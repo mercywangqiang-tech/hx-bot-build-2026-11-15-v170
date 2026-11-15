@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  HXBot (v1.6.8): the entitlements of a Mac build signed with the fixed identity (hx/scripts/mac-dist.ts).
+  - No associated-domains: it needs an Apple provisioning profile, and macOS does not start an app that
+    claims it without one.
+  - disable-library-validation: a certificate of HXBot's own has no Apple Team ID, so library validation
+    refuses the frameworks and native addons that the same certificate signs. A Developer ID build keeps
+    it too: the voice runtime and the remote desktop runtime load libraries signed by other teams.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+  </dict>
+</plist>

@@ -1,0 +1,154 @@
+/*
+ * The mobile theme layer. Only apps/mobile imports this file. The desktop app and
+ * the web client have their own light layer, tokens-light.css, which a root
+ * attribute turns on; the public site is always dark.
+ *
+ * It cannot be folded into tokens.css. `@variant light` is not a Tailwind v4
+ * variant at all; uniwind registers it as a custom variant, so desktop and web
+ * would fail to compile the block. And `@variant dark` in stock Tailwind means
+ * `prefers-color-scheme: dark`, which would turn the public site light for anyone
+ * running a light system.
+ *
+ * The dark block repeats the base values from tokens.css instead of inheriting
+ * them, which looks like something to tidy up. It is not. uniwind hard-codes its
+ * theme list to ['light', 'dark'] and discovers a theme's variables only by
+ * reading `@variant` at-rules, so a name present in one block and absent from the
+ * other is a theme that cannot resolve it. uniwind notices, but only writes a red
+ * line to the console - it does not fail the build. Keep every value here equal to
+ * the base, so that mobile dark does not drift away from desktop.
+ */
+
+:root {
+  @variant light {
+    --hxbot-bg-canvas: #f5f5f7;
+    --hxbot-bg-native-canvas: #f5f5f7;
+    --hxbot-bg-native-sidebar: #ffffff;
+    --hxbot-bg-sidebar: #ffffff;
+    --hxbot-bg-surface: #ffffff;
+    --hxbot-bg-surface-raised: #f0f0f3;
+    --hxbot-bg-control: #e9e9ed;
+    --hxbot-bg-control-active: #dedee4;
+    --hxbot-bg-overlay: rgba(20, 20, 20, 0.28);
+    --hxbot-border: rgba(20, 20, 20, 0.1);
+    --hxbot-border-strong: rgba(20, 20, 20, 0.16);
+    --hxbot-text-primary: #141414;
+    --hxbot-text-secondary: rgba(20, 20, 20, 0.72);
+    --hxbot-text-muted: rgba(20, 20, 20, 0.64);
+    --hxbot-text-dim: rgba(20, 20, 20, 0.34);
+    --hxbot-text-on-accent: #ffffff;
+    --hxbot-text-on-light: #141414;
+    --hxbot-text-on-status: #07130c;
+    --hxbot-action: #141414;
+    --hxbot-action-foreground: #f2f2f2;
+    --hxbot-accent: #6960f1;
+    --hxbot-accent-text: #5b52df;
+    --hxbot-logo-production: #1e6fd9;
+    --hxbot-logo-eye: #040007;
+    --hxbot-success: #32a85d;
+    --hxbot-warning: #c58a23;
+    --hxbot-danger: #d85f58;
+    --hxbot-success-text: #1e6f3b;
+    --hxbot-warning-text: #865700;
+    --hxbot-danger-text: #b02a2f;
+    --hxbot-drawer-scrim: #000000;
+    --hxbot-scroll-edge-overlay: rgba(245, 245, 247, 0.46);
+    --hxbot-shadow-card: 0 1px 2px rgba(20, 20, 20, 0.05);
+    --hxbot-shadow-overlay: 0 12px 32px rgba(20, 20, 20, 0.12);
+
+    /* Not a colour, and identical in both themes. uniwind only ever learns a
+     * variable from a @variant block, so a token @theme inline reaches through
+     * var() has to be declared here or the utility resolves to nothing on native.
+     * These two back tracking-hxbot-tight and tracking-hxbot-wide. */
+    --hxbot-tracking-tight: -0.1px;
+    --hxbot-tracking-wide: 0.02em;
+    --hxbot-bg-sheet: #fcfcfc;
+    --hxbot-bg-grouped: #f2f2f2;
+    --hxbot-text-grouped-secondary: #69696e;
+    --hxbot-border-grouped: #dddddf;
+    --hxbot-radius-grouped: 16px;
+    --hxbot-bg-chrome-glass: rgba(250, 250, 252, 0.94);
+    --hxbot-border-chrome-glass: rgba(20, 20, 20, 0.1);
+    --hxbot-bg-chrome-blur: rgba(255, 255, 255, 0.55);
+    /* File references: the same hues as dark, darker so the name reads on a light surface. */
+    --hxbot-file-blue: #1f6fd1;
+    --hxbot-file-blue-soft: rgba(31, 111, 209, 0.12);
+    --hxbot-file-yellow: #865700;
+    --hxbot-file-yellow-soft: rgba(197, 138, 35, 0.14);
+    --hxbot-file-orange: #b55a1f;
+    --hxbot-file-orange-soft: rgba(181, 90, 31, 0.12);
+    --hxbot-file-teal: #1c7f92;
+    --hxbot-file-teal-soft: rgba(28, 127, 146, 0.12);
+    --hxbot-file-green: #1e6f3b;
+    --hxbot-file-green-soft: rgba(50, 168, 93, 0.14);
+    --hxbot-file-red: #b02a2f;
+    --hxbot-file-red-soft: rgba(216, 95, 88, 0.14);
+    --hxbot-file-pink: #a3478f;
+    --hxbot-file-pink-soft: rgba(163, 71, 143, 0.12);
+    --hxbot-file-default: #5b52df;
+    --hxbot-file-default-soft: rgba(91, 82, 223, 0.12);
+  }
+
+  @variant dark {
+    /* biome-ignore lint/suspicious/noDuplicateCustomProperties: Theme variants intentionally share semantic token names. */
+    --hxbot-bg-canvas: #1a1a1a;
+    --hxbot-bg-native-canvas: #141414;
+    --hxbot-bg-native-sidebar: #141414;
+    --hxbot-bg-sidebar: #1a1a1a;
+    --hxbot-bg-surface: #212121;
+    --hxbot-bg-surface-raised: #242424;
+    --hxbot-bg-control: #212121;
+    --hxbot-bg-control-active: #2a2a2a;
+    --hxbot-bg-overlay: rgba(26, 26, 26, 0.92);
+    --hxbot-border: rgba(255, 255, 255, 0.035);
+    --hxbot-border-strong: rgba(255, 255, 255, 0.045);
+    --hxbot-text-primary: #ffffff;
+    --hxbot-text-secondary: #dcdcdc;
+    --hxbot-text-muted: #979797;
+    --hxbot-text-dim: #6a6a6a;
+    --hxbot-text-on-accent: #ffffff;
+    --hxbot-text-on-light: #141414;
+    --hxbot-text-on-status: #07130c;
+    --hxbot-action: #f0f0f0;
+    --hxbot-action-foreground: #141414;
+    --hxbot-accent: #007cf7;
+    --hxbot-accent-text: #42a0ff;
+    --hxbot-logo-production: #d6adf2;
+    --hxbot-logo-eye: #040007;
+    --hxbot-success: #31cf76;
+    --hxbot-warning: #ff9412;
+    --hxbot-danger: #fd2f3b;
+    --hxbot-success-text: #31cf76;
+    --hxbot-warning-text: #ff9412;
+    --hxbot-danger-text: #ff6069;
+    --hxbot-drawer-scrim: #000000;
+    --hxbot-scroll-edge-overlay: rgba(0, 0, 0, 0.72);
+    --hxbot-shadow-card: 0 0 0 transparent;
+    --hxbot-shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.48);
+    --hxbot-tracking-tight: -0.1px;
+    --hxbot-tracking-wide: 0.02em;
+    --hxbot-bg-sheet: #141414;
+    --hxbot-bg-grouped: #212121;
+    --hxbot-text-grouped-secondary: #96969b;
+    --hxbot-border-grouped: #333335;
+    --hxbot-radius-grouped: 16px;
+    --hxbot-bg-chrome-glass: rgba(38, 38, 40, 0.96);
+    --hxbot-border-chrome-glass: rgba(255, 255, 255, 0.08);
+    --hxbot-bg-chrome-blur: rgba(26, 26, 28, 0.62);
+    --hxbot-file-blue: #74b9ff;
+    --hxbot-file-blue-soft: rgba(116, 185, 255, 0.14);
+    --hxbot-file-yellow: #ff9412;
+    --hxbot-file-yellow-soft: rgba(255, 148, 18, 0.12);
+    --hxbot-file-orange: #f0a06a;
+    --hxbot-file-orange-soft: rgba(240, 160, 106, 0.14);
+    --hxbot-file-teal: #6bc7d9;
+    --hxbot-file-teal-soft: rgba(107, 199, 217, 0.14);
+    --hxbot-file-green: #31cf76;
+    --hxbot-file-green-soft: rgba(49, 207, 118, 0.12);
+    --hxbot-file-red: #fd2f3b;
+    --hxbot-file-red-soft: rgba(253, 47, 59, 0.16);
+    --hxbot-file-pink: #d98ac9;
+    --hxbot-file-pink-soft: rgba(217, 138, 201, 0.14);
+    --hxbot-file-default: #42a0ff;
+    --hxbot-file-default-soft: rgba(0, 124, 247, 0.14);
+  }
+}

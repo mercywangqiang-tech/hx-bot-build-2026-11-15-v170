@@ -1,0 +1,121 @@
+# HXBot 研究版：服务器端（阿里云 ECS）
+#
+#   account       账号服务（注册、邮箱 + 密码登录、网页版 /app、主机目录、会话票据），仅监听 127.0.0.1:8787
+#   account-cron  每 5 分钟触发账号服务的定时任务
+#   signal        信令服务（WebRTC 握手），仅监听 127.0.0.1:8081，由 nginx 以 wss:// 对外
+#   coturn        中继服务（TURN），使用宿主机网络：3478/udp+tcp、5349/tcp、49152-65535/udp
+#
+# 用法（在本目录执行）：
+#   docker compose up -d --build
+#   docker compose ps
+#   docker compose logs -f account
+name: hxbot
+
+x-defaults: &defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+services:
+  account:
+    <<: *defaults
+    build:
+      context: ./account
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:24-bookworm-slim}
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        DEBIAN_MIRROR: ${DEBIAN_MIRROR:-mirrors.aliyun.com}
+    image: hxbot/account:local
+    env_file: .env
+    environment:
+      AUTH_EXPOSE_DEVELOPMENT_CODE: ${AUTH_EXPOSE_DEVELOPMENT_CODE:-false}
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - account-state:/state
+
+  account-cron:
+    <<: *defaults
+    image: hxbot/account:local
+    # 镜像由上面的 account 服务在本机构建，不要去镜像仓库拉取
+    pull_policy: never
+    command: ["cron"]
+    # 镜像自带的健康检查是给账号服务用的，定时任务容器不需要
+    healthcheck:
+      disable: true
+    depends_on:
+      account:
+        condition: service_healthy
+
+  signal:
+    <<: *defaults
+    build:
+      context: ./signal
+      args:
+        BUN_IMAGE: ${BUN_IMAGE:-oven/bun:1.4.2-alpine}
+    image: hxbot/signal:local
+    depends_on:
+      account:
+        condition: service_healthy
+    environment:
+      REMOTE_SIGNAL_HOST: 0.0.0.0
+      REMOTE_SIGNAL_PORT: "8081"
+      REMOTE_HEALTH_HOST: 0.0.0.0
+      REMOTE_HEALTH_PORT: "8080"
+      REMOTE_TLS_DISABLED: "true"
+      # nginx 终止 TLS 后转发，按 X-Forwarded-For 计算每个 IP 的连接上限
+      REMOTE_TRUST_PROXY: "true"
+      REMOTE_TICKET_PUBLIC_KEYS: ${REMOTE_TICKET_PUBLIC_JWKS:?请先运行 scripts/init-secrets.sh}
+      REMOTE_CONTROL_PLANE_URL: http://account:8787
+      REMOTE_SESSION_SECRET: ${REMOTE_SESSION_SECRET:?请先运行 scripts/init-secrets.sh}
+      REMOTE_AUTH_WEBHOOK_SECRET: ${REMOTE_AUTH_WEBHOOK_SECRET:?请先运行 scripts/init-secrets.sh}
+      REMOTE_METRICS_TOKEN: ${REMOTE_METRICS_TOKEN:?请先运行 scripts/init-secrets.sh}
+      TURN_SHARED_SECRET: ${TURN_SHARED_SECRET:?请先运行 scripts/init-secrets.sh}
+      TURN_HOST: ${TURN_DOMAIN:?请在 .env 中填写 TURN_DOMAIN}
+      TURN_PORT: "3478"
+      TURN_TLS_PORT: "5349"
+      REMOTE_MAX_CONNECTIONS_PER_USER: "32"
+      REMOTE_MAX_CONNECTIONS_PER_IP: "32"
+      REMOTE_MAX_MESSAGES_PER_MINUTE: "600"
+    ports:
+      - "127.0.0.1:8081:8081"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+  coturn:
+    <<: *defaults
+    build:
+      context: ./coturn
+      args:
+        COTURN_IMAGE: ${COTURN_IMAGE:-coturn/coturn:4.17.2-r0}
+    image: hxbot/coturn:local
+    network_mode: host
+    environment:
+      TURN_PUBLIC_IP: ${TURN_PUBLIC_IP:?请在 .env 中填写服务器公网 IP（TURN_PUBLIC_IP）}
+      TURN_REALM: ${TURN_DOMAIN}
+      TURN_SHARED_SECRET: ${TURN_SHARED_SECRET}
+      # 证书由 scripts/setup-https.sh 从 Let's Encrypt 复制到 /opt/hxbot/certs（组 2000 可读）
+      TURN_TLS_CERT_PATH: /certs/fullchain.pem
+      TURN_TLS_KEY_PATH: /certs/privkey.pem
+    group_add:
+      - "2000"
+    volumes:
+      - /opt/hxbot/certs:/certs:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "turnutils_stunclient 127.0.0.1 -p 3478 >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  # 账号数据库（用户、会话、主机目录）都在这个卷里，备份它即可：scripts/backup.sh
+  account-state:

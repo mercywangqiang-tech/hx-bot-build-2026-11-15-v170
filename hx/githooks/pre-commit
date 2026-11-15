@@ -1,0 +1,32 @@
+#!/bin/sh
+# HXBot 的提交前检查。只检查，不改任何文件；有问题就说明原因并中止提交。
+# bun install 时由 scripts/install-git-hooks.ts 启用（git config core.hooksPath hx/githooks）。
+#
+#   1. 机密文件不进仓库：.env、签名密钥、证书（新加入仓库的文件才检查）
+#   2. 代码就是 hx/rebrand.py 的结果：没有漏掉的改造、没有上游的名称和入口
+#   3. 暂存的文件格式和规范没有问题（Biome，只报告不修改）
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+added=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=A)
+secret=$(printf '%s\n' "$added" | grep -E '(^|/)\.env(\.[^/]*)?$|(^|/)\.dev\.vars$|^hx/keys/|(^|/)keystore\.properties$|\.(jks|keystore|p8|p12|pfx|pem|key|mobileprovision)$' | grep -v -E '\.env\.example$' || true)
+if [ -n "$secret" ] && [ "${HX_ALLOW_SECRET_FILES:-}" != "1" ]; then
+  echo "提交中止：下面的文件看起来是配置或密钥，不能进仓库：" >&2
+  printf '%s\n' "$secret" | sed 's/^/  /' >&2
+  echo "用 git restore --staged <文件> 取消暂存。确认它不含任何密钥、确实要提交时：HX_ALLOW_SECRET_FILES=1 git commit ……" >&2
+  exit 1
+fi
+
+echo "核对改造结果（python3 hx/rebrand.py --check）……"
+python3 hx/rebrand.py --check >/dev/null || {
+  echo "提交中止：代码与 hx/rebrand.py 的结果不一致。运行 python3 hx/rebrand.py --check 查看，运行 python3 hx/rebrand.py 应用改造。" >&2
+  exit 1
+}
+
+if [ -x node_modules/.bin/biome ]; then
+  echo "核对暂存文件的格式和规范（只报告，不修改）……"
+  node_modules/.bin/biome check --staged --files-ignore-unknown=true --no-errors-on-unmatched --max-diagnostics=40 || {
+    echo "提交中止：上面的问题需要先处理。格式问题可以运行 node_modules/.bin/biome check --write <文件> 后重新暂存。" >&2
+    exit 1
+  }
+fi

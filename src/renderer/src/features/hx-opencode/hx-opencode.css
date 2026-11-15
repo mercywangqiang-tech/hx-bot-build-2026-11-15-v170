@@ -1,0 +1,74 @@
+/* HXBot: the OpenCode services dialog and its line under the provider list (hx-opencode). */
+
+.hx-opencode-dialog {
+  max-height: min(720px, calc(100vh - 2 * var(--hxbot-space-6)));
+}
+
+.hx-opencode-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The list scrolls; the search box and the rows keep their height (the search box was squeezed). */
+.hx-opencode-body > * {
+  flex-shrink: 0;
+}
+
+.hx-opencode-list > li {
+  display: flex;
+  flex-direction: column;
+}
+
+.hx-opencode-free,
+.hx-opencode-section {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-md);
+}
+
+.hx-opencode-section {
+  margin-top: var(--hxbot-space-3);
+}
+
+.hx-opencode-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+  margin: 0 var(--hxbot-space-3) var(--hxbot-space-2);
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+  border-radius: var(--hxbot-radius-md);
+  background: var(--hxbot-bg-control-hover);
+}
+
+.hx-opencode-connection,
+.hx-opencode-link,
+.hx-opencode-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-opencode-ways,
+.hx-opencode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-opencode-actions {
+  justify-content: flex-end;
+}
+
+.hx-opencode-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-opencode-spin {
+  animation: ui-spin 720ms linear infinite;
+}

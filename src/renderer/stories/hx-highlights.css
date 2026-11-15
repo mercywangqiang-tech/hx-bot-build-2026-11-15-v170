@@ -1,0 +1,40 @@
+/* HXBot: the frame of the highlight screens (HxHighlights.stories.tsx). */
+.hx-highlight-frame {
+  display: flex;
+  width: fit-content;
+  max-width: 780px;
+  flex-direction: column;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-6);
+}
+
+/* The screenshot takes the frame: only as tall as what it shows (the story frame fills the window). */
+.foundation-story.hx-highlight-frame {
+  height: fit-content;
+  min-height: 0;
+}
+
+/* The agent settings panel opens 360 pixels wide; its content is this wide. */
+.hx-highlight-panel {
+  width: 328px;
+}
+
+/* A progress card wide enough for its whole title (v1.6.7). */
+.hx-highlight-wide {
+  width: 560px;
+}
+
+/* Settings › Computer Use as the settings window shows it (v1.6.8). */
+.hx-highlight-settings {
+  width: 560px;
+}
+
+/* The steps window beside System Settings is 340 pixels wide (v1.6.8). */
+.hx-highlight-window {
+  width: 340px;
+}
+
+/* The story frame is not a window: the steps take their own height (the window is 424 tall). */
+.hx-highlight-window .computer-use-help {
+  height: auto;
+}

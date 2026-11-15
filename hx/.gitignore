@@ -1,0 +1,14 @@
+# 签名文件和服务器密钥绝不能进代码仓库
+keys/
+server/.env
+
+# 由 hx/scripts/build-server.sh 生成
+server/account/dist/
+server/account/migrations/
+server/signal/signal.js
+server/coturn/turnserver.conf
+server/coturn/entrypoint.sh
+server/BUILD_COMMIT
+server/BUILD_TIME
+dist-hx/
+__pycache__/

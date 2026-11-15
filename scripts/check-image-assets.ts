@@ -1,0 +1,52 @@
+import { spawnSync } from "node:child_process";
+import { createHxBotLogger } from "@hxbot/logging";
+
+// Pull request screenshots and recordings go in the pull request body, not in the repository
+// (AGENTS.md, "Pull requests"). Only the product owns image files, in these directories.
+const ALLOWED_DIRECTORIES = [
+  // electron-builder application icons.
+  "build/",
+  // Images that the renderer bundles, and Storybook fixtures.
+  "src/renderer/src/assets/",
+  "src/renderer/stories/assets/",
+  // Images that shared UI (`@hxbot/ui`) bundles for the desktop and web apps.
+  "packages/ui/src/assets/",
+  // Expo icons and splash screens.
+  "apps/mobile/assets/",
+  // Public site files, news and guide art, and guide images.
+  "apps/auth-api/public/",
+  "apps/auth-api/content-art/",
+  "apps/auth-api/src/content/guides/media/",
+  // HXBot: its logo, its icons and share pictures, and the pictures of its documents.
+  "hx/assets/",
+  "hx/docs/assets/",
+  // HXBot: the screenshots of the portal's What's new page (v1.6.5).
+  "hx/server/portal/assets/",
+] as const;
+
+const IMAGE_FILE = /\.(avif|bmp|gif|heic|icns|ico|jpe?g|mov|mp4|png|svg|tiff?|webm|webp)$/i;
+
+const logger = createHxBotLogger("check-image-assets");
+
+const result = spawnSync("git", ["ls-files", "-z"], { encoding: "utf8" });
+if (result.status !== 0) {
+  logger.error(`git ls-files failed: ${result.stderr}`);
+  process.exit(1);
+}
+
+const misplaced = result.stdout
+  .split("\0")
+  .filter((path) => IMAGE_FILE.test(path))
+  .filter((path) => !ALLOWED_DIRECTORIES.some((directory) => path.startsWith(directory)));
+
+if (misplaced.length > 0) {
+  logger.error(
+    [
+      "These image files are outside the allowed asset directories:",
+      ...misplaced.map((path) => `  ${path}`),
+      "Put pull request screenshots in the pull request body. If the product needs the file,",
+      "move it to an allowed directory or add its directory in scripts/check-image-assets.ts.",
+    ].join("\n"),
+  );
+  process.exit(1);
+}

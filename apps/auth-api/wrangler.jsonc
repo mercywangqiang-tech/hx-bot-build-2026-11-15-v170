@@ -1,0 +1,116 @@
+{
+  // HXBot 账号服务（apps/auth-api 的 Account API Worker）。
+  // 它不部署到 Cloudflare，而是在弘犀自己的阿里云服务器上用 workerd（Cloudflare 开源运行时）运行，
+  // D1 数据库和 R2 存储都落在服务器本地磁盘（Docker 卷 hxbot_account-state）。
+  // hx/rebrand.py 会把本文件复制为 apps/auth-api/wrangler.jsonc；上游原文件保存为 wrangler.upstream.jsonc。
+  // 运行时的密钥、登录口令等变量由容器入口脚本写入 .dev.vars，会覆盖这里的同名 vars。
+  // 登录方式：每个人用邮箱和自己的密码登录（注册账号，src/server/hx-accounts）。注册时的邮箱验证码用 SMTP 发，
+  // 短信验证码用阿里云短信发；六家第三方登录各自的密钥填好才开启。这些值都由入口脚本从 .env 写入。
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hxbot-account",
+  "compatibility_date": "2026-08-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/worker-entry.ts",
+  "workers_dev": false,
+  "preview_urls": false,
+  "upload_source_maps": false,
+  "triggers": {
+    // 本地运行时不会自己按 cron 触发，由 docker-compose 里的 account-cron 容器每 5 分钟调用一次。
+    "crons": ["*/5 * * * *"]
+  },
+  // 不绑定域名：请求的 Host 由服务器上的 nginx 原样传入。
+  "routes": [],
+  "secrets": {
+    "required": [
+      "SKILLS_ADMIN_TOKEN",
+      "SITE_REPORT_HASH_SECRET",
+      "REMOTE_TICKET_PRIVATE_JWK",
+      "REMOTE_TICKET_PUBLIC_JWKS",
+      "REMOTE_AUTH_WEBHOOK_SECRET"
+    ]
+  },
+  "vars": {
+    "AUTH_EXPOSE_DEVELOPMENT_CODE": "false",
+    "EMAIL_SMTP_HOST": "",
+    "EMAIL_SMTP_PORT": "",
+    "EMAIL_SMTP_USERNAME": "",
+    "EMAIL_FROM": "",
+    "EMAIL_LICENSE_FROM": "",
+    "REMOTE_TICKET_KEY_ID": "hxbot-remote-1",
+    "REMOTE_SIGNAL_URL": "wss://signal.bot.hxallai.com/v1/signal",
+    "REMOTE_SIGNAL_HOMES": "",
+    "REMOTE_AUTH_WEBHOOK_URL": "http://signal:8081/internal/auth-events",
+    "REMOTE_AUTH_WEBHOOK_URLS": "",
+    "SIGNAL_ENTRY_ZONE_ID": "",
+    "SITE_PUBLISH_ENABLED": "false",
+    "SITE_COOKIE_ISOLATION_READY": "false",
+    "HOSTED_SERVERS_ENABLED": "false",
+    "HOSTED_SERVERS_ALLOWED_USER_IDS": "",
+    "LICENSE_TRIAL_END": "",
+    "GITHUB_APP_CLIENT_ID": "",
+    "APNS_TEAM_ID": "",
+    "APNS_TOPIC": "",
+    "HX_ALLOWED_EMAILS": "",
+    // 以前的共用登录口令：不再用于登录，只在过渡期让老账号第一次设置自己的密码（邮箱验证关闭时）。
+    "HX_LOGIN_PASSWORD": "",
+    // 注册时的两项验证：留空 = 开启，off = 关闭。
+    "HX_EMAIL_VERIFICATION": "",
+    "HX_PHONE_VERIFICATION": "",
+    "HX_ALLOWED_EMAIL_DOMAINS": "",
+    // iOS 版通用链接：弘犀智能 Apple 开发者账号的团队号（10 位），由 .env 的 HX_APPLE_TEAM_ID 写入。
+    // 留空时邀请链接在 iPhone 上用浏览器打开；填好后直接打开 HXBot iOS 版（包标识 com.hxallai.bot）。Apple 登录也用它。
+    "HX_APPLE_TEAM_ID": "",
+    // 下面各项都要在这里登记（留空）：本地运行时，入口脚本写进 .dev.vars 的值只有在这里或 secrets.required 里
+    // 登记过的才会交给账号服务，没有登记的会被悄悄丢掉。hx/scripts/build-server.sh 会核对这一点。
+    // 发信邮箱的密码（邮箱验证码、找回密码）。
+    "EMAIL_SMTP_PASSWORD": "",
+    // 阿里云短信（短信验证码）。
+    "HX_SMS_ACCESS_KEY_ID": "",
+    "HX_SMS_ACCESS_KEY_SECRET": "",
+    "HX_SMS_SIGN_NAME": "",
+    "HX_SMS_TEMPLATE_CODE": "",
+    // 六家第三方登录。一家的各项都有值，这一家才开启。
+    "HX_WECHAT_APP_ID": "",
+    "HX_WECHAT_APP_SECRET": "",
+    "HX_ALIPAY_APP_ID": "",
+    "HX_ALIPAY_PRIVATE_KEY": "",
+    "HX_DOUYIN_CLIENT_KEY": "",
+    "HX_DOUYIN_CLIENT_SECRET": "",
+    "HX_APPLE_SERVICE_ID": "",
+    "HX_APPLE_KEY_ID": "",
+    "HX_APPLE_PRIVATE_KEY": "",
+    "HX_GOOGLE_CLIENT_ID": "",
+    "HX_GOOGLE_CLIENT_SECRET": "",
+    "HX_FACEBOOK_APP_ID": "",
+    "HX_FACEBOOK_APP_SECRET": ""
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hxbot-account",
+      "database_id": "00000000-0000-4000-8000-00000000a001",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "AVATARS", "bucket_name": "hxbot-avatars" },
+    { "binding": "SKILLS", "bucket_name": "hxbot-skills" },
+    { "binding": "SITES", "bucket_name": "hxbot-sites" }
+  ],
+  "ratelimits": [
+    {
+      "name": "MARKETPLACE_INGRESS_RATE_LIMITER",
+      "namespace_id": "2026110801",
+      "simple": { "limit": 300, "period": 60 }
+    },
+    {
+      "name": "MARKETPLACE_MUTATION_RATE_LIMITER",
+      "namespace_id": "2026110802",
+      "simple": { "limit": 30, "period": 60 }
+    },
+    { "name": "MARKETPLACE_UPLOAD_RATE_LIMITER", "namespace_id": "2026110803", "simple": { "limit": 5, "period": 60 } },
+    { "name": "SITE_REPORT_RATE_LIMITER", "namespace_id": "2026110804", "simple": { "limit": 10, "period": 60 } },
+    { "name": "GITHUB_TOKEN_RATE_LIMITER", "namespace_id": "2026110805", "simple": { "limit": 30, "period": 60 } },
+    { "name": "LIVE_ACTIVITY_RATE_LIMITER", "namespace_id": "2026110806", "simple": { "limit": 300, "period": 60 } }
+  ]
+}

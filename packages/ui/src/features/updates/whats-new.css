@@ -1,0 +1,263 @@
+/* The "What's new" dialog after an app update. One centred card: the logo and version on top, the
+ * notes in a scroll area, and the actions in a footer. The groups use the colours of the
+ * changelog page on bot.hxallai.com, so a reader sees the same notes in the same way. */
+
+.whats-new-dialog {
+  position: relative;
+  display: flex;
+  width: min(480px, 100%);
+  max-height: min(640px, calc(100dvh - 2 * var(--hxbot-space-6)));
+  flex-direction: column;
+  overflow: hidden;
+  outline: 0;
+  border-radius: var(--hxbot-radius-xl);
+  background: var(--hxbot-bg-sidebar);
+  color: var(--hxbot-text-primary);
+}
+
+.whats-new-close {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: var(--hxbot-space-3);
+  inset-inline-end: var(--hxbot-space-3);
+  color: var(--hxbot-text-muted);
+}
+
+.whats-new-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--hxbot-space-1);
+  padding: var(--hxbot-space-8) var(--hxbot-space-6) var(--hxbot-space-4);
+  text-align: center;
+}
+
+.whats-new-logo {
+  --app-logo-background: var(--hxbot-surface-light);
+  width: 56px;
+  height: 56px;
+  margin-block-end: var(--hxbot-space-3);
+  border-radius: var(--hxbot-radius-logo);
+}
+
+.whats-new-title {
+  margin: 0;
+  font-size: var(--hxbot-text-2xl);
+  font-weight: var(--hxbot-weight-bold);
+  line-height: var(--hxbot-leading-2xl);
+}
+
+.whats-new-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--hxbot-space-6);
+  overflow-y: auto;
+  padding: var(--hxbot-space-2) var(--hxbot-space-6) var(--hxbot-space-6);
+  border-block-start: 1px solid transparent;
+}
+
+.whats-new-body.scroll-fade-top {
+  border-block-start-color: var(--hxbot-border);
+}
+
+.whats-new-body.scroll-fade-bottom {
+  mask-image: linear-gradient(to bottom, var(--hxbot-text-primary) calc(100% - 32px), transparent);
+}
+
+.whats-new-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  padding-block: var(--hxbot-space-6);
+  text-align: center;
+}
+
+.whats-new-state .ui-button {
+  margin-block-start: var(--hxbot-space-2);
+}
+
+.whats-new-state-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--hxbot-warning-text);
+}
+
+.whats-new-notice {
+  padding: var(--hxbot-space-3) var(--hxbot-space-4) var(--hxbot-space-4);
+  border-radius: var(--hxbot-radius-card);
+  background-image: linear-gradient(
+    180deg,
+    var(--hxbot-warning-soft),
+    color-mix(in srgb, var(--hxbot-warning) 3%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hxbot-warning) 26%, transparent);
+  --whats-new-tone: var(--hxbot-warning-text);
+}
+
+.whats-new-notice-title {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  margin: 0 0 var(--hxbot-space-2);
+  color: var(--hxbot-warning-text);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+.whats-new-notice-title svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.whats-new-group {
+  --whats-new-tone: var(--hxbot-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--hxbot-space-3);
+}
+
+.whats-new-group[data-type="added"] {
+  --whats-new-tone: var(--hxbot-logo-production);
+}
+
+.whats-new-group[data-type="changed"] {
+  --whats-new-tone: var(--hxbot-accent-text);
+}
+
+.whats-new-group[data-type="fixed"] {
+  --whats-new-tone: var(--hxbot-success-text);
+}
+
+.whats-new-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  margin: 0;
+  color: var(--whats-new-tone);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.whats-new-group-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--whats-new-tone);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--whats-new-tone) 70%, transparent);
+}
+
+.whats-new-group-count {
+  padding: 0 var(--hxbot-space-1-5);
+  border-radius: var(--hxbot-radius-pill);
+  background: color-mix(in srgb, var(--whats-new-tone) 12%, transparent);
+  font-family: var(--hxbot-font-mono);
+  font-weight: var(--hxbot-weight-medium);
+  letter-spacing: 0;
+}
+
+.whats-new-list {
+  display: grid;
+  width: 100%;
+  gap: var(--hxbot-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A hanging mark in the group's colour, so a long item wraps under its own text. */
+.whats-new-item {
+  position: relative;
+  padding-inline-start: var(--hxbot-space-6);
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-md);
+  line-height: var(--hxbot-leading-md);
+  text-wrap: pretty;
+}
+
+.whats-new-item-headline {
+  display: block;
+  color: var(--hxbot-text-primary);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.whats-new-item-detail {
+  display: block;
+  margin-block-start: var(--hxbot-space-0-5);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  line-height: var(--hxbot-leading-sm);
+}
+
+.whats-new-item::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.75em;
+  inset-inline-start: var(--hxbot-space-1);
+  width: 8px;
+  height: 1px;
+  background: color-mix(in srgb, var(--whats-new-tone) 70%, transparent);
+}
+
+.whats-new-toggle {
+  margin-inline-start: calc(-1 * var(--hxbot-space-2));
+  color: var(--hxbot-text-muted);
+}
+
+.whats-new-actions .ui-button svg,
+.whats-new-toggle svg {
+  width: var(--hxbot-icon-sm);
+  height: var(--hxbot-icon-sm);
+  flex: 0 0 auto;
+  stroke-width: var(--hxbot-icon-stroke);
+}
+
+.whats-new-toggle svg {
+  transition: transform var(--hxbot-duration-fast) var(--hxbot-ease-out);
+}
+
+.whats-new-toggle[data-expanded] svg {
+  transform: rotate(180deg);
+}
+
+.whats-new-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-2);
+  padding: var(--hxbot-space-3) var(--hxbot-space-4);
+  border-block-start: 1px solid var(--hxbot-border);
+}
+
+@media (max-width: 560px) {
+  .whats-new-backdrop {
+    padding: var(--hxbot-space-3);
+  }
+
+  .whats-new-header {
+    padding-inline: var(--hxbot-space-4);
+  }
+
+  .whats-new-body {
+    padding-inline: var(--hxbot-space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whats-new-backdrop,
+  .whats-new-toggle svg {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* The Help menu of the window rail. A long release headline ends in an ellipsis before its date. */
+.help-menu {
+  width: 320px;
+}

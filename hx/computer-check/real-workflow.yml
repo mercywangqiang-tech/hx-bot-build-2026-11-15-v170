@@ -1,0 +1,201 @@
+# HXBot：真实模型与真机检查（v1.6.8，放在公开仓库里跑的版本）。
+# 由 hx/scripts/real-check-public.sh 生成：分支名和 native-runtime.lock.json 里
+# 固定的电脑操控驱动（cua-driver）的版本、校验值，在生成时填进来。
+#   ubuntu-latest：用真实模型走一遍协作全流程（建议卡、组队、交接单退回、插话、换人、交回、叫停）。
+#   macos-15、macos-26、windows-2025：用真的驱动一步步操作文本编辑、记事本，再让真实模型自己列计划、操作、保存；
+#   Mac 上再把一个测试应用装进“应用程序”文件夹（computer_install：新装、先问、替换、从磁盘映像装，v1.6.8）。
+#   Mac、Windows 上再走一遍应用命令和脚本（computer_app、computer_run：前台、窗口、菜单、隐藏、退出、没保存时退出、默认浏览器，v1.6.9）。
+# 模型：仓库 Secret 里配的模型（HX_CHECK_MODEL_URL、HX_CHECK_MODEL_KEY、HX_CHECK_MODEL），再试 GitHub Models。
+# OpenCode 的免费模型在 GitHub 的机器上回答额度已用完（2026-11-14 实测），所以这里不再下载 OpenCode；
+# 检查程序仍支持 --opencode <可执行文件>，在别的机器上可以用。没有模型时，真实模型那几项记“跳过”。
+# 结果挂在运行页面的 Artifacts 里，也提交到分支 __BRANCH__-results 的 real/<编号>/。
+name: HXBot real check
+
+on:
+  push:
+    branches: [__BRANCH__]
+    paths:
+      - hx-real-check.mjs
+      - .github/workflows/hx-real-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hxbot-real-check-__BRANCH__
+  cancel-in-progress: true
+
+jobs:
+  team:
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      models: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Ask GitHub Models once (what the check reads)
+        continue-on-error: true
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          curl -sS -i --max-time 60 "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Say ready."}]}' | head -c 1200; echo
+      - name: Run the check
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # A model of your own (optional, repository secrets): an OpenAI compatible address, its key
+          # and the model name. Free models do not answer GitHub's machines (limits reached).
+          HX_CHECK_MODEL_URL: ${{ secrets.HX_CHECK_MODEL_URL }}
+          HX_CHECK_MODEL_KEY: ${{ secrets.HX_CHECK_MODEL_KEY }}
+          HX_CHECK_MODEL: ${{ secrets.HX_CHECK_MODEL }}
+        run: node hx-real-check.mjs --out out --machine ubuntu-latest --parts team
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f out/summary.md ]; then cat out/summary.md >> "$GITHUB_STEP_SUMMARY"; else echo "检查程序没有写出成绩单。" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-real-ubuntu-latest
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
+
+  steps:
+    name: ${{ matrix.machine }}
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      models: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { machine: macos-15, asset: __MAC_ASSET__, sha: __MAC_SHA__, binary: cua-driver, binarySha: __MAC_BINARY_SHA__ }
+          - { machine: macos-26, asset: __MAC_ASSET__, sha: __MAC_SHA__, binary: cua-driver, binarySha: __MAC_BINARY_SHA__ }
+          - { machine: windows-2025, asset: __WIN_ASSET__, sha: __WIN_SHA__, binary: cua-driver.exe, binarySha: __WIN_BINARY_SHA__ }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Get the Computer Use driver
+        shell: bash
+        env:
+          ASSET: ${{ matrix.asset }}
+          SHA: ${{ matrix.sha }}
+          BINARY: ${{ matrix.binary }}
+          BINARY_SHA: ${{ matrix.binarySha }}
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/$ASSET"
+          curl -fsSL --retry 3 -o "$archive" "https://github.com/trycua/cua/releases/download/__TAG__/$ASSET"
+          # From standard input: with a Windows path, sha256sum puts a backslash in front of the sum.
+          sum() { if command -v sha256sum >/dev/null; then sha256sum < "$1" | cut -d' ' -f1; else shasum -a 256 < "$1" | cut -d' ' -f1; fi; }
+          [ "$(sum "$archive")" = "$SHA" ] || { echo "The driver archive has the wrong checksum."; exit 1; }
+          mkdir -p "$RUNNER_TEMP/driver"
+          case "$ASSET" in
+            *.zip) pwsh -NoProfile -Command "Expand-Archive -LiteralPath '$archive' -DestinationPath '$RUNNER_TEMP/driver' -Force" ;;
+            *) (cd "$RUNNER_TEMP/driver" && tar -xzf -) < "$archive" ;;
+          esac
+          found="$(find "$RUNNER_TEMP/driver" -type f -name "$BINARY" | head -1)"
+          [ -n "$found" ] || { echo "The driver archive has no $BINARY."; exit 1; }
+          [ "$(sum "$found")" = "$BINARY_SHA" ] || { echo "The driver has the wrong checksum."; exit 1; }
+          chmod +x "$found" || true
+          echo "DRIVER=$found" >> "$GITHUB_ENV"
+      - name: Run the check
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MACHINE: ${{ matrix.machine }}
+          HX_CHECK_MODEL_URL: ${{ secrets.HX_CHECK_MODEL_URL }}
+          HX_CHECK_MODEL_KEY: ${{ secrets.HX_CHECK_MODEL_KEY }}
+          HX_CHECK_MODEL: ${{ secrets.HX_CHECK_MODEL }}
+        run: node hx-real-check.mjs --out out --machine "$MACHINE" --parts steps,install,apps,quiet --driver "$DRIVER"
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f out/summary.md ]; then cat out/summary.md >> "$GITHUB_STEP_SUMMARY"; else echo "检查程序没有写出成绩单。" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-real-${{ matrix.machine }}
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
+
+  summary:
+    name: summary
+    needs: [team, steps]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Download the results of every machine
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          path: all
+          pattern: hxbot-real-*
+      - name: Merge the reports
+        id: merge
+        shell: bash
+        run: |
+          mkdir -p all
+          set +e
+          node hx-real-check.mjs --merge all --expected "ubuntu-latest,macos-15,macos-26,windows-2025"
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          cat all/overview.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the results on a branch
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          branch="__BRANCH__-results"
+          light="$RUNNER_TEMP/light"
+          mkdir -p "$light"
+          cp all/overview.md all/verdict.json "$light/"
+          for folder in all/hxbot-real-*/; do
+            [ -d "$folder" ] || continue
+            name="$(basename "$folder")"
+            mkdir -p "$light/$name"
+            for file in report.json summary.md log.txt; do [ -f "$folder$file" ] && cp "$folder$file" "$light/$name/"; done
+          done
+          work="$RUNNER_TEMP/results"
+          git init -q "$work"
+          cd "$work"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth=1 origin "$branch" 2>/dev/null; then git checkout -q -B "$branch" FETCH_HEAD; else git checkout -q --orphan "$branch"; fi
+          mkdir -p "real/$GITHUB_RUN_NUMBER"
+          cp -R "$light/." "real/$GITHUB_RUN_NUMBER/"
+          printf '%s %s\n' "$GITHUB_RUN_NUMBER" "$GITHUB_SHA" > latest-real.txt
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Real check results of run $GITHUB_RUN_NUMBER"
+          git push -q origin "$branch"
+      - name: Verdict
+        if: steps.merge.outputs.code != '0'
+        shell: bash
+        run: |
+          echo "有失败的项，或有机器没有交回结果。见上面的成绩单。"
+          exit 1

@@ -1,0 +1,80 @@
+import type { PartialTranslation } from "../../message";
+import type { messages as source } from "../en/sitePage";
+
+export const messages = {
+  "sitePage.error.title": "Не удалось загрузить страницу",
+  "sitePage.error.body":
+    "Проверьте подключение и перезагрузите страницу. Если она всё ещё не загружается, вернитесь на главную страницу.",
+  "sitePage.error.reload": "Перезагрузить",
+  "sitePage.error.home": "На главную",
+  "sitePage.join.title": "Присоединиться к серверу HXBot",
+  "sitePage.join.description": "Откройте частное приглашение на сервер в HXBot.",
+  "sitePage.join.eyebrow": "Частное приглашение",
+  "sitePage.join.intro":
+    "Откройте это приглашение в HXBot. Приложение проверит сервер и попросит подтверждения перед подключением.",
+  "sitePage.join.invalid":
+    "Эта ссылка-приглашение недействительна или неполна. Попросите владельца сервера о новом приглашении.",
+  "sitePage.join.open": "Открыть HXBot",
+  "sitePage.join.noApp": "Нет приложения? {browser} или {download}.",
+  "sitePage.join.noAppMobile": "Нет приложения? {browser}.",
+  "sitePage.join.browserLink": "Присоединитесь в этом браузере",
+  "sitePage.join.downloadLink": "скачайте HXBot",
+  "sitePage.join.notOpened":
+    "Если HXBot есть на этом компьютере, запустите его и снова нажмите «{open}». Если нет, сначала скачайте его.",
+  "sitePage.join.mobile":
+    "Если HXBot установлен, нажмите «{open}». Также можно вставить эту ссылку в «Добавить сервер» в приложении.",
+  "sitePage.join.email": "Если приглашение пришло по электронной почте, войдите в HXBot с этим адресом.",
+  "sitePage.connect.title": "Вернуться в HXBot",
+  "sitePage.connect.failedTitle": "Подключение не завершено",
+  "sitePage.connect.openApp": "Открыть HXBot",
+  "sitePage.connect.tryAgainApp": "Повторить в HXBot",
+  "sitePage.connect.tryAgainBrowser": "Повторить в браузере",
+  "sitePage.connect.doneInWebClient": "Ваша вкладка HXBot завершает подключение к {name}. Эту вкладку можно закрыть.",
+  "sitePage.connect.doneInApp": "HXBot завершает подключение к {name} на вашем компьютере.",
+  "sitePage.connect.failure.cancelled": "Подключение к {name} отменено. Ничего не изменилось.",
+  "sitePage.connect.failure.expired": "Срок входа в {name} истёк. Начните подключение снова.",
+  "sitePage.connect.failure.exchange": "{name} не подтвердил подключение. Попробуйте снова.",
+  "sitePage.connect.failure.enterprise": "Подключите одно рабочее пространство Slack, а не всю организацию.",
+  "sitePage.connect.failure.takenSlack":
+    "Другой сервер HXBot уже отвечает в этом рабочем пространстве Slack. Отключите его на том сервере и попробуйте снова.",
+  "sitePage.connect.failure.takenDiscord":
+    "Другой сервер HXBot уже отвечает на этом сервере Discord. Отключите его на том сервере и попробуйте снова.",
+  "sitePage.connect.failure.unavailable": "HXBot сейчас не может подключиться к {name}. Попробуйте позже.",
+  "sitePage.connect.failure.tabClosed":
+    "Вкладка HXBot, которая начала подключение к {name}, не ответила. Откройте HXBot в браузере и подключите {name} снова.",
+  "sitePage.connect.failure.failed": "{name} не завершил подключение. Попробуйте снова.",
+  "sitePage.connect.restartHint":
+    "В HXBot откройте «{marketplace}», затем «{apps}», затем {name} и выберите «{connect}».",
+  "sitePage.connect.notOpened":
+    "Запустите HXBot и попробуйте снова. Если HXBot нет на этом компьютере, скачайте его и подключите {name} в приложении.",
+  "sitePage.openApp.title": "Ничего не открылось?",
+  "sitePage.openApp.dismiss": "Не сейчас",
+  "sitePage.billing.pageTitle": "Оплата HXBot",
+  "sitePage.billing.updatedTitle": "Оплата обновлена",
+  "sitePage.billing.updatedBody": "Вернитесь в HXBot. Эту страницу можно закрыть.",
+  "sitePage.billing.cancelledTitle": "Оплата отменена",
+  "sitePage.billing.cancelledBody": "Деньги не списаны. Вернитесь в HXBot.",
+  "sitePage.report.pageTitle": "Пожаловаться на размещённый сайт — HXBot",
+  "sitePage.report.title": "Пожаловаться на размещённый сайт",
+  "sitePage.report.intro": "Отправьте жалобу на вредный или незаконный контент по адресу HXBot.",
+  "sitePage.report.hostnameLabel": "Адрес сайта",
+  "sitePage.report.hostnameMissing": "Введите адрес сайта",
+  "sitePage.report.reasonLabel": "Причина",
+  "sitePage.report.reason.phishing": "Фишинг",
+  "sitePage.report.reason.malware": "Вредоносное ПО",
+  "sitePage.report.reason.abuse": "Злоупотребление",
+  "sitePage.report.reason.copyright": "Авторское право",
+  "sitePage.report.reason.other": "Другое",
+  "sitePage.report.detailsLabel": "Подробности",
+  "sitePage.report.optional": "Необязательно",
+  "sitePage.report.detailsPlaceholder": "Что не так с этим сайтом?",
+  "sitePage.report.send": "Отправить",
+  "sitePage.report.sending": "Отправка…",
+  "sitePage.report.tooMany": "Слишком много жалоб. Попробуйте позже.",
+  "sitePage.report.sendFailed": "Не удалось отправить жалобу. Попробуйте снова.",
+  "sitePage.report.writeTo": "Также можно написать на {email}.",
+  "sitePage.report.sentTitle": "Жалоба отправлена",
+  "sitePage.report.sentBody": "Спасибо. Мы получили вашу жалобу.",
+  "sitePage.report.home": "На главную страницу",
+  "sitePage.marketplace.downloadFor": "Скачать для {platform}",
+} as const satisfies PartialTranslation<typeof source>;

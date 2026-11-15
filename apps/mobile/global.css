@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@import "heroui-native/styles";
+
+@import "@hxbot/brand/tokens.css";
+@import "@hxbot/brand/tokens-native.css";
+
+@theme inline {
+  --color-sheet: var(--hxbot-bg-sheet);
+  --color-grouped: var(--hxbot-bg-grouped);
+  --color-grouped-secondary: var(--hxbot-text-grouped-secondary);
+  --color-grouped-border: var(--hxbot-border-grouped);
+  --radius-grouped: var(--hxbot-radius-grouped);
+  --color-canvas: var(--hxbot-bg-native-canvas);
+  --color-sidebar: var(--hxbot-bg-native-sidebar);
+  --color-control: var(--hxbot-bg-control);
+  --color-control-active: var(--hxbot-bg-control-active);
+  --color-raised: var(--hxbot-bg-surface-raised);
+  --color-text-secondary: var(--hxbot-text-secondary);
+  --color-text-dim: var(--hxbot-text-dim);
+  --color-accent-text: var(--hxbot-accent-text);
+  --color-success-text: var(--hxbot-success-text);
+  --color-warning-text: var(--hxbot-warning-text);
+  --color-danger-text: var(--hxbot-danger-text);
+  --color-brand-logo: var(--hxbot-logo-production);
+  --color-action: var(--hxbot-action);
+  --color-action-foreground: var(--hxbot-action-foreground);
+  --color-drawer-scrim: var(--hxbot-drawer-scrim);
+  --color-scroll-edge-overlay: var(--hxbot-scroll-edge-overlay);
+
+  --text-display: 2rem;
+  --text-display--line-height: 2.375rem;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.75rem;
+  --text-heading: 1.5rem;
+  --text-heading--line-height: 1.875rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+
+  --tracking-hxbot-tight: var(--hxbot-tracking-tight);
+  --tracking-hxbot-wide: var(--hxbot-tracking-wide);
+}
+
+@layer theme {
+  :root {
+    color-scheme: light dark;
+
+    /* uniwind reads theme values only from @variant blocks, so a plain :root alias
+     * loses to HeroUI's own near-black dark --background. */
+    @variant dark {
+      --background: var(--hxbot-bg-native-canvas);
+      /* Only the Android menu draws on --overlay. HeroUI's light value is already #ffffff. */
+      --overlay: var(--hxbot-bg-surface-raised);
+    }
+
+    /* HeroUI consumes these aliases; HXBot tokens remain the source of truth. */
+    --foreground: var(--hxbot-text-primary);
+    --surface: var(--hxbot-bg-surface);
+    --surface-foreground: var(--hxbot-text-primary);
+    --surface-secondary: var(--hxbot-bg-control);
+    --surface-secondary-foreground: var(--hxbot-text-primary);
+    --surface-tertiary: var(--hxbot-bg-surface-raised);
+    --surface-tertiary-foreground: var(--hxbot-text-primary);
+    --overlay-foreground: var(--hxbot-text-primary);
+    --backdrop: var(--hxbot-bg-overlay);
+    --muted: var(--hxbot-text-muted);
+    --default: var(--hxbot-bg-control);
+    --default-foreground: var(--hxbot-text-primary);
+    --accent: var(--hxbot-accent);
+    --accent-foreground: var(--hxbot-text-on-accent);
+    --success: var(--hxbot-success);
+    --success-foreground: var(--hxbot-text-on-status);
+    --warning: var(--hxbot-warning);
+    --warning-foreground: var(--hxbot-text-on-status);
+    --danger: var(--hxbot-danger);
+    --danger-foreground: var(--hxbot-text-on-accent);
+    --border: var(--hxbot-border);
+    --separator: var(--hxbot-border-strong);
+    --focus: var(--hxbot-accent);
+    --link: var(--hxbot-accent-text);
+    --field-background: var(--hxbot-bg-control);
+    --field-foreground: var(--hxbot-text-primary);
+    --field-placeholder: var(--hxbot-text-muted);
+    --field-border: var(--hxbot-border-strong);
+
+    /* A 4 pt base produces the 8 / 12 / 16 px radius family used on desktop. */
+    --radius: 0.25rem;
+    --field-radius: 0.75rem;
+    --surface-shadow: var(--hxbot-shadow-card);
+    --overlay-shadow: var(--hxbot-shadow-overlay);
+    --field-shadow: 0 0 0 0 transparent inset;
+  }
+}
+
+/* Inter is the desktop and web font. The expo-font plugin in app.json embeds it as one family, so
+ * `fontWeight` picks the face. A build without the files falls back to the system font. HeroUI
+ * reads --font-normal to --font-bold. */
+@media ios {
+  :root {
+    --font-sans: Inter;
+    --font-normal: Inter;
+    --font-medium: Inter;
+    --font-semibold: Inter;
+    --font-bold: Inter;
+    --font-mono: ui-monospace;
+  }
+}
+
+@media android {
+  :root {
+    --font-sans: Inter;
+    --font-normal: Inter;
+    --font-medium: Inter;
+    --font-semibold: Inter;
+    --font-bold: Inter;
+    --font-mono: monospace;
+  }
+}

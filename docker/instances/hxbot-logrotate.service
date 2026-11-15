@@ -1,0 +1,8 @@
+# Rotates the container logs of the HXBot instances. hxbot-logrotate.timer starts it.
+# `hxbot-instance setup` installs it. See docs/docker.md#logs.
+[Unit]
+Description=Rotate the container logs of the HXBot instances
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/logrotate --state /var/lib/logrotate/hxbot-docker.status /etc/hxbot-docker/logrotate.conf

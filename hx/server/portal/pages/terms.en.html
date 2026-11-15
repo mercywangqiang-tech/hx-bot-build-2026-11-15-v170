@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<title>Terms of Service · HXBot</title>
+<meta name="description" content="Terms of Service for HXBot Research Edition: eligibility, accounts, software license, AI models and third-party services, agent risks, acceptable use, liability and disputes.">
+<link rel="alternate" hreflang="zh-CN" href="https://bot.hxallai.com/terms/">
+<link rel="alternate" hreflang="en" href="https://bot.hxallai.com/en/terms/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  /* HXBot · Terms of Service。由 hx/scripts/site-pages.mjs 从 hx/docs/site/terms.en.md 生成，请勿直接修改。 */
+  :root {
+    --blue: #0156D3; --blue-2: #3D8BFF; --violet: #8B6CF2; --orange: #EB6100;
+    --ink: #1F1F1F; --ink-2: #444746; --muted: #5F6368; --line: #E1E3E1; --paper: #F8FAFD; --chip: #E8F0FE;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--sans); color: var(--ink); background: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.smooth { scroll-behavior: smooth; }
+  body { margin: 0; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  svg.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .skip { position: absolute; left: 12px; top: -48px; z-index: 30; padding: 8px 14px; border-radius: 999px; background: var(--blue); color: #FFFFFF; }
+  .skip:focus { top: 12px; }
+
+  header { position: sticky; top: 0; z-index: 20; background: #FFFFFF; box-shadow: 0 1px 0 var(--line); }
+  .bar { display: flex; align-items: center; gap: 12px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+  .brand:hover { text-decoration: none; }
+  .brand svg { width: 18px; height: 34px; flex: none; }
+  .spacer { flex: 1; }
+  .nav { display: flex; align-items: center; gap: 2px; }
+  .nav a { font-size: 14px; color: var(--ink-2); padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .nav a[aria-current="page"] { color: var(--blue); background: var(--chip); }
+  .nav a.lang { margin-left: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+  @media (max-width: 560px) { .brand .name { display: none; } .nav a { padding: 8px 10px; } }
+  /* 窄屏上五个入口放不下时，顶栏的入口可以左右滑动，页面本身不再被撑宽 */
+  @media (max-width: 480px) { .nav { min-width: 0; overflow-x: auto; scrollbar-width: none; } .nav::-webkit-scrollbar { display: none; }
+    .nav a { padding: 8px 8px; font-size: 13.5px; } }
+
+  .head { position: relative; overflow: hidden; padding: 56px 0 40px; border-bottom: 1px solid var(--line);
+    background: radial-gradient(55% 80% at 8% 10%, rgba(61, 139, 255, .10) 0%, rgba(61, 139, 255, 0) 62%),
+                radial-gradient(45% 70% at 92% 0%, rgba(139, 108, 242, .09) 0%, rgba(139, 108, 242, 0) 60%),
+                radial-gradient(35% 60% at 70% 110%, rgba(235, 97, 0, .06) 0%, rgba(235, 97, 0, 0) 70%), #FFFFFF; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    color: var(--blue); background: var(--chip); box-shadow: inset 0 0 0 1px #D3E3FD; }
+  h1 { margin: 16px 0 0; font-size: clamp(30px, 4.2vw, 46px); line-height: 1.22; font-weight: 600; letter-spacing: -.01em; }
+  html[lang="zh-CN"] h1 { letter-spacing: .02em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+  .meta b { font-weight: 500; color: var(--ink-2); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 32px; padding-bottom: 72px; }
+  .layout > main { min-width: 0; }
+  @media (min-width: 1000px) { .layout { grid-template-columns: 250px minmax(0, 1fr); gap: 56px; padding-top: 40px; } }
+  .toc { align-self: start; border-radius: 16px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+  @media (min-width: 1000px) { .toc { position: sticky; top: 88px; max-height: calc(100vh - 112px); overflow: auto; background: none; box-shadow: none; } }
+  .toc summary { cursor: pointer; padding: 12px 16px; font-size: 14px; font-weight: 600; color: var(--ink-2); list-style: none; }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc summary::after { content: "▾"; float: right; color: var(--muted); }
+  .toc[open] summary::after { content: "▴"; }
+  @media (min-width: 1000px) { .toc summary { padding: 0 10px 8px; cursor: default; pointer-events: none; } .toc summary::after, .toc[open] summary::after { content: none; } }
+  .toc ol { list-style: none; margin: 0; padding: 0 8px 12px; }
+  @media (min-width: 1000px) { .toc ol { padding: 0; } }
+  .toc a { display: block; padding: 6px 10px; border-radius: 8px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+  .toc a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .toc a.is-active { color: var(--blue); background: var(--chip); }
+  .toc .sub a { padding-left: 24px; font-size: 13px; color: var(--muted); }
+
+  article { min-width: 0; max-width: 820px; font-size: 16px; }
+  html[lang="zh-CN"] article { line-height: 1.85; }
+  article h2 { margin: 52px 0 12px; font-size: 23px; line-height: 1.35; font-weight: 600; scroll-margin-top: 84px; }
+  article h3 { margin: 32px 0 8px; font-size: 18px; line-height: 1.4; font-weight: 600; scroll-margin-top: 84px; }
+  article > :first-child { margin-top: 0; }
+  article p { margin: 12px 0; }
+  article ul, article ol { margin: 12px 0; padding-left: 1.5em; }
+  article li { margin: 6px 0; }
+  article li > ul, article li > ol { margin: 6px 0; }
+  article a { overflow-wrap: anywhere; }
+  article strong { font-weight: 600; }
+  .anchor { margin-left: 10px; font-weight: 400; color: #C4C7C5; opacity: 0; transition: opacity .2s ease; }
+  h2:hover .anchor, h3:hover .anchor { opacity: 1; }
+  .anchor:hover { color: var(--blue); text-decoration: none; }
+  .note { margin: 20px 0; padding: 16px 20px; border-radius: 16px; background: linear-gradient(180deg, #F3F7FE 0%, #F8FAFD 100%);
+    box-shadow: inset 0 0 0 1px #D3E3FD; }
+  .note > :first-child { margin-top: 0; }
+  .note > :last-child { margin-bottom: 0; }
+  .note__t { margin-bottom: 6px !important; }
+  .note__t strong { color: var(--blue); }
+  .table { margin: 16px 0; overflow-x: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.65; }
+  th, td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { background: var(--paper); font-weight: 600; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .table--wide table { min-width: 720px; }
+  .table--wide td:first-child, .table--pair td:first-child { font-weight: 500; }
+  .table--pair td:first-child { white-space: nowrap; }
+  @media (max-width: 640px) {
+    .table--pair td:first-child { white-space: normal; min-width: 7em; }
+    .table--stack { overflow: visible; border-radius: 0; box-shadow: none; }
+    .table--stack table { min-width: 0; }
+    .table--stack thead { display: none; }
+    .table--stack tbody, .table--stack tr, .table--stack td { display: block; }
+    .table--stack tr { margin: 0 0 12px; padding: 6px 0; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+    .table--stack td { padding: 6px 16px; border: 0; }
+    .table--stack td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .table--stack td:first-child { font-size: 15.5px; font-weight: 600; }
+    .table--stack td:first-child::before { content: none; }
+  }
+  code { font-family: var(--mono); font-size: .88em; padding: .12em .4em; border-radius: 6px; background: #F1F3F4; overflow-wrap: anywhere; }
+  .code { position: relative; margin: 16px 0; }
+  .code pre { margin: 0; padding: 16px 18px; padding-right: 80px; overflow-x: auto; border-radius: 14px; background: #0B1220; color: #E3E3E3; font-size: 14px; line-height: 1.6; }
+  .code pre code { padding: 0; background: none; color: inherit; overflow-wrap: normal; }
+  .copy { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border: 0; border-radius: 999px; font: inherit; font-size: 12px;
+    color: #E3E3E3; background: rgba(255, 255, 255, .12); cursor: pointer; }
+  .copy:hover { background: rgba(255, 255, 255, .22); }
+  .top { display: inline-block; margin-top: 40px; font-size: 14px; }
+  .tag { display: inline-block; margin-right: 2px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 20px;
+    letter-spacing: .06em; vertical-align: 2px; color: #FFFFFF; }
+  .tag--hot { background: var(--orange); }
+  .tag--new { background: var(--blue); }
+  .on { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 20px; vertical-align: 1px;
+    color: var(--ink-2); background: #F1F3F4; white-space: nowrap; }
+  .shot { margin: 16px 0 20px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); background: #F5F5F7; }
+  .shot figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .bar { flex-wrap: wrap; height: auto; padding-top: 20px; padding-bottom: 20px; gap: 8px 18px; }
+  footer .brand { font-weight: 400; color: var(--muted); }
+  footer .links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--blue); }
+  @media print {
+    header, .toc, .anchor, .copy, .top, footer nav { display: none !important; }
+    .head { padding: 0 0 16px; background: none; }
+    .layout { display: block; padding: 16px 0 0; }
+    article { max-width: none; }
+    a { color: inherit; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<svg class="defs" aria-hidden="true" focusable="false"><defs><symbol id="hx-giraffe" viewBox="-6 -6 307.75 590.25"><path d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><path d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84ZM66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67ZM28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20ZM19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97ZM81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92ZM126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21ZM200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98ZM263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01ZM81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78ZM1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56ZM148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74ZM218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59ZM271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82ZM2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z" fill="#79512B"/><path d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></symbol></defs></svg>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/en/" aria-label="HXBot · Portal"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span class="name">HXBot</span></a>
+    <span class="spacer"></span>
+    <nav class="nav" aria-label="HXBot"><a href="/en/guide/">Guide</a><a href="/en/whats-new/">What's new</a><a href="/en/terms/" aria-current="page">Terms</a><a href="/en/privacy/">Privacy</a><a class="lang" href="/terms/?lang=zh" data-lang="zh" hreflang="zh-CN" lang="zh-CN">中文</a></nav>
+  </div>
+</header>
+<div class="head">
+  <div class="wrap">
+    <span class="chip">HXBot Research Edition</span>
+    <h1>Terms of Service</h1>
+    <ul class="meta"><li><b>Effective</b>: November 13, 2026</li><li><b>Last updated</b>: November 13, 2026</li><li><b>Version</b> 1.2</li></ul>
+  </div>
+</div>
+<div class="wrap layout">
+  <details class="toc" open>
+    <summary>Contents</summary>
+    <nav aria-label="Contents"><ol><li><a href="#about">1. Who we are and what these Terms cover</a></li><li><a href="#research">2. Nature of the research edition and eligibility</a></li><li><a href="#account">3. Accounts, passwords and security</a></li><li><a href="#how">4. How the Service works</a></li><li><a href="#license">5. Client Software license and intellectual property</a></li><li><a href="#third-party">6. AI models and third-party services</a></li><li><a href="#agents">7. What agents can do, and the risks</a></li><li><a href="#servers">8. Servers, members and invitations</a></li><li><a href="#acceptable-use">9. Acceptable use</a></li><li><a href="#content">10. Your content</a></li><li><a href="#fees">11. Fees</a></li><li><a href="#export">12. Export controls and sanctions</a></li><li><a href="#privacy">13. Privacy and personal information</a></li><li><a href="#changes">14. Changes, suspension and termination</a></li><li><a href="#disclaimer">15. Disclaimer</a></li><li><a href="#liability">16. Limitation of liability</a></li><li><a href="#indemnity">17. Indemnity</a></li><li><a href="#law">18. Governing law and disputes</a></li><li><a href="#general">19. General</a></li></ol></nav>
+  </details>
+  <main id="main">
+    <article>
+<aside class="note"><p class="note__t"><strong>Please read carefully</strong></p><p>These Terms are an agreement between you and Great Unicorn Intelligence Shenzhen Co., Ltd. about your use of HXBot Research Edition. <strong>Clauses that exclude or limit our liability, restrict your rights, or set the governing law and how disputes are resolved are shown in bold. Please read them with particular care.</strong> If you do not agree to these Terms, do not register for, sign in to, download, install or use the Service.</p></aside>
+<aside class="note"><p class="note__t"><strong>Key points (a summary, not a substitute for the Terms)</strong></p><ul><li>The research edition is free and for non-commercial research only. Register an account and verify your email address and mobile number to use it.</li><li>Agents run on your own computer. Conversations and files stay there; our servers do not store them.</li><li>We do not provide AI models. The model services you connect are provided by third parties or run by you, under their own terms.</li><li>Agents can read and write files, run commands, use the network and operate your computer: supervise their work, check results and keep backups.</li><li>The research edition is provided “as is” and may change or end. To the extent the law allows, our liability is limited. Your statutory rights as a consumer are not affected.</li></ul></aside>
+<h2 id="about">1. Who we are and what these Terms cover<a class="anchor" href="#about" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>1.1 The Service is provided by <strong>Great Unicorn Intelligence Shenzhen Co., Ltd.</strong> (“HX AI”, “we”, “us” or “our”), registered at Room 1711, Xunlei Building, 3709 Baishi Road, Nanshan District, Shenzhen, Guangdong, China. Contact: <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>.</p>
+<p>1.2 The “Service” means HXBot Research Edition, including:</p>
+<ul><li>the portal and download center at <a href="/"><code>https://bot.hxallai.com</code></a>, and pages such as these Terms, the Privacy Policy and the Guide;</li><li>the web app (<code>/app</code>) and the server invitation page (<code>/join</code>);</li><li>the account, signaling and relay services (<code>api.bot.hxallai.com</code>, <code>signal.bot.hxallai.com</code>, <code>turn.bot.hxallai.com</code>);</li><li>the desktop (macOS, Windows), Android and iOS apps we offer in the download center (the “Client Software”);</li><li>related documentation, email support and updates.</li></ul>
+<p>1.3 These Terms, together with the Privacy Policy (<a href="/en/privacy/">https://bot.hxallai.com/en/privacy/</a>), the license that comes with the Client Software (see section 5) and the instructions we publish in the Service, form the entire agreement between you and us about the Service.</p>
+<p>1.4 By registering for, signing in to, downloading, installing or using any part of the Service, or by clicking “Create account”, “Continue” or a similar button on the registration page or in the Client Software, you confirm that you have read, understood and agree to these Terms. <strong>If you use the Service on behalf of a company, university, research institution or other organization, you confirm that you are authorized to accept these Terms for it, and “you” then means both you and that organization.</strong></p>
+<h2 id="research">2. Nature of the research edition and eligibility<a class="anchor" href="#research" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>2.1 The research edition is a preview for researchers who study multi-agent collaboration, and it is <strong>for non-commercial research purposes only</strong>. You must not use the Service or the Client Software for any commercial purpose, including delivering projects or results to clients, providing paid services, product demonstrations or sales support, working for others for profit, or integrating it into a commercial product or service.</p>
+<p>2.2 The Service is currently free of charge. Its features, availability and who may use it will change as the research progresses. It may contain defects, and it may be suspended or ended (see section 14). <strong>The research edition comes with no service level agreement (SLA). We do not promise that the Service will run continuously, on time, securely or without errors.</strong></p>
+<p>2.3 Eligibility: you must be at least 18 years old and have full legal capacity; if the age of majority where you live is higher than 18, you must have reached it. The Service is not intended for minors. You must also not be a restricted person, or be located in a restricted country or region, as described in section 12.</p>
+<p>2.4 Access: anyone who meets section 2.3 may register an account on the portal at <a href="/"><code>https://bot.hxallai.com</code></a>. According to the needs of the research, we may open registration and sign-in only to listed email addresses or email domains, and we may pause or stop registration. We decide whether and to whom we grant access and when access ends.</p>
+<p>2.5 If laws, regulations or competent authorities require it, we may ask you to provide and verify additional identity information. If you do not provide it, we may be unable to continue providing the related services to you.</p>
+<h2 id="account">3. Accounts, passwords and security<a class="anchor" href="#account" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>3.1 <strong>Registration.</strong> To register, you give your email address, a password, a username, your mobile number, your job title and your company name, and you verify your email address (we email you a code) and your mobile number (we text you a code) as the page asks. Use an email address and a mobile number that are your own and valid, give your real job title and company, and tell us when any of them changes. An account is for one person; one email address and one mobile number can register only one account, and a username cannot be one that someone else uses.</p>
+<p>3.2 <strong>Username.</strong> Your username must not use the name of another person or organization, must not contain anything unlawful or that infringes the rights of others, and must not suggest that you work with us. If it does, we may ask you to change it or suspend your account.</p>
+<p>3.3 <strong>Your password is for you alone. Keep it safe, do not tell it to anyone, and do not use it on other sites. Do not give your password, a signed-in device or a session to anyone else.</strong> We never store your password itself, only a salted hash computed from it, which cannot be turned back into the password; we cannot see your password. If you forget it, choose “Forgot password?” under the sign-in form on the portal and set a new one with the code we email you.</p>
+<p>3.4 <strong>Signing in with an account at another platform.</strong> Where we have turned on sign-in with a platform (WeChat, Alipay, Douyin, Apple, Google or Facebook), you can sign in to the Service with your account there. The first time, you register an account of the Service or link one you already have. The platform handles your information on the platform under its own terms and privacy policy, and it decides whether your account there can be used.</p>
+<p>3.5 You are responsible for activity carried out through your account, your sessions and the servers you publish, except where it is caused by our fault. If you believe your password has leaked or someone else is using your account, change your password, email <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> right away and sign out the sessions you do not recognize under Settings → Profile → Account sessions in the app.</p>
+<p>3.6 For security reasons (for example unusual sign-ins, unusual request rates or a possible password leak), we may ask you to sign in again, revoke your sessions, ask you to change your password or temporarily disable your account.</p>
+<p>3.7 You can delete your account at any time under Settings → Profile in the apps, or ask us to delete it through <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> (see section 14.3). A deleted account cannot be restored.</p>
+<h2 id="how">4. How the Service works<a class="anchor" href="#how" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>4.1 <strong>Local first.</strong> Agents run on the computer where you installed the desktop app (called a “server” or “host” in the app). Agents, conversations, the files you upload and create, workspaces, built-in browser data and local settings are all stored on that computer. Our servers do not store them.</p>
+<p>4.2 <strong>Remote access.</strong> The web app and the mobile apps reach your computer over an encrypted connection. The signaling service only sets up the connection. When the two ends cannot connect directly, the relay service forwards end-to-end encrypted data that we cannot read and do not store.</p>
+<p>4.3 <strong>What our servers store.</strong> To provide accounts, sign-in, the server directory, members and invitations, our servers store limited account and technical information, as described in the Privacy Policy.</p>
+<p>4.4 <strong>Availability depends on your computer.</strong> When the computer is off, asleep or offline, or the desktop app is not running, the web app, the mobile apps and the members of that server cannot use its agents.</p>
+<p>4.5 <strong>Updates.</strong> The research edition does not update itself from third-party channels. New versions are published in the download center, and you install them by downloading again. To fix security issues, we may require you to upgrade before you can keep using the Service.</p>
+<h2 id="license">5. Client Software license and intellectual property<a class="anchor" href="#license" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>5.1 The Client Software is licensed under the PolyForm Noncommercial License 1.0.0 (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener">https://polyformproject.org/licenses/noncommercial/1.0.0/</a>). The license and the copyright notices (the LICENSE and NOTICE files) are included with every installer and with the source code. Your use, copying, modification and distribution of the Client Software are governed by that license. Where the license and these Terms differ, the license prevails for the Client Software itself, and these Terms prevail for the rest of the Service (servers, accounts, download center and so on).</p>
+<p>5.2 The Client Software contains open-source components of third parties and works of other right holders. Those parts are subject to their own license terms, and the rights in them belong to their respective owners. These Terms grant you no rights beyond those the license expressly grants.</p>
+<p>5.3 “HX AI”, “HXBot”, their Chinese names and the giraffe logo are our names and marks. Apart from truthfully stating that you use the Service, you may not use them without our written consent, or suggest that we endorse or cooperate with you or your products.</p>
+<p>5.4 You are welcome to send us feedback and suggestions at <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>. You agree that we may use your feedback free of charge to improve the Service. We will not make your identity public because of it.</p>
+<h2 id="third-party">6. AI models and third-party services<a class="anchor" href="#third-party" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>6.1 <strong>We do not provide AI models, and we do not provide a generative AI service to you.</strong> The model services you connect in the Client Software, such as ChatGPT (Codex), Claude, Grok, Gemini, free models offered through the third-party open-source tool OpenCode, compatible endpoints of model platforms in China, or models you run on your own computer, are provided by third parties or run by you. When an agent calls a model, the request goes directly from your computer to the provider you chose, using your own account, key or subscription.</p>
+<p>6.2 You must follow the terms of service, usage policies, regional restrictions and pricing of the model services and other third-party services you use (including plugins, connectors, MCP servers, websites, and speech recognition and voice services), and you bear their costs. We are not a party to your agreements with third parties, and <strong>we are not responsible for the content, availability, accuracy or security of third-party services, or for how they handle data.</strong></p>
+<p>6.3 <strong>If you use AI models to provide generative AI services to the public in mainland China, or publish text, images, audio, video or other content generated or synthesized by AI, you are responsible for complying with the Interim Measures for the Management of Generative Artificial Intelligence Services, the Provisions on the Administration of Deep Synthesis of Internet-based Information Services, the Measures for Labeling AI-Generated Synthetic Content and related rules, including any security assessment, filing and labeling duties.</strong> Elsewhere you must likewise follow local AI laws, such as the requirements of the EU Artificial Intelligence Act on disclosing AI-generated or manipulated content.</p>
+<p>6.4 Third-party services may be located outside your country or region. Before you send data, especially other people's personal information, to a third-party service, make sure you are entitled to do so and that you meet the applicable data protection and cross-border transfer requirements.</p>
+<h2 id="agents">7. What agents can do, and the risks<a class="anchor" href="#agents" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>7.1 On the computer that runs them, agents can read, create, change and delete files, run commands and programs, access the network and operate the built-in browser. If you turn on Computer Use, they can also see the screen and use the keyboard and mouse. Such actions can be hard to undo and can cost money (for example by calling paid APIs).</p>
+<p>7.2 AI output can be inaccurate, incomplete, outdated or biased, can look right while being wrong, and can infringe the rights of others. <strong>Supervise your agents' work. Check their output before you adopt or rely on it, take irreversible actions or send content to others, and back up important data regularly.</strong></p>
+<p>7.3 <strong>Run agents only on computers and accounts you are entitled to control, and run only tasks, plugins and servers you trust.</strong> Web pages, emails and files can contain content designed to trick an agent into harmful actions (“prompt injection”). Be careful when granting permissions.</p>
+<p>7.4 <strong>You must not use the Service for high-risk purposes that could endanger people or cause serious loss,</strong> including medical diagnosis or treatment decisions, legal advice, investment or credit decisions, hiring or education admission decisions, critical information infrastructure or industrial control systems, weapons systems, autonomous driving, and automated decisions that the law prohibits or requires a human to review.</p>
+<p>7.5 You are responsible for the actions you instruct or authorize agents to take, and for their consequences.</p>
+<h2 id="servers">8. Servers, members and invitations<a class="anchor" href="#servers" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>8.1 In the desktop app you can publish your server and invite others under Server settings → Members. Invited members can use the agents on your computer according to the role you set (owner, admin or member), and their conversations and the files they send are stored on your computer.</p>
+<p>8.2 <strong>You are responsible for whom you invite, the roles you grant and what they do through your server.</strong> Anyone who has a permanent invite link can use it, so send it only to people you trust and revoke it when it is no longer needed.</p>
+<p>8.3 When personal information of members or others is processed on your computer, you decide the purposes and means of that processing and must comply with the applicable data protection laws. For data on your computer, you, not we, are the party that decides why and how it is processed.</p>
+<p>8.4 When you join someone else's server, its owner, admins and other members can see your email address, display name and avatar, and the owner and admins may be able to see your conversations and files on that server. Do not share sensitive content on servers you do not trust.</p>
+<h2 id="acceptable-use">9. Acceptable use<a class="anchor" href="#acceptable-use" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>You must not use the Service to do, or to help others do, any of the following:</p>
+<ul><li>(a) create, copy, publish or spread information prohibited by law, including content that endangers national security, discloses state secrets, subverts state power or undermines national unity; harms national honor and interests; promotes terrorism or extremism; incites ethnic hatred or discrimination or undermines ethnic unity; undermines state religious policy or promotes cults or superstition; spreads rumors or disrupts economic or social order; spreads obscenity, pornography, gambling, violence, murder or terror, or incites crime; or insults or defames others or infringes their lawful rights and interests;</li><li>(b) generate, store or spread sexual content involving minors, or any content that exploits, abuses or harms minors;</li><li>(c) infringe the intellectual property, trade secrets, likeness, reputation, privacy or personal information of others, including collecting or processing personal information without consent, and creating deep-synthesis content from another person's likeness or voice without consent;</li><li>(d) commit fraud or phishing, impersonate others, send spam, manipulate public opinion or interfere with elections;</li><li>(e) develop or distribute malware, access, scan or attack any system or network without authorization, or circumvent security measures;</li><li>(f) attack, disrupt or overload the Service, circumvent the access list, rate limits or other access controls, or use the relay service for traffic unrelated to the Service;</li><li>(g) reverse engineer, decompile or systematically scrape our server software, except as expressly permitted by law or by the Client Software license;</li><li>(h) develop biological, chemical, nuclear or radiological weapons or other weapons of mass destruction, or assist terrorism, violent crime or cyberattacks;</li><li>(i) process state secrets, work secrets or other information that must be kept confidential by law, or process important data, core data or other people's sensitive personal information without authorization;</li><li>(j) violate export controls, sanctions or other applicable laws (see section 12);</li><li>(k) use the Service commercially (see section 2.1) or breach the Client Software license;</li><li>(l) breach the terms or usage policies of the third-party services you use.</li></ul>
+<p>If we find, or receive a report, that you have breached these rules, we may, in accordance with the law, warn you, remove the content concerned, restrict features, or suspend or end your access, keep the relevant records as required by law, and report to the competent authorities.</p>
+<h2 id="content">10. Your content<a class="anchor" href="#content" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>10.1 The content you create in conversations with agents, upload or generate on your computer (“Your Content”) belongs to you or the relevant right holders. We claim no rights in Your Content. Whether AI-generated content is protected by copyright or similar rights depends on the applicable law.</p>
+<p>10.2 For the small amount of content you upload to our servers for display, such as your display name, avatar, server names and server logos, you grant us a non-exclusive, royalty-free, worldwide license to store, copy and show it to the relevant users (for example members of the same server), solely to operate the Service. The license ends when you delete that content or your account, except where the law requires us to keep it.</p>
+<p>10.3 You confirm that you are entitled to provide Your Content and that Your Content and its use do not break the law or infringe the rights of others.</p>
+<h2 id="fees">11. Fees<a class="anchor" href="#fees" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>The research edition of the Service is free. You bear the costs of the model services and other third-party services you connect, and of your own network and devices. If we ever charge for the Service, we will tell you in advance and charge you only with your agreement.</p>
+<h2 id="export">12. Export controls and sanctions<a class="anchor" href="#export" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>The Service and the Client Software may be subject to the export control and sanctions laws of China, the United States, the European Union and other countries and regions. You represent and warrant that you are not located in, controlled by or acting on behalf of a comprehensively sanctioned country or region; that you are not named on any applicable sanctions or export control list, including those of the United Nations, China, the United States and the European Union; and that you will not use the Service or the Client Software for any prohibited end use or make them available to restricted parties.</p>
+<h2 id="privacy">13. Privacy and personal information<a class="anchor" href="#privacy" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>We process your personal information as described in the Privacy Policy (<a href="/en/privacy/">https://bot.hxallai.com/en/privacy/</a>), which forms part of these Terms.</p>
+<h2 id="changes">14. Changes, suspension and termination<a class="anchor" href="#changes" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>14.1 We may change the features of the Service. For changes that materially and adversely affect your rights or obligations, we will notify you a reasonable time in advance (normally at least 15 days) through the portal, the Client Software or email, except for urgent changes needed to address security risks or legal requirements.</p>
+<p>14.2 We may update these Terms. Updated Terms will be posted on this page with their date, and material changes will be notified in advance as described in section 14.1. If you keep using the Service after the changes take effect, you accept the updated Terms. If you do not agree, stop using the Service; you may also ask us to delete your account.</p>
+<p>14.3 You may stop using the Service at any time and delete your account under Settings → Profile in the apps, or ask us to delete it by emailing <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>.</p>
+<p>14.4 We may suspend or end your access if you breach these Terms, the Client Software license or the law, or if your use puts the Service, other users or third parties at risk. In less serious cases we will first tell you and give you a chance to fix the problem, unless the law provides otherwise or the matter is urgent.</p>
+<p>14.5 If the research program ends or we decide to discontinue the research edition, we will try to give you at least 30 days' notice.</p>
+<p>14.6 After termination: your right to use the Service ends; data stored on your computer stays there for you to handle; and we delete or anonymize your account information as described in the Privacy Policy. Whether the Client Software license ends is governed by that license. Sections 5.2 to 5.4, 7.5, 8.2, 9, 10 and 15 to 19 survive termination.</p>
+<h2 id="disclaimer">15. Disclaimer<a class="anchor" href="#disclaimer" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>To the maximum extent permitted by applicable law, the Service and the Client Software are provided “as is” and “as available”. The research edition may contain errors, interruptions, data loss or security vulnerabilities. We make no express or implied warranties about the Service, including warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy or continuous availability, and we do not warrant that AI-generated content is correct or suitable.</strong></p>
+<p>This section does not exclude or limit any warranty or right that cannot be excluded or limited by law, including your statutory rights as a consumer under the law of the place where you live.</p>
+<h2 id="liability">16. Limitation of liability<a class="anchor" href="#liability" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>16.1 <strong>To the maximum extent permitted by applicable law, we are not liable for indirect, incidental, special, punitive or consequential damages; loss of profits, revenue, business, goodwill or anticipated savings; or loss of or damage to data caused by actions agents take on your instructions or with your authorization, by your reliance on AI-generated content, by third-party services, by your devices or network, or by your failure to keep backups.</strong></p>
+<p>16.2 <strong>To the maximum extent permitted by applicable law, our total liability to you in connection with the Service is limited to the greater of RMB 100 and the amount you paid us for the Service in the 12 months before the event giving rise to the liability. The research edition is free, so normally you will not have paid us anything.</strong></p>
+<p>16.3 This section does not limit or exclude: (a) liability for property damage caused by our intent or gross negligence; (b) liability for personal injury or death; (c) liability for fraud; or (d) any other liability that cannot be limited or excluded under applicable law, including mandatory law of the place where you live as a consumer.</p>
+<p>16.4 <strong>If you are a consumer in the European Union, the European Economic Area or the United Kingdom:</strong> we are liable in accordance with the law for damage caused by intent or gross negligence and for injury to life, body or health. Where we breach an essential contractual obligation through slight negligence (an obligation whose fulfillment is necessary to perform the contract and on which you may normally rely), our liability is limited to the typical damage foreseeable when the contract was made. Otherwise we are not liable for slight negligence. Liability under product liability law is not affected.</p>
+<h2 id="indemnity">17. Indemnity<a class="anchor" href="#indemnity" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>To the extent permitted by applicable law, you will compensate us for reasonable losses (including reasonable legal fees) arising from third-party claims caused by your breach of these Terms, the Client Software license or the law, or by Your Content, the actions you instruct agents to take, or the conduct of members you invite. This section does not apply where mandatory consumer protection law of the place where you live does not allow such liability to be imposed on consumers.</p>
+<h2 id="law">18. Governing law and disputes<a class="anchor" href="#law" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>18.1 <strong>The formation, validity, interpretation, performance of and disputes about these Terms are governed by the laws of the People's Republic of China (for the purposes of these Terms only, excluding the laws of the Hong Kong and Macao Special Administrative Regions and Taiwan), without regard to its conflict-of-law rules.</strong></p>
+<p>18.2 <strong>The parties will first try to settle any dispute arising from these Terms or the Service amicably. If that fails, either party may bring the dispute before the competent people's court at HX AI's domicile (Nanshan District, Shenzhen, Guangdong, China).</strong></p>
+<p>18.3 If you are a consumer in the European Union, the European Economic Area or the United Kingdom, this choice of law does not deprive you of the protection of the mandatory law of the country where you habitually reside, and you may also bring proceedings before the competent courts of that country. If you are a consumer elsewhere, this section likewise does not take away any rights that you cannot waive under local law.</p>
+<p>18.4 We do not take part in, and are not obliged to take part in, dispute resolution proceedings before a consumer mediation or arbitration body.</p>
+<h2 id="general">19. General<a class="anchor" href="#general" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>19.1 <strong>Entire agreement.</strong> These Terms, together with the documents listed in section 1.3, are the entire agreement between you and us about the Service and replace any earlier arrangement on the same subject.</p>
+<p>19.2 <strong>Severability.</strong> If any provision of these Terms is found invalid or unenforceable, the remaining provisions stay in effect, and that provision will be applied, to the extent the law allows, in the way that comes closest to its original intent.</p>
+<p>19.3 <strong>No waiver.</strong> If we do not exercise a right under these Terms, or delay in doing so, we do not waive that right.</p>
+<p>19.4 <strong>Assignment.</strong> You may not transfer your rights and obligations under these Terms without our written consent. We may transfer these Terms in a merger, division, acquisition or transfer of assets and will tell you; the new party must protect you at least as well as these Terms do.</p>
+<p>19.5 <strong>Force majeure.</strong> Neither party is liable, to the extent affected, for failure or delay in performance caused by events that cannot be foreseen, avoided or overcome, such as natural disasters, war, epidemics, government action, power or network failures or outages of third-party services. The affected party will notify the other promptly and do its best to reduce losses.</p>
+<p>19.6 <strong>Notices.</strong> We send notices through the portal, the Client Software or the email address of your account. You can send notices to us at <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>.</p>
+<p>19.7 <strong>Language.</strong> These Terms are provided in Chinese and English. If the two versions differ, the Chinese version prevails, unless mandatory law of the place where you live provides otherwise.</p>
+<p>19.8 <strong>Contact.</strong> If you have any questions about these Terms, email <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> or write to Great Unicorn Intelligence Shenzhen Co., Ltd., Room 1711, Xunlei Building, 3709 Baishi Road, Nanshan District, Shenzhen, Guangdong, China.</p>
+    <a class="top" href="#">Back to top ↑</a>
+    </article>
+  </main>
+</div>
+<footer>
+  <div class="wrap bar">
+    <span class="brand"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span>© 2026 HX AI</span></span>
+    <span class="spacer"></span>
+    <nav class="links" aria-label="License"><a href="/en/guide/">Guide</a><a href="/en/whats-new/">What's new</a><a href="/en/terms/">Terms</a><a href="/en/privacy/">Privacy</a><a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener">License</a><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026163032号</a></nav>
+  </div>
+</footer>
+<script>
+(function () {
+  "use strict";
+  var KEY = "hxbot-portal-lang";
+  // 打开带 #章节 的地址时直接跳到该章节，之后页内跳转再平滑滚动
+  window.addEventListener("load", function () { setTimeout(function () { document.documentElement.classList.add("smooth"); }, 0); });
+  // 切换语言：记住选择，并保留当前章节（#…）
+  Array.prototype.forEach.call(document.querySelectorAll("[data-lang]"), function (a) {
+    a.addEventListener("click", function () {
+      try { localStorage.setItem(KEY, a.getAttribute("data-lang")); } catch (e) {}
+      a.setAttribute("href", a.getAttribute("href").split("#")[0] + location.hash);
+    });
+  });
+  // 目录：窄屏默认收起，点了章节后收起；滚动时高亮当前章节
+  var toc = document.querySelector(".toc");
+  var narrow = window.matchMedia && matchMedia("(max-width: 999px)");
+  if (toc && narrow && narrow.matches) toc.removeAttribute("open");
+  if (toc) toc.addEventListener("click", function (e) {
+    if (e.target.closest("a") && narrow && narrow.matches) toc.removeAttribute("open");
+  });
+  var links = {};
+  Array.prototype.forEach.call(document.querySelectorAll(".toc a[href^='#']"), function (a) { links[a.getAttribute("href").slice(1)] = a; });
+  var current = null;
+  function mark(id) {
+    if (current === id || !links[id]) return;
+    if (current && links[current]) links[current].classList.remove("is-active");
+    links[id].classList.add("is-active");
+    current = id;
+  }
+  var heads = document.querySelectorAll("article h2[id], article h3[id]");
+  var pending = false;
+  function spy() {
+    pending = false;
+    var id = heads.length ? heads[0].id : null;
+    for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top <= 110) id = heads[i].id; else break; }
+    mark(id);
+  }
+  window.addEventListener("scroll", function () { if (!pending) { pending = true; requestAnimationFrame(spy); } }, { passive: true });
+  window.addEventListener("load", spy);
+  spy();
+  // 代码块“复制”按钮
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (button) {
+    button.addEventListener("click", function () {
+      var text = button.parentNode.querySelector("code").textContent;
+      var label = button.textContent;
+      var done = function () { button.textContent = document.documentElement.lang === "en" ? "Copied" : "已复制"; setTimeout(function () { button.textContent = label; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+    });
+  });
+})();
+</script>
+</body>
+</html>

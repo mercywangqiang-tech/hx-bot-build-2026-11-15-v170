@@ -1,0 +1,48 @@
+import type { PartialTranslation } from "../../message";
+import type { messages as source } from "../en/computerUse";
+
+export const messages = {
+  // Computer Use settings, the permission help window, and the window highlight.
+  "computerUse.permission.screenRecording.title": "屏幕录制",
+  "computerUse.permission.screenRecording.description": "让 HXBot 截屏。点击和输入不需要它。",
+  "computerUse.permission.screenRecording.pane": "屏幕与系统音频录制",
+  "computerUse.permission.accessibility.title": "辅助功能",
+  "computerUse.permission.accessibility.description": "让 HXBot 点击和输入。打开后，HXBot 自己去开屏幕录制。",
+  "computerUse.permission.accessibility.pane": "辅助功能",
+  "computerUse.error.check": "HXBot 无法检查 Computer Use。",
+  "computerUse.error.openSettings": "HXBot 无法打开系统设置。",
+  "computerUse.error.startDriver": "HXBot 无法启动 Computer Use 驱动。",
+  "computerUse.checkAgain": "重新检查",
+  "computerUse.checking": "正在检查 Computer Use",
+  "computerUse.unavailable.title": "Computer Use 暂不可用",
+  "computerUse.permissions.title": "系统权限",
+  "computerUse.permissions.description":
+    "权限由 macOS 管理。点“授予”后，能自己打开的开关由 HXBot 打开，你只需输入密码或按指纹。",
+  "computerUse.ready.title": "Computer Use 已就绪",
+  "computerUse.ready.description": "HXBot 可以看到并操作这台电脑上的应用，该系统不需要额外权限。",
+  "computerUse.openSettingsFailed.title": "无法打开系统设置",
+  "computerUse.compact.title": "启用 Computer Use",
+  "computerUse.compact.description": "允许 HXBot 看到并操作这台电脑上的应用。",
+  "computerUse.granted": "已授予",
+  "computerUse.opening": "正在打开…",
+  "computerUse.manage": "管理",
+  "computerUse.grant": "授予",
+  "computerUse.manageLabel": "管理{permission}",
+  "computerUse.grantLabel": "授予{permission}",
+  "computerUse.help.title": "开启{permission}",
+  "computerUse.help.paneOpen": "系统设置已打开到“{pane}”。",
+  "computerUse.help.dragLabel": "把 {name} 拖入系统设置，或点击在访达中显示",
+  "computerUse.help.dragToAdd": "拖动以添加",
+  "computerUse.help.findInList": "在列表中找到 {name}。",
+  "computerUse.help.dragIntoList": "把 {name}.app 拖入列表。",
+  "computerUse.help.turnOn": "打开开关。",
+  "computerUse.help.showInFinder": "在访达中显示",
+  "computerUse.help.revealFailed": "无法在访达中显示该应用。",
+  "computerUse.help.dragFailed": "无法拖动该应用。",
+  "computerUse.highlight.working": "HXBot 正在 {title} 中工作",
+  "computerUse.help.hxPressesScreen":
+    "HXBot 有辅助功能授权时，会自己打开这个开关。系统要密码时，输入密码或按指纹即可。",
+  "computerUse.help.hxThenScreen": "这个开关只能由你打开（macOS 的规定）。打开后，HXBot 接着自己去开屏幕录制。",
+  "computerUse.hxAskTitle": "HXBot 需要一项授权",
+  "computerUse.hxAskBody": "点这里打开系统设置里的那一页。你在用别的应用时，HXBot 不会自己打开它。",
+} as const satisfies PartialTranslation<typeof source>;

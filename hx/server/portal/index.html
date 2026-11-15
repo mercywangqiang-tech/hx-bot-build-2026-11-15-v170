@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<title>HXBot 账号 · 弘犀智能</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>document.documentElement.className += " js";</script>
+<style>
+  /* HXBot 账号页 · 2026-11-12（v1.6.1）：按 Apple 账号登录页（account.apple.com）的版式和实测尺寸重做：全局导航、账号标题栏、
+     居中的长颈鹿标志（hx/assets/vi）、两步登录（先邮箱、再密码）、隐私说明、两枚按钮、灰色页脚。注册表单的必填项带星号，
+     邮箱、中国大陆手机号、密码（不少于 8 位，字母、数字、符号都要有）在离开输入框时校验。中文 / 与英文 /en/ 两个地址。 */
+  :root {
+    --blue: #0156D3; --blue-2: #3D8BFF; --blue-3: #7CACF8; --blue-4: #A8C7FA; --navy: #041E49; --space: #070B14;
+    --violet: #8B6CF2; --orange: #EB6100; --orange-d: #B84A00;
+    --ink: #1F1F1F; --ink-2: #444746; --muted: #5F6368; --line: #E1E3E1; --edge: #C4C7C5; --paper: #F8FAFD; --card: #FFFFFF;
+    --err: #B84A00; --ok: #0842A0;
+    --w: 460px;
+    --apple-ink: #1D1D1F; --apple-gray: #6E6E73; --field-edge: #86868B; --red: #E30000; --green: #00873C; --foot: #F5F5F7;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--sans); color: var(--ink); background: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; line-height: 1.47; -webkit-font-smoothing: antialiased; font-size: 17px; letter-spacing: -.01em; }
+  html[lang="zh-CN"] body { letter-spacing: 0; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  [hidden] { display: none !important; }
+  svg.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .wrap { max-width: 1024px; margin: 0 auto; padding: 0 22px; }
+  .spacer { flex: 1; }
+  :focus-visible { outline: 2px solid var(--blue-2); outline-offset: 2px; }
+
+  /* ---------- 全局导航：细、浅，随页面滚走 ---------- */
+  .gn { position: relative; z-index: 30; height: 44px; background: rgba(255, 255, 255, .92); }
+  .gn__in { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; max-width: 1024px; margin: 0 auto; padding: 0 22px; }
+  .gn a, .gn button { font: inherit; font-size: 12px; letter-spacing: -.01em; color: rgba(31, 31, 31, .8); background: none; border: 0; padding: 0 8px; height: 44px; display: inline-flex; align-items: center; cursor: pointer; white-space: nowrap; }
+  .gn a:hover, .gn button:hover { color: var(--ink); text-decoration: none; }
+  .gn__logo { padding: 0 8px 0 0 !important; }
+  .gn__logo svg { width: 12px; height: 23px; }
+
+  /* ---------- 账号标题栏：贴住顶部，磨砂白 ---------- */
+  .ln { position: sticky; top: 0; z-index: 25; background: rgba(255, 255, 255, .86); -webkit-backdrop-filter: saturate(1.8) blur(20px); backdrop-filter: saturate(1.8) blur(20px); }
+  .ln__in { display: flex; align-items: center; gap: 12px; height: 52px; max-width: 1024px; margin: 0 auto; padding: 0 22px; position: relative; }
+  .ln__in::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 0; height: 1px; background: rgba(31, 31, 31, .16); }
+  .ln__title { font-size: 21px; line-height: 1.14; font-weight: 600; letter-spacing: .011em; color: var(--apple-ink); white-space: nowrap; }
+  html[lang="zh-CN"] .ln__title { letter-spacing: 0; }
+  .ln__title:hover { text-decoration: none; }
+  .ln__links { display: flex; align-items: center; gap: 22px; }
+  .ln__a { font: inherit; font-size: 12px; line-height: 1; letter-spacing: -.01em; color: var(--apple-ink); background: none; border: 0; padding: 4px 0; cursor: pointer; white-space: nowrap; }
+  .ln__a:hover { color: var(--blue); text-decoration: none; }
+  .ln__a[aria-current="page"] { color: var(--muted); cursor: default; }
+  .ln__a[aria-current="page"]:hover { color: var(--muted); }
+
+  /* ---------- 中间：标志、标题、登录框 ---------- */
+  .acct { padding: 54px 22px 96px; }
+  /* 标志：只有长颈鹿。进场时从下方升起、斑点一颗颗出现；之后轻轻摇摆、不时眨眼；鼠标移上去会歪头 */
+  .emb { display: flex; justify-content: center; height: 168px; margin: 0 auto; }
+  .emb svg { display: block; height: 100%; width: auto; overflow: visible; transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.34, 1.56, .64, 1); }
+  .emb:hover svg { transform: rotate(-4deg) translateY(-3px); }
+  .emb :is(.gw, .gb) { transform-box: fill-box; transform-origin: 50% 100%; }
+  .emb :is(.gsp, .gpupil) { transform-box: fill-box; transform-origin: center; }
+  .js .emb .gw { opacity: 0; transform: translateY(26px) scale(.92); animation: gRise 1s cubic-bezier(.2, .9, .25, 1.12) .12s forwards; }
+  .js .emb .gsp { opacity: 0; transform: scale(.2); animation: gSpot .55s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+  .js .emb .geye { opacity: 0; animation: gIn .3s ease forwards .5s; }
+  .emb.is-live .gb { animation: gSway 7.5s ease-in-out infinite; }
+  .emb.is-live .gpupil { animation: gBlink 5.8s ease-in-out infinite .6s; }
+  .emb.is-hop svg { animation: gHop .8s cubic-bezier(.3, .7, .4, 1); }
+  @keyframes gRise { to { opacity: 1; transform: none; } }
+  @keyframes gSpot { to { opacity: 1; transform: none; } }
+  @keyframes gIn { to { opacity: 1; } }
+  @keyframes gSway { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-1.6deg); } 70% { transform: rotate(1.1deg); } }
+  @keyframes gBlink { 0%, 90%, 100% { transform: none; } 93% { transform: scaleY(.12); } 96% { transform: none; } }
+  @keyframes gHop { 0% { transform: none; } 28% { transform: translateY(-16px) scaleY(1.04); } 52% { transform: translateY(0) scale(1.03, .95); } 70% { transform: translateY(-5px); } 100% { transform: none; } }
+  .acct--in .emb { height: 112px; }
+
+  .pane { width: 100%; max-width: var(--w); margin: 0 auto; text-align: left; }
+  /* 标志下面的文字：与 Apple 账号页相同的字号、字重和间距（标题 32 号半粗，副标题 17 号常规） */
+  .pane h1 { margin: 46px -120px 0; text-align: center; font-size: 32px; line-height: 1.125; font-weight: 600; letter-spacing: .004em; color: var(--apple-ink); text-wrap: balance; }
+  html[lang="zh-CN"] .pane h1 { word-break: keep-all; letter-spacing: 0; }
+  .pane__sub { margin: 8px 0 0; text-align: center; font-size: 17px; line-height: 1.47; font-weight: 400; letter-spacing: -.022em; color: var(--apple-ink); text-wrap: balance; }
+  html[lang="zh-CN"] .pane__sub { letter-spacing: 0; }
+  .pane__sub b { font-weight: 600; }
+  .pane__note { margin: 20px 0 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--muted); text-wrap: balance; }
+  .loading { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 34px; color: var(--muted); font-size: 14px; }
+  .loading i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--blue); animation: rot .8s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  /* 输入框：标签在框里，输入后缩到上方 */
+  .fields { margin-top: 28px; display: grid; gap: 12px; }
+  .fields + .fields { margin-top: 12px; }
+  .fld { position: relative; }
+  /* 输入框比 Apple 账号页小一档（高 56 → 46，字 17 → 15；2026-11-14 用户要求：控件太大不美观） */
+  .fld input { display: block; width: 100%; height: 46px; padding: 18px 13px 3px; font: inherit; font-size: 15px; line-height: 1.24; letter-spacing: -.016em; color: var(--apple-ink);
+    background: #FFFFFF; border: 1px solid var(--field-edge); border-radius: 10px; outline: none; transition: border-color .15s, box-shadow .15s; }
+  html[lang="zh-CN"] .fld input { letter-spacing: 0; }
+  .fld label { position: absolute; z-index: 2; left: 14px; right: 14px; top: 6px; font-size: 12px; line-height: 1.25; letter-spacing: 0; color: var(--apple-gray); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color .125s ease; }
+  /* 标签一直是上面那行小字，空框也不放大（2026-11-14 用户要求：没填的框标签放大不好看） */
+  .fld input:focus { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+  /* 必填项：标签后面一个红色星号 */
+  /* 星号只用在注册表单（2026-11-12 用户要求）：登录、找回密码、绑定账号不加。 */
+  #state-register .req > label::after, #state-register .req > .code__l::after { content: " *"; color: var(--red); }
+  /* 校验：出错的框变红，下面一行红字和图标；改对了马上恢复 */
+  .fld.is-bad input, .fld.is-bad input:focus { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); background: #FFF5F5; }
+  .fld.is-bad label, .fld.is-bad input:focus + label { color: var(--red); }
+  .code.is-bad .code__box span { border-color: var(--red); background: #FFF5F5; }
+  .ferr { display: flex; align-items: flex-start; gap: 6px; margin: 8px 2px 0; font-size: 12px; line-height: 1.33; color: var(--red); }
+  .ferr svg { flex: none; width: 14px; height: 14px; margin-top: 1px; }
+  .ferr[hidden] { display: none !important; }
+  /* 设置密码：四条要求，满足一条亮一条 */
+  .pwrules { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin: 10px 2px 0; padding: 12px 14px; list-style: none; border-radius: 12px; background: var(--foot); font-size: 12px; line-height: 1.33; color: var(--apple-gray); }
+  .pwrules li { display: flex; align-items: center; gap: 7px; transition: color .2s; }
+  .pwrules li::before { content: ""; flex: none; width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #AEAEB2; transition: background .2s, box-shadow .2s; }
+  .pwrules li.is-ok { color: var(--green); }
+  .pwrules li.is-ok::before { background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M4 7.2l2 2 4-4.4' fill='none' stroke='%23fff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat; box-shadow: none; }
+  .pwrules.is-bad li:not(.is-ok) { color: var(--red); }
+  .pwrules + .fields { margin-top: 12px; }
+  .fld input:focus + label { color: var(--blue); }
+  /* 登录：邮箱、密码两格连成一个框 */
+  .fields.joined { gap: 0; }
+  .fields.joined .fld:first-child:not(:last-child) input { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .fields.joined .fld + .fld input { margin-top: -1px; border-top-left-radius: 0; border-top-right-radius: 0; }
+  .fields.joined .fld input:focus { position: relative; z-index: 1; }
+  .js .fields.joined .fld + .fld { animation: slideIn .32s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .js .pane.is-enter { animation: paneIn .5s cubic-bezier(.2, .8, .2, 1); }
+  @keyframes paneIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .fields.is-shake { animation: shake .5s cubic-bezier(.36, .07, .19, .97); }
+  @keyframes shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
+  .fields.is-error .fld input { border-color: var(--red); }
+  .sent { margin: 26px 0 0; padding: 12px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; color: var(--ok); background: #EEF3FB; text-align: center; }
+  .sent:empty { display: none; }
+  .fields--codes { margin-top: 22px; gap: 18px; }
+  .resend { margin: 12px 2px 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+  .msg { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; min-height: 1.2em; font-size: 12px; line-height: 1.33; color: var(--apple-gray); }
+  .msg:empty { min-height: 0; margin-top: 0; }
+  .msg.err { color: var(--red); } .msg.ok { color: var(--ok); }
+  .msg.err::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 1px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='7' r='6.2' fill='none' stroke='%23E30000' stroke-width='1.3'/%3E%3Cpath d='M7 3.8v4' stroke='%23E30000' stroke-width='1.4' stroke-linecap='round'/%3E%3Ccircle cx='7' cy='10.1' r='.85' fill='%23E30000'/%3E%3C/svg%3E") center / 14px no-repeat; }
+
+  /* 隐私说明 */
+  .privacy { margin-top: 40px; }
+  .privacy__ico { display: block; width: 36px; height: 30px; margin-bottom: 12px; }
+  .privacy p { margin: 0; font-size: 12px; line-height: 1.33; letter-spacing: -.01em; color: var(--apple-ink); }
+  .privacy a, .consent a { color: var(--blue); }
+  .consent { margin: 22px 0 0; font-size: 12px; line-height: 1.42; color: var(--muted); text-align: center; }
+
+  /* 按钮：主按钮蓝色、次按钮深色，两枚并排 */
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 34px; }
+  .acts--one { grid-template-columns: 1fr; }
+  .b { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 8px 16px; font: inherit; font-size: 14px; line-height: 1.29; letter-spacing: -.016em;
+    border: 0; border-radius: 8px; cursor: pointer; transition: background-color .15s ease, opacity .15s ease; text-align: center; }
+  .b:hover { text-decoration: none; }
+  .b--pri { color: #FFFFFF; background: var(--blue); }
+  .b--pri:hover { background: #0A4FB8; }
+  .b--pri[disabled], .b--pri.is-idle { background: #A3C3F2; color: rgba(255, 255, 255, .86); }
+  .b--pri[disabled] { cursor: default; }
+  .fld input:-webkit-autofill { animation: autofill .01s; }
+  @keyframes autofill { from { opacity: 1; } to { opacity: 1; } }
+  .b--dark { color: #FFFFFF; background: var(--apple-ink); }
+  .b--dark:hover { background: #333537; }
+  .b[disabled] { cursor: default; }
+  .b:active:not([disabled]) { transform: scale(.98); }
+  .b { position: relative; transition: background-color .15s ease, opacity .15s ease, transform .1s ease; }
+  .b.is-busy { color: transparent !important; pointer-events: none; }
+  .b.is-busy::after { content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .35); border-top-color: #FFFFFF; animation: rot .7s linear infinite; }
+  .b--gray { color: var(--ink); background: #ECEEF1; }
+  .b--gray:hover { background: #E1E4E8; }
+
+  /* 验证码：六个格子（背后是一个输入框，粘贴和短信自动填入都照常） */
+  .code { position: relative; }
+  .code__l { display: block; margin: 0 0 10px; font-size: 14px; line-height: 1.43; color: var(--apple-ink); }
+  .code__box { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .code__box span { display: grid; place-items: center; height: 46px; border: 1px solid var(--field-edge); border-radius: 10px; font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); background: #FFFFFF;
+    transition: border-color .15s, box-shadow .15s, transform .2s cubic-bezier(.34, 1.56, .64, 1); }
+  .code__box span.is-on { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), 0 0 0 4px rgba(1, 86, 211, .18); }
+  .code__box span.is-full { animation: pop .25s cubic-bezier(.34, 1.56, .64, 1); }
+  @keyframes pop { 50% { transform: scale(1.08); } }
+  .code__in { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; font-size: 16px; color: transparent; background: transparent; caret-color: transparent; z-index: 1; }
+
+  /* 对话框：居中卡片，背后磨砂 */
+  .dlg { width: min(92vw, 360px); padding: 0; border: 0; border-radius: 18px; color: var(--ink); background: #FFFFFF; box-shadow: 0 24px 70px rgba(4, 30, 73, .28), 0 0 0 1px rgba(31, 31, 31, .06); }
+  .dlg::backdrop { background: rgba(31, 31, 31, .32); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .dlg[open] { animation: dlgIn .32s cubic-bezier(.2, .9, .25, 1.08); }
+  .dlg[open]::backdrop { animation: gIn .25s ease; }
+  @keyframes dlgIn { from { opacity: 0; transform: scale(.94) translateY(8px); } to { opacity: 1; transform: none; } }
+  .dlg__in { margin: 0; padding: 30px 26px 22px; text-align: center; }
+  .dlg__ico { display: block; width: 30px; height: 58px; margin: 0 auto 14px; }
+  .dlg h2 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 600; }
+  .dlg p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--muted); text-wrap: balance; }
+  .dlg__acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+  .b svg { width: 16px; height: 16px; flex: none; }
+  .links { margin: 20px 0 0; text-align: center; font-size: 14px; line-height: 1.43; letter-spacing: -.016em; }
+  .links .sep { margin: 0 10px; color: var(--line); }
+  .lnk { font: inherit; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; }
+  .lnk:hover { text-decoration: underline; }
+  .who { font-weight: 600; }
+
+  /* 第三方账号登录（服务器开启时才显示） */
+  .pv { margin-top: 26px; text-align: center; }
+  .pv__t { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font-size: 12px; color: var(--muted); }
+  .pv__t::before, .pv__t::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .pv__l { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .pv__l a { min-width: 96px; padding: 8px 14px; border-radius: 8px; font-size: 14px; color: var(--ink); background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--edge); }
+  .pv__l a:hover { text-decoration: none; background: var(--paper); }
+  .pane .divider { display: flex; align-items: center; gap: 12px; margin: 30px 0 0; font-size: 12px; color: var(--muted); }
+  .pane .divider::before, .pane .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* ---------- 登录后：下载、三步开始、邀请、使用须知 ---------- */
+  section.band { padding: 80px 0 0; }
+  section.band:first-of-type { border-top: 1px solid var(--line); }
+  #downloads { padding: 72px 0 80px; background: var(--paper); border-top: 1px solid var(--line); }
+  .eyebrow { display: block; font-size: 17px; line-height: 1.24; font-weight: 600; color: var(--orange-d); }
+  h2.t { margin: 8px 0 0; font-size: clamp(28px, 3.6vw, 40px); line-height: 1.1; letter-spacing: -.005em; font-weight: 600; }
+  html[lang="zh-CN"] h2.t { letter-spacing: 0; line-height: 1.25; }
+  p.st { margin: 14px 0 0; max-width: 46em; font-size: 17px; line-height: 1.6; color: var(--muted); }
+  .more { margin: 26px 0 0; font-size: 17px; }
+
+  /* downloads */
+  .grid { display: grid; gap: 16px; margin-top: 36px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .dl { display: flex; flex-direction: column; padding: 26px 24px; border-radius: 18px; background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+  .dl__ico { display: block; width: 44px; height: 44px; }
+  .dl__ico svg { width: 44px; height: 44px; }
+  .dl__ico path, .dl__ico rect, .dl__ico circle { fill: none; stroke: var(--blue); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .dl--soon .dl__ico :is(path, rect, circle) { stroke: #9AA0A6; }
+  .dl h3 { margin: 18px 0 0; font-size: 21px; line-height: 1.2; font-weight: 600; }
+  .dl .req { margin: 6px 0 18px; min-height: 3.2em; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .dl .btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 8px 16px; font-size: 15px; line-height: 1.2; border-radius: 8px; color: #FFFFFF; background: var(--blue); }
+  .dl .btn:hover { text-decoration: none; background: #0A4FB8; }
+  .dl .btn svg { width: 16px; height: 16px; }
+  .dl .alt { align-self: flex-start; margin-top: 12px; font-size: 14px; line-height: 1.5; }
+  .dl .meta { margin-top: 12px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+  .dl .meta code { word-break: break-all; }
+  .dl .note { margin-top: auto; padding-top: 14px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+  .dl .meta + .note { margin-top: 14px; border-top: 1px solid var(--line); }
+  .soon { align-self: flex-start; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--orange-d); background: #FFF1E8; }
+  code { font-family: var(--mono); font-size: 12px; background: #F0F4F9; padding: 1px 5px; border-radius: 4px; }
+  #dl-msg { color: var(--err); font-size: 14px; }
+
+  /* steps */
+  .steps { position: relative; display: grid; gap: 16px; margin-top: 36px; }
+  @media (min-width: 860px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
+  .step { position: relative; padding: 28px; border-radius: 18px; background: var(--paper); }
+  .step__h { display: flex; align-items: center; gap: 12px; padding-right: 44px; }
+  .step .n { position: absolute; right: 24px; top: 24px; font: 600 13px/1 var(--mono); color: var(--muted); }
+  .step h3 { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 600; }
+  .step p { margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+  .steps__line { display: none; }
+
+  /* invite links */
+  .iv { display: grid; gap: 16px; margin-top: 36px; }
+  @media (min-width: 860px) { .iv { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
+  .iv__col { padding: 28px; border-radius: 18px; background: var(--paper); }
+  .iv h3 { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 600; }
+  .iv ol { margin: 14px 0 0; padding-left: 1.3em; display: grid; gap: 8px; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+  .iv ol li::marker { color: var(--blue); font-weight: 600; }
+  .iv__note { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.6; color: var(--muted); }
+  #invite .st { word-break: break-word; }
+
+  /* notice (research use only) */
+  .notice { margin: 80px 0 0; padding: 28px 32px; border-radius: 18px; background: #FFF6F0; }
+  .notice__h { display: flex; align-items: center; gap: 12px; }
+  .notice h2 { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 600; }
+  .notice p { margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+  .notice .must { font-weight: 600; color: var(--orange-d); }
+
+  /* ---------- 页脚：浅灰底，小字 ---------- */
+  .ft { margin-top: 0; background: var(--foot); color: var(--apple-gray); font-size: 12px; line-height: 1.33; }
+  .main--in + .ft { margin-top: 88px; }
+  .ft__in { max-width: 1024px; margin: 0 auto; padding: 17px 22px 21px; }
+  .ft__more { margin: 0; padding-bottom: 10px; }
+  .ft__more a { color: var(--blue); }
+  .ft__bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 0; padding-top: 10px; border-top: 1px solid #D2D2D7; }
+  .ft__copy { margin-right: 28px; }
+  .ft__links { display: flex; flex-wrap: wrap; }
+  .ft__links a, .ft__bar > a { color: #424245; }
+  .ft__links a { padding: 0 10px; border-left: 1px solid #D2D2D7; line-height: 1; }
+  .ft__links a:first-child { padding-left: 0; border-left: 0; }
+
+  @media (max-width: 734px) {
+    .gn .hide-sm { display: none; }
+    .gn__in { justify-content: flex-start; gap: 4px; }
+    .gn__in .gn__logo { margin-right: auto; }
+    .ln__in { height: 48px; }
+    .ln__title { font-size: 19px; }
+    .ln__links { gap: 16px; }
+    .ln__links .hide-sm { display: none; }
+    .acct { padding: 28px 20px 64px; }
+    .pane h1, html[lang="zh-CN"] .pane h1 { margin: 36px 0 0; font-size: 28px; line-height: 1.14; }
+    .emb { height: 136px; }
+    .acct { padding-top: 40px; }
+    .ft__copy { width: 100%; margin: 0 0 6px; }
+    .ft__bar > .spacer { display: none; }
+    .ft__bar > a { width: 100%; margin-top: 6px; }
+  }
+  @media (max-width: 420px) {
+    .acts { grid-template-columns: 1fr; }
+    .ln__title { font-size: 17px; }
+  }
+
+  /* 英文页脚两句之间留空格（中文句号后不留） */
+  html[lang="en"] .ft__more [data-t="supportPre"]::before { content: " "; }
+  .js .emb .s1 { animation-delay: 0.56s; } .js .emb .s2 { animation-delay: 0.61s; } .js .emb .s3 { animation-delay: 0.67s; } .js .emb .s4 { animation-delay: 0.72s; } .js .emb .s5 { animation-delay: 0.78s; } .js .emb .s6 { animation-delay: 0.83s; } .js .emb .s7 { animation-delay: 0.89s; } .js .emb .s8 { animation-delay: 0.94s; } .js .emb .s9 { animation-delay: 0.99s; } .js .emb .s10 { animation-delay: 1.05s; } .js .emb .s11 { animation-delay: 1.10s; } .js .emb .s12 { animation-delay: 1.16s; } .js .emb .s13 { animation-delay: 1.21s; } .js .emb .s14 { animation-delay: 1.27s; }
+
+  /* ---------- animated icons (same as www.hxallai.com) ---------- */
+/* ==========
+   v3 · animated icons (aicons), steps with a progress rail, word-by-word statement, connector  (2026-11-10 第五版)
+   Icons draw themselves when they scroll into view (.is-on, set by site.js) and keep a quiet loop while on screen (.is-live).
+   ===================================================================================================================== */
+.aic {
+  --aic-pri: #0156D3; --aic-hx: #0156D3; --aic-pri-c: #D3E3FD;
+  --aic-vio: #8B6CF2; --aic-vio-c: rgba(139, 108, 242, .22);
+  --aic-or: #EB6100; --aic-or-c: #FFDCC7;
+  --aic-pk: #E05A8E; --aic-pk-c: rgba(224, 90, 142, .22);
+  --aic-line: #C4C7C5; --aic-soft: #C4C7C5; --aic-track: #E1E3E1;
+  --aic-card: #FFFFFF; --aic-edge: #E1E3E1; --aic-ink: #1F1F1F;
+  display: block; width: 76px; max-width: 100%; aspect-ratio: 160 / 100; margin: 0 0 14px -2px;
+}
+.aic--sm { width: 68px; margin-bottom: 12px; }
+.aic svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.aic svg * { fill: none; stroke: none; }
+:is(.phero, .dark, .cta__box, .mxdark) .aic {
+  --aic-pri: #3D8BFF; --aic-hx: #0156D3; --aic-pri-c: rgba(61, 139, 255, .32);
+  --aic-vio-c: rgba(139, 108, 242, .36); --aic-or-c: rgba(235, 97, 0, .34); --aic-pk-c: rgba(224, 90, 142, .34);
+  --aic-line: rgba(255, 255, 255, .30); --aic-soft: rgba(255, 255, 255, .24); --aic-track: rgba(255, 255, 255, .16);
+  --aic-card: rgba(255, 255, 255, .07); --aic-edge: rgba(255, 255, 255, .20); --aic-ink: #E3E3E3;
+}
+/* stagger: t1…t60 = 0.05 s … 3 s (classes, as the CSP allows no inline style attributes) */
+:is(.aic, .aconn) .t1 { --d: .05s; } :is(.aic, .aconn) .t2 { --d: .1s; } :is(.aic, .aconn) .t3 { --d: .15s; } :is(.aic, .aconn) .t4 { --d: .2s; } :is(.aic, .aconn) .t5 { --d: .25s; } :is(.aic, .aconn) .t6 { --d: .3s; }
+:is(.aic, .aconn) .t7 { --d: .35s; } :is(.aic, .aconn) .t8 { --d: .4s; } :is(.aic, .aconn) .t9 { --d: .45s; } :is(.aic, .aconn) .t10 { --d: .5s; } :is(.aic, .aconn) .t11 { --d: .55s; } :is(.aic, .aconn) .t12 { --d: .6s; }
+:is(.aic, .aconn) .t13 { --d: .65s; } :is(.aic, .aconn) .t14 { --d: .7s; } :is(.aic, .aconn) .t15 { --d: .75s; } :is(.aic, .aconn) .t16 { --d: .8s; } :is(.aic, .aconn) .t17 { --d: .85s; } :is(.aic, .aconn) .t18 { --d: .9s; }
+:is(.aic, .aconn) .t19 { --d: .95s; } :is(.aic, .aconn) .t20 { --d: 1s; } :is(.aic, .aconn) .t21 { --d: 1.05s; } :is(.aic, .aconn) .t22 { --d: 1.1s; } :is(.aic, .aconn) .t23 { --d: 1.15s; } :is(.aic, .aconn) .t24 { --d: 1.2s; }
+:is(.aic, .aconn) .t25 { --d: 1.25s; } :is(.aic, .aconn) .t26 { --d: 1.3s; } :is(.aic, .aconn) .t27 { --d: 1.35s; } :is(.aic, .aconn) .t28 { --d: 1.4s; } :is(.aic, .aconn) .t29 { --d: 1.45s; } :is(.aic, .aconn) .t30 { --d: 1.5s; }
+:is(.aic, .aconn) .t31 { --d: 1.55s; } :is(.aic, .aconn) .t32 { --d: 1.6s; } :is(.aic, .aconn) .t33 { --d: 1.65s; } :is(.aic, .aconn) .t34 { --d: 1.7s; } :is(.aic, .aconn) .t35 { --d: 1.75s; } :is(.aic, .aconn) .t36 { --d: 1.8s; }
+:is(.aic, .aconn) .t37 { --d: 1.85s; } :is(.aic, .aconn) .t38 { --d: 1.9s; } :is(.aic, .aconn) .t39 { --d: 1.95s; } :is(.aic, .aconn) .t40 { --d: 2s; } :is(.aic, .aconn) .t41 { --d: 2.05s; } :is(.aic, .aconn) .t42 { --d: 2.1s; }
+:is(.aic, .aconn) .t43 { --d: 2.15s; } :is(.aic, .aconn) .t44 { --d: 2.2s; } :is(.aic, .aconn) .t45 { --d: 2.25s; } :is(.aic, .aconn) .t46 { --d: 2.3s; } :is(.aic, .aconn) .t47 { --d: 2.35s; } :is(.aic, .aconn) .t48 { --d: 2.4s; }
+:is(.aic, .aconn) .t49 { --d: 2.45s; } :is(.aic, .aconn) .t50 { --d: 2.5s; } :is(.aic, .aconn) .t51 { --d: 2.55s; } :is(.aic, .aconn) .t52 { --d: 2.6s; } :is(.aic, .aconn) .t53 { --d: 2.65s; } :is(.aic, .aconn) .t54 { --d: 2.7s; }
+:is(.aic, .aconn) .t55 { --d: 2.75s; } :is(.aic, .aconn) .t56 { --d: 2.8s; } :is(.aic, .aconn) .t57 { --d: 2.85s; } :is(.aic, .aconn) .t58 { --d: 2.9s; } :is(.aic, .aconn) .t59 { --d: 2.95s; } :is(.aic, .aconn) .t60 { --d: 3s; }
+.js .aic .f.fr { transform: translateX(14px); } .js .aic .f.fu { transform: translateY(-10px); }
+/* fills */
+.aic .k-pri { fill: var(--aic-pri); } .aic .k-hx { fill: var(--aic-hx); } .aic .k-pri-c { fill: var(--aic-pri-c); }
+.aic .k-vio { fill: var(--aic-vio); } .aic .k-vio-c { fill: var(--aic-vio-c); }
+.aic .k-or { fill: var(--aic-or); } .aic .k-or-c { fill: var(--aic-or-c); }
+.aic .k-pk { fill: var(--aic-pk); } .aic .k-pk-c { fill: var(--aic-pk-c); }
+.aic .k-w { fill: #FFFFFF; } .aic .k-card { fill: var(--aic-card); } .aic .k-line { fill: var(--aic-track); } .aic .k-ink { fill: var(--aic-ink); }
+.aic .gs-a { stop-color: var(--aic-pri); stop-opacity: .26; } .aic .gs-b { stop-color: var(--aic-pri); stop-opacity: 0; }
+/* strokes */
+.aic .s-pri { stroke: var(--aic-pri); } .aic .s-vio { stroke: var(--aic-vio); } .aic .s-or { stroke: var(--aic-or); } .aic .s-pk { stroke: var(--aic-pk); }
+.aic .s-line { stroke: var(--aic-line); } .aic .s-edge { stroke: var(--aic-edge); stroke-width: 1.5; } .aic .s-w { stroke: #FFFFFF; stroke-width: 1.2; }
+.aic .sw4 { stroke-width: 4; }
+.aic :is(.ln, .ln-pri, .ln-or, .ln-soft, .ln-ink, .ln-dash, .ln-w, .ln-w4) path, .aic :is(.ln-w2, .ln-w3, .ln-pri2, .ln-pri4), .aic .fl { stroke-linecap: round; stroke-linejoin: round; }
+.aic .ln path { stroke-width: 3; }
+.aic .ln-pri path { stroke: var(--aic-pri); stroke-width: 3.2; }
+.aic .ln-or path { stroke: var(--aic-or); stroke-width: 3.6; }
+.aic .ln-soft path { stroke: var(--aic-soft); stroke-width: 3; }
+.aic .ln-ink path { stroke: var(--aic-ink); stroke-width: 2.6; }
+.aic .ln-dash path { stroke-width: 2.4; stroke-dasharray: .05 .05; }
+.aic .ln-w path { stroke: #FFFFFF; stroke-width: 6; }
+.aic .ln-w4 path { stroke: #FFFFFF; stroke-width: 5; }
+.aic .ln-w2 { stroke: #FFFFFF; stroke-width: 2.6; }
+.aic .ln-w3 { stroke: #FFFFFF; stroke-width: 2.2; }
+.aic .ln-pri2 { stroke: var(--aic-pri); stroke-width: 2.6; }
+.aic .ln-pri4 { stroke: var(--aic-pri); stroke-width: 6; }
+.aic .sw-tr { fill: var(--aic-track); }
+.aic .sw-kn { fill: #FFFFFF; stroke: rgba(31, 31, 31, .08); stroke-width: 1; }
+.aic .d.dash { stroke-dasharray: .02 .02; }
+.aic .ring { stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.aic .fl { stroke-width: 5; stroke-dasharray: .07 1.2; stroke-dashoffset: .07; opacity: 0; }
+.aic .cur { transform: translate(66px, 76px); }
+.aic .clk { stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.aic .bar, .aic .fillbar2, .aic .hl { transform-box: fill-box; transform-origin: 0 50%; }
+.aic .sw-kn { transform: translateX(26px); } .aic .sw-tr { fill: var(--aic-pri); }
+
+/* entrance (only with JS, so the icons are complete without it) */
+.js .aic .d { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .9s cubic-bezier(.45, 0, .2, 1) var(--d, 0s); }
+.js .aic :is(.ln-dash, .x) .d, .js .aic .d.dash { stroke-dasharray: .05 .05; stroke-dashoffset: 0; opacity: 0; transition: opacity .6s ease var(--d, 0s); }
+.js .aic .d.dash { stroke-dasharray: .02 .02; }
+.js .aic .p { opacity: 0; transform: scale(.2); transform-box: fill-box; transform-origin: center; transition: transform .55s cubic-bezier(.34, 1.56, .64, 1) var(--d, 0s), opacity .25s ease var(--d, 0s); }
+.js .aic .g { transform: scaleY(0); transform-box: fill-box; transform-origin: 50% 100%; transition: transform .75s cubic-bezier(.2, .8, .2, 1) var(--d, 0s); }
+.js .aic .f { opacity: 0; transform: translateY(6px); transition: opacity .5s ease var(--d, 0s), transform .7s cubic-bezier(.2, .8, .2, 1) var(--d, 0s); }
+.js .aic .sw-kn { transform: none; transition: transform .5s cubic-bezier(.34, 1.56, .64, 1) .35s; }
+.js .aic .sw-tr { fill: var(--aic-track); transition: fill .4s ease .45s; }
+.js .aic .hl, .js .aic .fillbar2 { transform: scaleX(0); transition: transform .7s cubic-bezier(.2, .8, .2, 1) .75s; }
+.js .aic .bar { transform: scaleX(.15); }
+.js .aic .mag { opacity: 0; transform: translate(14px, 10px); transition: opacity .4s ease .4s, transform .8s cubic-bezier(.2, .8, .2, 1) .4s; }
+.js .aic .drop { opacity: 0; transform: translateY(-14px); transition: opacity .4s ease .2s, transform .7s cubic-bezier(.34, 1.4, .64, 1) .2s; }
+.js .aic .cur { opacity: 0; transform: translate(132px, 94px); transition: opacity .3s ease .9s, transform .9s cubic-bezier(.45, 0, .2, 1) .9s; }
+.js .aic .caret { opacity: 0; }
+.aic.is-on .d { stroke-dashoffset: 0; }
+.aic.is-on :is(.ln-dash, .x) .d, .aic.is-on .d.dash { opacity: 1; }
+.aic.is-on :is(.p, .f) { opacity: 1; transform: none; }
+.aic.is-on .g { transform: none; }
+.aic.is-on .sw-kn { transform: translateX(26px); }
+.aic.is-on .sw-tr { fill: var(--aic-pri); }
+.aic.is-on :is(.hl, .fillbar2) { transform: none; }
+.js .aic .bar { transition: transform .9s cubic-bezier(.2, .8, .2, 1) .8s; }
+.aic.is-on .bar { transform: scaleX(.62); }
+.aic.is-on :is(.mag, .drop) { opacity: 1; transform: none; }
+.aic.is-on .cur { opacity: 1; transform: translate(66px, 76px); }
+
+/* tiny inline icon (aic--ix): sits in a kicker or a title line as an accent; strokes are thickened so the drawing still reads at this size */
+.aic.aic--ix { display: inline-block; flex: none; width: 34px; margin: 0 2px 0 0; vertical-align: -5px; }
+:is(h2, h3) > .aic--ix { width: 38px; margin-right: 12px; vertical-align: -4px; }
+.feat h3 > .aic--ix { align-self: center; margin-right: 0; }
+.aic--ix .ln path, .aic--ix .ln-pri path, .aic--ix .ln-or path { stroke-width: 7; }
+.aic--ix .ln-soft path, .aic--ix .ln-ink path { stroke-width: 6; }
+.aic--ix .ln-w path, .aic--ix .ln-w4 path { stroke-width: 9; }
+.aic--ix :is(.ln-w2, .ln-w3, .ln-pri2) { stroke-width: 5; }
+.aic--ix .ln-pri4 { stroke-width: 10; }
+.aic--ix .s-edge { stroke-width: 3; }
+.aic--ix .fl { stroke-width: 10; }
+.aic--ix .ring, .aic--ix .clk { stroke-width: 4; }
+.aic--ix .ln-dash path { stroke-dasharray: .08 .07; }
+/* replay on hover: reset instantly, then draw again */
+.aic.no-tr, .aic.no-tr * { transition: none !important; animation: none !important; }
+/* idle loops while the icon is on screen */
+.aic.is-on.is-live .fl { animation: aicflow 3.2s linear var(--d, 1.6s) infinite; }
+.aic.is-on.is-live .ring { animation: aicring 2.6s ease-out 1.4s infinite; }
+.aic.is-on.is-live .tw { animation: aictw 3s ease-in-out 1.6s infinite; }
+.aic.is-on.is-live .caret { animation: aicblink 1.1s steps(1) 1s infinite; }
+.aic.is-on.is-live .pulse { animation: aicpulse 1.6s ease-in-out infinite; }
+.aic.is-on.is-live .bar { animation: aicbar 3.4s cubic-bezier(.45, 0, .2, 1) .6s infinite; }
+.aic.is-on.is-live .fillbar2 { animation: aicbar 3.4s cubic-bezier(.45, 0, .2, 1) 1.6s infinite; }
+.aic.is-on.is-live .mag { animation: aicmag 4.8s ease-in-out 1.4s infinite; }
+.aic.is-on.is-live .drop { animation: aicdrop 3.4s ease-in-out 1.4s infinite; }
+.aic.is-on.is-live .cur { animation: aiccur 4.4s cubic-bezier(.45, 0, .2, 1) 1.8s infinite; }
+.aic.is-on.is-live .clk { animation: aicclk 4.4s ease-out 1.8s infinite; }
+@keyframes aicflow { 0% { stroke-dashoffset: .07; opacity: 0; } 6% { opacity: 1; } 62% { stroke-dashoffset: -1; opacity: 1; } 63%, 100% { stroke-dashoffset: -1; opacity: 0; } }
+@keyframes aicring { 0% { opacity: .7; transform: scale(.55); } 80%, 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes aictw { 0%, 100% { scale: 1; rotate: 0deg; } 50% { scale: .72; rotate: 45deg; } }
+@keyframes aicblink { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes aicpulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes aicbar { 0% { transform: scaleX(.08); } 70% { transform: scaleX(1); } 85%, 100% { transform: scaleX(1); opacity: 1; } }
+@keyframes aicmag { 0%, 100% { transform: none; } 30% { transform: translate(-26px, -24px); } 60% { transform: translate(-12px, 20px); } }
+@keyframes aicdrop { 0%, 100% { transform: none; } 50% { transform: translateY(6px); } }
+@keyframes aiccur { 0% { transform: translate(66px, 76px); } 30% { transform: translate(128px, 46px); } 60% { transform: translate(66px, 76px); } 64% { transform: translate(66px, 76px) scale(.86); } 68%, 100% { transform: translate(66px, 76px); } }
+@keyframes aicclk { 0%, 62% { opacity: 0; transform: scale(.4); } 66% { opacity: .9; } 90%, 100% { opacity: 0; transform: scale(2.4); } }
+
+
+  .aic.aic--ix { width: 36px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* 减少动态效果：标志直接显示、不摆动不眨眼，表单不淡入不晃动，对话框直接出现；提交时的转圈保留 */
+    html { scroll-behavior: auto; }
+    .loading i { animation: none; }
+    .js .emb :is(.gw, .gsp, .geye), .js .fields.joined .fld + .fld { opacity: 1; transform: none; animation: none; }
+    .emb.is-live :is(.gb, .gpupil), .emb.is-hop svg, .js .pane.is-enter, .fields.is-shake, .dlg[open], .dlg[open]::backdrop { animation: none; }
+    .emb svg, .emb:hover svg { transition: none; transform: none; }
+  }
+</style>
+
+<body>
+<!-- HX BOT 长颈鹿标志：定义一次，页头、页脚与图标里用 <use> 引用 -->
+<svg class="defs" aria-hidden="true" focusable="false"><defs><symbol id="hx-giraffe" viewBox="-6 -6 307.75 590.25"><path d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><path d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84ZM66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67ZM28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20ZM19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97ZM81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92ZM126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21ZM200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98ZM263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01ZM81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78ZM1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56ZM148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74ZM218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59ZM271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82ZM2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z" fill="#79512B"/><path d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></symbol></defs></svg>
+
+<header class="gn" id="hdr">
+  <nav class="gn__in" aria-label="弘犀智能">
+    <a class="gn__logo" href="/" id="brand-link" aria-label="HXBot"><svg class="mark" aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg></a>
+    <a class="hide-sm" id="home-link" href="https://www.hxallai.com/" data-t="home">弘犀智能官网</a>
+    <a class="hide-sm doc-link" data-doc="guide" href="/guide/" data-t="guideNav">使用指南</a>
+    <a class="hide-sm doc-link" data-doc="whats-new" href="/whats-new/" data-t="newsNav">新功能</a>
+    <a href="/app" data-t="webapp">网页版</a>
+    <a class="hide-sm doc-link" data-doc="terms" href="/terms/" data-t="termsNav">服务条款</a>
+    <a class="hide-sm doc-link" data-doc="privacy" href="/privacy/" data-t="privacyNav">隐私政策</a>
+    <button type="button" id="lang">English</button>
+  </nav>
+</header>
+
+<div class="ln" id="localnav">
+  <div class="ln__in">
+    <a class="ln__title" href="/" id="ln-title" data-t="acctTitle">HXBot 账号</a>
+    <span class="spacer"></span>
+    <nav class="ln__links" aria-label="账号">
+      <button type="button" class="ln__a" id="ln-signin" data-t="signIn">登录</button>
+      <button type="button" class="ln__a" id="ln-register" data-t="lnRegister">创建你的 HXBot 账号</button>
+      <a class="ln__a" href="#downloads" id="ln-downloads" hidden data-t="toDownloads">下载客户端</a>
+      <a class="ln__a doc-link hide-sm" data-doc="guide" data-hash="#faq" href="/guide/#faq" data-t="faq">常见问题解答</a>
+      <button type="button" class="ln__a" id="logout" hidden data-t="logout">退出登录</button>
+    </nav>
+  </div>
+</div>
+
+<main id="main">
+  <section class="acct" id="acct">
+    <div class="emb" id="emb" aria-hidden="true"><svg viewBox="-6 -6 307.75 590.25" focusable="false"><g class="gw"><g class="gb"><path class="gbody" d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><g class="gspots" fill="#79512B"><path class="gsp s1" d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84Z"/><path class="gsp s2" d="M66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67Z"/><path class="gsp s3" d="M28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20Z"/><path class="gsp s4" d="M19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97Z"/><path class="gsp s5" d="M81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92Z"/><path class="gsp s6" d="M126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21Z"/><path class="gsp s7" d="M200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98Z"/><path class="gsp s8" d="M263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01Z"/><path class="gsp s9" d="M81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78Z"/><path class="gsp s10" d="M1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56Z"/><path class="gsp s11" d="M148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74Z"/><path class="gsp s12" d="M218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59Z"/><path class="gsp s13" d="M271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82Z"/><path class="gsp s14" d="M2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z"/></g><g class="geye"><path class="gpupil" d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></g></g></g></svg></div>
+
+    <div id="state-loading" class="loading"><i></i><span data-t="loading">正在检查登录状态……</span></div>
+
+    <form id="state-email" class="pane" hidden novalidate>
+      <h1 data-t="acctTitle">HXBot 账号</h1>
+      <p class="pane__sub" data-t="signInSub">管理你的 HXBot 账号</p>
+      <div class="fields joined">
+        <div class="fld"><input id="email" data-rule="email" data-need="needEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required placeholder=" "><label for="email" data-t="emailLabel">电子邮件</label></div>
+        <div class="fld" id="password-row" hidden><input id="password" data-need="needPassword" type="password" autocomplete="current-password" maxlength="32" placeholder=" "><label for="password" data-t="passwordLabel">密码</label></div>
+      </div>
+      <div class="msg" id="email-msg" role="status"></div>
+      <div class="privacy">
+        <svg class="privacy__ico" viewBox="0 0 34 30" aria-hidden="true"><defs><linearGradient id="pv-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3D8BFF"/><stop offset="1" stop-color="#0156D3"/></linearGradient></defs><path d="M17 1.6c3.4 2.3 6.9 3.4 10.6 3.6.4 0 .7.4.7.8v8.2c0 7-4.7 11.9-10.9 14.1a1.2 1.2 0 0 1-.8 0C10.4 26.1 5.7 21.2 5.7 14.2V6c0-.4.3-.8.7-.8 3.7-.2 7.2-1.3 10.6-3.6z" fill="url(#pv-g)"/><path d="M12 14.9l3.5 3.5 6.6-7.2" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p><span data-t="privacy1">你的 HXBot 账号用于登录本页、桌面端、网页版和手机端，并在各端之间同步你的主机与智能体。</span><span data-t="consentPre">登录即表示你同意</span><a class="doc-link" data-doc="terms" href="/terms/" target="_blank" rel="noopener" data-t="consentTerms">《服务条款》</a><span data-t="consentMid">并已阅读</span><a class="doc-link" data-doc="privacy" href="/privacy/" target="_blank" rel="noopener" data-t="consentPrivacy">《隐私政策》</a><span data-t="consentPost">。</span></p>
+      </div>
+      <div class="acts">
+        <button class="b b--pri" type="submit" id="signin"><span id="signin-text">继续</span></button>
+        <button class="b b--dark" type="button" id="to-register" data-t="toRegister">创建账号</button>
+      </div>
+      <p class="links"><button type="button" class="lnk" id="to-reset" data-t="toReset">忘记了密码？</button></p>
+      <div class="pv" id="providers" hidden><p class="pv__t" data-t="orWith">或者使用以下账号登录</p><div class="pv__l" id="provider-list"></div></div>
+    </form>
+
+    <form id="state-register" class="pane" hidden novalidate>
+      <h1 data-t="regTitle">创建你的 HXBot 账号</h1>
+      <p class="pane__sub"><span id="reg-sub" data-t="regSub">一个账号，即可使用 HXBot 桌面端、网页版和手机端。</span></p>
+      <p class="pane__sub" id="reg-identity" hidden></p>
+      <div id="reg-step1">
+        <div class="fields">
+          <div class="fld req"><input id="reg-email" data-rule="email" data-need="needEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required placeholder=" "><label for="reg-email" data-t="emailLabel">邮箱</label></div>
+          <div class="fld req"><input id="reg-phone" data-rule="phone" data-need="needPhone" type="tel" autocomplete="tel" inputmode="tel" required placeholder=" "><label for="reg-phone" data-t="phoneLabel">手机号码</label></div>
+          <div class="fld req" id="reg-shared-row" hidden><input id="reg-shared" data-need="needShared" type="password" autocomplete="off" maxlength="32" placeholder=" "><label for="reg-shared" data-t="sharedLabel">原来的登录口令</label></div>
+        </div>
+        <div class="acts acts--one"><button class="b b--pri" type="submit" id="reg-next"><span data-t="regNext">下一步</span></button></div>
+      </div>
+      <div id="reg-step2" hidden>
+        <p class="sent" id="reg-sent" role="status"></p>
+        <div class="fields fields--codes">
+          <div class="code req" id="reg-ecode-row"><label class="code__l" for="reg-ecode" data-t="emailCodeLabel">邮箱验证码</label><div class="code__box"><input class="code__in" id="reg-ecode" data-rule="code" data-need="needCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+          <div class="code req" id="reg-pcode-row"><label class="code__l" for="reg-pcode" data-t="phoneCodeLabel">短信验证码</label><div class="code__box"><input class="code__in" id="reg-pcode" data-rule="code" data-need="needCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+        </div>
+        <p class="resend"><span data-t="noCode">没有收到验证码？</span><button type="button" class="lnk" id="reg-again" data-t="codeAgain">重新获取</button></p>
+        <div class="fields">
+          <div class="fld req"><input id="reg-username" data-rule="username" data-need="needUsername" type="text" autocomplete="nickname" maxlength="32" required placeholder=" "><label for="reg-username" data-t="usernameLabel">用户名</label></div>
+        </div>
+        <div class="fields">
+          <div class="fld req"><input id="reg-password" data-rule="new-password" data-rules="reg-pwrules" data-need="needNewPassword" type="password" autocomplete="new-password" maxlength="32" required placeholder=" "><label for="reg-password" data-t="newPasswordLabel">设置密码</label></div>
+        </div>
+        <ul class="pwrules" id="reg-pwrules" aria-live="polite"><li data-r="len" data-t="ruleLen">8～32 个字符</li><li data-r="letter" data-t="ruleLetter">包含字母</li><li data-r="digit" data-t="ruleDigit">包含数字</li><li data-r="symbol" data-t="ruleSymbol">包含符号，如 ! @ # $ %</li></ul>
+        <div class="fields">
+          <div class="fld req"><input id="reg-password2" data-rule="same:reg-password" data-need="needPassword2" type="password" autocomplete="new-password" maxlength="32" required placeholder=" "><label for="reg-password2" data-t="password2Label">再输入一次密码</label></div>
+        </div>
+        <div class="fields">
+          <div class="fld req"><input id="reg-title" data-need="needTitle" type="text" autocomplete="organization-title" maxlength="64" required placeholder=" "><label for="reg-title" data-t="titleLabel">职位</label></div>
+          <div class="fld req"><input id="reg-company" data-need="needCompany" type="text" autocomplete="organization" maxlength="64" required placeholder=" "><label for="reg-company" data-t="companyLabel">公司名称</label></div>
+        </div>
+        <div class="acts acts--one"><button class="b b--pri" type="submit" id="reg-finish"><span data-t="regFinish">完成注册</span></button></div>
+      </div>
+      <div class="msg" id="reg-msg" role="status"></div>
+      <p class="links"><span data-t="haveAccount">已有账号？</span><button type="button" class="lnk back-signin" data-t="signInNow">登录</button></p>
+      <p class="consent"><span data-t="regConsentPre">注册即表示你同意</span><a class="doc-link" data-doc="terms" href="/terms/" target="_blank" rel="noopener" data-t="consentTerms">《服务条款》</a><span data-t="consentMid">并已阅读</span><a class="doc-link" data-doc="privacy" href="/privacy/" target="_blank" rel="noopener" data-t="consentPrivacy">《隐私政策》</a><span data-t="consentPost">。</span></p>
+    </form>
+
+    <form id="state-reset" class="pane" hidden novalidate>
+      <h1 data-t="resetTitle">找回密码</h1>
+      <p class="pane__sub" data-t="resetSub">向注册邮箱发送验证码，验证后设置新密码。</p>
+      <div id="reset-step1">
+        <div class="fields">
+          <div class="fld"><input id="reset-email" data-rule="email" data-need="needEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required placeholder=" "><label for="reset-email" data-t="emailLabel">邮箱</label></div>
+        </div>
+        <div class="acts acts--one"><button class="b b--pri" type="submit" id="reset-next"><span data-t="sendCode">发送验证码</span></button></div>
+      </div>
+      <div id="reset-step2" hidden>
+        <p class="sent" id="reset-sent" role="status"></p>
+        <div class="fields fields--codes">
+          <div class="code"><label class="code__l" for="reset-code" data-t="emailCodeLabel">邮箱验证码</label><div class="code__box"><input class="code__in" id="reset-code" data-rule="code" data-need="needCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6"><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+        </div>
+        <div class="fields">
+          <div class="fld"><input id="reset-password" data-rule="new-password" data-rules="reset-pwrules" data-need="needNewPassword" type="password" autocomplete="new-password" maxlength="32" required placeholder=" "><label for="reset-password" data-t="newPasswordLabel">设置密码</label></div>
+        </div>
+        <ul class="pwrules" id="reset-pwrules" aria-live="polite"><li data-r="len" data-t="ruleLen">8～32 个字符</li><li data-r="letter" data-t="ruleLetter">包含字母</li><li data-r="digit" data-t="ruleDigit">包含数字</li><li data-r="symbol" data-t="ruleSymbol">包含符号，如 ! @ # $ %</li></ul>
+        <div class="fields">
+          <div class="fld"><input id="reset-password2" data-rule="same:reset-password" data-need="needPassword2" type="password" autocomplete="new-password" maxlength="32" required placeholder=" "><label for="reset-password2" data-t="password2Label">再输入一次密码</label></div>
+        </div>
+        <div class="acts acts--one"><button class="b b--pri" type="submit" id="reset-finish"><span data-t="resetFinish">设置新密码并登录</span></button></div>
+      </div>
+      <div class="msg" id="reset-msg" role="status"></div>
+      <p class="links"><button type="button" class="lnk back-signin" data-t="backSignIn">返回登录</button></p>
+    </form>
+
+    <form id="state-identity" class="pane" hidden novalidate>
+      <h1 data-t="idTitle">还差一步</h1>
+      <p class="pane__sub" id="id-sub"></p>
+      <div class="acts acts--one"><button class="b b--pri" type="button" id="id-register"><span data-t="idRegister">注册新账号</span></button></div>
+      <p class="divider" data-t="idOr">或者绑定已有的 HXBot 账号</p>
+      <div class="fields joined">
+        <div class="fld"><input id="id-email" data-rule="email" data-need="needEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder=" "><label for="id-email" data-t="emailLabel">邮箱</label></div>
+        <div class="fld"><input id="id-password" data-need="needPassword" type="password" autocomplete="current-password" maxlength="32" placeholder=" "><label for="id-password" data-t="passwordLabel">密码</label></div>
+      </div>
+      <div class="acts acts--one"><button class="b b--dark" type="submit" id="id-link"><span data-t="idLink">绑定并登录</span></button></div>
+      <div class="msg" id="id-msg" role="status"></div>
+      <p class="links"><button type="button" class="lnk back-signin" data-t="backSignIn">返回登录</button></p>
+    </form>
+
+    <div id="state-in" class="pane" hidden>
+      <h1 data-t="welcome">你已登录</h1>
+      <p class="pane__sub"><span data-t="signedInAs">当前账号：</span><b class="who" id="user-email"></b></p>
+      <div class="acts">
+        <a class="b b--pri" href="#downloads" data-t="toDownloads">下载客户端</a>
+        <a class="b b--dark" href="/app" data-t="openWeb">进入网页版</a>
+      </div>
+      <p class="pane__note" data-t="webHint">网页版连接你已登录的桌面端主机。请先在 Mac 或 Windows 上安装桌面端并用同一邮箱登录。</p>
+    </div>
+  </section>
+
+  <dialog class="dlg" id="dlg-logout" aria-labelledby="dlg-logout-t">
+    <form method="dialog" class="dlg__in">
+      <svg class="dlg__ico" aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg>
+      <h2 id="dlg-logout-t" data-t="logoutQ">要退出登录吗？</h2>
+      <p data-t="logoutBody">退出后，需要重新登录才能下载客户端。</p>
+      <div class="dlg__acts"><button class="b b--gray" value="cancel" data-t="cancel">取消</button><button class="b b--pri" value="ok" id="dlg-logout-ok" data-t="logout">退出登录</button></div>
+    </form>
+  </dialog>
+
+  <section class="band" id="downloads" hidden>
+    <div class="wrap">
+      <span class="eyebrow" data-t="dlEyebrow">客户端下载</span>
+      <h2 class="t" data-t="dlTitle">选择你的设备</h2>
+      <p class="st" data-t="dlSub">所有客户端都连接弘犀自有服务器，用同一个邮箱登录即可在各端之间同步主机与智能体。</p>
+      <div class="grid" id="dl-grid"></div>
+      <p class="msg" id="dl-msg"></p>
+    </div>
+  </section>
+
+  <section class="band" id="start" hidden>
+    <div class="wrap">
+      <span class="eyebrow" data-t="stEyebrow">三步开始</span>
+      <h2 class="t" data-t="stTitle">装好、登录，团队就开始工作</h2>
+      <div class="steps" id="steps">
+        <span class="steps__line" aria-hidden="true"></span>
+        <div class="step"><span class="n">01</span><div class="step__h"><span class="aic aic--download aic--ix" aria-hidden="true"><svg viewBox="0 0 160 100" focusable="false">
+    <g class="ln-ink"><path class="d t2" pathLength="1" d="M30 62v18a8 8 0 0 0 8 8h84a8 8 0 0 0 8-8V62"/></g>
+    <g class="drop"><use href="#hx-giraffe" x="60" y="2" width="40" height="56"/></g>
+    <g class="ln-pri"><path class="d t18" pathLength="1" d="M80 54v14M72 61l8 8 8-8"/></g>
+    <rect class="fillbar k-pri-c" x="38" y="76" width="84" height="6" rx="3"/>
+    <rect class="fillbar2 k-or" x="38" y="76" width="84" height="6" rx="3"/></svg></span><h3 data-t="s1t">下载安装</h3></div><p data-t="s1d">登录后下载 Mac 或 Windows 桌面端，智能体运行在这台电脑上。</p></div>
+        <div class="step"><span class="n">02</span><div class="step__h"><span class="aic aic--login aic--ix" aria-hidden="true"><svg viewBox="0 0 160 100" focusable="false">
+    <g class="p"><rect class="k-card s-edge" x="12" y="12" width="136" height="30" rx="10"/></g>
+    <g class="p t3"><rect class="k-pri-c" x="20" y="19" width="16" height="16" rx="4"/><path class="ln-pri2" d="M23 24l5 4 5-4"/></g>
+    <g class="ln-soft"><path class="d t6" pathLength="1" d="M44 27h66"/></g>
+    <g class="p t10"><rect class="k-card s-edge" x="12" y="52" width="136" height="30" rx="10"/></g>
+    <circle class="p k-ink t14" cx="30" cy="67" r="3.4"/><circle class="p k-ink t16" cx="44" cy="67" r="3.4"/><circle class="p k-ink t18" cx="58" cy="67" r="3.4"/><circle class="p k-ink t20" cx="72" cy="67" r="3.4"/><circle class="p k-ink t22" cx="86" cy="67" r="3.4"/><circle class="p k-ink t24" cx="100" cy="67" r="3.4"/>
+    <g class="p t28"><circle class="k-or" cx="134" cy="67" r="10"/><path class="ln-w2" d="M129.5 67l3 3 6-6.5"/></g></svg></span><h3 data-t="s2t">注册账号并登录</h3></div><p><span data-t="s2d">在本页注册账号，然后在桌面端用同一邮箱和密码登录。</span></p></div>
+        <div class="step"><span class="n">03</span><div class="step__h"><span class="aic aic--agents aic--ix" aria-hidden="true"><svg viewBox="0 0 160 100" focusable="false">
+    <g class="ln"><path class="d s-line t7" pathLength="1" d="M40 30L120 30"/><path class="d s-line t10" pathLength="1" d="M120 30L80 80"/><path class="d s-line t13" pathLength="1" d="M80 80L40 30"/></g>
+    <path class="fl s-pri t30" pathLength="1" d="M40 30L120 30"/><path class="fl s-vio t42" pathLength="1" d="M120 30L80 80"/><path class="fl s-or t54" pathLength="1" d="M80 80L40 30"/>
+    <g class="p t2"><circle class="k-pri" cx="40" cy="30" r="16"/><circle class="k-w" cx="40" cy="25" r="5"/><path class="k-w" d="M31 39a9 7 0 0 1 18 0z"/></g>
+    <g class="p t5"><circle class="k-vio" cx="120" cy="30" r="16"/><circle class="k-w" cx="120" cy="25" r="5"/><path class="k-w" d="M111 39a9 7 0 0 1 18 0z"/></g>
+    <g class="p t8"><circle class="k-or" cx="80" cy="80" r="16"/><circle class="k-w" cx="80" cy="75" r="5"/><path class="k-w" d="M71 89a9 7 0 0 1 18 0z"/></g>
+    <g class="p t19"><rect class="k-card s-edge" x="68" y="38" width="24" height="18" rx="6"/><path class="ln-pri2" d="M74 47h12"/></g></svg></span><h3 data-t="s3t">组建团队，开始协作</h3></div><p data-t="s3d">为每个智能体写清职责，把任务交给负责人；在安卓和网页版上随时查看进度、继续对话。</p></div>
+      </div>
+      <p class="more"><a class="doc-link" data-doc="guide" href="/guide/" data-t="stMore">阅读完整的使用指南 →</a></p>
+    </div>
+  </section>
+
+  <section class="band" id="invite" hidden>
+    <div class="wrap">
+      <span class="eyebrow" data-t="ivEyebrow">服务器邀请链接</span>
+      <h2 class="t" data-t="ivTitle">邀请同事加入你的服务器</h2>
+      <p class="st" data-t="ivSub">“服务器”就是运行 HXBot 桌面端的那台电脑。邀请链接由服务器所有者在桌面端创建，每个链接都不同，形如 https://bot.hxallai.com/join?api=…&server=…&fingerprint=…&invite=…，里面带着这台服务器的编号、身份指纹和一次性凭证，所以无法提前给出一个通用链接。</p>
+      <div class="iv">
+        <div class="iv__col">
+          <h3 data-t="ivOwnerT">所有者：创建邀请链接</h3>
+          <ol>
+            <li data-t="ivO1">在 Mac 或 Windows 上打开 HXBot 桌面端，用邮箱和密码登录。</li>
+            <li data-t="ivO2">在左侧服务器栏右键（或点“…”）当前服务器，选“服务器设置”，打开“成员”。</li>
+            <li data-t="ivO3">打开“发布该服务器”，显示“可在公网访问，仅受邀者可以登录”。</li>
+            <li data-t="ivO4">点“邀请成员”，邀请方式选“邀请链接”，选好角色（成员或管理员），点“创建链接”，再点“复制链接”，发给同事；同事用手机时也可以点“显示邀请二维码”让对方扫码。</li>
+          </ol>
+          <p class="iv__note" data-t="ivONote">一次性链接 24 小时后过期，用过一次即失效；“永久链接”不会过期、可多次使用，任何拿到它的人都能加入，只发给信任的人，不用时在“待处理的邀请”里撤销。研究版没有配置发信，请用“邀请链接”，不要选“邮箱”。</p>
+        </div>
+        <div class="iv__col">
+          <h3 data-t="ivMemberT">同事：用邀请加入</h3>
+          <ol>
+            <li data-t="ivM1">先在本页登录（还没有账号请先注册）。</li>
+            <li data-t="ivM2">打开网页版 https://bot.hxallai.com/app，点“用邀请加入”；或在自己的桌面端、安卓端点“添加服务器”。</li>
+            <li data-t="ivM3">粘贴收到的链接，点“查看邀请”，核对服务器名称后确认加入。</li>
+          </ol>
+          <p class="iv__note" data-t="ivMNote">也可以直接在浏览器里打开收到的邀请链接，页面会引导你在 HXBot 中打开它。服务器所在的电脑需要开机并运行 HXBot，加入后才能对话。</p>
+        </div>
+      </div>
+      <p class="more"><a class="doc-link" data-doc="guide" data-hash="#server" href="/guide/#server" data-t="ivMore">完整说明：使用指南 · 服务端 →</a></p>
+    </div>
+  </section>
+
+  <div class="wrap" id="notice-wrap" hidden>
+    <section class="notice" id="notice" aria-labelledby="notice-title">
+      <div>
+        <div class="notice__h"><span class="aic aic--shield aic--ix" aria-hidden="true"><svg viewBox="0 0 160 100" focusable="false">
+    <path class="f k-pri-c t11" d="M80 8l34 12v26c0 22-14 38-34 46-20-8-34-24-34-46V20z"/>
+    <g class="ln-pri"><path class="d t1" pathLength="1" d="M80 8l34 12v26c0 22-14 38-34 46-20-8-34-24-34-46V20z"/></g>
+    <g class="ln-or"><path class="d t17" pathLength="1" d="M66 50l10 10 20-22"/></g>
+    <circle class="ring s-pri" cx="80" cy="50" r="40"/>
+    <g class="p t22"><rect class="k-card s-edge" x="8" y="62" width="36" height="22" rx="7"/><path class="ln-pri2" d="M16 73h20"/></g>
+    <g class="p t24"><rect class="k-card s-edge" x="116" y="20" width="36" height="22" rx="7"/><path class="ln-pri2" d="M124 31h20"/></g></svg></span><h2 id="notice-title" data-t="noticeTitle">使用须知</h2></div>
+        <p class="must" data-t="researchOnly">HXBot 研究版仅限研究使用，不得用于任何商业用途。</p>
+        <p data-t="notice">下载、安装或使用即表示你同意仅将其用于研究，并遵守随安装包提供的许可协议。智能体在运行它的电脑上拥有完整的文件、命令和网络权限，请只运行你信任的任务，并做好数据备份。</p>
+        <p><span data-t="supportPre">安装和部署如需支持，请发邮件至</span> <a class="mail-support" href="mailto:bot@hxallai.com">bot@hxallai.com</a><span data-t="supportPost">，我们会和你确认是否需要支持。</span></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="ft">
+  <div class="ft__in">
+    <p class="ft__more"><span data-t="researchOnly">HXBot 研究版仅限研究使用，不得用于任何商业用途。</span><span data-t="supportPre">安装和部署如需支持，请发邮件至</span> <a class="mail-support" id="support-mail" href="mailto:bot@hxallai.com">bot@hxallai.com</a><span data-t="supportPost">，我们会和你确认是否需要支持。</span></p>
+    <div class="ft__bar">
+      <span class="ft__copy" data-t="copyright">Copyright © 2026 弘犀智能。保留所有权利。</span>
+      <nav class="ft__links" aria-label="条款">
+        <a class="doc-link" data-doc="terms" href="/terms/" data-t="termsNav">服务条款</a>
+        <a class="doc-link" data-doc="privacy" href="/privacy/" data-t="privacyNav">隐私政策</a>
+        <a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener" data-t="license">许可协议</a>
+        <a class="doc-link" data-doc="guide" href="/guide/" data-t="guideNav">使用指南</a>
+        <a class="doc-link" data-doc="whats-new" href="/whats-new/" data-t="newsNav">新功能</a>
+      </nav>
+      <span class="spacer"></span>
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026163032号</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var T = {
+    zh: {
+      logoutQ: "要退出登录吗？", logoutBody: "退出后，需要重新登录才能下载客户端。", cancel: "取消", noCode: "没有收到验证码？",
+      brand: "HXBot", home: "弘犀智能官网", webapp: "网页版", logout: "退出登录", acctTitle: "HXBot 账号", docTitle: "HXBot 账号 · 弘犀智能", signInSub: "管理你的 HXBot 账号", continue: "继续", lnRegister: "创建你的 HXBot 账号", faq: "常见问题解答", privacy1: "你的 HXBot 账号用于登录本页、桌面端、网页版和手机端，并在各端之间同步你的主机与智能体。", haveAccount: "已有账号？", signInNow: "登录", pwHint: "8～32 个字符，同时包含字母、数字和符号。", copyright: "Copyright © 2026 弘犀智能。保留所有权利。",
+      loading: "正在检查登录状态……",
+      toRegister: "创建账号", toReset: "忘记了密码？", orWith: "或者使用以下账号登录",
+      applySubject: "HXBot 账号问题", emailLabel: "电子邮件", passwordLabel: "密码", signIn: "登录",
+      regTitle: "创建你的 HXBot 账号", regSub: "一个账号，即可使用 HXBot 桌面端、网页版和手机端。", phoneLabel: "手机号码", sharedLabel: "原来的登录口令",
+      regNext: "下一步", emailCodeLabel: "邮箱验证码", phoneCodeLabel: "短信验证码", usernameLabel: "用户名",
+      newPasswordLabel: "设置密码", password2Label: "再输入一次密码", titleLabel: "职位", companyLabel: "公司名称",
+      regFinish: "完成注册", codeAgain: "重新获取", backSignIn: "返回登录", regConsentPre: "注册即表示你同意",
+      resetTitle: "找回密码", resetSub: "向注册邮箱发送验证码，验证后设置新密码。", sendCode: "发送验证码", resetFinish: "设置新密码并登录",
+      idTitle: "还差一步", idRegister: "创建新账号", idOr: "或者绑定已有的 HXBot 账号", idLink: "绑定并登录",
+      idSub: "已通过{p}确认身份。这个{p}账号第一次在这里登录，请注册新账号，或绑定已有的账号。", regWith: "注册完成后，可以直接用{p}登录。",
+      pv_wechat: "微信", pv_alipay: "支付宝", pv_douyin: "抖音", pv_apple: "Apple", pv_google: "Google", pv_facebook: "Facebook",
+      codesSent: "验证码已发送，10 分钟内有效。请查看邮箱和手机短信。", codeSentEmail: "验证码已发到你的邮箱，10 分钟内有效。", working: "请稍候……",
+      badPhone: "请输入有效的手机号码。", badCode: "请输入 6 位验证码。", badUsername: "用户名要 2～32 个字符，可以用中文、字母、数字和 _ . -。",
+      badNewPassword: "密码要 8～32 个字符，同时包含字母、数字和符号。", passwordMismatch: "两次输入的密码不一致。", badProfile: "请填写职位和公司名称。",
+      e_email_registered: "这个邮箱已经注册，请直接登录。", e_username_taken: "这个用户名已经有人用了，请换一个。", e_phone_registered: "这个手机号已经注册了账号，请用那个账号登录。",
+      e_incorrect_email_code: "邮箱验证码不正确。", e_incorrect_phone_code: "短信验证码不正确。", e_code_expired: "验证码已失效，请重新获取。",
+      e_too_many_code_attempts: "验证码输错次数太多，请重新获取。", e_code_recently_sent: "请稍等一会儿再获取验证码。",
+      e_rate_limited: "操作太频繁，请稍后再试。", e_email_not_configured: "服务器还没有配置发信邮箱，暂时不能注册或找回密码。",
+      e_sms_not_configured: "服务器还没有配置短信服务，暂时不能注册。", e_phone_not_supported: "目前只能验证中国大陆的手机号码。",
+      e_invalid_phone: "请输入有效的手机号码。", e_invalid_email: "请输入有效的邮箱地址。", e_sms_failed: "短信没有发出去，请稍后再试。",
+      e_sms_limited: "这个号码获取验证码太频繁，请稍后再试。", e_email_failed: "验证码邮件没有发出去，请稍后再试。",
+      e_shared_password_required: "这个邮箱以前登录过，请填写原来的登录口令。", e_contact_admin: "请联系管理员为这个邮箱设置密码。",
+      e_reset_unavailable: "服务器没有开启邮箱验证，请联系管理员重置密码。", e_account_not_found: "这个邮箱还没有注册。",
+      e_account_disabled: "这个账号已停用，请联系管理员。", e_incorrect_password: "邮箱或密码不正确。",
+      e_identity_expired: "这次第三方登录已失效，请重新开始。", e_identity_in_use: "这个第三方账号已经绑定了别的账号。",
+      e_provider_failed: "第三方登录没有成功，请重试。", e_provider_off: "这种登录方式没有开启。", e_cancelled: "已取消第三方登录。",
+      e_invalid_username: "用户名要 2～32 个字符，可以用中文、字母、数字和 _ . -。", e_invalid_password: "密码要 8～32 个字符，同时包含字母、数字和符号。",
+      e_invalid_job_title: "请填写职位。", e_invalid_company: "请填写公司名称。", e_registration_expired: "注册已失效，请重新开始。", e_reset_expired: "这次找回密码已失效，请重新开始。",
+      welcome: "你已登录", signedInAs: "当前账号：",
+      openWeb: "进入网页版", toDownloads: "下载客户端",
+      webHint: "网页版连接你已登录的桌面端主机。请先在 Mac 或 Windows 上安装桌面端并用同一邮箱登录。",
+      dlEyebrow: "客户端下载", dlTitle: "选择你的设备", dlSub: "所有客户端都连接弘犀自有服务器，用同一个邮箱登录即可在各端之间同步主机与智能体。",
+      stEyebrow: "三步开始", stTitle: "装好、登录，团队就开始工作",
+      s1t: "下载安装", s1d: "登录后下载 Mac 或 Windows 桌面端，智能体运行在这台电脑上。",
+      s2t: "注册账号并登录", s2d: "在本页注册账号，然后在桌面端用同一邮箱和密码登录。",
+      s3t: "组建团队，开始协作", s3d: "为每个智能体写清职责，把任务交给负责人；在安卓和网页版上随时查看进度、继续对话。",
+      ivEyebrow: "服务器邀请链接", ivTitle: "邀请同事加入你的服务器",
+      ivSub: "“服务器”就是运行 HXBot 桌面端的那台电脑。邀请链接由服务器所有者在桌面端创建，每个链接都不同，形如 https://bot.hxallai.com/join?api=…&server=…&fingerprint=…&invite=…，里面带着这台服务器的编号、身份指纹和一次性凭证，所以无法提前给出一个通用链接。",
+      ivOwnerT: "所有者：创建邀请链接",
+      ivO1: "在 Mac 或 Windows 上打开 HXBot 桌面端，用邮箱和密码登录。",
+      ivO2: "在左侧服务器栏右键（或点“…”）当前服务器，选“服务器设置”，打开“成员”。",
+      ivO3: "打开“发布该服务器”，显示“可在公网访问，仅受邀者可以登录”。",
+      ivO4: "点“邀请成员”，邀请方式选“邀请链接”，选好角色（成员或管理员），点“创建链接”，再点“复制链接”，发给同事；同事用手机时也可以点“显示邀请二维码”让对方扫码。",
+      ivONote: "一次性链接 24 小时后过期，用过一次即失效；“永久链接”不会过期、可多次使用，任何拿到它的人都能加入，只发给信任的人，不用时在“待处理的邀请”里撤销。研究版没有配置发信，请用“邀请链接”，不要选“邮箱”。",
+      ivMemberT: "同事：用邀请加入",
+      ivM1: "先在本页登录（还没有账号请先注册）。",
+      ivM2: "打开网页版 https://bot.hxallai.com/app，点“用邀请加入”；或在自己的桌面端、安卓端点“添加服务器”。",
+      ivM3: "粘贴收到的链接，点“查看邀请”，核对服务器名称后确认加入。",
+      ivMNote: "也可以直接在浏览器里打开收到的邀请链接，页面会引导你在 HXBot 中打开它。服务器所在的电脑需要开机并运行 HXBot，加入后才能对话。",
+      noticeTitle: "使用须知", researchOnly: "HXBot 研究版仅限研究使用，不得用于任何商业用途。",
+      notice: "下载、安装或使用即表示你同意仅将其用于研究，并遵守随安装包提供的许可协议。智能体在运行它的电脑上拥有完整的文件、命令和网络权限，请只运行你信任的任务，并做好数据备份。",
+      supportPre: "安装和部署如需支持，请发邮件至", supportPost: "，我们会和你确认是否需要支持。", mailSubject: "HXBot 安装与部署支持",
+      license: "许可协议", lang: "English", copy: "© 2026 弘犀智能",
+      guideNav: "使用指南", newsNav: "新功能", termsNav: "服务条款", privacyNav: "隐私政策",
+      consentPre: "登录即表示你同意", consentTerms: "《服务条款》", consentMid: "并已阅读", consentPrivacy: "《隐私政策》", consentPost: "。",
+      stMore: "阅读完整的使用指南 →", ivMore: "完整说明：使用指南 · 服务端 →",
+      verifying: "正在登录……", badEmail: "请输入有效的邮箱地址。", badPassword: "请输入密码。",
+      notAllowed: "该邮箱不在研究版名单中。如需开通，请发邮件至 bot@hxallai.com。",
+      tooMany: "尝试太频繁，请过几分钟再试。", wrongPassword: "邮箱或密码不正确。",
+      notReady: "服务器的登录设置不完整，请联系管理员。", failed: "出错了，请稍后再试。",
+      download: "下载", soon: "即将推出", version: "版本", build: "构建 {n}", size: "大小", updated: "更新",
+      noFile: "安装包尚未上传", dlFailed: "暂时无法读取下载列表，请稍后刷新。",
+      mac: "Mac", macReq: "Apple 芯片（M1 及以上），macOS 13 或更新",
+      macNote: "首次打开如提示“无法验证开发者”：在“访达 → 应用程序”中右键点“HXBot”选“打开”，或在终端运行 <code>xattr -dr com.apple.quarantine \"/Applications/HXBot.app\"</code>。",
+      win: "Windows", winReq: "Windows 10 / 11，64 位",
+      winNote: "如出现“Windows 已保护你的电脑”，点“更多信息 → 仍要运行”。研究版安装包未做代码签名。",
+      android: "Android", androidReq: "Android 7.0 或更新",
+      androidNote: "用手机浏览器打开本页登录后下载 APK，安装时允许“安装未知应用”。手机端用于远程连接你的桌面主机。",
+      ios: "iPhone / iPad", iosReq: "通过 TestFlight 或直接安装", iosReqTf: "通过 TestFlight 安装", iosReqAdhoc: "直接安装，仅限已登记的设备",
+      iosMin: "iOS {v} 或更新", iosTf: "在 TestFlight 中安装", iosInstall: "安装", iosIpa: "下载 .ipa",
+      iosAlt: "已登记的设备：不经 TestFlight 直接安装", iosAltIpa: "已登记的设备：下载 .ipa", iosExpires: "有效期至",
+      iosNote: "iOS 版发布后，这里会出现安装入口。",
+      iosNoteTf: "不用登记设备。先在 App Store 安装“TestFlight”，再用 iPhone 或 iPad 打开本页点上面的按钮，在 TestFlight 里点“安装”。以后的新版本在 TestFlight 里更新。",
+      iosNoteAdhoc: "只能装到已登记的设备：请先把设备标识（UDID）发到 <a href=\"mailto:bot@hxallai.com\">bot@hxallai.com</a> 登记。用 iPhone 或 iPad 的 Safari 打开本页，登录后点“安装”，回到主屏幕等图标装好。iOS 16 及以上第一次打开前，要在“设置 → 隐私与安全性 → 开发者模式”里打开开发者模式并重启设备。在 Mac 上也可以把下载的 .ipa 拖到“访达”里的设备上安装。",
+      iosNoteBoth: "已登记的设备直接安装时，iOS 16 及以上第一次打开前要在“设置 → 隐私与安全性 → 开发者模式”里打开开发者模式并重启设备。",
+      needEmail: "请输入电子邮件地址。", needPassword: "请输入密码。", needPhone: "请输入手机号码。", needShared: "请输入原来的登录口令。",
+      needCode: "请输入 6 位验证码。", needUsername: "请输入用户名。", needNewPassword: "请设置密码。", needPassword2: "请再输入一次密码。",
+      needTitle: "请填写职位。", needCompany: "请填写公司名称。",
+      fmtEmail: "电子邮件地址格式不正确，例如 name@example.com。", fmtPhone: "请输入 11 位中国大陆手机号码，以 1 开头。",
+      fmtCode: "验证码是 6 位数字。", fmtUsername: "用户名要 2～32 个字符。", fmtPassword: "密码要 8～32 个字符，同时包含字母、数字和符号。",
+      ruleLen: "8～32 个字符", ruleLetter: "包含字母", ruleDigit: "包含数字", ruleSymbol: "包含符号，如 ! @ # $ %"
+    },
+    en: {
+      logoutQ: "Sign out?", logoutBody: "You’ll need to sign in again to download the apps.", cancel: "Cancel", noCode: "Didn’t get a code? ",
+      brand: "HXBot", home: "HX AI website", webapp: "Web app", logout: "Sign out", acctTitle: "HXBot Account", docTitle: "HXBot Account · HX AI", signInSub: "Manage your HXBot Account", continue: "Continue", lnRegister: "Create Your HXBot Account", faq: "FAQ", privacy1: "Your HXBot Account signs you in here and in the desktop, web and mobile apps, and keeps your hosts and agents the same on all of them. ", haveAccount: "Already have an account? ", signInNow: "Sign in", pwHint: "8 to 32 characters, with letters, numbers and symbols.", copyright: "Copyright © 2026 HX AI. All rights reserved.",
+      loading: "Checking your sign-in…",
+      toRegister: "Create Account", toReset: "Forgot password?", orWith: "Or sign in with",
+      applySubject: "HXBot account question",
+      emailLabel: "Email", passwordLabel: "Password", signIn: "Sign In",
+      regTitle: "Create Your HXBot Account", regSub: "One HXBot Account is all you need for the desktop, web and mobile apps.",
+      phoneLabel: "Mobile number", sharedLabel: "Earlier sign-in password", regNext: "Next", emailCodeLabel: "Email code", phoneCodeLabel: "SMS code",
+      usernameLabel: "Username", newPasswordLabel: "New password", password2Label: "Password again",
+      titleLabel: "Job title", companyLabel: "Company", regFinish: "Create Account", codeAgain: "Send again", backSignIn: "Back to sign-in",
+      regConsentPre: "By creating an account you agree to the ",
+      resetTitle: "Reset your password", resetSub: "We email a code to the address of your account. Then you set a new password.",
+      sendCode: "Send Code", resetFinish: "Reset Password and Sign In",
+      idTitle: "One more step", idRegister: "Create New Account", idOr: "Or link an HXBot Account you already have", idLink: "Link and Sign In",
+      idSub: "{p} confirmed who you are. This {p} account is new here: create an account, or link one you have.", regWith: "After this you can sign in with {p}.",
+      pv_wechat: "WeChat", pv_alipay: "Alipay", pv_douyin: "Douyin", pv_apple: "Apple", pv_google: "Google", pv_facebook: "Facebook",
+      codesSent: "We sent the codes. They expire in 10 minutes. Check your email and your text messages.", codeSentEmail: "The code is in your inbox. It works for 10 minutes.", working: "One moment…",
+      badPhone: "Enter a valid mobile number.", badCode: "Enter the 6-digit code.", badUsername: "Use 2 to 32 letters, digits, or _ . - for the username.",
+      badNewPassword: "Use 8 to 32 characters with at least one letter, one number and one symbol.", passwordMismatch: "The two passwords differ.", badProfile: "Enter your job title and company.",
+      e_email_registered: "This email is already registered. Sign in instead.", e_username_taken: "This username is taken.", e_phone_registered: "This mobile number is already registered. Sign in with that account.",
+      e_incorrect_email_code: "The email code is incorrect.", e_incorrect_phone_code: "The SMS code is incorrect.", e_code_expired: "The code expired. Request a new one.",
+      e_too_many_code_attempts: "Too many incorrect codes. Request a new one.", e_code_recently_sent: "Wait a moment before requesting another code.",
+      e_rate_limited: "Too many attempts. Try again later.", e_email_not_configured: "Email is not set up on the server yet.",
+      e_sms_not_configured: "SMS is not set up on the server yet.", e_phone_not_supported: "Only mainland China mobile numbers can be verified.",
+      e_invalid_phone: "Enter a valid mobile number.", e_invalid_email: "Enter a valid email address.", e_sms_failed: "The SMS could not be sent. Try again later.",
+      e_sms_limited: "Too many codes for this number. Try again later.", e_email_failed: "The email with the code could not be sent. Try again later.",
+      e_shared_password_required: "This email signed in before. Enter the earlier sign-in password.", e_contact_admin: "Ask the administrator to set a password for this email.",
+      e_reset_unavailable: "Ask the administrator to reset the password.", e_account_not_found: "This email is not registered.",
+      e_account_disabled: "This account is disabled.", e_incorrect_password: "The email or the password is incorrect.",
+      e_identity_expired: "This sign-in expired. Start again.", e_identity_in_use: "That account is linked to another HXBot Account.",
+      e_provider_failed: "The sign-in with that account failed. Try again.", e_provider_off: "This sign-in method is not enabled.", e_cancelled: "The sign-in was cancelled.",
+      e_invalid_username: "Use 2 to 32 letters, digits, or _ . - for the username.", e_invalid_password: "Use 8 to 32 characters with at least one letter, one number and one symbol.",
+      e_invalid_job_title: "Enter your job title.", e_invalid_company: "Enter your company name.", e_registration_expired: "This registration expired. Start again.", e_reset_expired: "This reset expired. Start again.", welcome: "You’re signed in", signedInAs: "Account: ",
+      openWeb: "Open the web app", toDownloads: "Download apps",
+      webHint: "The web app connects to your desktop host. Install the desktop app on a Mac or Windows PC first and sign in with the same email.",
+      dlEyebrow: "Downloads", dlTitle: "Choose your device", dlSub: "Every app connects to HX AI's servers. Sign in with the same email to see your hosts and agents everywhere.",
+      stEyebrow: "Get started", stTitle: "Install, sign in, and the team gets to work",
+      s1t: "Download and install", s1d: "Sign in here and download the Mac or Windows desktop app. Your agents run on that computer.",
+      s2t: "Create an account and sign in", s2d: "Create an account on this page, then sign in to the desktop app with the same email and password.",
+      s3t: "Build the team, start working", s3d: "Give each agent a clear role and hand tasks to the lead; check progress and keep talking from Android or the web.",
+      ivEyebrow: "Server invite links", ivTitle: "Invite colleagues to your server",
+      ivSub: "A “server” is the computer that runs the HXBot desktop app. Its owner creates invite links in the desktop app. Every link is different and looks like https://bot.hxallai.com/join?api=…&server=…&fingerprint=…&invite=…: it carries the server’s ID, its identity fingerprint and a one-time secret, so there is no general link that could be given out in advance.",
+      ivOwnerT: "Owner: create an invite link",
+      ivO1: "Open the HXBot desktop app on a Mac or Windows PC and sign in with your email and password.",
+      ivO2: "In the server bar on the left, right-click your server (or click “…”), choose Server settings, and open Members.",
+      ivO3: "Turn on Publish this server. It then reads “Reachable online. Only invited people can sign in.”",
+      ivO4: "Click Invite people, choose Invite link as the method, pick a role (member or admin), click Create link, then Copy link and send it. For a colleague on a phone you can also click Show invitation QR code and let them scan it.",
+      ivONote: "A one-time link expires after 24 hours and works once. A permanent link never expires and works many times: anyone who has it can join, so send it only to people you trust and revoke it under Pending invitations when it is no longer needed. The research edition does not send email, so use Invite link rather than Email.",
+      ivMemberT: "Colleague: join with the invitation",
+      ivM1: "Sign in on this page first (no account yet? Create one here).",
+      ivM2: "Open the web app at https://bot.hxallai.com/app and click Join with invitation, or click Add a server in your own desktop or Android app.",
+      ivM3: "Paste the link, click Review invite, check the server name and confirm.",
+      ivMNote: "You can also open the invite link in a browser: the page guides you to open it in HXBot. The server’s computer must be on and running HXBot before you can chat with its agents.",
+      noticeTitle: "Terms of use", researchOnly: "HXBot Research Edition is for research use only. It must not be used for any commercial purpose.",
+      notice: "By downloading, installing or using it you agree to use it for research only and to follow the license terms included with the installer. Agents have full file, command and network access on the computer that runs them: run only tasks you trust and keep backups.",
+      supportPre: "Need help with installation or deployment? Email", supportPost: " and we will confirm with you whether support is needed.", mailSubject: "HXBot installation and deployment support",
+      license: "License", lang: "中文", copy: "© 2026 HX AI",
+      guideNav: "Guide", newsNav: "What’s new", termsNav: "Terms", privacyNav: "Privacy",
+      consentPre: "By signing in, you accept the ", consentTerms: "Terms of Service", consentMid: " and acknowledge the ", consentPrivacy: "Privacy Policy", consentPost: ".",
+      stMore: "Read the full guide →", ivMore: "Full instructions: Guide · Server →",
+      verifying: "Signing in…", badEmail: "Enter a valid email address.", badPassword: "Enter your password.",
+      notAllowed: "This email is not on the research access list. Email bot@hxallai.com for access.",
+      tooMany: "Too many attempts. Wait a few minutes and try again.", wrongPassword: "The email or the password is incorrect.",
+      notReady: "Sign-in is not set up completely on the server. Contact the administrator.", failed: "Something went wrong. Try again later.",
+      download: "Download", soon: "Coming soon", version: "Version", build: "build {n}", size: "Size", updated: "Updated",
+      noFile: "Not uploaded yet", dlFailed: "The download list is unavailable. Refresh later.",
+      mac: "Mac", macReq: "Apple silicon (M1 or later), macOS 13 or later",
+      macNote: "If macOS cannot verify the developer: right-click “HXBot” in Finder → Applications and choose Open, or run <code>xattr -dr com.apple.quarantine \"/Applications/HXBot.app\"</code>.",
+      win: "Windows", winReq: "Windows 10 / 11, 64-bit",
+      winNote: "If SmartScreen says “Windows protected your PC”, choose More info → Run anyway. Research builds are not code-signed.",
+      android: "Android", androidReq: "Android 7.0 or later",
+      androidNote: "Open this page on the phone, sign in and download the APK. Allow “Install unknown apps” when asked. The phone app connects to your desktop host.",
+      ios: "iPhone / iPad", iosReq: "Installed with TestFlight or directly", iosReqTf: "Installed with TestFlight", iosReqAdhoc: "Direct install, registered devices only",
+      iosMin: "iOS {v} or later", iosTf: "Install with TestFlight", iosInstall: "Install", iosIpa: "Download .ipa",
+      iosAlt: "Registered device: install without TestFlight", iosAltIpa: "Registered device: download the .ipa", iosExpires: "Valid until",
+      iosNote: "The install option will appear here when the iOS app is released.",
+      iosNoteTf: "No device registration needed. Install TestFlight from the App Store first. Then open this page on the iPhone or iPad, tap the button above and choose Install in TestFlight. Later versions update inside TestFlight.",
+      iosNoteAdhoc: "Works on registered devices only: email the device identifier (UDID) to <a href=\"mailto:bot@hxallai.com\">bot@hxallai.com</a> first. Open this page in Safari on the iPhone or iPad, sign in and tap Install, then wait for the icon to appear on the Home Screen. On iOS 16 or later, turn on Developer Mode under Settings → Privacy &amp; Security and restart the device before the first launch. On a Mac you can also drag the downloaded .ipa onto the device in Finder.",
+      iosNoteBoth: "For a direct install on a registered device with iOS 16 or later, turn on Developer Mode under Settings → Privacy &amp; Security and restart the device before the first launch.",
+      needEmail: "Enter your email address.", needPassword: "Enter your password.", needPhone: "Enter your mobile number.", needShared: "Enter the earlier sign-in password.",
+      needCode: "Enter the 6-digit code.", needUsername: "Enter a username.", needNewPassword: "Choose a password.", needPassword2: "Enter the password again.",
+      needTitle: "Enter your job title.", needCompany: "Enter your company name.",
+      fmtEmail: "This email address isn’t valid. For example: name@example.com.", fmtPhone: "Enter an 11-digit mobile number from mainland China, starting with 1.",
+      fmtCode: "The code is 6 digits.", fmtUsername: "Use 2 to 32 characters for the username.", fmtPassword: "Use 8 to 32 characters with at least one letter, one number and one symbol.",
+      ruleLen: "8 to 32 characters", ruleLetter: "A letter", ruleDigit: "A number", ruleSymbol: "A symbol, such as ! @ # $ %"
+    }
+  };
+  var SUPPORT = "bot@hxallai.com";
+  var GLYPH = {
+    mac: '<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="6" width="18" height="12" rx="2"/><path d="M2.5 21.5h23"/></svg>',
+    win: '<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="3.5" y="4.5" width="21" height="15" rx="2"/><path d="M14 4.5v15M3.5 12h21M10 23.5h8"/></svg>',
+    android: '<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="8" y="3.5" width="12" height="21" rx="2.6"/><path d="M12.5 21h3"/></svg>',
+    ios: '<svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5.5" y="3.5" width="17" height="21" rx="3"/><path d="M12 6.5h4M12.5 21h3"/></svg>'
+  };
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // 语言：/en/ 为英文完整版，/ 为中文；也可用 ?lang=en / ?lang=zh。其余情况按上次的选择或浏览器语言，
+  // 并把地址栏同步为对应的地址（刷新、分享链接时语言不变）。
+  var lang = "zh", q = /[?&]lang=(en|zh)\b/.exec(location.search);
+  if (/^\/en\/?$/.test(location.pathname)) lang = "en";
+  else if (q) lang = q[1];
+  else { try { lang = localStorage.getItem("hxbot-portal-lang") || ((navigator.language || "zh").toLowerCase().indexOf("zh") === 0 ? "zh" : "en"); } catch (e) {} }
+  function syncUrl() {
+    var path = lang === "en" ? "/en/" : "/";
+    var search = location.search.replace(/([?&])lang=(en|zh)(&|$)/, function (m, a, b, c) { return c ? a : ""; }).replace(/[?&]$/, "");
+    if (location.pathname !== path || search !== location.search) { try { history.replaceState(null, "", path + search + location.hash); } catch (e) {} }
+  }
+  var user = null, manifest = null, busy = false;
+
+  function $(id) { return document.getElementById(id); }
+  function t(key) { return (T[lang] && T[lang][key]) || T.zh[key] || key; }
+  function applyLang() {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    syncUrl();
+    $("brand-link").setAttribute("href", lang === "en" ? "/en/" : "/");
+    $("brand-link").setAttribute("aria-label", t("brand"));
+    $("home-link").setAttribute("href", lang === "en" ? "https://www.hxallai.com/en/" : "https://www.hxallai.com/");
+    document.title = t("docTitle");
+    $("ln-title").setAttribute("href", lang === "en" ? "/en/" : "/");
+    var nodes = document.querySelectorAll("[data-t]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].textContent = t(nodes[i].getAttribute("data-t"));
+    $("lang").textContent = t("lang");
+    var docs = document.querySelectorAll(".doc-link[data-doc]");
+    for (var d = 0; d < docs.length; d++) docs[d].setAttribute("href", (lang === "en" ? "/en/" : "/") + docs[d].getAttribute("data-doc") + "/" + (docs[d].getAttribute("data-hash") || ""));
+    var mails = document.querySelectorAll(".mail-support");
+    for (var mi = 0; mi < mails.length; mi++) mails[mi].href = "mailto:" + SUPPORT + "?subject=" + encodeURIComponent(t("mailSubject"));
+    signInStep(step === 2);
+    var apply = "mailto:" + SUPPORT + "?subject=" + encodeURIComponent(t("applySubject"));
+    renderProviders();
+    renderIdentity();
+    var more = document.querySelectorAll(".mail-apply");
+    for (var j = 0; j < more.length; j++) more[j].href = apply;
+    if (manifest || user) renderDownloads();
+  }
+  var shown = "";
+  function hop() { var e = $("emb"); e.classList.remove("is-hop"); void e.offsetWidth; e.classList.add("is-hop"); }
+  function shake(el) { el.classList.remove("is-shake"); void el.offsetWidth; el.classList.add("is-shake"); }
+  // 忙的按钮里转一个小圈（文字留着给读屏软件）
+  function busyButton(button, on) { button.classList.toggle("is-busy", on); button.setAttribute("aria-busy", on ? "true" : "false"); }
+  function show(state) {
+    ["state-loading", "state-email", "state-in", "state-register", "state-reset", "state-identity"].forEach(function (id) { $(id).hidden = id !== state; });
+    var inside = state === "state-in";
+    // 登录后才显示下载、三步开始、邀请和使用须知；标题栏换成“下载客户端”“退出登录”
+    ["downloads", "start", "invite", "notice-wrap", "logout", "ln-downloads"].forEach(function (id) { $(id).hidden = !inside; });
+    $("ln-signin").hidden = inside; $("ln-register").hidden = inside;
+    $("ln-signin").setAttribute("aria-current", state === "state-email" ? "page" : "false");
+    $("ln-register").setAttribute("aria-current", state === "state-register" ? "page" : "false");
+    var pane = $(state);
+    if (pane.classList.contains("pane") && shown !== state) { pane.classList.remove("is-enter"); void pane.offsetWidth; pane.classList.add("is-enter"); }
+    if (inside && shown && shown !== "state-in" && shown !== "state-loading") hop();
+    shown = state;
+    $("acct").classList.toggle("acct--in", inside);
+    $("main").classList.toggle("main--in", inside);
+    watchIcons();
+  }
+  function say(id, text, kind) { var el = $(id); el.textContent = text || ""; el.className = "msg" + (kind ? " " + kind : ""); }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); }).join("");
+    return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+  }
+  function api(path, body) {
+    return fetch("/api/browser/" + path, {
+      method: body === undefined ? "GET" : "POST",
+      credentials: "same-origin",
+      headers: body === undefined ? {} : { "Content-Type": "application/json", "X-HXBot-Browser": "1", "Idempotency-Key": uuid() },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    }).then(function (r) {
+      return r.text().then(function (text) {
+        var data = null; try { data = text ? JSON.parse(text) : null; } catch (e) {}
+        return { ok: r.ok, status: r.status, data: data, retryAfter: Number(r.headers.get("Retry-After")) || 0 };
+      });
+    });
+  }
+  function errorText(res) {
+    var code = res.data && res.data.error && res.data.error.code;
+    if (code === "email_not_allowed") return t("notAllowed");
+    if (res.status === 429) return t("tooMany");
+    if (code === "invalid_email") return t("badEmail");
+    if (code === "email_delivery_not_configured" || res.status === 503) return t("notReady");
+    if (code === "invalid_sign_in_code" || res.status === 401 || res.status === 410) return t("wrongPassword");
+    return t("failed");
+  }
+  function loadSession() {
+    return api("session").then(function (res) {
+      user = res.ok && res.data ? res.data.user : null;
+      if (user) { $("user-email").textContent = user.email; show("state-in"); loadManifest(); }
+      else {
+        show("state-email");
+        // 各端登录界面上的“创建账号”“忘记了密码？”打开本页时带 ?register=1 或 ?reset=1
+        if (/(^|[?&])register=1/.test(location.search)) $("to-register").click();
+        else if (/(^|[?&])reset=1/.test(location.search)) $("to-reset").click();
+        else if (/(^|[?&])login=1/.test(location.search) || (window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches)) $("email").focus();
+      }
+    }).catch(function () { show("state-email"); });
+  }
+  // 登录框分两步：先填邮箱点“继续”，再出现密码框。两步都填好后才请求账号服务（先用邮箱开始登录，再提交密码）。
+  var step = 1;
+  function signInStep(two) {
+    step = two ? 2 : 1;
+    $("password-row").hidden = !two;
+    if (!two) $("password").value = "";
+    $("signin-text").textContent = t(two ? "signIn" : "continue");
+    syncSignIn();
+  }
+  // 没填好时“继续”显示为浅色，但仍可点（浏览器自动填入的邮箱要等点击后脚本才读得到），点了再提示
+  function syncSignIn() {
+    $("signin").disabled = busy;
+    $("signin").classList.toggle("is-idle", !$("email").value.trim() || (step === 2 && !$("password").value));
+  }
+  ["input", "change", "animationstart"].forEach(function (type) { $("email").addEventListener(type, syncSignIn); $("password").addEventListener(type, syncSignIn); });
+  ["email", "password"].forEach(function (id) { $(id).addEventListener("input", function () { document.querySelector("#state-email .fields").classList.remove("is-error"); }); });
+  function signIn(email, password) {
+    busy = true; syncSignIn(); busyButton($("signin"), true); say("email-msg", "");
+    var fields = document.querySelector("#state-email .fields");
+    fields.classList.remove("is-error");
+    function done(text) {
+      busy = false; busyButton($("signin"), false); syncSignIn();
+      if (text) { say("email-msg", text, "err"); fields.classList.add("is-error"); shake(fields); }
+    }
+    return api("email/start", { email: email }).then(function (res) {
+      if (!res.ok) { done(errorText(res)); return; }
+      if (res.data.credential !== "password") { done(t("notReady")); return; }
+      return api("email/verify", { challengeId: res.data.challengeId, code: password }).then(function (check) {
+        if (!check.ok) { done(errorText(check)); $("password").select(); return; }
+        $("password").value = ""; done(""); say("email-msg", ""); signInStep(false); loadSession();
+      });
+    }).catch(function () { done(t("failed")); });
+  }
+  $("state-email").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (busy) return;
+    if (!fieldsOk(step === 1 ? $("email").closest(".fld") : $("state-email"))) return;
+    var email = $("email").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("email-msg", t("badEmail"), "err"); $("email").focus(); return; }
+    if (step === 1) { say("email-msg", ""); signInStep(true); $("password").focus(); return; }
+    var password = $("password").value.trim();
+    if (!password) { say("email-msg", t("badPassword"), "err"); $("password").focus(); return; }
+    signIn(email, password);
+  });
+  // ---------- 输入校验：必填、电子邮件格式、中国大陆手机号、密码（字母、数字、符号，至少 8 位） ----------
+  // 离开输入框时、提交时检查；出错的框变红，框下一行红字说明；改对了马上恢复。密码框下四条要求随输入亮起。
+  var ERR_ICON = '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 3.8v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="7" cy="10.1" r=".85" fill="currentColor"/></svg>';
+  var EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+  function cnMobile(value) { return value.replace(/[\s()-]/g, "").replace(/^(\+?86)(?=1\d{10}$)/, ""); }
+  function passwordParts(value) {
+    return { len: value.length >= 8 && value.length <= 32, letter: /[A-Za-z]/.test(value), digit: /[0-9]/.test(value), symbol: /[^\p{L}\p{N}\s]/u.test(value) };
+  }
+  function problem(input) {
+    var rule = input.getAttribute("data-rule") || "", value = input.value.trim();
+    if (!value) return t(input.getAttribute("data-need") || "failed");
+    if (rule === "email" && !EMAIL_RE.test(value)) return t("fmtEmail");
+    if (rule === "phone" && !/^1[3-9][0-9]{9}$/.test(cnMobile(value))) return t("fmtPhone");
+    if (rule === "code" && !/^[0-9]{6}$/.test(value)) return t("fmtCode");
+    if (rule === "username" && (value.length < 2 || value.length > 32)) return t("fmtUsername");
+    if (rule === "new-password") { var parts = passwordParts(value); if (!(parts.len && parts.letter && parts.digit && parts.symbol)) return t("fmtPassword"); }
+    if (rule.indexOf("same:") === 0 && value !== $(rule.slice(5)).value.trim()) return t("passwordMismatch");
+    return "";
+  }
+  function holder(input) { return input.closest(".fld, .code"); }
+  function showProblem(input, text) {
+    var box = holder(input), joined = box.parentNode.classList.contains("joined");
+    box.classList.toggle("is-bad", !!text);
+    input.setAttribute("aria-invalid", text ? "true" : "false");
+    if (joined) {
+      // 邮箱和密码连成一个框：说明写在框下面的消息行里
+      var form = input.form, msg = form && form.querySelector(".msg");
+      if (msg && (text || msg.getAttribute("data-from") === input.id)) { say(msg.id, text, text ? "err" : ""); msg.setAttribute("data-from", text ? input.id : ""); }
+      return;
+    }
+    var id = input.id + "-err", note = $(id);
+    if (!note) { note = document.createElement("p"); note.className = "ferr"; note.id = id; note.setAttribute("role", "alert"); box.parentNode.insertBefore(note, box.nextSibling); }
+    note.hidden = !text; note.innerHTML = text ? ERR_ICON + "<span></span>" : ""; if (text) note.lastChild.textContent = text;
+    input.setAttribute("aria-describedby", id);
+    var rules = input.getAttribute("data-rules"); if (rules) $(rules).classList.toggle("is-bad", !!text);
+  }
+  function check(input) { var text = problem(input); showProblem(input, text); return !text; }
+  function syncRules(input) {
+    var list = $(input.getAttribute("data-rules")), parts = passwordParts(input.value.trim()), items = list.querySelectorAll("li");
+    for (var i = 0; i < items.length; i++) items[i].classList.toggle("is-ok", !!parts[items[i].getAttribute("data-r")]);
+  }
+  /** Checks every visible field in `root`: the first wrong one takes the focus. True when all are right. */
+  function fieldsOk(root) {
+    var inputs = root.querySelectorAll("input[data-need]"), first = null;
+    for (var i = 0; i < inputs.length; i++) {
+      if (inputs[i].offsetParent === null && !holder(inputs[i]).offsetParent) continue;
+      if (!check(inputs[i]) && !first) first = inputs[i];
+    }
+    if (first) { first.focus(); var f = holder(first).parentNode; if (f.classList.contains("fields")) shake(f); }
+    return !first;
+  }
+  (function () {
+    var inputs = document.querySelectorAll("input[data-need]");
+    for (var i = 0; i < inputs.length; i++) (function (input) {
+      input.addEventListener("blur", function () { if (input.value.trim() || holder(input).classList.contains("is-bad")) check(input); });
+      input.addEventListener("input", function () {
+        if (input.getAttribute("data-rules")) syncRules(input);
+        if (holder(input).classList.contains("is-bad")) check(input);
+        var same = document.querySelector('input[data-rule="same:' + input.id + '"]');
+        if (same && holder(same).classList.contains("is-bad")) check(same);
+      });
+    })(inputs[i]);
+  })();
+
+  // ---------- 注册、找回密码、第三方登录（接口在 /api/browser/hx/ 下） ----------
+  var hx = { settings: null, registrationId: "", resetId: "", identity: null, working: false };
+  function hxError(res) {
+    var code = res.data && res.data.error && res.data.error.code;
+    if (code === "email_not_allowed") return t("notAllowed");
+    var known = code ? T[lang]["e_" + code] : "";
+    if (known) return known + (res.retryAfter ? " (" + res.retryAfter + "s)" : "");
+    return res.status === 429 ? t("tooMany") : t("failed");
+  }
+  function hxCall(path, body, messageId, button) {
+    if (hx.working) return Promise.resolve(null);
+    hx.working = true; button.disabled = true; busyButton(button, true); say(messageId, "");
+    return api("hx/" + path, body).then(function (res) {
+      hx.working = false; button.disabled = false; busyButton(button, false);
+      if (!res.ok) { say(messageId, hxError(res), "err"); return null; }
+      say(messageId, ""); return res.data;
+    }).catch(function () { hx.working = false; button.disabled = false; busyButton(button, false); say(messageId, t("failed"), "err"); return null; });
+  }
+  // 注册、找回密码、第三方登录走完后拿到一次性票据，用原有的登录第二步换登录状态
+  function useTicket(ticket, messageId) {
+    return api("email/verify", { challengeId: ticket.challengeId, code: ticket.code }).then(function (check) {
+      if (!check.ok) { say(messageId, errorText(check), "err"); return; }
+      hx.identity = null; hx.registrationId = ""; hx.resetId = ""; say(messageId, "");
+      ["reg-password", "reg-password2", "reset-password", "reset-password2", "id-password", "reg-shared"].forEach(function (id) { $(id).value = ""; });
+      loadSession();
+    }).catch(function () { say(messageId, t("failed"), "err"); });
+  }
+  function renderProviders() {
+    var list = (hx.settings && hx.settings.providers) || [];
+    $("providers").hidden = list.length === 0;
+    $("provider-list").innerHTML = list.filter(function (id) { return /^[a-z]{4,10}$/.test(id) && T.zh["pv_" + id]; }).map(function (id) {
+      return '<a href="/api/browser/hx/oauth/' + id + '/start">' + esc(t("pv_" + id)) + "</a>";
+    }).join("");
+  }
+  function renderIdentity() {
+    var name = hx.identity ? t("pv_" + hx.identity.provider) : "";
+    $("id-sub").textContent = hx.identity ? t("idSub").replace(/\{p\}/g, name) : "";
+    $("reg-identity").hidden = !hx.identity;
+    $("reg-identity").textContent = hx.identity ? t("regWith").replace(/\{p\}/g, name) : "";
+  }
+  function syncCode(input) {
+    var digits = input.value.replace(/[^0-9]/g, "").slice(0, 6);
+    if (digits !== input.value) input.value = digits;
+    var boxes = input.parentNode.querySelectorAll("span"), focused = document.activeElement === input;
+    for (var i = 0; i < boxes.length; i++) {
+      var had = boxes[i].textContent;
+      boxes[i].textContent = digits.charAt(i);
+      boxes[i].classList.toggle("is-on", focused && i === Math.min(digits.length, 5));
+      if (!had && digits.charAt(i)) { boxes[i].classList.remove("is-full"); void boxes[i].offsetWidth; boxes[i].classList.add("is-full"); }
+    }
+  }
+  var codes = document.querySelectorAll(".code__in");
+  function syncCodes() { for (var ci = 0; ci < codes.length; ci++) syncCode(codes[ci]); }
+  for (var ck = 0; ck < codes.length; ck++) ["input", "focus", "blur", "keyup", "click"].forEach(function (type) { codes[ck].addEventListener(type, function (event) { syncCode(event.target); }); });
+  function regStep(two) {
+    $("reg-step1").hidden = two; $("reg-step2").hidden = !two;
+    if (!two) { hx.registrationId = ""; $("reg-ecode").value = ""; $("reg-pcode").value = ""; }
+    syncCodes();
+  }
+  function resetStep(two) { $("reset-step1").hidden = two; $("reset-step2").hidden = !two; if (!two) { hx.resetId = ""; $("reset-code").value = ""; } syncCodes(); }
+  function newPassword(first, second, messageId) {
+    var value = $(first).value.trim();
+    var parts = passwordParts(value);
+    if (!(parts.len && parts.letter && parts.digit && parts.symbol)) { say(messageId, t("badNewPassword"), "err"); $(first).focus(); return ""; }
+    if (value !== $(second).value.trim()) { say(messageId, t("passwordMismatch"), "err"); $(second).focus(); return ""; }
+    return value;
+  }
+  // 用户名能不能用：离开输入框时问服务器（要有进行中的注册），已被占用就在框下提示；邮箱、手机号在第一步就查
+  $("reg-username").addEventListener("blur", function () {
+    var input = $("reg-username"), name = input.value.trim();
+    if (!hx.registrationId || !name || problem(input)) return;
+    api("hx/register/username", { registrationId: hx.registrationId, username: name }).then(function (res) {
+      if (input.value.trim() !== name) return;
+      if (res.ok && res.data && res.data.available === false) showProblem(input, t("e_username_taken"));
+    }).catch(function () {});
+  });
+  $("to-register").addEventListener("click", function () { $("reg-email").value = $("email").value.trim(); regStep(false); say("reg-msg", ""); show("state-register"); $("reg-email").focus(); });
+  $("to-reset").addEventListener("click", function () { $("reset-email").value = $("email").value.trim(); resetStep(false); say("reset-msg", ""); show("state-reset"); $("reset-email").focus(); });
+  var backs = document.querySelectorAll(".back-signin");
+  function clearProblems() { var bad = document.querySelectorAll(".is-bad"); for (var i = 0; i < bad.length; i++) { var input = bad[i].querySelector("input"); if (input) showProblem(input, ""); else bad[i].classList.remove("is-bad"); } }
+  function backToSignIn() { clearProblems(); hx.identity = null; renderIdentity(); say("email-msg", ""); signInStep(false); show("state-email"); $("email").focus(); }
+  for (var bi = 0; bi < backs.length; bi++) backs[bi].addEventListener("click", backToSignIn);
+  $("ln-signin").addEventListener("click", function () { if (!$("state-email").hidden) { $("email").focus(); return; } backToSignIn(); });
+  $("ln-register").addEventListener("click", function () { if ($("state-register").hidden) $("to-register").click(); });
+  $("reg-again").addEventListener("click", function () { regStep(false); say("reg-msg", ""); });
+  $("state-register").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (!fieldsOk(hx.registrationId ? $("reg-step2") : $("reg-step1"))) return;
+    if (!hx.registrationId) {
+      var email = $("reg-email").value.trim(), phone = cnMobile($("reg-phone").value.trim());
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("reg-msg", t("badEmail"), "err"); $("reg-email").focus(); return; }
+      if (phone.replace(/[\s()+-]/g, "").length < 7) { say("reg-msg", t("badPhone"), "err"); $("reg-phone").focus(); return; }
+      var start = { email: email, phone: phone, lang: lang };
+      if (!$("reg-shared-row").hidden && $("reg-shared").value.trim()) start.sharedPassword = $("reg-shared").value.trim();
+      if (hx.identity) start.identity = hx.identity.ticket;
+      var button = $("reg-next");
+      button.disabled = true; busyButton(button, true); say("reg-msg", "");
+      api("hx/register/start", start).then(function (res) {
+        button.disabled = false; busyButton(button, false);
+        if (!res.ok) {
+          var code = res.data && res.data.error && res.data.error.code;
+          if (code === "shared_password_required") { $("reg-shared-row").hidden = false; $("reg-shared").focus(); }
+          say("reg-msg", hxError(res), "err"); return;
+        }
+        $("reg-ecode-row").hidden = !res.data.emailCode; $("reg-pcode-row").hidden = !res.data.phoneCode;
+        regStep(true); hx.registrationId = res.data.registrationId;
+        $("reg-sent").textContent = res.data.emailCode || res.data.phoneCode ? t("codesSent") : ""; say("reg-msg", "");
+        (res.data.emailCode ? $("reg-ecode") : res.data.phoneCode ? $("reg-pcode") : $("reg-username")).focus();
+      }).catch(function () { button.disabled = false; busyButton(button, false); say("reg-msg", t("failed"), "err"); });
+      return;
+    }
+    var finish = { registrationId: hx.registrationId, username: $("reg-username").value.trim(), jobTitle: $("reg-title").value.trim(), company: $("reg-company").value.trim() };
+    if (!$("reg-ecode-row").hidden) { finish.emailCode = $("reg-ecode").value.replace(/\s/g, ""); if (!/^[0-9]{6}$/.test(finish.emailCode)) { say("reg-msg", t("badCode"), "err"); $("reg-ecode").focus(); return; } }
+    if (!$("reg-pcode-row").hidden) { finish.phoneCode = $("reg-pcode").value.replace(/\s/g, ""); if (!/^[0-9]{6}$/.test(finish.phoneCode)) { say("reg-msg", t("badCode"), "err"); $("reg-pcode").focus(); return; } }
+    if (finish.username.length < 2) { say("reg-msg", t("badUsername"), "err"); $("reg-username").focus(); return; }
+    finish.password = newPassword("reg-password", "reg-password2", "reg-msg");
+    if (!finish.password) return;
+    if (!finish.jobTitle || !finish.company) { say("reg-msg", t("badProfile"), "err"); (finish.jobTitle ? $("reg-company") : $("reg-title")).focus(); return; }
+    hxCall("register/finish", finish, "reg-msg", $("reg-finish")).then(function (ticket) { if (ticket) return useTicket(ticket, "reg-msg"); });
+  });
+  $("state-reset").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (!fieldsOk(hx.resetId ? $("reset-step2") : $("reset-step1"))) return;
+    if (!hx.resetId) {
+      var email = $("reset-email").value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("reset-msg", t("badEmail"), "err"); $("reset-email").focus(); return; }
+      hxCall("password/start", { email: email, lang: lang }, "reset-msg", $("reset-next")).then(function (data) {
+        if (!data) return;
+        resetStep(true); hx.resetId = data.resetId; $("reset-sent").textContent = t("codeSentEmail"); say("reset-msg", ""); $("reset-code").focus();
+      });
+      return;
+    }
+    var code = $("reset-code").value.replace(/\s/g, "");
+    if (!/^[0-9]{6}$/.test(code)) { say("reset-msg", t("badCode"), "err"); $("reset-code").focus(); return; }
+    var password = newPassword("reset-password", "reset-password2", "reset-msg");
+    if (!password) return;
+    hxCall("password/finish", { resetId: hx.resetId, emailCode: code, password: password }, "reset-msg", $("reset-finish")).then(function (ticket) { if (ticket) return useTicket(ticket, "reset-msg"); });
+  });
+  $("id-register").addEventListener("click", function () {
+    if (hx.identity && hx.identity.email) $("reg-email").value = hx.identity.email;
+    regStep(false); say("reg-msg", ""); renderIdentity(); show("state-register"); $("reg-email").focus();
+  });
+  $("state-identity").addEventListener("submit", function (event) {
+    event.preventDefault();
+    if (!hx.identity) { show("state-email"); return; }
+    if (!fieldsOk($("state-identity"))) return;
+    var email = $("id-email").value.trim(), password = $("id-password").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("id-msg", t("badEmail"), "err"); $("id-email").focus(); return; }
+    if (!password) { say("id-msg", t("badPassword"), "err"); $("id-password").focus(); return; }
+    hxCall("identity/link", { identity: hx.identity.ticket, email: email, password: password }, "id-msg", $("id-link")).then(function (ticket) { if (ticket) return useTicket(ticket, "id-msg"); });
+  });
+  // 第三方登录回来时，结果在地址的 # 后面（不会发给服务器）：读出来以后立刻从地址栏里去掉
+  function takeFragment() {
+    var hash = location.hash.replace(/^#/, "");
+    if (hash.indexOf("hx-") !== 0) return null;
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    var values = {}, parts = hash.split("&");
+    for (var i = 0; i < parts.length; i++) { var at = parts[i].indexOf("="); if (at > 0) { try { values[parts[i].slice(0, at)] = decodeURIComponent(parts[i].slice(at + 1).replace(/\+/g, " ")); } catch (e) {} } }
+    return values;
+  }
+  function afterProvider(values) {
+    var signin = /^([A-Za-z0-9_-]{20,128})\.([A-Za-z0-9_-]{20,32})$/.exec(values["hx-signin"] || "");
+    if (signin) { show("state-email"); say("email-msg", t("verifying")); return useTicket({ challengeId: signin[1], code: signin[2] }, "email-msg"); }
+    if (/^[A-Za-z0-9_-]{20,128}$/.test(values["hx-identity"] || "") && T.zh["pv_" + values.provider]) {
+      hx.identity = { ticket: values["hx-identity"], provider: values.provider, email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email || "") ? values.email : "" };
+      $("id-email").value = hx.identity.email; say("id-msg", ""); renderIdentity(); show("state-identity"); return null;
+    }
+    show("state-email");
+    var code = /^[a-z_]{1,40}$/.test(values["hx-error"] || "") ? values["hx-error"] : "";
+    say("email-msg", (code && T[lang]["e_" + code]) || t("failed"), "err");
+    return null;
+  }
+  function signOut() { api("logout", {}).then(function () { user = null; manifest = null; say("email-msg", ""); signInStep(false); show("state-email"); }); }
+  var dlg = $("dlg-logout");
+  $("logout").addEventListener("click", function () {
+    if (!dlg.showModal) { signOut(); return; }
+    dlg.returnValue = ""; dlg.showModal();
+  });
+  dlg.addEventListener("close", function () { if (dlg.returnValue === "ok") signOut(); });
+  dlg.addEventListener("click", function (event) { if (event.target === dlg) dlg.close("cancel"); });
+  $("lang").addEventListener("click", function () {
+    lang = lang === "zh" ? "en" : "zh";
+    try { localStorage.setItem("hxbot-portal-lang", lang); } catch (e) {}
+    applyLang();
+  });
+
+  function loadManifest() {
+    fetch("/downloads/manifest.json", { credentials: "same-origin", cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(function (data) { manifest = data; say("dl-msg", ""); renderDownloads(); })
+      .catch(function () { manifest = { items: [] }; renderDownloads(); say("dl-msg", t("dlFailed"), "err"); });
+  }
+  function human(bytes) {
+    if (!bytes) return "";
+    var units = ["B", "KB", "MB", "GB"], i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return bytes.toFixed(i ? 1 : 0) + " " + units[i];
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  // iPhone / iPad（iPadOS 的 Safari 自称 Mac，用触摸点数区分）
+  var IOS_DEVICE = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // 只把苹果自己的地址（TestFlight、App Store）做成按钮
+  function appleLink(url) { return typeof url === "string" && /^https:\/\/(testflight\.apple\.com|apps\.apple\.com)\/[A-Za-z0-9\/._~%?=&-]+$/.test(url) ? url : ""; }
+  // Ad Hoc 安装包的无线安装链接：清单必须是本站 /ota/ 下由服务器生成的地址
+  function otaLink(path) {
+    return typeof path === "string" && /^\/ota\/[0-9a-f]{32}\/manifest\.plist$/.test(path)
+      ? "itms-services://?action=download-manifest&url=" + encodeURIComponent(location.origin + path) : "";
+  }
+  function renderDownloads() {
+    var items = (manifest && manifest.items) || [];
+    function find(platform) { for (var i = 0; i < items.length; i++) if (items[i] && items[i].platform === platform) return items[i]; return null; }
+    var cards = [
+      { key: "mac", platform: "macos" }, { key: "win", platform: "windows" },
+      { key: "android", platform: "android" }, { key: "ios", platform: "ios" }
+    ];
+    var arrow = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M6.5 11l5.5 5.5 5.5-5.5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    function fileUrl(item) { return "/downloads/" + encodeURIComponent(item.file); }
+    function fileMeta(item) {
+      // 构建号：同一个版本号下换了安装包（iOS 每次构建都不同），这里能看出来
+      var build = /^[0-9]{1,18}(\.[0-9]{1,9}){0,2}$/.test(item.build || "") ? (lang === "zh" ? "（" : " (") + esc(t("build").replace("{n}", item.build)) + (lang === "zh" ? "）" : ")") : "";
+      return esc(t("version")) + " " + esc(item.version || "") + build + " · " + esc(human(item.size)) + (item.date ? "<br>" + esc(t("updated")) + " " + esc(String(item.date).slice(0, 10)) : "") +
+        (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(item.expires || "") ? "<br>" + esc(t("iosExpires")) + " " + esc(item.expires) : "") +
+        (item.sha256 ? '<br>SHA-256 <code title="' + esc(item.sha256) + '">' + esc(String(item.sha256).slice(0, 16)) + "…</code>" : "");
+    }
+    function card(key, ready, req, action, meta, note) {
+      return '<div class="dl' + (ready ? "" : " dl--soon") + '"><span class="dl__ico">' + GLYPH[key] + '</span><h3>' + esc(t(key)) + '</h3><div class="req">' + esc(req) + "</div>" +
+        action + (meta ? '<div class="meta">' + meta + "</div>" : "") + '<div class="note">' + note + "</div></div>";
+    }
+    // iPhone / iPad：TestFlight 邀请链接、Ad Hoc 安装包（无线安装），或两者都有
+    function iosCard(item) {
+      var testflight = item ? appleLink(item.url) : "";
+      var install = item && item.file ? otaLink(item.ota) : "";
+      if (!testflight && !install) return card("ios", false, t("iosReq"), '<span class="soon">' + esc(t("soon")) + "</span>", "", t("iosNote"));
+      var req = testflight ? t("iosReqTf") : t("iosReqAdhoc");
+      if (/^[0-9]{1,2}(\.[0-9]{1,2}){0,2}$/.test((item && item.minOS) || "")) req += " · " + t("iosMin").replace("{v}", item.minOS);
+      var direct = !install ? ""
+        : IOS_DEVICE ? { href: install, text: testflight ? t("iosAlt") : t("iosInstall"), more: "" }
+        : { href: fileUrl(item), text: testflight ? t("iosAltIpa") : t("iosIpa"), more: " download" };
+      var action;
+      if (testflight) {
+        action = '<a class="btn" href="' + esc(testflight) + '" target="_blank" rel="noopener">' + esc(t("iosTf")) + arrow + "</a>" +
+          (direct ? '<a class="alt" href="' + esc(direct.href) + '"' + direct.more + ">" + esc(direct.text) + "</a>" : "");
+      } else {
+        action = '<a class="btn" href="' + esc(direct.href) + '"' + direct.more + ">" + esc(direct.text) + arrow + "</a>";
+      }
+      var note = testflight ? t("iosNoteTf") + (install ? (lang === "zh" ? "" : " ") + t("iosNoteBoth") : "") : t("iosNoteAdhoc");
+      return card("ios", true, req, action, install ? fileMeta(item) : "", note);
+    }
+    $("dl-grid").innerHTML = cards.map(function (entry) {
+      var item = find(entry.platform);
+      if (entry.platform === "ios") return iosCard(item);
+      if (item && item.file) return card(entry.key, true, t(entry.key + "Req"), '<a class="btn" href="' + fileUrl(item) + '" download>' + esc(t("download")) + arrow + "</a>", fileMeta(item), t(entry.key + "Note"));
+      return card(entry.key, false, t(entry.key + "Req"), '<span class="soon">' + esc(t("noFile")) + "</span>", "", t(entry.key + "Note"));
+    }).join("");
+  }
+
+  // animated icons: draw in when they come into view, idle loop while on screen
+  var io = null, seen = [];
+  function watchIcons() {
+    var els = document.querySelectorAll(".aic, .steps");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (seen.indexOf(el) >= 0 || el.offsetParent === null) continue;
+      seen.push(el);
+      if (reduce || !("IntersectionObserver" in window)) { el.classList.add("is-on"); continue; }
+      if (!io) io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add("is-on"); e.target.classList.toggle("is-live", e.isIntersecting && !document.hidden); }); }, { threshold: 0.35 });
+      io.observe(el);
+    }
+  }
+  // 标志：节点出现后外圈慢慢转动（减少动态效果时不转）
+  if (!reduce) setTimeout(function () { $("emb").classList.add("is-live"); }, 1700);
+  $("emb").addEventListener("animationend", function (event) { if (event.animationName === "gHop") $("emb").classList.remove("is-hop"); });
+
+  applyLang();
+  watchIcons();
+  // 注册页要显示什么（验证码、开了哪几家第三方登录）由服务器决定
+  api("hx/settings").then(function (res) { hx.settings = res.ok ? res.data : null; renderProviders(); }).catch(function () {});
+  var returned = takeFragment();
+  if (returned) afterProvider(returned); else loadSession();
+})();
+</script>
+</body>
+</html>

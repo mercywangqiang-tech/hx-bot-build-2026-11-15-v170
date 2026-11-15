@@ -1,0 +1,65 @@
+/* The offer of the next plan when the disk of a hosted server is almost full. It uses the hosted
+ * upsell modal, a little wider for three actions. */
+.server-upgrade-modal {
+  width: min(480px, 100%);
+}
+
+.server-upgrade-meter {
+  display: grid;
+  gap: var(--hxbot-space-1-5);
+  margin: var(--hxbot-space-1) 0;
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-sm);
+}
+
+.server-upgrade-meter .ui-progress-fill {
+  background: var(--hxbot-warning);
+}
+
+.server-upgrade-meter[data-level="full"] .ui-progress-fill {
+  background: var(--hxbot-danger);
+}
+
+.server-upgrade-compare {
+  width: 100%;
+  margin-top: var(--hxbot-space-2);
+  border-collapse: collapse;
+  font-size: var(--hxbot-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.server-upgrade-compare th,
+.server-upgrade-compare td {
+  padding: var(--hxbot-space-2) 0;
+  border-bottom: 1px solid var(--hxbot-border);
+  text-align: start;
+}
+
+.server-upgrade-compare thead th {
+  color: var(--hxbot-text-muted);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.server-upgrade-compare tbody th {
+  color: var(--hxbot-text-secondary);
+  font-weight: var(--hxbot-weight-regular);
+}
+
+.server-upgrade-compare tbody td:last-child {
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+.server-upgrade-compare tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.server-upgrade-error {
+  margin: 0;
+  color: var(--hxbot-danger);
+  font-size: var(--hxbot-text-sm);
+}
+
+/* Three actions do not fit at phone width, so they go to a second line. */
+.server-upgrade-modal .hosted-upsell-modal-actions {
+  flex-wrap: wrap;
+}

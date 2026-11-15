@@ -1,0 +1,146 @@
+# HXBot 电脑操控：真系统检查（放在公开仓库里跑的版本）。
+# 公开仓库使用 GitHub 的标准机器不计费，所以把打好的检查程序 hx-computer-check.mjs 和这个文件
+# 单独放到一个公开仓库（或公开仓库的一个单独分支）里跑，产品源码不用公开。
+# 由 hx/scripts/computer-check-public.sh 生成：__BRANCH__ 会换成实际的分支名。
+# 每次推送到这个分支就自动跑一遍；结果除了挂在运行页面的 Artifacts 里，还提交到分支 __BRANCH__-results
+# （每次运行一个文件夹 runs/<编号>/，只放成绩单、数据和需要人看的截图）。
+name: HXBot computer check
+
+on:
+  push:
+    branches: [__BRANCH__]
+    # Only a change of the check itself runs it again; the real-model check (hx-real-check) has its own workflow.
+    paths:
+      - hx-computer-check.mjs
+      - .github/workflows/hx-computer-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hxbot-computer-check-__BRANCH__
+  cancel-in-progress: true
+
+jobs:
+  machine:
+    name: ${{ matrix.machine }}
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # One start of PowerShell takes 22 seconds on windows-11-arm, so its check gets more time.
+        include:
+          - { machine: macos-15, budget: 35, timeout: 45 }
+          - { machine: macos-26, budget: 35, timeout: 45 }
+          - { machine: windows-2025, budget: 35, timeout: 45 }
+          - { machine: windows-2022, budget: 35, timeout: 45 }
+          - { machine: windows-11-arm, budget: 85, timeout: 100 }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run the check
+        shell: bash
+        env:
+          MACHINE: ${{ matrix.machine }}
+          BUDGET: ${{ matrix.budget }}
+        run: node hx-computer-check.mjs --out out --machine "$MACHINE" --budget-minutes "$BUDGET"
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f out/summary.md ]; then
+            cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "检查程序没有写出成绩单。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-check-${{ matrix.machine }}
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
+
+  summary:
+    name: summary
+    needs: machine
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Download the results of every machine
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          path: all
+          pattern: hxbot-check-*
+      - name: Merge the reports
+        id: merge
+        shell: bash
+        run: |
+          mkdir -p all
+          set +e
+          node hx-computer-check.mjs --merge all --expected "macos-15,macos-26,windows-2025,windows-2022,windows-11-arm" > /dev/null
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          cat all/overview.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Collect what is kept
+        shell: bash
+        run: |
+          light="$RUNNER_TEMP/light"
+          mkdir -p "$light"
+          cp all/overview.md all/verdict.json "$light/"
+          for folder in all/hxbot-check-*/; do
+            if [ ! -d "$folder" ]; then continue; fi
+            name="$(basename "$folder")"
+            mkdir -p "$light/$name"
+            for file in report.json summary.md pages.json selftest.json chinese-names.json; do
+              if [ -f "$folder$file" ]; then cp "$folder$file" "$light/$name/"; fi
+            done
+            if [ -d "${folder}attention" ]; then cp -R "${folder}attention" "$light/$name/attention"; fi
+          done
+      - name: Upload the overview
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-check-all
+          path: ${{ runner.temp }}/light
+          retention-days: 30
+      - name: Keep the results on a branch
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          branch="__BRANCH__-results"
+          work="$RUNNER_TEMP/results"
+          git init -q "$work"
+          cd "$work"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth=1 origin "$branch" 2>/dev/null; then
+            git checkout -q -B "$branch" FETCH_HEAD
+          else
+            git checkout -q --orphan "$branch"
+          fi
+          mkdir -p "runs/$GITHUB_RUN_NUMBER"
+          cp -R "$RUNNER_TEMP/light/." "runs/$GITHUB_RUN_NUMBER/"
+          printf '%s %s\n' "$GITHUB_RUN_NUMBER" "$GITHUB_SHA" > latest.txt
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Results of run $GITHUB_RUN_NUMBER"
+          git push -q origin "$branch"
+      - name: Verdict
+        if: steps.merge.outputs.code != '0'
+        shell: bash
+        run: |
+          echo "有失败的项，或有机器没有交回结果。见上面的成绩单。"
+          exit 1

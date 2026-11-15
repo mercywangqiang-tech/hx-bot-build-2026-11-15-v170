@@ -1,0 +1,312 @@
+/*
+ * HXBot：界面基础样式向 WorkBuddy 靠拢（v1.6.3）。尺寸和颜色按 WorkBuddy 截图实测（二倍图，量出的像素除以 2）：
+ * 浅灰底上的白色圆角卡片（圆角 12），分组小标题和行内说明是灰色的 14 号字，行与行之间没有分隔线；
+ * 开关打开是绿色、旋钮是白色；下拉框、输入框、按钮都是 32 高、圆角 8、浅灰边框；下拉框只有一个向下的箭头；
+ * 弹出的菜单和选项列表白底、细边框、圆角 12、每项 32 高；弹窗圆角 24、遮罩变暗并模糊背后；滑块是细线加白色竖条旋钮。
+ *
+ * 只改样式，不改结构：颜色和尺寸都取 @hxbot/brand 的 token（新加的 token 在 tokens.css 声明、tokens-light.css
+ * 给浅色值），这里只把各控件改用它们。这个文件在 styles.css 最后引入，和原来的规则一样的写法时以这里为准；
+ * 原来用 :where() 的规则这里也用 :where()，各功能自己的样式照样能盖过它。
+ */
+
+/* 菜单：白底细边框、圆角 12、内边距 8，每项圆角 8，悬停浅灰。 */
+:root {
+  --ui-menu-radius: var(--hxbot-radius-lg);
+  --ui-menu-padding: var(--hxbot-space-2);
+  --ui-menu-item-radius: var(--hxbot-radius-md);
+  --ui-menu-edge: var(--hxbot-menu-border);
+  --ui-menu-highlight: var(--hxbot-transparent);
+  --ui-menu-item-hover: var(--hxbot-bg-control-hover);
+}
+
+/* 开关：关着是浅灰底，打开是绿色，旋钮总是白色，不再有描边。 */
+.ui-switch {
+  background: var(--hxbot-control-off);
+  box-shadow: none;
+}
+
+.ui-switch[data-checked],
+.settings-modal .ui-switch[data-checked] {
+  background: var(--hxbot-control-on);
+}
+
+.ui-switch-thumb,
+.ui-switch-thumb[data-checked],
+.settings-modal .ui-switch-thumb[data-checked] {
+  background: var(--hxbot-control-knob);
+  box-shadow: 0 1px 2px var(--hxbot-control-knob-shadow);
+}
+
+/* 勾选框选中时和开关一样是绿色。 */
+.ui-checkbox-input:checked + .ui-checkbox-visual {
+  border-color: var(--hxbot-control-on);
+  background: var(--hxbot-control-on);
+  color: var(--hxbot-control-knob);
+}
+
+/* 下拉框：白底、浅灰边框、32 高、14 号字；打开时边框加深、箭头朝上。 */
+.ui-select-trigger {
+  background: var(--hxbot-bg-control);
+  box-shadow: none;
+  font-size: var(--hxbot-text-lg);
+}
+
+.ui-select-trigger[data-size] {
+  padding-block: 0;
+}
+
+.ui-select-trigger[data-size="md"] {
+  height: var(--hxbot-control-md);
+}
+
+.ui-select-trigger[data-size="sm"] {
+  font-size: var(--hxbot-text-md);
+}
+
+.ui-select-trigger[data-expanded] {
+  border-color: var(--hxbot-field-border-active);
+  background: var(--hxbot-bg-control);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ui-select-trigger:hover:not([data-disabled]) {
+    background: var(--hxbot-bg-control);
+    border-color: var(--hxbot-field-border-active);
+  }
+}
+
+.app-settings-modal-shell .settings-modal-select .ui-select-trigger {
+  background: var(--hxbot-bg-control);
+  color: var(--hxbot-text-primary);
+}
+
+.ui-select-trigger-icon svg {
+  transition: transform var(--hxbot-duration-fast) var(--hxbot-ease-out);
+}
+
+.ui-select-trigger:is([data-expanded], [aria-expanded="true"]) .ui-select-trigger-icon svg {
+  transform: rotate(180deg);
+}
+
+/* 选项列表：和菜单一样的面板，选中的一项浅灰底、字稍重，勾是绿色。 */
+.ui-select-content {
+  border-radius: var(--hxbot-radius-lg);
+  background: var(--hxbot-bg-surface);
+  box-shadow:
+    0 0 0 1px var(--hxbot-menu-border),
+    0 8px 24px var(--hxbot-shadow-menu);
+}
+
+.ui-select-listbox {
+  padding: var(--hxbot-space-2);
+}
+
+.ui-select-item {
+  min-height: var(--hxbot-control-md);
+  border-radius: var(--hxbot-radius-md);
+  padding-inline: var(--hxbot-space-2) var(--hxbot-space-8);
+  font-size: var(--hxbot-text-lg);
+  line-height: var(--hxbot-leading-lg);
+}
+
+.ui-select-item[data-highlighted],
+.ui-select-item[data-selected],
+.ui-select-item[data-selected][data-highlighted] {
+  background: var(--hxbot-bg-control-hover);
+}
+
+.ui-select-item[data-selected] {
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.ui-select-item-indicator {
+  color: var(--hxbot-control-on);
+}
+
+/* 输入框：白底、14 号字，获得焦点时边框加深。 */
+:where(.ui-input, .ui-textarea, .ui-native-select) {
+  background: var(--hxbot-bg-control);
+  font-size: var(--hxbot-text-lg);
+}
+
+/* 输入框原来跟随正文（16 号），这里用鼠标的设备改成 14 号；手机浏览器保留 16 号，聚焦时页面才不会被放大。 */
+@media (hover: hover) and (pointer: fine) {
+  .ui-input,
+  .ui-textarea {
+    font-size: var(--hxbot-text-lg);
+  }
+}
+
+:where(.ui-input, .ui-native-select)[data-size="lg"] {
+  height: var(--hxbot-control-md);
+}
+
+:where(.ui-input, .ui-textarea, .ui-native-select):focus-visible {
+  border-color: var(--hxbot-field-border-active);
+}
+
+/* 按钮：默认 32 高；主按钮近黑色，次按钮白底浅灰边框、黑字。 */
+:where(.ui-button-size-default) {
+  height: var(--hxbot-control-md);
+}
+
+:where(.ui-button-variant-outline) {
+  border-color: var(--hxbot-border-strong);
+  color: var(--hxbot-text-primary);
+}
+
+/* 设置窗口里的主按钮原来是蓝色，和其他地方一样改成近黑色。 */
+.settings-modal :where(.ui-button-variant-default) {
+  background: var(--hxbot-surface-light);
+  color: var(--hxbot-text-on-light);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .settings-modal :where(.ui-button-variant-default):hover:not(:disabled):not([data-disabled]) {
+    background: color-mix(in srgb, var(--hxbot-surface-light) 82%, transparent);
+  }
+}
+
+/* 弹窗：遮罩变暗并模糊背后，弹窗白底、圆角 24、细边框；确认框的按钮区不再有分隔线。 */
+.ui-dialog-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ui-dialog-content {
+  border-radius: var(--hxbot-radius-dialog);
+  box-shadow: 0 0 0 1px var(--hxbot-menu-border);
+}
+
+.ui-dialog-content.ui-confirm-dialog {
+  --agent-avatar-outline: var(--hxbot-bg-surface);
+
+  border-radius: var(--hxbot-radius-dialog);
+  border-color: var(--hxbot-menu-border);
+  background: var(--hxbot-bg-surface);
+}
+
+.ui-confirm-dialog-actions {
+  border-top: 0;
+  padding: 0 var(--hxbot-space-6) var(--hxbot-space-6);
+}
+
+/* 滑块：细线，已选的一段是黑色，旋钮是带细边的白色竖条。 */
+.ui-slider-track {
+  height: 2px;
+  background: var(--hxbot-slider-line);
+}
+
+.ui-slider-fill {
+  background: var(--hxbot-text-primary);
+}
+
+.ui-slider-thumb {
+  top: calc(50% - (var(--hxbot-control-knob-height) / 2));
+  width: var(--hxbot-control-knob-width);
+  height: var(--hxbot-control-knob-height);
+  background: var(--hxbot-control-knob);
+  box-shadow:
+    0 0 0 1px var(--hxbot-border-strong),
+    0 1px 3px var(--hxbot-control-knob-shadow);
+}
+
+.ui-slider-thumb:focus-visible {
+  box-shadow:
+    0 0 0 1px var(--hxbot-border-strong),
+    var(--hxbot-focus-ring);
+}
+
+/* 设置：白色卡片里的行之间没有分隔线；说明文字和标题一样是 14 号；分组小标题是灰色的 14 号字。 */
+.settings-modal-card > :not(:first-child)::before {
+  content: none;
+}
+
+.settings-modal :where(.ui-item-description, .ui-switch-description),
+.settings-modal :where(.ui-text)[data-variant="caption"] {
+  font-size: var(--hxbot-text-lg);
+  line-height: var(--hxbot-leading-lg);
+}
+
+.settings-modal :where(.ui-item-content, .ui-switch-copy) {
+  gap: var(--hxbot-space-1);
+}
+
+.settings-modal .ui-settings-section-heading,
+:is(.app-settings-modal-shell, .server-settings-modal-shell) .ui-settings-section-heading {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-lg);
+  font-weight: var(--hxbot-weight-regular);
+  line-height: var(--hxbot-leading-lg);
+}
+
+/* 设置左侧的分类：每项 32 高、圆角 8，选中的一项浅灰底，文字和图标都是黑色。 */
+.settings-modal-nav-item,
+:is(.app-settings-modal-shell, .server-settings-modal-shell) .settings-modal-nav-item {
+  min-height: var(--hxbot-control-md);
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-lg);
+}
+
+.settings-modal-nav-item > svg:first-child {
+  color: var(--hxbot-text-primary);
+}
+
+.settings-modal-nav-item:is([aria-current="page"], [data-selected]),
+:is(.app-settings-modal-shell, .server-settings-modal-shell, .settings-page-nav-group)
+  .settings-modal-nav-item[data-selected] {
+  background: var(--hxbot-bg-control-active);
+  font-weight: var(--hxbot-weight-regular);
+}
+
+/* 有新版本的窗口：新功能列表（HxForcedUpdate.tsx） */
+.hx-update-notes {
+  display: grid;
+  gap: var(--hxbot-space-1);
+  margin: 0 0 var(--hxbot-space-2);
+}
+
+.hx-update-notes ul {
+  margin: 0;
+  padding-inline-start: var(--hxbot-space-6);
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-md);
+  line-height: var(--hxbot-leading-md);
+}
+
+.hx-update-notes li + li {
+  margin-top: var(--hxbot-space-1);
+}
+
+/* 设置左侧的分组（v1.6.4，HxSettingsNav.tsx）：每组上面一个灰色小标题；“关于”“获取帮助”上面一条细线。 */
+.settings-modal-nav-heading {
+  padding: var(--hxbot-space-4) var(--hxbot-space-3) var(--hxbot-space-1);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-md);
+  line-height: var(--hxbot-leading-md);
+}
+
+.settings-modal-nav-heading:first-child {
+  padding-top: var(--hxbot-space-1);
+}
+
+.settings-modal-nav-divider {
+  height: 1px;
+  margin: var(--hxbot-space-3) var(--hxbot-space-3);
+  background: var(--hxbot-border);
+}
+
+/* 设置 → 关于的最下面：隐私政策 | 服务条款，居中的灰色小字链接。 */
+.hx-about-legal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hxbot-space-2);
+  margin: var(--hxbot-space-4) 0 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-md);
+}
+
+.hx-about-legal .ui-button {
+  color: var(--hxbot-text-muted);
+}

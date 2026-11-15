@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<title>What's new · HXBot</title>
+<meta name="description" content="The new features and highlights of each HXBot Research Edition version, newest first.">
+<link rel="alternate" hreflang="zh-CN" href="https://bot.hxallai.com/whats-new/">
+<link rel="alternate" hreflang="en" href="https://bot.hxallai.com/en/whats-new/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  /* HXBot · What's new。由 hx/scripts/site-pages.mjs 从 hx/docs/site/whats-new.en.md 生成，请勿直接修改。 */
+  :root {
+    --blue: #0156D3; --blue-2: #3D8BFF; --violet: #8B6CF2; --orange: #EB6100;
+    --ink: #1F1F1F; --ink-2: #444746; --muted: #5F6368; --line: #E1E3E1; --paper: #F8FAFD; --chip: #E8F0FE;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--sans); color: var(--ink); background: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.smooth { scroll-behavior: smooth; }
+  body { margin: 0; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  svg.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .skip { position: absolute; left: 12px; top: -48px; z-index: 30; padding: 8px 14px; border-radius: 999px; background: var(--blue); color: #FFFFFF; }
+  .skip:focus { top: 12px; }
+
+  header { position: sticky; top: 0; z-index: 20; background: #FFFFFF; box-shadow: 0 1px 0 var(--line); }
+  .bar { display: flex; align-items: center; gap: 12px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+  .brand:hover { text-decoration: none; }
+  .brand svg { width: 18px; height: 34px; flex: none; }
+  .spacer { flex: 1; }
+  .nav { display: flex; align-items: center; gap: 2px; }
+  .nav a { font-size: 14px; color: var(--ink-2); padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .nav a[aria-current="page"] { color: var(--blue); background: var(--chip); }
+  .nav a.lang { margin-left: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+  @media (max-width: 560px) { .brand .name { display: none; } .nav a { padding: 8px 10px; } }
+  /* 窄屏上五个入口放不下时，顶栏的入口可以左右滑动，页面本身不再被撑宽 */
+  @media (max-width: 480px) { .nav { min-width: 0; overflow-x: auto; scrollbar-width: none; } .nav::-webkit-scrollbar { display: none; }
+    .nav a { padding: 8px 8px; font-size: 13.5px; } }
+
+  .head { position: relative; overflow: hidden; padding: 56px 0 40px; border-bottom: 1px solid var(--line);
+    background: radial-gradient(55% 80% at 8% 10%, rgba(61, 139, 255, .10) 0%, rgba(61, 139, 255, 0) 62%),
+                radial-gradient(45% 70% at 92% 0%, rgba(139, 108, 242, .09) 0%, rgba(139, 108, 242, 0) 60%),
+                radial-gradient(35% 60% at 70% 110%, rgba(235, 97, 0, .06) 0%, rgba(235, 97, 0, 0) 70%), #FFFFFF; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    color: var(--blue); background: var(--chip); box-shadow: inset 0 0 0 1px #D3E3FD; }
+  h1 { margin: 16px 0 0; font-size: clamp(30px, 4.2vw, 46px); line-height: 1.22; font-weight: 600; letter-spacing: -.01em; }
+  html[lang="zh-CN"] h1 { letter-spacing: .02em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+  .meta b { font-weight: 500; color: var(--ink-2); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 32px; padding-bottom: 72px; }
+  .layout > main { min-width: 0; }
+  @media (min-width: 1000px) { .layout { grid-template-columns: 250px minmax(0, 1fr); gap: 56px; padding-top: 40px; } }
+  .toc { align-self: start; border-radius: 16px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+  @media (min-width: 1000px) { .toc { position: sticky; top: 88px; max-height: calc(100vh - 112px); overflow: auto; background: none; box-shadow: none; } }
+  .toc summary { cursor: pointer; padding: 12px 16px; font-size: 14px; font-weight: 600; color: var(--ink-2); list-style: none; }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc summary::after { content: "▾"; float: right; color: var(--muted); }
+  .toc[open] summary::after { content: "▴"; }
+  @media (min-width: 1000px) { .toc summary { padding: 0 10px 8px; cursor: default; pointer-events: none; } .toc summary::after, .toc[open] summary::after { content: none; } }
+  .toc ol { list-style: none; margin: 0; padding: 0 8px 12px; }
+  @media (min-width: 1000px) { .toc ol { padding: 0; } }
+  .toc a { display: block; padding: 6px 10px; border-radius: 8px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+  .toc a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .toc a.is-active { color: var(--blue); background: var(--chip); }
+  .toc .sub a { padding-left: 24px; font-size: 13px; color: var(--muted); }
+
+  article { min-width: 0; max-width: 820px; font-size: 16px; }
+  html[lang="zh-CN"] article { line-height: 1.85; }
+  article h2 { margin: 52px 0 12px; font-size: 23px; line-height: 1.35; font-weight: 600; scroll-margin-top: 84px; }
+  article h3 { margin: 32px 0 8px; font-size: 18px; line-height: 1.4; font-weight: 600; scroll-margin-top: 84px; }
+  article > :first-child { margin-top: 0; }
+  article p { margin: 12px 0; }
+  article ul, article ol { margin: 12px 0; padding-left: 1.5em; }
+  article li { margin: 6px 0; }
+  article li > ul, article li > ol { margin: 6px 0; }
+  article a { overflow-wrap: anywhere; }
+  article strong { font-weight: 600; }
+  .anchor { margin-left: 10px; font-weight: 400; color: #C4C7C5; opacity: 0; transition: opacity .2s ease; }
+  h2:hover .anchor, h3:hover .anchor { opacity: 1; }
+  .anchor:hover { color: var(--blue); text-decoration: none; }
+  .note { margin: 20px 0; padding: 16px 20px; border-radius: 16px; background: linear-gradient(180deg, #F3F7FE 0%, #F8FAFD 100%);
+    box-shadow: inset 0 0 0 1px #D3E3FD; }
+  .note > :first-child { margin-top: 0; }
+  .note > :last-child { margin-bottom: 0; }
+  .note__t { margin-bottom: 6px !important; }
+  .note__t strong { color: var(--blue); }
+  .table { margin: 16px 0; overflow-x: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.65; }
+  th, td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { background: var(--paper); font-weight: 600; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .table--wide table { min-width: 720px; }
+  .table--wide td:first-child, .table--pair td:first-child { font-weight: 500; }
+  .table--pair td:first-child { white-space: nowrap; }
+  @media (max-width: 640px) {
+    .table--pair td:first-child { white-space: normal; min-width: 7em; }
+    .table--stack { overflow: visible; border-radius: 0; box-shadow: none; }
+    .table--stack table { min-width: 0; }
+    .table--stack thead { display: none; }
+    .table--stack tbody, .table--stack tr, .table--stack td { display: block; }
+    .table--stack tr { margin: 0 0 12px; padding: 6px 0; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+    .table--stack td { padding: 6px 16px; border: 0; }
+    .table--stack td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .table--stack td:first-child { font-size: 15.5px; font-weight: 600; }
+    .table--stack td:first-child::before { content: none; }
+  }
+  code { font-family: var(--mono); font-size: .88em; padding: .12em .4em; border-radius: 6px; background: #F1F3F4; overflow-wrap: anywhere; }
+  .code { position: relative; margin: 16px 0; }
+  .code pre { margin: 0; padding: 16px 18px; padding-right: 80px; overflow-x: auto; border-radius: 14px; background: #0B1220; color: #E3E3E3; font-size: 14px; line-height: 1.6; }
+  .code pre code { padding: 0; background: none; color: inherit; overflow-wrap: normal; }
+  .copy { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border: 0; border-radius: 999px; font: inherit; font-size: 12px;
+    color: #E3E3E3; background: rgba(255, 255, 255, .12); cursor: pointer; }
+  .copy:hover { background: rgba(255, 255, 255, .22); }
+  .top { display: inline-block; margin-top: 40px; font-size: 14px; }
+  .tag { display: inline-block; margin-right: 2px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 20px;
+    letter-spacing: .06em; vertical-align: 2px; color: #FFFFFF; }
+  .tag--hot { background: var(--orange); }
+  .tag--new { background: var(--blue); }
+  .on { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 20px; vertical-align: 1px;
+    color: var(--ink-2); background: #F1F3F4; white-space: nowrap; }
+  .shot { margin: 16px 0 20px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); background: #F5F5F7; }
+  .shot figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .bar { flex-wrap: wrap; height: auto; padding-top: 20px; padding-bottom: 20px; gap: 8px 18px; }
+  footer .brand { font-weight: 400; color: var(--muted); }
+  footer .links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--blue); }
+  @media print {
+    header, .toc, .anchor, .copy, .top, footer nav { display: none !important; }
+    .head { padding: 0 0 16px; background: none; }
+    .layout { display: block; padding: 16px 0 0; }
+    article { max-width: none; }
+    a { color: inherit; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<svg class="defs" aria-hidden="true" focusable="false"><defs><symbol id="hx-giraffe" viewBox="-6 -6 307.75 590.25"><path d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><path d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84ZM66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67ZM28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20ZM19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97ZM81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92ZM126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21ZM200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98ZM263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01ZM81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78ZM1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56ZM148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74ZM218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59ZM271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82ZM2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z" fill="#79512B"/><path d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></symbol></defs></svg>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/en/" aria-label="HXBot · Portal"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span class="name">HXBot</span></a>
+    <span class="spacer"></span>
+    <nav class="nav" aria-label="HXBot"><a href="/en/guide/">Guide</a><a href="/en/whats-new/" aria-current="page">What's new</a><a href="/en/terms/">Terms</a><a href="/en/privacy/">Privacy</a><a class="lang" href="/whats-new/?lang=zh" data-lang="zh" hreflang="zh-CN" lang="zh-CN">中文</a></nav>
+  </div>
+</header>
+<div class="head">
+  <div class="wrap">
+    <span class="chip">HXBot Research Edition</span>
+    <h1>What's new</h1>
+    <ul class="meta"><li><b>Last updated</b>: November 15, 2026</li><li><b>Version</b> Desktop 0.67.9 · Mobile 1.5.0</li></ul>
+  </div>
+</div>
+<div class="wrap layout">
+  <details class="toc" open>
+    <summary>Contents</summary>
+    <nav aria-label="Contents"><ol><li><a href="#desktop-0-67-9">Desktop 0.67.9: HXBot leaves your other apps alone</a></li><li class="sub"><a href="#desktop-0-67-9-fast">Other apps stay fast</a></li><li class="sub"><a href="#desktop-0-67-9-focus">No stolen focus</a></li><li class="sub"><a href="#desktop-0-67-9-keys">Shortcuts and copy and paste work, and the network has room</a></li><li><a href="#desktop-0-67-8">Desktop 0.67.8: app commands, and the next way when one does not work</a></li><li class="sub"><a href="#desktop-0-67-8-apps">App commands, done by HXBot itself</a></li><li class="sub"><a href="#desktop-0-67-8-scripts">Scripts run in HXBot itself</a></li><li class="sub"><a href="#desktop-0-67-8-routes">The next way, by itself</a></li><li><a href="#desktop-0-67-7">Desktop 0.67.7: grant once on a Mac, the agent installs apps</a></li><li class="sub"><a href="#desktop-0-67-7-grants">Grant once, HXBot turns the switch on</a></li><li class="sub"><a href="#desktop-0-67-7-install">The agent installs apps</a></li><li class="sub"><a href="#desktop-0-67-7-vault">Vault sign-in without a question, only payments ask</a></li><li><a href="#desktop-0-67-6">Desktop 0.67.6: computer control (part 2), step by step in apps, bigger teams</a></li><li class="sub"><a href="#desktop-0-67-6-steps">Step by step in an app</a></li><li class="sub"><a href="#desktop-0-67-6-team">Bigger teams, one progress card</a></li><li class="sub"><a href="#desktop-0-67-6-defaults">The strongest by default, fewer settings</a></li><li><a href="#desktop-0-67-5">Desktop 0.67.5: collaboration (part 2), teams of agents</a></li><li class="sub"><a href="#desktop-0-67-5-team">Say it, and get a team</a></li><li class="sub"><a href="#desktop-0-67-5-board">Handoff forms and the task board</a></li><li class="sub"><a href="#desktop-0-67-5-follow">Follow it in your chat</a></li><li class="sub"><a href="#desktop-0-67-5-limits">The limits of a team</a></li><li><a href="#desktop-0-67-4">Desktop 0.67.4: any OpenCode service, collaboration (part 1)</a></li><li class="sub"><a href="#desktop-0-67-4-opencode">Connect any OpenCode service</a></li><li class="sub"><a href="#desktop-0-67-4-auto-model">Auto model: the model fits the work</a></li><li class="sub"><a href="#desktop-0-67-4-proposal">A proposal card before the work</a></li><li><a href="#desktop-0-67-3">Desktop 0.67.3: computer control (part 1), Settings regrouped</a></li><li class="sub"><a href="#desktop-0-67-3-computer">Agents operate this computer directly</a></li><li class="sub"><a href="#desktop-0-67-3-settings">Settings is easier to find your way in</a></li></ol></nav>
+  </details>
+  <main id="main">
+    <article>
+<p>This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: when a new desktop version is out, the app shows a window with what is new; click Update now. The data in the screenshots is demo data.</p>
+<h2 id="desktop-0-67-9">Desktop 0.67.9: HXBot leaves your other apps alone<a class="anchor" href="#desktop-0-67-9" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 15, 2026 · Desktop and web 0.67.9 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li><span class="tag tag--new">NEW</span> Other apps stay fast: the rim no longer reads every window all the time, and background work and the agent's commands leave the processor to your apps first. <span class="on">Desktop</span></li><li>No stolen focus: when you move to another app, the agent types nothing there and pulls no window back; a grant page or a remote control question comes as a notification first. <span class="on">Desktop</span></li><li>Shortcuts and copy and paste work, and the network has room: the modifier keys are let go, your clipboard keeps your copy, and updates and the remote desktop have a speed limit. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-9-fast">Other apps stay fast<a class="anchor" href="#desktop-0-67-9-fast" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-quiet.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-quiet.en.jpg" alt="While the agent works on the computer: clicks in the background, types nothing when you move away, lets go of the modifier keys" width="1478" height="845" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>The rim:</strong> while the agent works in an app, HXBot draws a rim around its window. It asked the system for every window 30 times a second, so every app had to answer all the time: fans ran and apps were slow. Now it reads at most twice a second, and only when the agent acted in the last 15 seconds; with no action it reads nothing and draws nothing.</li><li><strong>The mouse on Windows:</strong> the Dynamic Island and the agent dock see the mouse only while it is near them, so they no longer hold on to the mouse of the whole computer; the rim takes no mouse event at all.</li><li><strong>The processor:</strong> the catalog read runs at the lowest priority; the agent's processes and the commands they run (builds, tests) run below normal, so your own apps come first. A hidden web tab that nobody used for two minutes is throttled again.</li><li><strong>Big apps:</strong> one read of a window takes at most 1500 controls and 3 seconds, so a big app such as a browser, Xcode or a long document does not stop while it answers.</li></ul>
+<h3 id="desktop-0-67-9-focus">No stolen focus<a class="anchor" href="#desktop-0-67-9-focus" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Keys go to the target app only:</strong> before the agent types or presses a shortcut, it looks which app is in front. When you moved to another app, no key goes out and no window is pulled back: the agent stops and asks you in the chat to go back to that app.</li><li><strong>A notification first:</strong> when the agent wants a grant page of System Settings, or someone asks to control this computer, the page or the question opens at once while you work in HXBot. While you work in another app, a notification comes, and it opens on a click. One page opens at most once in a short time.</li><li><strong>After an update:</strong> when an automatic update has installed and HXBot opens again while you work in another app, HXBot opens behind it (Mac).</li></ul>
+<h3 id="desktop-0-67-9-keys">Shortcuts and copy and paste work, and the network has room<a class="anchor" href="#desktop-0-67-9-keys" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Modifier keys:</strong> at the end of each piece of work (also when you stop it), the agent lets go of Ctrl, Shift, Alt and Win (Mac: ⌘ ⇧ ⌥ ⌃), so no shortcut of another app goes wrong because a key stayed down.</li><li><strong>The stop keys:</strong> Ctrl+Alt+Esc (Mac: ⌃⌥Esc) are held only while the agent works on the computer; at other times other apps can use them.</li><li><strong>The clipboard:</strong> after the agent types, your clipboard still has the text you copied.</li><li><strong>The network:</strong> update downloads take at most 2 MB/s and the remote desktop picture at most 10 Mbit/s, so your calls and pages keep room.</li><li><strong>Your apps stay open:</strong> on Windows, the apps with a window that an agent opened (such as Notepad) stay open when the agent stops; only its background processes stop.</li><li><strong>Auto model:</strong> a chat that goes on keeps its model and reasoning effort, so the provider keeps its context and cache; a new chat or task, a model you name, or a redo chooses again.</li></ul>
+<h2 id="desktop-0-67-8">Desktop 0.67.8: app commands, and the next way when one does not work<a class="anchor" href="#desktop-0-67-8" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 14, 2026 · Desktop and web 0.67.8 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li>The agent uses app commands: front, hide, quit, window places, menu commands and default apps, all done by HXBot itself; a quit is a normal quit first, and a force quit asks you. <span class="on">Desktop</span></li><li>The agent runs AppleScript, JXA, Shortcuts and PowerShell to work in apps such as Excel and Word; it asks before a script deletes or sends. <span class="on">Desktop</span></li><li>When one way does not work, it takes the next: direct, command, controls, image; the result says which way it took. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-8-apps">App commands, done by HXBot itself<a class="anchor" href="#desktop-0-67-8-apps" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-apps.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-apps.en.jpg" alt="The agent uses app commands and scripts: scripts run in HXBot, the next way by itself, a normal quit first" width="1478" height="845" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>How:</strong> tell the agent, for example &quot;put the Excel window on the left half&quot;, &quot;quit Notes&quot;, &quot;make Chrome the default browser&quot; or &quot;open .pdf files with Preview&quot;. The agent lists the running apps, then finds the app by its name.</li><li><strong>What it does:</strong> bring to front, hide (minimize on Windows), quit, window to the left or right half, maximized or centered; read the menus of an app and click a command in them (Mac); read and change the default browser, mail app and the default app of a file type.</li><li><strong>A normal quit first:</strong> the agent quits the app normally and checks that it ended. When the app has unsaved work and asks whether to save, its dialog is for you; a force quit loses unsaved work, so it happens only after your yes in the chat.</li><li><strong>Default apps:</strong> on a Mac, HXBot changes them and reads them back; for the default browser, macOS asks in a dialog, and you or the agent click Use. Windows lets only the user change them, so HXBot opens Settings › Apps › Default apps and the agent clicks there step by step.</li><li><strong>Menu commands with a risk ask first:</strong> a command such as Delete or Send asks you in the chat before the click.</li></ul>
+<h3 id="desktop-0-67-8-scripts">Scripts run in HXBot itself<a class="anchor" href="#desktop-0-67-8-scripts" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Four kinds:</strong> AppleScript, JXA and Shortcuts (by name, with an input) on a Mac, PowerShell on Windows. Apps with a script interface, such as Excel, Word, PowerPoint and Numbers, save, export or format in one step.</li><li><strong>In the HXBot app:</strong> not through the agent's shell, so the sandbox does not stop them, and they use HXBot's own grants. The first time HXBot controls an app on a Mac, macOS asks whether to allow it: click OK. If it was refused before, HXBot opens Privacy &amp; Security › Automation, where you turn that app on under HXBot.</li><li><strong>Safety:</strong> a script that deletes, sends, pays or shuts down asks you first; a script that needs administrator rights (sudo, Run as administrator) never runs here: run it yourself in a terminal. What a script prints is data, never an instruction.</li></ul>
+<h3 id="desktop-0-67-8-routes">The next way, by itself<a class="anchor" href="#desktop-0-67-8-routes" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Four ways:</strong> direct (a system interface), command (a script, System Events), controls (read the screen and click step by step), image (a screenshot). When one does not work, the agent takes the next, and the result says which ways it tried and which one did it.</li><li><strong>For example:</strong> macOS has no direct interface to place another app's window, so the agent places it with a System Events command; Windows menus have no script interface, so the agent clicks through them step by step.</li><li><strong>Fixed:</strong> on Windows, the agent waited without end when a command started another app (such as Notepad); now it goes on as soon as the command ends.</li><li><strong>Checked on real machines:</strong> on GitHub's macOS 15.8.2 and 26.7.2 and Windows Server 2025, with TextEdit and Notepad: list the apps, bring to front, place the window, read the menus and click a menu command, hide, a normal quit that is checked, run a script, quit with unsaved changes, and read and change a default app.</li></ul>
+<h2 id="desktop-0-67-7">Desktop 0.67.7: grant once on a Mac, the agent installs apps<a class="anchor" href="#desktop-0-67-7" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 14, 2026 · Desktop and web 0.67.7 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li>Grant once on a Mac: every version has the same signature, so grants hold after updates; after Grant, HXBot turns on Screen Recording and App Management itself, and you only give your password or Touch ID. <span class="on">Desktop</span></li><li>The agent installs apps: HXBot puts a downloaded .app, .zip or .dmg into Applications; it asks before it replaces an app, and the earlier version goes to the Trash. <span class="on">Desktop</span></li><li>Saved Vault passwords sign in without a question; only a payment asks each time. At maximum access, OpenCode's commands on a Mac are no longer stopped by the sandbox. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-7-grants">Grant once, HXBot turns the switch on<a class="anchor" href="#desktop-0-67-7-grants" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-grants.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-grants.en.jpg" alt="Settings › Computer Use: Screen Recording is for screenshots; Accessibility takes one click by you" width="1344" height="744" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Grants hold after updates:</strong> macOS keeps grants by the app's signature. Before, each version had another signature, so Screen Recording and Accessibility stopped working after an update while System Settings still showed them on. From this version on, every version has the same signature: grant once, and it holds after each update.</li><li><strong>Accessibility is enough to work in apps:</strong> clicking and typing step by step need only Accessibility; Screen Recording is for screenshots. When macOS asks again for Screen Recording, the steps go on.</li><li><strong>HXBot turns the switch on:</strong> in Settings › Computer Use, click Grant. System Settings opens at that page and HXBot presses the switch of its own row; when macOS asks, give your password or Touch ID. macOS lets only you turn on Accessibility; after that, HXBot goes on to Screen Recording. The same happens when the agent needs a grant while it works in an app.</li><li><strong>Stale entries go:</strong> when a grant does not hold for this version (the switch shows on but counts for nothing), HXBot first removes its own earlier entry, then asks you. Only HXBot's own entries change, never another app's.</li><li><strong>In the right place:</strong> when HXBot runs outside Applications (from Downloads or a disk image, for example), it asks once to move there, and opens again from Applications.</li><li><strong>The first time with this version:</strong> macOS says it cannot check the developer the first time it opens; click Open Anyway in System Settings › Privacy &amp; Security. Then grant once as above; later updates need nothing.</li><li><strong>No black screen after closing in full screen:</strong> before, closing the window in full screen (the green button) hid HXBot but left its full screen Space, black over the whole display until you switched to another app. Now the window leaves full screen first, then hides; the Dock icon brings it back.</li><li><strong>Checked on real machines:</strong> on GitHub's macOS 15.8.2 and 26.7.2: two versions signed with the same certificate have the same signature identity; through the Computer Use driver, HXBot pressed only the switch of its own row and macOS asked for the password; without Screen Recording all steps passed; removing the stale entries needs no administrator password and removes only that app's entries.</li></ul>
+<figure class="shot"><a href="/hx-portal/whats-new/grant-steps.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/grant-steps.en.jpg" alt="The steps window: HXBot turns the Screen Recording switch on; you only give your password or Touch ID" width="1214" height="924" loading="lazy" decoding="async"></a></figure>
+<h3 id="desktop-0-67-7-install">The agent installs apps<a class="anchor" href="#desktop-0-67-7-install" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-install.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-install.en.jpg" alt="The agent puts a downloaded Claude into Applications: signature and notarization first, a question before it replaces" width="1433" height="682" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>How to use it:</strong> tell the agent &quot;install the Claude I downloaded&quot;. A .app, .zip or .dmg works: HXBot unpacks it, puts it into Applications and reads the version back; a .pkg goes to the macOS installer, where you give the password yourself.</li><li><strong>It asks before it replaces:</strong> when the app is already in Applications, the agent asks you in the chat first; only after your yes does it replace it, and the earlier version goes to the Trash. When the earlier version is open, quit it first.</li><li><strong>Safe:</strong> before it installs, it reads the signature (the developer) and whether Apple notarized it, and says so in the chat. The quarantine flag stays: macOS checks the app as usual the first time it opens.</li><li><strong>App Management:</strong> when macOS does not let HXBot change another developer's app, HXBot opens Privacy &amp; Security › App Management and turns on its own switch; you only give your password or Touch ID.</li><li><strong>Checked on real machines:</strong> on GitHub's macOS 15.8.2 and 26.7.2, with a test app: a new install, the question first, the replacement (the earlier version in the Trash, no temporary files left) and an install from a disk image.</li></ul>
+<h3 id="desktop-0-67-7-vault">Vault sign-in without a question, only payments ask<a class="anchor" href="#desktop-0-67-7-vault" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Sign-in without a question:</strong> at maximum access, signing in to a website with a password saved in the Vault (one-time codes too) and deleting a Vault item no longer show a card.</li><li><strong>Payments still ask:</strong> paying with a card on a web page asks each time, and only Allow once. Changing files outside the workspace, running a command as administrator and touching the key folders still ask first.</li><li><strong>OpenCode is not stopped by the sandbox:</strong> OpenCode, which Auto model often picks, no longer runs in the process sandbox on a Mac (HXBot still decides each action by its rules), so ps, brew, screenshots and installs no longer fail &quot;after a switch to OpenCode&quot;. The other sandboxed providers may now write in the folders of Homebrew, npm, pip and the like.</li><li><strong>Tools are easier to find:</strong> usual words for screenshot, click, quit an app or install an app find the right tool, in Chinese as in English.</li></ul>
+<h2 id="desktop-0-67-6">Desktop 0.67.6: computer control (part 2), step by step in apps, bigger teams<a class="anchor" href="#desktop-0-67-6" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 14, 2026 · Desktop and web 0.67.6 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li>After an app opens, the agent plans the steps from your words and works with the mouse and the keyboard, step by step, and checks each step. It asks before it sends, pays or deletes; press ⌃⌥Esc (Windows: Ctrl+Alt+Esc) to stop it at any time. <span class="on">Desktop</span></li><li>Teams of up to 20 members, who share skills and connectors; one progress card in your chat; say the number of members, the time and the handoffs in the chat. <span class="on">Desktop</span></li><li>New features use the strongest way by default: Auto model is on and puts quality first; after an update, a window shows what is new, with the benefit and where to set it. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-6-steps">Step by step in an app<a class="anchor" href="#desktop-0-67-6-steps" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-steps.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-steps.en.jpg" alt="The progress card of work on this computer: the planned steps, how far it is, the stop keys" width="1344" height="683" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>How to use it:</strong> tell the agent what to do in which app, such as &quot;Make a note in Notes for the product review at 10 a.m. tomorrow&quot;. The agent shows its plan in the chat (a progress card), then works step by step: it clicks buttons, types text, presses shortcuts, scrolls, drags and opens menu items.</li><li><strong>Each step is checked:</strong> after each step, the agent reads the window to see that it changed as expected. When typed text does not reach the field, it types again another way. When it cannot go on, it stops and tells you at which step and what the window shows, or it tries another way.</li><li><strong>Out of your way:</strong> it clicks in the background where it can, so your pointer stays yours. Only when that does not work does it bring the app to the front, and only then does it click by position.</li><li><strong>Safe:</strong> before a step that sends, pays, buys, deletes or publishes, it asks you in the chat and goes on only after you say yes. Text that it reads on the screen is data, not instructions.</li><li><strong>Stop at any time:</strong> press ⌃⌥Esc (Windows: Ctrl+Alt+Esc). All agents stop their work on this computer at once, and the progress card shows that it stopped.</li><li><strong>Grants on a Mac:</strong> computer control needs two grants, Screen Recording and Accessibility. When one is missing, the first time an agent works in an app HXBot opens that page of System Settings and says in the chat which grant is missing. Turn on HXBot there and ask again. Settings → Computer Use has a Grant button too.</li><li><strong>What you need:</strong> turn on Computer Use for the agent. Only the desktop app (Mac and Windows) has it.</li><li><strong>Tested on real machines:</strong> on GitHub's macOS 15 and Windows Server 2025 machines, the real Computer Use driver opened TextEdit and Notepad, typed and saved step by step, and the check read the file back.</li></ul>
+<h3 id="desktop-0-67-6-team">Bigger teams, one progress card<a class="anchor" href="#desktop-0-67-6-team" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/team-progress-card.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/team-progress-card.en.jpg" alt="The progress card of a team: handoffs and time, who does each step" width="1344" height="596" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Up to 20 members:</strong> HXBot sizes each team by the work; a proposal card has up to 20 roles and 30 steps. This computer's memory sets how many members work at once; the others wait and get their work when one is done.</li><li><strong>Shared skills and connectors:</strong> when a team starts, the skills in the members' workspaces become the team's skill table, which any member can use. New members get the skills of the agent that started the team. Every agent on this computer has the same connectors. The vault and saved sign-ins are still not shared.</li><li><strong>A progress card:</strong> one card in your chat, updated in place: the handoffs, the time, who does each step and how far it is. Work on this computer uses the same progress card.</li><li><strong>Say the limits in the chat:</strong> &quot;at most 3 members and 1 hour this time&quot; or &quot;30 more minutes and up to 20 handoffs&quot;, on the web and on the phone too. By default a team has up to 20 members, 240 minutes and 80 handoffs.</li></ul>
+<h3 id="desktop-0-67-6-defaults">The strongest by default, fewer settings<a class="anchor" href="#desktop-0-67-6-defaults" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/team-summary.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/team-summary.en.jpg" alt="Agent settings: Auto model is on, and the team limits are one line" width="1214" height="1422" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Auto model is on and puts quality first:</strong> each piece of work gets the best and strongest model for it; with free models only, it takes the strongest free one. To save cost, set the preference to Free first under Auto model in the agent's settings. Agents whose settings you changed keep them.</li><li><strong>Fewer settings:</strong> the team limits in the agent's settings are one summary line; turn on Change the limits to see them.</li><li><strong>What's new:</strong> the first time the app opens after an update, a window shows the new features of the version, each with its benefit and where to set it. It shows once; Settings → About opens it again.</li><li><strong>Privacy Policy 1.5:</strong> it describes the step-by-step work, that its records stay on your computer, the stop keys, and how to turn off Auto model now that it is on by default.</li></ul>
+<h2 id="desktop-0-67-5">Desktop 0.67.5: collaboration (part 2), teams of agents<a class="anchor" href="#desktop-0-67-5" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 14, 2026 · Desktop and web 0.67.5 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li>Say what you need and get a team: press Start on a proposal card, and HXBot picks agents by skill, makes members for missing roles and opens a team room. <span class="on">Desktop</span></li><li>Members hand work over with a fixed handoff form and share one task board: who does what, and what is stuck, at a glance. <span class="on">Desktop</span></li><li>Progress and the result come back to your chat; to add words, stop the team or swap a member, just say so there. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-5-team">Say it, and get a team<a class="anchor" href="#desktop-0-67-5-team" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/team-card.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/team-card.en.jpg" alt="The proposal card names who takes each role: an agent you have, or a new member" width="1482" height="1067" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>To start:</strong> tell the agent what you need. When the work suits several agents, it shows a proposal card first; on a card with two or more roles, each role names who takes it. Press Start and the team is made.</li><li><strong>Who is picked:</strong> the agents you have, by name, title and description; the agent you talk to does not join and stays with you. A role that no agent fits gets a new member (on the model the card gives that role, with no more access than the agent that starts the team).</li><li><strong>The team room:</strong> a channel is made for the team. The lead (the planning role) gets the whole brief: the goal, the roles, the steps, the apps, where it waits for you, the shared folder and the limits.</li><li><strong>New members:</strong> hidden when the team ends (show them again from the hidden agents). To keep them, tell the agent, or choose Keep in the settings.</li></ul>
+<h3 id="desktop-0-67-5-board">Handoff forms and the task board<a class="anchor" href="#desktop-0-67-5-board" aria-hidden="true" tabindex="-1">#</a></h3>
+<ul><li><strong>Handoff form:</strong> each assignment and transfer states six things: the goal, what is done, the files, what is open, the next step and what not to touch, with “none” where there is nothing. A form with a missing line goes back to be completed, so the member that takes the work does not have to ask again.</li><li><strong>Task board:</strong> who has each step, how far it is and what is stuck, plus the facts and files everyone needs. The files named on a handoff form go on the board by themselves.</li><li><strong>Shared abilities:</strong> the board shows each member's model and whether it can use this computer; members keep their own skills and connectors, and work goes to the member that has the ability it needs. When several members open apps or change settings at the same time, they take turns. The vault and saved sign-ins are not shared.</li></ul>
+<h3 id="desktop-0-67-5-follow">Follow it in your chat<a class="anchor" href="#desktop-0-67-5-follow" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/team-progress.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/team-progress.en.jpg" alt="The team in your chat: the team, the handoffs, the results, done" width="1334" height="787" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Progress:</strong> who gave what to whom, how many steps are done and what is stuck show as small lines in your chat; open the team room for the details.</li><li><strong>Add words, stop, swap:</strong> just tell the agent (“make the posters blue”, “stop the team”, “give the Writer's part to Sam”). It passes your words on, stops the team, or swaps the member; the open work of the old member goes to the new one.</li><li><strong>The result:</strong> the lead checks the work and sends the final result back; the agent tells you the result and the files in your chat.</li></ul>
+<h3 id="desktop-0-67-5-limits">The limits of a team<a class="anchor" href="#desktop-0-67-5-limits" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/team-settings.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/team-settings.en.jpg" alt="The team limits in the agent's settings" width="1214" height="1036" loading="lazy" decoding="async"></a></figure>
+<ul><li>Under the proposal card in the agent's settings: how many members (5 by default), how long (120 minutes by default), how many handoffs (20 by default), and whether new members are hidden or kept when the team ends.</li><li>At the time or handoff limit, or when the same work fails twice, the team stops; the agent tells you what is done and what is left, and asks what to do next.</li></ul>
+<h2 id="desktop-0-67-4">Desktop 0.67.4: any OpenCode service, collaboration (part 1)<a class="anchor" href="#desktop-0-67-4" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 14, 2026 · Desktop and web 0.67.4 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li>Connect any of OpenCode's 200+ services under Add provider, free models included: sign in in the browser or paste a key. <span class="on">Desktop</span></li><li>Agents choose the model by the work: writing, code, images and planning each get a fitting model, free first by default. <span class="on">Desktop</span></li><li>Before bigger work, a proposal card: how many agents, who does what and which models. Nothing starts until you press Start. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-4-opencode">Connect any OpenCode service<a class="anchor" href="#desktop-0-67-4-opencode" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/opencode-services.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/opencode-services.en.jpg" alt="The All OpenCode services window: free models, connected services, browser sign-in or a key" width="1214" height="1228" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Where:</strong> click “+” in the model panel (or Settings › Providers), click Add and choose All OpenCode services. Connect services at the bottom of the provider settings opens it too.</li><li><strong>Which:</strong> the 200+ services that OpenCode can reach, such as OpenAI, Anthropic, DeepSeek, Kimi, Zhipu, Qwen, GitHub Copilot and OpenRouter, with a search field. OpenCode Free at the top needs no sign-in and is ready to use.</li><li><strong>Three ways in:</strong> sign in in the browser (as with ChatGPT; the window shows Connected by itself), paste an API key, or use the credentials already on your computer (AWS, Google Cloud, Claude Code and more).</li><li><strong>After that:</strong> the service's models show in each agent's model list (under OpenCode, by service) and in Auto model. Disconnect at any time.</li><li><strong>Safety:</strong> OpenCode keeps the credentials on your computer (as opencode auth login does); HXBot keeps no copy. This is in the desktop app only.</li></ul>
+<h3 id="desktop-0-67-4-auto-model">Auto model: the model fits the work<a class="anchor" href="#desktop-0-67-4-auto-model" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/auto-model.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/auto-model.en.jpg" alt="Auto model in the agent's settings" width="1214" height="1588" loading="lazy" decoding="async"></a></figure>
+<figure class="shot"><a href="/hx-portal/whats-new/auto-model-lines.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/auto-model-lines.en.jpg" alt="The chat names the model of each piece of work" width="1214" height="648" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Turn it on:</strong> in the agent's settings, turn on Auto model (below Model and Backup models).</li><li><strong>How it chooses:</strong> for each new piece of work, the agent finds what it is (chat, writing, a small code change, code across files, data, an image, long material, planning, operating the computer) and how hard it is, and picks one of the models you are signed in to. A small line in the chat names the model, such as “Auto model · writing: GLM-5.3-Flash Free takes it.”</li><li><strong>Preference:</strong> Free first by default (a free model when it is good enough); or Balanced, or Quality first.</li><li><strong>You decide:</strong> name a model in your message (“use Claude Opus 5.5 for this”) and that message uses it. Under Models and recent choices, clear the models you do not want and see the recent choices.</li><li><strong>When work fails:</strong> the chat asks once; reply “redo” and a stronger model does it again.</li><li><strong>When unsure:</strong> a low-cost small model decides (or choose Rules only); when neither is sure, the agent keeps its model.</li></ul>
+<h3 id="desktop-0-67-4-proposal">A proposal card before the work<a class="anchor" href="#desktop-0-67-4-proposal" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/proposal-card.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/proposal-card.en.jpg" alt="The proposal card: roles and models, steps, and Start" width="1398" height="1039" loading="lazy" decoding="async"></a></figure>
+<ul><li>When work is worth sharing among agents, or needs a checker apart from the doer, the agent first shows a proposal card: how many agents, what each role does, which models (and whether free), the steps, the apps to use, and which steps need your OK.</li><li>Start begins the work; Change it says what to change; Use one agent lets one agent do it all; Cancel stops it.</li><li>In the agent's settings under Proposal card, choose When the work calls for it (default), Before each long task, or Never.</li></ul>
+<h2 id="desktop-0-67-3">Desktop 0.67.3: computer control (part 1), Settings regrouped<a class="anchor" href="#desktop-0-67-3" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>November 13, 2026 · Desktop and web 0.67.3 · Mobile 1.5.0 (no change this time)</p>
+<aside class="note"><p class="note__t"><strong>Highlights</strong></p><ol><li><span class="tag tag--hot">HOT</span> Agents open apps and system settings pages by name, with no screenshots and no clicks; Chinese names can be typed in pinyin. <span class="on">Desktop</span></li><li>Agents change 32 common settings directly, such as dark mode, the Dock, the taskbar and when the screen turns off. <span class="on">Desktop</span></li><li>Settings is regrouped, so you find what you need at a glance. <span class="on">Desktop</span></li></ol></aside>
+<h3 id="desktop-0-67-3-computer">Agents operate this computer directly<a class="anchor" href="#desktop-0-67-3-computer" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-open.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-open.en.jpg" alt="One sentence in the chat opens an app or changes a setting" width="1342" height="683" loading="lazy" decoding="async"></a></figure>
+<figure class="shot"><a href="/hx-portal/whats-new/computer-catalog.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/computer-catalog.en.jpg" alt="Settings › Computer Use: the catalog of this computer and the self-test" width="1550" height="690" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Open by name:</strong> apps, system settings pages, folders, documents and web addresses, such as “open NetEase Cloud Music” or “open Bluetooth settings”. Chinese names also work in full pinyin or by initials (“wangyiyun” and “wyyyy” both find NetEase Cloud Music).</li><li><strong>Change settings directly:</strong> 16 on macOS (dark mode, volume, mute, Dock auto-hide and size, menu bar auto-hide and more) and 16 on Windows (dark mode, transparency, taskbar alignment, seconds on the clock, notifications, Game Mode, screen and sleep timeouts and more). After a change the agent reads the setting again to make sure it is right; if not, it puts the old value back.</li><li><strong>A catalog of this computer:</strong> HXBot keeps a catalog of the installed apps and the system settings pages (40 on macOS, 57 on Windows), so agents do not wait when they look something up. After you install a new app, click Rebuild the catalog under Settings › Computer Use.</li><li><strong>Self-test:</strong> under Settings › Computer Use, one click checks whether each setting can be read and changed. The self-test changes no setting. On Windows, agents change the screen brightness directly only after one self-test passes.</li><li><strong>Safety:</strong> pages about privacy, passwords and login items only open; the agent leaves those settings to you. Files that run directly (such as .exe and .sh) do not open. What agents opened and changed is in Settings › Access &amp; activity.</li><li><strong>To use it:</strong> turn on Computer Use for the agent. The mobile app and the web app do not have this feature.</li><li><strong>Well tested:</strong> five rounds of automatic tests on five real machines (macOS 15, macOS 26, Windows Server 2025, Windows Server 2022, Windows 11 ARM). Each setting was really changed and changed back; the last round had 0 failures.</li></ul>
+<h3 id="desktop-0-67-3-settings">Settings is easier to find your way in<a class="anchor" href="#desktop-0-67-3-settings" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="shot"><a href="/hx-portal/whats-new/settings-groups.en.jpg" target="_blank" rel="noopener"><img src="/hx-portal/whats-new/settings-groups.en.jpg" alt="The three groups on the left of Settings, About and Get help" width="1728" height="1072" loading="lazy" decoding="async"></a></figure>
+<ul><li><strong>Three groups:</strong> on the left, Settings (General, Profile, Billing), Features (Agents, Notifications, Voice, Computer Use, Mobile Connect and more) and Data &amp; security (Access &amp; activity).</li><li><strong>About:</strong> Updates is now About. Next to the version and Check for updates, it opens the website, the Terms of Service and the Privacy Policy.</li><li><strong>Get help:</strong> new. It opens the Guide, and lets you write to us with feedback.</li><li>The search at the top of Settings also finds each item in About and Get help.</li></ul>
+    <a class="top" href="#">Back to top ↑</a>
+    </article>
+  </main>
+</div>
+<footer>
+  <div class="wrap bar">
+    <span class="brand"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span>© 2026 HX AI</span></span>
+    <span class="spacer"></span>
+    <nav class="links" aria-label="License"><a href="/en/guide/">Guide</a><a href="/en/whats-new/">What's new</a><a href="/en/terms/">Terms</a><a href="/en/privacy/">Privacy</a><a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener">License</a><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026163032号</a></nav>
+  </div>
+</footer>
+<script>
+(function () {
+  "use strict";
+  var KEY = "hxbot-portal-lang";
+  // 打开带 #章节 的地址时直接跳到该章节，之后页内跳转再平滑滚动
+  window.addEventListener("load", function () { setTimeout(function () { document.documentElement.classList.add("smooth"); }, 0); });
+  // 切换语言：记住选择，并保留当前章节（#…）
+  Array.prototype.forEach.call(document.querySelectorAll("[data-lang]"), function (a) {
+    a.addEventListener("click", function () {
+      try { localStorage.setItem(KEY, a.getAttribute("data-lang")); } catch (e) {}
+      a.setAttribute("href", a.getAttribute("href").split("#")[0] + location.hash);
+    });
+  });
+  // 目录：窄屏默认收起，点了章节后收起；滚动时高亮当前章节
+  var toc = document.querySelector(".toc");
+  var narrow = window.matchMedia && matchMedia("(max-width: 999px)");
+  if (toc && narrow && narrow.matches) toc.removeAttribute("open");
+  if (toc) toc.addEventListener("click", function (e) {
+    if (e.target.closest("a") && narrow && narrow.matches) toc.removeAttribute("open");
+  });
+  var links = {};
+  Array.prototype.forEach.call(document.querySelectorAll(".toc a[href^='#']"), function (a) { links[a.getAttribute("href").slice(1)] = a; });
+  var current = null;
+  function mark(id) {
+    if (current === id || !links[id]) return;
+    if (current && links[current]) links[current].classList.remove("is-active");
+    links[id].classList.add("is-active");
+    current = id;
+  }
+  var heads = document.querySelectorAll("article h2[id], article h3[id]");
+  var pending = false;
+  function spy() {
+    pending = false;
+    var id = heads.length ? heads[0].id : null;
+    for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top <= 110) id = heads[i].id; else break; }
+    mark(id);
+  }
+  window.addEventListener("scroll", function () { if (!pending) { pending = true; requestAnimationFrame(spy); } }, { passive: true });
+  window.addEventListener("load", spy);
+  spy();
+  // 代码块“复制”按钮
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (button) {
+    button.addEventListener("click", function () {
+      var text = button.parentNode.querySelector("code").textContent;
+      var label = button.textContent;
+      var done = function () { button.textContent = document.documentElement.lang === "en" ? "Copied" : "已复制"; setTimeout(function () { button.textContent = label; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+    });
+  });
+})();
+</script>
+</body>
+</html>

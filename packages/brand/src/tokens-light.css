@@ -1,0 +1,161 @@
+/*
+ * The light palette of the desktop app and the web client. tokens.css declares every
+ * token, dark; this file changes only the colors that must change, when the root element
+ * has data-hxbot-color-scheme="light". Each desktop window and the web client set that
+ * attribute from the saved choice, and resolve System from prefers-color-scheme. The public
+ * site never sets it, so it stays dark.
+ *
+ * The rules of the dark palette stay true here, turned over: a raised surface is lighter
+ * than the canvas, and a hover or a border is a translucent ink. In the dark palette that
+ * ink is white; here it is the primary text color, #141414.
+ *
+ * Not here, on purpose:
+ * - The native-only tokens (bg-native-canvas, chrome-*): mobile has its own light theme in
+ *   tokens-native.css. The desktop uses the native sidebar, sheet and grouped tokens, so they are here.
+ * - The landing-page materials (price-*, hero-grid, download-card-*): the public site is dark only.
+ * - The paper-* tokens: they stay on paper that is always light, such as a QR code.
+ * - Illustration and brand colors (logo-*, onboarding-*, sound-*, provider logos): a drawing
+ *   keeps its colors in both themes.
+ * - The Dynamic Island: it imitates the camera housing, so its window never sets the attribute.
+ */
+
+:root[data-hxbot-color-scheme="light"] {
+  color-scheme: light;
+
+  --hxbot-bg-canvas: #f7f7f7;
+  --hxbot-bg-canvas-clear: rgba(247, 247, 247, 0);
+  --hxbot-bg-frame: #e8e8eb;
+  --hxbot-bg-sidebar: #f7f7f7;
+  --hxbot-bg-native-sidebar: #f7f7f7;
+  --hxbot-bg-sheet: #ffffff;
+  --hxbot-bg-sheet-inset: #f0f0f2;
+  --hxbot-bg-grouped: #ffffff;
+  --hxbot-text-grouped-secondary: #6b6b70;
+  --hxbot-border-grouped: #e3e3e6;
+  --hxbot-marketplace-detail-bg: #ececee;
+  --hxbot-bg-surface: #ffffff;
+  --hxbot-bg-surface-raised: #fcfcfc;
+  --hxbot-bg-control: #ffffff;
+  --hxbot-bg-control-hover: #f2f2f2;
+  --hxbot-bg-control-active: #ebebeb;
+  --hxbot-tabs-bar-bg: #ececee;
+  --hxbot-tabs-pill-bg: #ffffff;
+  --hxbot-bg-overlay: rgba(247, 247, 247, 0.92);
+  --hxbot-dialog-overlay: rgba(0, 0, 0, 0.15);
+  --hxbot-dialog-ring: rgba(20, 20, 20, 0.1);
+  --hxbot-bg-glass: rgba(255, 255, 255, 0.76);
+  --hxbot-glass-surface: rgba(20, 20, 20, 0.04);
+  --hxbot-glass-surface-hover: rgba(20, 20, 20, 0.07);
+  --hxbot-glass-border: rgba(20, 20, 20, 0.12);
+  --hxbot-glass-highlight: rgba(255, 255, 255, 0.6);
+  --hxbot-glass-shadow: transparent;
+  --hxbot-scroll-edge-overlay: rgba(247, 247, 247, 0.72);
+
+  --hxbot-border: rgba(20, 20, 20, 0.07);
+  --hxbot-border-strong: rgba(20, 20, 20, 0.1);
+  --hxbot-image-outline: rgba(20, 20, 20, 0.1);
+  --hxbot-hover: rgba(20, 20, 20, 0.05);
+
+  /* Contrast on the canvas: primary 17:1, secondary 10:1, muted 4.9:1. Dim is for
+     marks and disabled text, as in the dark palette. */
+  --hxbot-text-primary: #141414;
+  --hxbot-text-secondary: #3a3a3c;
+  --hxbot-text-muted: #6b6b70;
+  --hxbot-text-dim: #8e8e93;
+  --hxbot-text-placeholder: #a3a3a3;
+  --hxbot-text-readable: rgba(20, 20, 20, 0.6);
+  --hxbot-settings-text-muted: rgba(20, 20, 20, 0.6);
+
+  /* The on-light family is the high-contrast inverted element: the default button, a checked
+     switch, the user's bubble, the light tooltip. On a light canvas it turns dark. */
+  --hxbot-surface-light: #191919;
+  --hxbot-text-on-light: #ffffff;
+  --hxbot-text-muted-on-light: rgba(255, 255, 255, 0.64);
+  --hxbot-text-dim-on-light: rgba(255, 255, 255, 0.4);
+  --hxbot-border-on-light: rgba(255, 255, 255, 0.16);
+
+  /* The same hue 210 as the dark accent. The fill keeps its value, so a button looks the same
+     in both themes; text and hover go darker for contrast (accent-text 5.3:1 on the canvas). */
+  --hxbot-accent-hover: #006ad4;
+  --hxbot-accent-text: #0064c8;
+  --hxbot-accent-soft: rgba(0, 124, 247, 0.12);
+  --hxbot-accent-strong: rgba(0, 124, 247, 0.26);
+
+  /* Chart series: darker steps of the dark-palette hues, so each series reads on white.
+     Not yet checked with the dataviz palette validator in light mode. */
+  --hxbot-chart-series-codex: #8e4fc0;
+  --hxbot-chart-series-grok: #16849b;
+  --hxbot-chart-storage-workspaces: #2f74c9;
+  --hxbot-chart-storage-files: #c64d1d;
+  --hxbot-chart-storage-chats: #148a61;
+  --hxbot-chart-storage-downloads: #6f62d6;
+  --hxbot-chart-storage-runtimes: #a86f00;
+
+  /* Status fills keep their hue. Status text is darker, for AA on white. */
+  --hxbot-success: #1fa85a;
+  --hxbot-success-text: #187a41;
+  --hxbot-success-soft: rgba(31, 168, 90, 0.12);
+  --hxbot-success-wash: rgba(31, 168, 90, 0.06);
+  --hxbot-warning: #f08a00;
+  --hxbot-warning-text: #9c5200;
+  --hxbot-warning-soft: rgba(240, 138, 0, 0.14);
+  --hxbot-approval-badge-soft: rgba(240, 138, 0, 0.18);
+  --hxbot-danger: #e8222d;
+  --hxbot-danger-hover: #f04a53;
+  --hxbot-danger-text: #c0141d;
+  --hxbot-danger-soft: rgba(232, 34, 45, 0.12);
+  --hxbot-danger-soft-hover: rgba(232, 34, 45, 0.2);
+  --hxbot-danger-focus: rgba(232, 34, 45, 0.36);
+  --hxbot-danger-border: rgba(232, 34, 45, 0.45);
+
+  --hxbot-question-option: #16849b;
+  --hxbot-question-option-soft: rgba(22, 132, 155, 0.12);
+  --hxbot-question-option-hover: rgba(22, 132, 155, 0.18);
+  --hxbot-question-option-pressed: rgba(22, 132, 155, 0.24);
+  --hxbot-question-badge-text: #0f6a7d;
+  --hxbot-question-badge-soft: rgba(22, 132, 155, 0.14);
+  --hxbot-message-badge-text: #0a5fb8;
+  --hxbot-message-badge-soft: rgba(0, 124, 247, 0.12);
+  --hxbot-badge-new: #e0004a;
+  --hxbot-badge-new-soft: rgba(224, 0, 74, 0.12);
+
+  /* File references: the hues of the dark palette, darker so the name reads on white. */
+  --hxbot-file-blue: #1a66c4;
+  --hxbot-file-blue-soft: rgba(31, 111, 209, 0.12);
+  --hxbot-file-yellow: #9c5200;
+  --hxbot-file-yellow-soft: rgba(240, 138, 0, 0.14);
+  --hxbot-file-orange: #a8521a;
+  --hxbot-file-orange-soft: rgba(181, 90, 31, 0.12);
+  --hxbot-file-teal: #127589;
+  --hxbot-file-teal-soft: rgba(22, 132, 155, 0.12);
+  --hxbot-file-green: #187a41;
+  --hxbot-file-green-soft: rgba(31, 168, 90, 0.12);
+  --hxbot-file-red: #c0141d;
+  --hxbot-file-red-soft: rgba(232, 34, 45, 0.12);
+  --hxbot-file-pink: #a3478f;
+  --hxbot-file-pink-soft: rgba(163, 71, 143, 0.12);
+  --hxbot-file-default: #0064c8;
+  --hxbot-file-default-soft: rgba(0, 124, 247, 0.12);
+
+  --hxbot-data-table-border: #e3e3e6;
+  --hxbot-data-table-header-text: #6b6b70;
+  --hxbot-data-table-text: #1c1c1e;
+  --hxbot-data-table-outer-border: rgba(20, 20, 20, 0);
+  --hxbot-data-table-ring: rgba(20, 20, 20, 0.1);
+
+  /* No drop shadows: on the dark canvas they do not show, but on white they read as a halo.
+     A raised surface keeps its 1px ring. HXBot: menus and lists keep a faint shadow, as in
+     WorkBuddy. */
+  --hxbot-shadow-popover-ambient: transparent;
+  --hxbot-shadow-dialog: transparent;
+  --hxbot-shadow-menu: rgba(0, 0, 0, 0.08);
+  --hxbot-shadow-ring: rgba(20, 20, 20, 0.04);
+  --hxbot-shadow-overlay: 0 0 0 transparent;
+
+  /* HXBot: the controls as in WorkBuddy (v1.6.3), measured on its screenshots. */
+  --hxbot-control-off: #e5e5e5;
+  --hxbot-control-knob-shadow: rgba(0, 0, 0, 0.15);
+  --hxbot-field-border-active: #b2b2b2;
+  --hxbot-menu-border: #dedede;
+  --hxbot-slider-line: #b2b2b2;
+}

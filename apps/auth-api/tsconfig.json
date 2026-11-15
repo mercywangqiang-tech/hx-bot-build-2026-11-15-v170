@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
+    "paths": {
+      "@hxbot/renderer-preview": ["./src/types/renderer-preview.d.ts"],
+      "@hxbot/renderer-web": ["./src/types/renderer-web.d.ts"],
+      "@hxbot/ui/features/conversation/MarkdownMessageText": ["./src/types/markdown-message-text.d.ts"]
+    },
+    "types": ["@cloudflare/workers-types", "vite/client", "@testing-library/jest-dom"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.tsx",
+    "scripts/**/*.ts",
+    "vite.config.ts",
+    "renderer-preview-alias.ts",
+    "vitest.config.ts"
+  ]
+}

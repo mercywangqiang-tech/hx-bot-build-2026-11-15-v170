@@ -1,0 +1,12 @@
+# Stages the newest release, or stops HXBot, moves the staged release into place and starts HXBot
+# again, when an owner, an admin or a permitted member asks for it in Server Settings > Updates.
+[Unit]
+Description=Update HXBot on request
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/HXBot/hosted/hxbot-hosted-update request
+# A download and an apply: the limits of hxbot-update.service and hxbot-update-apply.service.
+TimeoutStartSec=45min

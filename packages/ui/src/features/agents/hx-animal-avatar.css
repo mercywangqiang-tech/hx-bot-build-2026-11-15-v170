@@ -1,0 +1,25 @@
+/* HXBot：动物头像。工作中的动物轻轻上下跳动（允许动态效果时），失败时变灰。 */
+.hx-animal-avatar > svg {
+  display: block;
+  overflow: visible;
+}
+
+@keyframes hx-animal-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hx-animal-avatar[data-mood="working"] > svg {
+    animation: hx-animal-bob 1.1s ease-in-out infinite;
+  }
+}
+
+.hx-animal-avatar[data-mood="failed"] > svg {
+  filter: grayscale(0.7);
+}

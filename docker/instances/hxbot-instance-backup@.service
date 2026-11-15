@@ -1,0 +1,10 @@
+# Backs up instance %i and verifies the backup. hxbot-instance-backup@%i.timer starts it. `setup`
+# replaces /opt/hxbot-docker/instances/ with the folder of hxbot-instance.
+[Unit]
+Description=Back up HXBot instance %i
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hxbot-docker/instances/hxbot-instance backup %i --verify
+TimeoutStartSec=6h

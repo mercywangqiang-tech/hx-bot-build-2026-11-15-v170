@@ -1,0 +1,822 @@
+/* The trace of an agent run: the totals, then one timeline row for each span. */
+
+.trace {
+  --trace-surface: var(--hxbot-bg-surface);
+  /* `cqw` resolves where these are used, inside the scroll body, so a narrow trace keeps its timeline. */
+  --trace-name-width: min(260px, 45cqw);
+  /* Room on the right of the timeline for the label after the last bar. */
+  --trace-label-room: min(150px, 25cqw);
+  --trace-lane-pad: var(--hxbot-space-3);
+  --trace-row-height: 36px;
+  --trace-bar-height: 16px;
+  /* The colour of the agent that did a span. The top agent and its own calls stay neutral. */
+  --trace-hue: var(--hxbot-text-muted);
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-card);
+  background: var(--trace-surface);
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-sm);
+  line-height: var(--hxbot-leading-sm);
+}
+
+.trace-header {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  padding-block: var(--hxbot-space-2);
+  padding-inline: var(--hxbot-space-4) var(--hxbot-space-2);
+  border-bottom: 1px solid var(--hxbot-border);
+}
+
+.trace-title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-semibold);
+  line-height: var(--hxbot-leading-md);
+}
+
+/* The speed menu is compact: it holds one short value. */
+.ui-select.trace-select {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.trace-select .trace-select-trigger {
+  width: auto;
+  gap: var(--hxbot-space-1);
+  padding-inline: var(--hxbot-space-2) var(--hxbot-space-1-5);
+  font-variant-numeric: tabular-nums;
+}
+
+.trace-search {
+  position: relative;
+  width: min(240px, 100%);
+}
+
+.trace-search-icon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: var(--hxbot-space-2);
+  width: var(--hxbot-icon-xs);
+  height: var(--hxbot-icon-xs);
+  color: var(--hxbot-text-muted);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.trace-search .trace-search-input {
+  width: 100%;
+  padding-inline: calc(var(--hxbot-space-2) * 2 + var(--hxbot-icon-xs)) var(--hxbot-space-8);
+}
+
+/* A focused field gets a neutral border only, as the other fields of the app. */
+.trace-search .trace-search-input:focus-visible {
+  border-color: var(--hxbot-text-muted);
+  box-shadow: none;
+  outline: none;
+}
+
+/* The browser's own clear button would sit under the shortcut hint. */
+.trace-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.trace-search-kbd {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: var(--hxbot-space-1-5);
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.trace-totals {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  /* The last total in each line puts its end border outside the trace, where it is clipped. */
+  margin-block: 0;
+  margin-inline: 0 -1px;
+}
+
+.trace-total {
+  display: grid;
+  flex: 1 1 96px;
+  gap: var(--hxbot-space-0-5);
+  min-width: 0;
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+  border-inline-end: 1px solid var(--hxbot-border);
+  border-bottom: 1px solid var(--hxbot-border);
+}
+
+.trace-total-label {
+  overflow: hidden;
+  color: var(--hxbot-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The same roll as the task list: the digits that change lift in and sharpen. */
+.trace-total-value {
+  --digit-dur: var(--hxbot-duration-overlay);
+  --digit-distance: var(--hxbot-space-1);
+  --digit-blur: var(--hxbot-space-0-5);
+  --digit-ease: var(--hxbot-ease-out);
+
+  margin: 0;
+  font-size: var(--hxbot-text-lg);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--hxbot-leading-lg);
+}
+
+.trace-body {
+  --trace-fade: var(--hxbot-space-6);
+  /* No edge is faded until the list scrolls: one opaque layer for each edge. */
+  --trace-mask-top: linear-gradient(var(--hxbot-text-primary), var(--hxbot-text-primary));
+  --trace-mask-bottom: linear-gradient(var(--hxbot-text-primary), var(--hxbot-text-primary));
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  container-type: inline-size;
+  scrollbar-width: none;
+  /* A time axis: the name column, the lanes and the bars keep their LTR places in RTL too. */
+  direction: ltr;
+}
+
+.trace-body::-webkit-scrollbar {
+  display: none;
+}
+
+.trace-body.scroll-fade-top,
+.trace-body.scroll-fade-bottom {
+  mask-image: var(--trace-mask-top), var(--trace-mask-bottom);
+  mask-composite: intersect;
+}
+
+/* The rows fade in under the rows that stay at the top. */
+.trace-body.scroll-fade-top {
+  --trace-mask-top: linear-gradient(
+    to bottom,
+    var(--hxbot-text-primary) var(--trace-stack),
+    transparent var(--trace-stack),
+    var(--hxbot-text-primary) calc(var(--trace-stack) + var(--trace-fade))
+  );
+}
+
+.trace-body.scroll-fade-bottom {
+  --trace-mask-bottom: linear-gradient(
+    to bottom,
+    var(--hxbot-text-primary) calc(100% - var(--trace-fade)),
+    transparent
+  );
+}
+
+.trace-grid {
+  position: relative;
+  z-index: 0;
+}
+
+.trace-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trace-row {
+  display: grid;
+  height: var(--trace-row-height);
+  box-sizing: border-box;
+  grid-template-columns: var(--trace-name-width) minmax(0, 1fr);
+  border-bottom: 1px solid var(--hxbot-border);
+}
+
+/* The rows under a parent slide closed when it folds and open when it unfolds. `clip`, not `hidden`:
+ * a scroll container here would stop the parent rows inside from staying at the top. */
+.trace-branch-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--hxbot-duration-slow) var(--hxbot-ease-out);
+}
+
+.trace-branch-children[data-open] {
+  grid-template-rows: 1fr;
+}
+
+.trace-branch-clip {
+  min-height: 0;
+  overflow: clip;
+  opacity: 0;
+  transition: opacity var(--hxbot-duration-slow) var(--hxbot-ease-out);
+}
+
+.trace-branch-children[data-open] > .trace-branch-clip {
+  opacity: 1;
+}
+
+/* A row that a search or a replay adds fades in. */
+.trace-row {
+  transition: opacity var(--hxbot-duration-slow) var(--hxbot-ease-out);
+}
+
+@starting-style {
+  .trace-row {
+    opacity: 0;
+  }
+}
+
+/* A parent row stays under the rows above it while its own rows scroll. Its item ends with its last
+ * row, so the next parent row takes its place. */
+.trace-row[data-parent] {
+  position: sticky;
+  top: calc((var(--trace-depth) + 1) * var(--trace-row-height));
+  z-index: 4;
+  background: var(--trace-surface);
+}
+
+/* Five agent colours. The calls of an agent take its colour through `--trace-hue`. */
+.trace-row[data-hue="1"],
+.trace-handoff[data-hue="1"] {
+  --trace-hue: var(--hxbot-chart-storage-downloads);
+}
+
+.trace-row[data-hue="2"],
+.trace-handoff[data-hue="2"] {
+  --trace-hue: var(--hxbot-chart-storage-files);
+}
+
+.trace-row[data-hue="3"],
+.trace-handoff[data-hue="3"] {
+  --trace-hue: var(--hxbot-chart-storage-chats);
+}
+
+.trace-row[data-hue="4"],
+.trace-handoff[data-hue="4"] {
+  --trace-hue: var(--hxbot-chart-storage-workspaces);
+}
+
+.trace-row[data-hue="5"],
+.trace-handoff[data-hue="5"] {
+  --trace-hue: var(--hxbot-chart-storage-runtimes);
+}
+
+.trace-name {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--hxbot-space-1-5);
+  --trace-indent: var(--hxbot-space-4);
+  --trace-guide-at: calc(var(--hxbot-control-xs) / 2);
+  padding-inline: calc(var(--hxbot-space-2) + var(--trace-depth, 0) * var(--trace-indent)) var(--hxbot-space-2);
+  border-right: 1px solid var(--hxbot-border);
+  /* The tint of a row under the pointer, then one guide line for each tree level above the row,
+   * under the chevron of that level. */
+  background:
+    linear-gradient(var(--trace-row-tint), var(--trace-row-tint)),
+    repeating-linear-gradient(
+      to right,
+      transparent 0 var(--trace-guide-at),
+      var(--hxbot-border) var(--trace-guide-at) calc(var(--trace-guide-at) + 1px),
+      transparent calc(var(--trace-guide-at) + 1px) var(--trace-indent)
+    )
+    var(--hxbot-space-2) 0 / calc(var(--trace-depth, 0) * var(--trace-indent)) 100% no-repeat,
+    var(--trace-surface);
+}
+
+/* The row under the pointer or the keyboard lights up, and so does the piece of its parent's lane
+ * that stands for it. A piece under the pointer lights up its row. */
+.trace-row {
+  --trace-row-tint: transparent;
+}
+
+.trace-row[data-hovered],
+.trace-row:has(.trace-name-button:focus-visible) {
+  --trace-row-tint: var(--hxbot-hover);
+}
+
+.trace-row[data-hovered] .trace-bar:not(.trace-segment),
+.trace-segment[data-hovered] {
+  outline: 1px solid var(--hxbot-text-secondary);
+  outline-offset: 1px;
+}
+
+/* The name of a row is its keyboard stop, and a click on it shows the step in the chat. */
+.trace-name .trace-name-button.ui-button {
+  height: auto;
+  min-width: 0;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  gap: var(--hxbot-space-1-5);
+  padding: 0;
+  border-radius: var(--hxbot-radius-xs);
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: start;
+  cursor: default;
+}
+
+.trace-row[data-selectable] .trace-name-button.ui-button {
+  cursor: pointer;
+}
+
+/* The row's tint shows the keyboard stop, so the name gets a thin neutral ring and no halo. */
+.trace-name .trace-name-button.ui-button:focus-visible {
+  box-shadow: none;
+  outline: 1px solid var(--hxbot-text-muted);
+  outline-offset: 1px;
+}
+
+.trace-axis-row {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--trace-surface);
+}
+
+.trace-axis-name {
+  color: var(--hxbot-text-muted);
+}
+
+/* An open row is not a lit toggle, so the chevron has no fill. */
+.trace-name .trace-toggle[aria-expanded="true"]:not(:hover) {
+  background: transparent;
+}
+
+.trace-toggle-icon {
+  width: var(--hxbot-icon-xs);
+  height: var(--hxbot-icon-xs);
+  transition: rotate var(--hxbot-duration-fast) var(--hxbot-ease-out);
+}
+
+.trace-toggle[aria-expanded="false"] .trace-toggle-icon {
+  rotate: -90deg;
+}
+
+.trace-toggle-space {
+  width: var(--hxbot-control-xs);
+  flex: 0 0 auto;
+}
+
+.trace-icon {
+  width: var(--hxbot-icon-xs);
+  height: var(--hxbot-icon-xs);
+  flex: 0 0 auto;
+  color: var(--hxbot-text-muted);
+}
+
+/* The icon of a row sits on a quiet tile. An agent's icon has the agent's colour. */
+.trace-glyph {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-sm);
+  background: color-mix(in srgb, var(--hxbot-text-primary) 4%, var(--trace-surface));
+  color: var(--hxbot-text-secondary);
+}
+
+.trace-glyph[data-agent] {
+  color: var(--trace-hue);
+}
+
+.trace-row:not([data-hue]) .trace-glyph[data-agent] {
+  color: var(--hxbot-text-primary);
+}
+
+.trace-glyph[data-failed] {
+  color: var(--hxbot-danger-text);
+}
+
+.trace-glyph-icon {
+  width: var(--hxbot-icon-xs);
+  height: var(--hxbot-icon-xs);
+}
+
+.trace-spinner {
+  width: var(--hxbot-icon-xs);
+  height: var(--hxbot-icon-xs);
+  flex: 0 0 auto;
+  color: var(--hxbot-text-muted);
+  animation: ui-spin 1s linear infinite;
+}
+
+.trace-span-name {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace-row[data-parent] .trace-span-name {
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+.trace-row[data-failed] .trace-span-name {
+  color: var(--hxbot-danger-text);
+}
+
+/* The error of a failed tool row, under the row. It covers the lines of the timeline behind it. */
+.trace-span-error-row {
+  position: relative;
+  z-index: 2;
+  padding: var(--hxbot-space-1-5) var(--hxbot-space-2);
+  padding-inline-start: calc(var(--hxbot-space-2) + (var(--trace-depth, 0) + 1) * var(--hxbot-space-4));
+  border-bottom: 1px solid var(--hxbot-border);
+  background: var(--trace-surface);
+}
+
+.trace-span-error {
+  max-height: 160px;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-xs);
+  background: var(--hxbot-bg-control);
+  padding: var(--hxbot-space-1-5) var(--hxbot-space-2);
+  color: var(--hxbot-text-secondary);
+  font-family: var(--hxbot-font-mono);
+  font-size: var(--hxbot-text-sm);
+  line-height: var(--hxbot-leading-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* A light moves along the name of a running step. It repaints the text on each frame, so only the
+ * few running rows have it. */
+.trace-row[data-running] .trace-span-name {
+  background:
+    linear-gradient(
+      90deg,
+      var(--hxbot-text-muted) 0%,
+      var(--hxbot-text-muted) 35%,
+      var(--hxbot-text-primary) 50%,
+      var(--hxbot-text-muted) 65%,
+      var(--hxbot-text-muted) 100%
+    )
+    0 0 / 300% 100%;
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: trace-shine 2s linear infinite;
+}
+
+@keyframes trace-shine {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
+.trace-span-detail {
+  /* The detail takes only the room after the name, so the name stays readable. */
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--hxbot-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The timeline of a row. Each time sits at `--trace-at`, from 0 to 1, between the left pad and the
+ * label room. The overlay of grid lines uses the same scale. */
+.trace-lane {
+  --trace-scale: calc(100% - var(--trace-lane-pad) - var(--trace-label-room));
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.trace-row[data-hovered] .trace-lane {
+  background: var(--trace-row-tint);
+}
+
+.trace-overlay {
+  --trace-scale: calc(100% - var(--trace-lane-pad) - var(--trace-label-room));
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--trace-name-width);
+  pointer-events: none;
+}
+
+.trace-tick,
+.trace-gridline,
+.trace-now,
+.trace-now-dot,
+.trace-bar,
+.trace-handoff,
+.trace-bar-label {
+  position: absolute;
+  left: calc(var(--trace-lane-pad) + var(--trace-scale) * var(--trace-at));
+}
+
+.trace-tick {
+  top: 50%;
+  padding-left: var(--hxbot-space-1);
+  color: var(--hxbot-text-muted);
+  font-variant-numeric: tabular-nums;
+  translate: 0 -50%;
+  white-space: nowrap;
+}
+
+.trace-gridline,
+.trace-now {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hxbot-border);
+}
+
+.trace-now {
+  z-index: 2;
+  background: var(--hxbot-text-dim);
+}
+
+.trace-now-dot {
+  bottom: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--hxbot-text-primary);
+  translate: -3px 50%;
+}
+
+/* A new bar grows from its start. A replay moves bars on each frame, so their position has no
+ * transition. */
+.trace-bar {
+  transform-origin: left center;
+  transition: scale var(--hxbot-duration-overlay) var(--hxbot-ease-out);
+}
+
+@starting-style {
+  .trace-bar {
+    scale: 0 1;
+  }
+}
+
+.trace-bar {
+  top: 50%;
+  display: grid;
+  width: max(3px, calc(var(--trace-scale) * var(--trace-width)));
+  height: var(--trace-bar-height);
+  box-sizing: border-box;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--hxbot-radius-xs);
+  translate: 0 -50%;
+}
+
+/* A model call has the full agent colour and a tool call a dim one. */
+.trace-bar[data-kind="model"],
+.trace-swatch[data-kind="model"] {
+  background-color: var(--trace-hue);
+}
+
+.trace-bar[data-kind="tool"],
+.trace-swatch[data-kind="tool"] {
+  background-color: color-mix(in srgb, var(--trace-hue) 45%, var(--trace-surface));
+}
+
+.trace-bar[data-kind="waiting"],
+.trace-swatch[data-kind="waiting"] {
+  border: 1px solid color-mix(in srgb, var(--trace-hue) 60%, transparent);
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--trace-hue) 60%, transparent) 0 1px,
+    transparent 1px 5px
+  );
+}
+
+.trace-bar[data-kind="handoff"] {
+  border: 1px solid var(--trace-hue);
+  background-color: transparent;
+}
+
+.trace-bar[data-failed],
+.trace-swatch[data-failed] {
+  border: 0;
+  background: var(--hxbot-danger);
+}
+
+.trace-bar.trace-track {
+  border: 0;
+  background: color-mix(in srgb, var(--trace-hue) 16%, transparent);
+}
+
+/* A light moves along a bar that still runs. */
+.trace-bar[data-running]:not([data-kind="waiting"]) {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--hxbot-text-primary) 35%, transparent) 50%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 50% 100%;
+  animation: trace-bar-shine 1.6s linear infinite;
+}
+
+@keyframes trace-bar-shine {
+  from {
+    background-position: -100% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+.trace-bar-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--hxbot-text-on-accent);
+}
+
+/* The line from a parent row down to its subagents' bars. It starts under the parent's lane and ends
+ * at the top of the last subagent's row. A line has the colour of the agent that hands off, so the
+ * rows that draw parts of it do not give it their own colour. */
+.trace-handoff {
+  --trace-elbow: var(--hxbot-space-2);
+  --trace-line-top: calc((var(--trace-from) + 1.5) * var(--trace-row-height) + var(--trace-bar-height) / 2);
+  --trace-line-rows: calc(var(--trace-to) - var(--trace-from) - 0.5);
+  /* An open error moves the rows under it, so the line moves and grows by the errors along it. */
+  top: calc(var(--trace-line-top) + var(--trace-from-shift, 0px));
+  width: var(--trace-elbow);
+  height: calc(var(--trace-line-rows) * var(--trace-row-height) - var(--trace-bar-height) / 2 + var(--trace-grow, 0px));
+  box-sizing: border-box;
+  border-left: 2px dotted var(--trace-hue);
+  translate: calc(-1 * var(--trace-elbow)) 0;
+  /* The rows slide when a parent folds, so the line follows them at the same pace. */
+  transition:
+    top var(--hxbot-duration-slow) var(--hxbot-ease-out),
+    height var(--hxbot-duration-slow) var(--hxbot-ease-out);
+}
+
+.trace-handoff:not([data-hue]) {
+  --trace-hue: var(--hxbot-text-muted);
+}
+
+/* The branch into a subagent's bar. The line goes on past it to the next subagent, and turns into the
+ * bar of the last one. */
+.trace-handoff.trace-handoff-end {
+  top: 0;
+  height: 50%;
+  border-bottom: 2px dotted var(--trace-hue);
+  border-left: 0;
+}
+
+.trace-handoff.trace-handoff-end[data-last] {
+  border-left: 2px dotted var(--trace-hue);
+  border-bottom-left-radius: var(--hxbot-radius-xs);
+}
+
+/* A parent row is opaque while it stays at the top, so it draws the part of a line that passes it. */
+.trace-handoff.trace-handoff-pass {
+  top: 0;
+  height: 100%;
+}
+
+.trace-bar-label {
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hxbot-space-1-5);
+  padding-left: var(--hxbot-space-1-5);
+  color: var(--hxbot-text-muted);
+  font-variant-numeric: tabular-nums;
+  translate: 0 -50%;
+  white-space: nowrap;
+}
+
+.trace-empty {
+  display: grid;
+  gap: var(--hxbot-space-1);
+  padding: var(--hxbot-space-8) var(--hxbot-space-4);
+  text-align: center;
+}
+
+.trace-empty-title,
+.trace-empty-description {
+  margin: 0;
+}
+
+.trace-empty-title {
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.trace-empty-description {
+  color: var(--hxbot-text-muted);
+}
+
+.trace-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-2) var(--hxbot-space-4);
+  padding-block: var(--hxbot-space-2);
+  padding-inline: var(--hxbot-space-4) var(--hxbot-space-2);
+  border-top: 1px solid var(--hxbot-border);
+}
+
+/* Each key is a small bar in the shape of the bars above it. The top agent's neutral colour is too dim here,
+ * so the keys use the secondary text colour. */
+.trace-legend {
+  --trace-hue: var(--hxbot-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hxbot-space-1) var(--hxbot-space-4);
+  margin: 0;
+  padding: 0;
+  color: var(--hxbot-text-muted);
+  list-style: none;
+}
+
+.trace-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+}
+
+.trace-swatch {
+  width: 16px;
+  height: 8px;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: var(--hxbot-radius-xs);
+}
+
+/* The handoff key is a piece of the dotted line that goes down to a subagent. */
+.trace-swatch[data-kind="handoff"] {
+  height: 2px;
+  border-top: 2px dotted var(--trace-hue);
+  border-radius: 0;
+}
+
+.trace-replay {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-1);
+}
+
+.trace-replay .trace-play {
+  border-radius: var(--hxbot-radius-pill);
+}
+
+.trace-replay .trace-select {
+  margin-inline-start: var(--hxbot-space-1);
+}
+
+.ui-dialog-content.trace-dialog {
+  width: min(1040px, 100%);
+  max-height: min(680px, calc(100dvh - 2 * var(--hxbot-space-6)));
+  display: flex;
+  overflow: hidden;
+  outline: 0;
+  background: var(--hxbot-bg-surface);
+}
+
+.trace.trace-in-dialog {
+  border: 0;
+  border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace-branch-children,
+  .trace-branch-clip,
+  .trace-row,
+  .trace-bar,
+  .trace-handoff {
+    transition: none;
+  }
+
+  .trace-spinner,
+  .trace-row[data-running] .trace-span-name,
+  .trace-bar[data-running] {
+    animation: none;
+  }
+
+  .trace-toggle-icon {
+    transition: none;
+  }
+}

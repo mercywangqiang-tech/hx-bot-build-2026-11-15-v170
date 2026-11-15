@@ -1,0 +1,128 @@
+[
+  {
+    "version": "0.67.9",
+    "date": "2026-11-15",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Other apps stay fast: while the agent works on the computer, the rim no longer reads every window all the time; the catalog read, the agent's processes and the commands it runs leave the processor to your apps first; reading a big app's window has a limit, so that app does not stop.",
+          "No stolen focus: when you move to another app, the agent types nothing there and pulls no window back; it stops and asks you. A grant page or a remote control question comes as a notification while you work in another app, and opens on a click; an automatic update opens HXBot behind your app.",
+          "Shortcuts and copy and paste work: at the end of its work the agent lets go of Ctrl, Shift, Alt and the other modifier keys; the stop keys Ctrl+Alt+Esc are held only while the agent works on the computer; after the agent types, your clipboard still has your copy.",
+          "No full network, your apps stay open: update downloads take at most 2 MB/s and the remote desktop at most 10 Mbit/s; on Windows, the apps with a window that an agent opened (such as Notepad) stay open when the agent stops. Auto model keeps the model of a chat that goes on, so its context and cache stay."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.8",
+    "date": "2026-11-14",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "The agent uses app commands: bring to front, hide, quit, put a window on the left half, click a menu command, all done by HXBot itself, faster than step by step. A quit is a normal quit first; when the app asks whether to save, you choose, and a force quit asks you first.",
+          "The agent runs AppleScript, JXA, Shortcuts and PowerShell to work in apps such as Excel and Word. It asks before a script deletes or sends, and it never runs one that needs administrator rights. The first time HXBot controls an app on a Mac, macOS asks whether to allow it: click OK.",
+          "When one way does not work, it takes the next: direct, command, controls, image; the result says which way it took. It also reads and changes the default browser, mail app and the default app of a file type (on Windows it opens Default apps and the agent clicks there step by step).",
+          "Fixed: on Windows, the agent waited without end when a command started another app (such as Notepad)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.7",
+    "date": "2026-11-14",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Grant once on a Mac: every version has the same signature, so Screen Recording and Accessibility hold after updates. In Settings › Computer Use, click Grant: HXBot turns on the switches it can, and you only give your password or Touch ID. With Accessibility alone, the agent works in apps step by step.",
+          "The agent installs apps: say \"install the Claude I downloaded\", and HXBot puts the app from a .app, .zip or .dmg into Applications. It asks before it replaces an app, and the earlier version goes to the Trash.",
+          "Saved Vault passwords sign in without a question; only a payment asks each time. At maximum access, OpenCode's commands on a Mac (ps, brew, screenshots) are no longer stopped by the sandbox.",
+          "The first time with this version: click Open Anyway in System Settings › Privacy & Security when macOS asks, then grant once; later updates need nothing. Also fixed: on a Mac, closing the window in full screen turned the whole screen black."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.6",
+    "date": "2026-11-14",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "After an app opens, the agent plans the steps from your words and works with the mouse and the keyboard, step by step. Each step is checked and a progress card shows in the chat; it asks before it sends, pays or deletes; press Ctrl+Alt+Esc (⌃⌥Esc on a Mac) to stop it at any time. It is on, with nothing to set (the agent needs Computer Use on; on a Mac, HXBot opens the page of a missing grant).",
+          "A team can have up to 20 members, sized by the work. This computer's memory sets how many work at once; to change the limits of one team, say so in the chat, such as “at most 3 members and 1 hour this time”.",
+          "Teams have a progress card: in your chat, one card shows who does each step, how far it is, the handoffs and the time. Members share their skills: any member can use the skills in the team's skill table.",
+          "Auto model is on and takes the strongest model by default. With free models only, it takes the strongest free one; to save cost, choose Free first under Auto model in the agent's settings."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.5",
+    "date": "2026-11-14",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Say what you need and get a team: press Start on a proposal card, and HXBot picks agents by skill, makes members for missing roles and opens a team room.",
+          "Members hand work over with a fixed handoff form and share one task board: who does what, and what is stuck, at a glance.",
+          "Progress and the result come back to your chat; to add words, stop the team or swap a member, just say so there."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.4",
+    "date": "2026-11-14",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Agents choose the model by the work: writing, code, images and planning each get a fitting model, free first by default, and a small line in the chat names it. Turn on Auto model in the agent's settings.",
+          "A proposal card before the work: how many agents, who does what and which models. Nothing starts until you press Start.",
+          "When work fails, the agent suggests a stronger model; reply “redo”.",
+          "Connect any of OpenCode’s 200+ services under Add provider, free models included: sign in in the browser or paste an API key, and agents can then use the models."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.3",
+    "date": "2026-11-13",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Agents open apps and system settings pages by name, without screenshots or clicks (Computer Use must be on); Chinese names can be typed in pinyin.",
+          "Agents change 32 common settings directly, such as dark mode, the Dock, the taskbar and when the screen turns off (on Windows, the screen brightness after one run of the self-test under Settings › Computer Use).",
+          "Settings, tidied up: Settings, Features and Data & security, so you find what you need at a glance.",
+          "New Get help; Updates is now About, with the website, the Terms of Service and the Privacy Policy."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.67.2",
+    "date": "2026-11-13",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "A fresh look: switches, buttons, menus and Settings are cleaner and easier on the eyes.",
+          "Easier updates: a window tells you what is new; choose Update now, or update later. Only major versions (such as 0.68.0) must be installed.",
+          "Settings › Access & activity opens again when you click it."
+        ]
+      }
+    ]
+  }
+]

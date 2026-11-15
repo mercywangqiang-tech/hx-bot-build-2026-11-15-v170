@@ -1,0 +1,1076 @@
+/*
+ * Files and storage (issue 496). The storage bar takes its hues from the
+ * `--hxbot-chart-storage-*` tokens in a fixed order; everything else uses the
+ * shared text, surface and space tokens.
+ */
+
+/* Storage bar ------------------------------------------------------------- */
+
+.storage-usage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-4);
+}
+
+.storage-usage [data-group="workspaces"] {
+  --storage-color: var(--hxbot-chart-storage-workspaces);
+}
+.storage-usage [data-group="files"] {
+  --storage-color: var(--hxbot-chart-storage-files);
+}
+.storage-usage [data-group="chats"] {
+  --storage-color: var(--hxbot-chart-storage-chats);
+}
+.storage-usage [data-group="downloads"] {
+  --storage-color: var(--hxbot-chart-storage-downloads);
+}
+.storage-usage [data-group="runtimes"] {
+  --storage-color: var(--hxbot-chart-storage-runtimes);
+}
+.storage-usage [data-group="app"] {
+  --storage-color: var(--hxbot-chart-storage-app);
+}
+
+/* A 2px surface gap between segments; each segment keeps a minimum width so a
+   small share stays a visible mark next to its legend row. */
+.storage-usage-bar {
+  display: flex;
+  height: 10px;
+  gap: var(--hxbot-space-0-5);
+}
+
+.storage-usage-segment {
+  min-width: 4px;
+  flex-basis: 0;
+  border-radius: var(--hxbot-radius-xs);
+  background: var(--storage-color);
+  transition: opacity var(--hxbot-duration-fast) ease;
+}
+
+.storage-usage[data-hovering="true"] :is(.storage-usage-segment, .storage-usage-legend-row):not([data-active]) {
+  opacity: 0.35;
+}
+
+.storage-usage-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--hxbot-space-1) var(--hxbot-space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.storage-usage-legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: var(--hxbot-space-2);
+  padding: var(--hxbot-space-1) 0;
+  font-size: var(--hxbot-text-md);
+  transition: opacity var(--hxbot-duration-fast) ease;
+}
+
+.storage-usage-swatch {
+  width: var(--hxbot-space-2);
+  height: var(--hxbot-space-2);
+  align-self: center;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--storage-color);
+}
+
+.storage-usage-legend-label {
+  overflow: hidden;
+  color: var(--hxbot-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storage-usage-legend-value {
+  color: var(--hxbot-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.storage-usage-legend-percent {
+  min-width: 4ch;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+/* Storage page ------------------------------------------------------------ */
+
+.storage-overview {
+  container-type: inline-size;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-8);
+  color: var(--hxbot-text-primary);
+}
+
+.storage-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-4);
+}
+
+.storage-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--hxbot-space-3);
+}
+
+.storage-summary-label {
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.storage-summary-total {
+  margin: var(--hxbot-space-1) 0;
+  font-size: var(--hxbot-text-display);
+  font-weight: var(--hxbot-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.storage-summary-total-skeleton {
+  width: 140px;
+  height: 36px;
+  margin: var(--hxbot-space-1) 0;
+}
+
+.storage-summary-caption {
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.storage-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-3) var(--hxbot-space-4);
+  border: 1px solid var(--hxbot-border-grouped);
+  border-radius: var(--hxbot-radius-lg);
+  background: var(--hxbot-bg-grouped);
+}
+
+.storage-message-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--hxbot-text-muted);
+  stroke-width: var(--hxbot-icon-stroke-lg);
+}
+
+.storage-message[role="alert"] .storage-message-icon {
+  color: var(--hxbot-danger-text);
+}
+
+.storage-message-title {
+  margin: 0;
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.storage-message-description {
+  margin: var(--hxbot-space-0-5) 0 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.storage-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+}
+
+.storage-section-heading-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--hxbot-space-3);
+}
+
+.storage-section-heading {
+  margin: 0;
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+.storage-section-aside {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.storage-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--hxbot-border-grouped);
+  border-radius: var(--hxbot-radius-lg);
+  background: var(--hxbot-bg-grouped);
+  list-style: none;
+}
+
+.storage-rows > li + li {
+  border-top: 1px solid var(--hxbot-border-grouped);
+}
+
+.storage-row.ui-button {
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 52px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-2) var(--hxbot-space-4);
+  border-radius: 0;
+  text-align: start;
+  font-weight: var(--hxbot-weight-regular);
+}
+
+.storage-row-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+
+.storage-row-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--hxbot-space-0-5);
+}
+
+.storage-row-title {
+  overflow: hidden;
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storage-row-meta {
+  overflow: hidden;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One series, so the share bar is one neutral hue; the size beside it is the
+   readable value. Scaled to the largest agent, so the top agent fills it. */
+.storage-row-share {
+  width: 96px;
+  height: 6px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--hxbot-hover);
+}
+
+.storage-row-share-fill {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--hxbot-text-muted);
+}
+
+.storage-row-size {
+  display: flex;
+  min-width: 72px;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.storage-row-percent {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.storage-row-chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--hxbot-text-dim);
+  stroke-width: var(--hxbot-icon-stroke);
+}
+
+/* Right to left, the arrow points the other way. */
+.storage-row-chevron:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.storage-cleanup-row {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-2) var(--hxbot-space-4);
+}
+
+.storage-cleanup-row .storage-row-meta {
+  white-space: normal;
+}
+
+.storage-subview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+}
+
+/* The same size as the back icon in the settings panel header. */
+.storage-subview-back > svg {
+  width: var(--hxbot-icon-md);
+  height: var(--hxbot-icon-md);
+}
+
+.storage-subview-header h3 {
+  margin: 0;
+  font-size: var(--hxbot-text-lg);
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+@container (max-width: 520px) {
+  .storage-row-share {
+    display: none;
+  }
+}
+
+/* File list ---------------------------------------------------------------- */
+
+.file-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-3);
+}
+
+.file-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+}
+
+.file-list-search {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+}
+
+.file-list-search-icon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: var(--hxbot-space-2);
+  width: 14px;
+  height: 14px;
+  color: var(--hxbot-text-muted);
+  pointer-events: none;
+  stroke-width: var(--hxbot-icon-stroke);
+  transform: translateY(-50%);
+}
+
+.file-list-search .file-list-search-input {
+  width: 100%;
+  padding-inline-start: calc(var(--hxbot-space-2) + 14px + var(--hxbot-space-1-5));
+}
+
+.file-list-toolbar > .ui-select {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.file-list-sort {
+  width: 120px;
+}
+
+.file-list[data-compact="true"] .file-list-sort {
+  width: auto;
+}
+
+.file-list-filters {
+  display: flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  flex-wrap: wrap;
+  gap: var(--hxbot-space-1);
+}
+
+.file-list[data-compact="true"] .file-list-filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.file-list-filter.ui-button {
+  flex: 0 0 auto;
+  gap: var(--hxbot-space-1-5);
+  border-radius: var(--hxbot-radius-pill);
+  color: var(--hxbot-text-muted);
+}
+
+.file-list-filter.ui-button[aria-pressed="true"] {
+  background: var(--hxbot-bg-control-active);
+  color: var(--hxbot-text-primary);
+}
+
+.file-list-filter-count {
+  color: var(--hxbot-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.file-list-filter[aria-pressed="true"] .file-list-filter-count {
+  color: var(--hxbot-text-secondary);
+}
+
+.file-list-summary {
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.file-list-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+}
+
+.file-list-group + .file-list-group {
+  margin-top: var(--hxbot-space-2);
+}
+
+.file-list-group-heading {
+  margin: 0;
+  padding: 0 var(--hxbot-space-1);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.file-list-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-0-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-list-skeleton {
+  height: 48px;
+  border-radius: var(--hxbot-radius-md);
+}
+
+.file-list-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  padding: var(--hxbot-space-8) var(--hxbot-space-4);
+  text-align: center;
+}
+
+.file-list-message-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--hxbot-danger-text);
+  stroke-width: var(--hxbot-icon-stroke-lg);
+}
+
+.file-list-message-title {
+  margin: 0;
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.file-list-message-description {
+  max-width: 320px;
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-1);
+  padding-inline-end: var(--hxbot-space-1);
+  border-radius: var(--hxbot-radius-md);
+}
+
+.file-row:hover,
+.file-row:focus-within {
+  background: var(--hxbot-hover);
+}
+
+.file-row-main.ui-button {
+  display: flex;
+  min-width: 0;
+  height: auto;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-1-5) var(--hxbot-space-2);
+  text-align: start;
+  font-weight: var(--hxbot-weight-regular);
+}
+
+.file-row-main.ui-button:hover {
+  background: transparent;
+}
+
+/* A missing or remote file cannot preview, but its row still reads as a row
+   rather than a disabled control. */
+.file-row-main.ui-button:disabled {
+  opacity: 1;
+}
+
+.files-file-visual {
+  --file-reference-color: var(--hxbot-file-default);
+  --file-reference-soft: var(--hxbot-file-default-soft);
+
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--hxbot-radius-md);
+  background: var(--file-reference-soft);
+  color: var(--file-reference-color);
+  font-family: var(--hxbot-font-mono);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+/* The shared danger colour is too dark for 12px text on its soft fill. */
+.files-file-visual[data-file-tone="document"] {
+  color: var(--hxbot-danger-text);
+}
+
+.files-file-visual[data-status="missing"],
+.files-file-visual[data-status="failed"] {
+  opacity: 0.5;
+}
+
+.files-file-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-row-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--hxbot-space-0-5);
+}
+
+.file-row-name {
+  overflow: hidden;
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-row[data-status="missing"] .file-row-name {
+  color: var(--hxbot-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--hxbot-text-dim);
+}
+
+.file-row-meta {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  white-space: pre;
+}
+
+.file-row-meta-part {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-row-meta-part:first-child {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.file-row-status {
+  flex: 0 0 auto;
+}
+
+/* The chat panel surface is lighter than the page; the shared danger colour is too dark on it at 12px. */
+.file-row-status.z-badge-variant-destructive-light {
+  color: var(--hxbot-danger-text);
+}
+
+.file-row-menu-trigger {
+  flex: 0 0 auto;
+  color: var(--hxbot-text-muted);
+}
+
+.file-row-menu-trigger > svg {
+  width: var(--hxbot-icon-md);
+  height: var(--hxbot-icon-md);
+  stroke-width: var(--hxbot-icon-stroke);
+}
+
+/* Icons next to button text: the ui-button leaves lucide at its 24px default. */
+.files-button-icon {
+  width: var(--hxbot-icon-sm);
+  height: var(--hxbot-icon-sm);
+  flex: 0 0 auto;
+  stroke-width: var(--hxbot-icon-stroke);
+}
+
+/* Agent settings > Files ------------------------------------------------- */
+
+.agent-files-view {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--hxbot-bg-canvas);
+}
+
+.agent-files-body {
+  container-type: inline-size;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--hxbot-space-6);
+  overflow-y: auto;
+  padding: var(--hxbot-space-4);
+}
+
+.agent-files-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-3);
+}
+
+.agent-files-total-label {
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.agent-files-total {
+  margin: var(--hxbot-space-0-5) 0 0;
+  font-size: var(--hxbot-text-3xl);
+  font-weight: var(--hxbot-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.agent-files-total-skeleton {
+  width: 96px;
+  height: 28px;
+  margin-top: var(--hxbot-space-0-5);
+}
+
+/* One grouped card with a label and a value per row: the settings panel is too narrow for
+   tiles, and a row keeps a long label such as "Files from agents" on one line. */
+.agent-files-tiles {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--hxbot-border-grouped);
+  border-radius: var(--hxbot-radius-lg);
+  background: var(--hxbot-bg-grouped);
+}
+
+.agent-files-tile {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+}
+
+.agent-files-tile + .agent-files-tile {
+  border-top: 1px solid var(--hxbot-border-grouped);
+}
+
+.agent-files-tile dt {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--hxbot-space-1);
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-md);
+}
+
+.agent-files-tile-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-files-tile dd {
+  margin: 0;
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The row keeps its height: the button overlaps the row padding, not the text. */
+.agent-files-tile-action {
+  flex: 0 0 auto;
+  margin-block: calc(var(--hxbot-space-1) * -1);
+  color: var(--hxbot-text-muted);
+}
+
+.agent-files-tile-skeleton {
+  width: 64px;
+  height: 18px;
+}
+
+.agent-files-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+}
+
+/* Chat > Files panel ------------------------------------------------------ */
+
+.conversation-files-summary {
+  flex: 0 0 auto;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.conversation-files-content {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--hxbot-space-3);
+}
+
+/* Machine use, at the top of Storage -------------------------------------- */
+
+.machine-resources-metrics,
+.machine-resources-settings {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--hxbot-border-grouped);
+  border-radius: var(--hxbot-radius-lg);
+  background: var(--hxbot-bg-grouped);
+  list-style: none;
+}
+
+.machine-resources-metric {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 96px 44px;
+  align-items: center;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-3) var(--hxbot-space-4);
+}
+
+.machine-resources-metric + .machine-resources-metric {
+  border-top: 1px solid var(--hxbot-border-grouped);
+}
+
+.machine-resources-icon {
+  width: var(--hxbot-icon-sm);
+  height: var(--hxbot-icon-sm);
+  color: var(--hxbot-text-secondary);
+}
+
+.machine-resources-metric[data-tone="warning"] .machine-resources-icon {
+  color: var(--hxbot-warning);
+}
+
+.machine-resources-metric[data-tone="danger"] .machine-resources-icon {
+  color: var(--hxbot-danger);
+}
+
+.machine-resources-copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--hxbot-space-0-5);
+}
+
+.machine-resources-title {
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.machine-resources-meta {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.machine-resources-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.machine-resources-bar .ui-progress-track {
+  height: 6px;
+}
+
+.machine-resources-metric[data-tone="warning"] .ui-progress-fill {
+  background: var(--hxbot-warning);
+}
+
+.machine-resources-metric[data-tone="danger"] .ui-progress-fill {
+  background: var(--hxbot-danger);
+}
+
+/* The alert level of the metric, on its bar. */
+.machine-resources-threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--hxbot-text-secondary);
+}
+
+.machine-resources-value {
+  font-size: var(--hxbot-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.storage-message.machine-resources-alert .storage-message-icon {
+  color: var(--hxbot-warning);
+}
+
+.machine-resources-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-4);
+  padding: var(--hxbot-space-4);
+}
+
+.machine-resources-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-4);
+}
+
+.machine-resources-select {
+  flex: 0 0 220px;
+}
+
+@container (max-width: 520px) {
+  .machine-resources-metric {
+    grid-template-columns: auto minmax(0, 1fr) 44px;
+  }
+
+  .machine-resources-bar {
+    display: none;
+  }
+
+  .machine-resources-setting {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .machine-resources-select {
+    flex-basis: auto;
+  }
+}
+
+/* Library ----------------------------------------------------------------------- */
+
+/* The files and pictures of every chat of a server. The page fills the space that its caller gives it. */
+.library-page {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-4);
+  overflow-y: auto;
+  padding: var(--hxbot-space-8) var(--hxbot-space-8) var(--hxbot-space-6);
+}
+
+.library-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-3);
+}
+
+.library-title {
+  margin: 0;
+  font-size: var(--hxbot-text-2xl);
+  font-weight: var(--hxbot-weight-semibold);
+}
+
+.library-tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+}
+
+.library-views {
+  display: flex;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: var(--hxbot-space-0-5);
+}
+
+.library-views [aria-pressed="true"] {
+  background: var(--hxbot-bg-control-active);
+  color: var(--hxbot-text-primary);
+}
+
+.library-search {
+  width: min(320px, 40vw);
+}
+
+.library-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  columns: 4 220px;
+  column-gap: var(--hxbot-space-3);
+}
+
+.library-tile {
+  position: relative;
+  margin-bottom: var(--hxbot-space-3);
+  break-inside: avoid;
+}
+
+.ui-button.library-picture,
+.ui-button.library-file-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-card);
+  background: var(--hxbot-bg-surface);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.library-picture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* A square until the picture loads, so a picture below the fold does not load at once. */
+  aspect-ratio: auto 1 / 1;
+}
+
+.ui-button.library-file-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--hxbot-space-3);
+  padding: var(--hxbot-space-3);
+}
+
+.library-file-name {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  min-width: 0;
+  padding-inline-end: var(--hxbot-space-6);
+  font-size: var(--hxbot-text-md);
+  font-weight: var(--hxbot-weight-medium);
+}
+
+.library-file-source {
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-sm);
+}
+
+.library-file-source:empty {
+  display: none;
+}
+
+.library-tile-menu {
+  position: absolute;
+  top: var(--hxbot-space-2);
+  inset-inline-end: var(--hxbot-space-2);
+  opacity: 0;
+}
+
+.library-tile[data-kind="image"] .library-tile-menu {
+  background: var(--hxbot-bg-overlay);
+}
+
+.library-tile:is(:hover, :focus-within) .library-tile-menu,
+.library-tile-menu[data-expanded] {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .ui-button.library-picture:hover,
+  .ui-button.library-file-card:hover {
+    border-color: var(--hxbot-border-strong);
+    background: var(--hxbot-bg-surface);
+    color: inherit;
+  }
+}
+
+@media (max-width: 720px) {
+  .library-page {
+    padding: var(--hxbot-space-4);
+  }
+
+  .library-head {
+    flex-wrap: wrap;
+  }
+
+  .library-search {
+    width: auto;
+    flex: 1;
+  }
+}

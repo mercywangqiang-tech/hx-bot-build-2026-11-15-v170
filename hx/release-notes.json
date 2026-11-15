@@ -1,0 +1,111 @@
+{
+  "_comment": "每个桌面端版本的新功能，显示在“有新版本”的窗口里（中文界面显示 zh，其他语言显示 en），v1.6.7 起也显示在升级后第一次打开时的“新功能”窗口里。每版 2～4 条，写用户能感觉到的变化：每条第一句说好处（“新功能”窗口把它当标题），后面再用一两句说怎么用、在哪设置。打包时 hx/forced_updates.py 把当前版本这一条写进 electron-builder.yml 的 releaseInfo，随 latest.yml 发到服务器；hx/close_upstream.py 把全部版本写进“新功能”窗口的数据。",
+  "0.67.2": {
+    "zh": [
+      "全新的界面样式：开关、按钮、下拉框、菜单和设置页更清爽，看着更舒服。",
+      "更新更省心：有新版本时弹出窗口介绍新功能，点“立即更新”就能装，也可以以后再说；只有大版本（例如 0.68.0）才必须更新。",
+      "修好了“设置 → 授权与记录”在左侧点不开的问题。"
+    ],
+    "en": [
+      "A fresh look: switches, buttons, menus and Settings are cleaner and easier on the eyes.",
+      "Easier updates: a window tells you what is new; choose Update now, or update later. Only major versions (such as 0.68.0) must be installed.",
+      "Settings › Access & activity opens again when you click it."
+    ]
+  },
+  "0.67.3": {
+    "zh": [
+      "助手可以按名称直接打开应用和系统设置页，不用截图和点鼠标（需要开启 Computer Use）；中文名用拼音也能找到。",
+      "深色模式、程序坞、任务栏、熄屏时间等 32 项常用设置，助手可以直接修改（Windows 的屏幕亮度要先在“设置 → Computer Use”里运行一次自检）。",
+      "设置窗口重新整理：左侧分成“设置”“功能”“数据与安全”三组，想找的设置一眼就能找到。",
+      "新增“获取帮助”；“更新”改名为“关于”，还能直接打开官网、服务条款和隐私政策。"
+    ],
+    "en": [
+      "Agents open apps and system settings pages by name, without screenshots or clicks (Computer Use must be on); Chinese names can be typed in pinyin.",
+      "Agents change 32 common settings directly, such as dark mode, the Dock, the taskbar and when the screen turns off (on Windows, the screen brightness after one run of the self-test under Settings › Computer Use).",
+      "Settings, tidied up: Settings, Features and Data & security, so you find what you need at a glance.",
+      "New Get help; Updates is now About, with the website, the Terms of Service and the Privacy Policy."
+    ]
+  },
+  "0.67.4": {
+    "zh": [
+      "助手可以按工作内容自动选模型：写作、编程、看图、定方案各用合适的模型，默认免费优先；对话里一行小字写明用了哪个。在助手设置里打开“自动选择模型”。",
+      "开工前的建议卡：复杂的事先列出要几个智能体、谁做什么、各用什么模型，你点“开始”才动手。",
+      "一件事做不下来时，助手会建议换更强的模型，回复“重做”就行。",
+      "“添加服务商”里可以连接 OpenCode 的全部 200 多家服务商（含免费模型）：网页登录、粘贴 API 密钥都行，连上后助手就能选用这些模型。"
+    ],
+    "en": [
+      "Agents choose the model by the work: writing, code, images and planning each get a fitting model, free first by default, and a small line in the chat names it. Turn on Auto model in the agent's settings.",
+      "A proposal card before the work: how many agents, who does what and which models. Nothing starts until you press Start.",
+      "When work fails, the agent suggests a stronger model; reply “redo”.",
+      "Connect any of OpenCode’s 200+ services under Add provider, free models included: sign in in the browser or paste an API key, and agents can then use the models."
+    ]
+  },
+  "0.67.5": {
+    "zh": [
+      "说一句话就能组团队：在建议卡上点“开始”，HXBot 按专长挑选现有的智能体，缺的角色自动新建，开一个协作房间分工去做。",
+      "成员之间用固定格式的交接单交接，共用一块任务看板：谁在做什么、卡在哪里，一目了然。",
+      "进度和结果回到你原来的对话；想插话、叫停或换人，直接在对话里说。"
+    ],
+    "en": [
+      "Say what you need and get a team: press Start on a proposal card, and HXBot picks agents by skill, makes members for missing roles and opens a team room.",
+      "Members hand work over with a fixed handoff form and share one task board: who does what, and what is stuck, at a glance.",
+      "Progress and the result come back to your chat; to add words, stop the team or swap a member, just say so there."
+    ]
+  },
+  "0.67.6": {
+    "zh": [
+      "打开应用后，助手能按你的要求自己列步骤，用鼠标和键盘一步步操作。每一步都核对，对话里有进度卡；发送、付款、删除前先问你；随时按 Ctrl+Alt+Esc（Mac 上是 ⌃⌥Esc）停止。默认开着，不用设置（助手要开启 Computer Use；Mac 上缺授权时，HXBot 会直接打开授权的那一页）。",
+      "团队最多可以有 20 个成员，人数按工作自动定。同时干活的人数按这台电脑的内存自动控制；想改某一次的上限，直接在对话里说，比如“这次最多 3 个人、1 小时”。",
+      "协作有了进度卡：原来的对话里一张卡显示每一步谁在做、做到哪、交接了几次、用了多久。成员的技能合起来用，任何成员都能用团队技能表里的技能。",
+      "自动选择模型默认打开，默认用最强的模型。只有免费模型时用最强的免费模型；想省钱，在助手设置的“自动选择模型”里改成“免费优先”。"
+    ],
+    "en": [
+      "After an app opens, the agent plans the steps from your words and works with the mouse and the keyboard, step by step. Each step is checked and a progress card shows in the chat; it asks before it sends, pays or deletes; press Ctrl+Alt+Esc (⌃⌥Esc on a Mac) to stop it at any time. It is on, with nothing to set (the agent needs Computer Use on; on a Mac, HXBot opens the page of a missing grant).",
+      "A team can have up to 20 members, sized by the work. This computer's memory sets how many work at once; to change the limits of one team, say so in the chat, such as “at most 3 members and 1 hour this time”.",
+      "Teams have a progress card: in your chat, one card shows who does each step, how far it is, the handoffs and the time. Members share their skills: any member can use the skills in the team's skill table.",
+      "Auto model is on and takes the strongest model by default. With free models only, it takes the strongest free one; to save cost, choose Free first under Auto model in the agent's settings."
+    ]
+  },
+  "0.67.7": {
+    "zh": [
+      "Mac 上授权一次就好：每一版都用同一个签名，升级后“屏幕录制”“辅助功能”不再失效。在“设置 → Computer Use”点“授予”，能自己打开的开关由 HXBot 打开，你只输入密码或按指纹；只要有辅助功能，助手就能一步步操作应用。",
+      "助手能帮你装应用：说一句“把下载好的 Claude 装好”，HXBot 把 .app、.zip、.dmg 里的应用装进“应用程序”文件夹。已经装过的先问你，旧版放进废纸篓。",
+      "保密箱里保存的密码自动登录，不再拦着问，只有付款每次先问你。最大权限下，OpenCode 在 Mac 上的命令（ps、brew、截屏等）不再被沙盒拦住。",
+      "第一次装这一版：macOS 第一次打开时要到“系统设置 → 隐私与安全性”点“仍要打开”，再授权一次，以后升级不用再做。另外修好了：Mac 上全屏时点关闭按钮，整个屏幕变黑。"
+    ],
+    "en": [
+      "Grant once on a Mac: every version has the same signature, so Screen Recording and Accessibility hold after updates. In Settings › Computer Use, click Grant: HXBot turns on the switches it can, and you only give your password or Touch ID. With Accessibility alone, the agent works in apps step by step.",
+      "The agent installs apps: say \"install the Claude I downloaded\", and HXBot puts the app from a .app, .zip or .dmg into Applications. It asks before it replaces an app, and the earlier version goes to the Trash.",
+      "Saved Vault passwords sign in without a question; only a payment asks each time. At maximum access, OpenCode's commands on a Mac (ps, brew, screenshots) are no longer stopped by the sandbox.",
+      "The first time with this version: click Open Anyway in System Settings › Privacy & Security when macOS asks, then grant once; later updates need nothing. Also fixed: on a Mac, closing the window in full screen turned the whole screen black."
+    ]
+  },
+  "0.67.8": {
+    "zh": [
+      "助手直接用应用命令：切到前台、隐藏、退出、把窗口放到左半边、点菜单里的命令，都由 HXBot 自己做，比一步步点快。退出时先正常退出；应用问要不要保存时交给你，强制退出先问你。",
+      "助手能运行 AppleScript、JXA、快捷指令和 PowerShell，用来操作 Excel、Word 这类应用。删除、发送这类脚本先问你，要管理员权限的不运行。Mac 上第一次控制某个应用时，系统会问是否允许 HXBot 控制它，点“好”。",
+      "一条路走不通自动换下一条：直达 → 命令 → 控件 → 看图，结果里写明走的是哪条。默认浏览器、邮件应用、按文件类型的默认应用也能读和改（Windows 上打开“默认应用”页，由助手一步步点）。",
+      "修好了：Windows 上一个命令启动了别的应用（例如记事本）时，助手一直等着不往下做。"
+    ],
+    "en": [
+      "The agent uses app commands: bring to front, hide, quit, put a window on the left half, click a menu command, all done by HXBot itself, faster than step by step. A quit is a normal quit first; when the app asks whether to save, you choose, and a force quit asks you first.",
+      "The agent runs AppleScript, JXA, Shortcuts and PowerShell to work in apps such as Excel and Word. It asks before a script deletes or sends, and it never runs one that needs administrator rights. The first time HXBot controls an app on a Mac, macOS asks whether to allow it: click OK.",
+      "When one way does not work, it takes the next: direct, command, controls, image; the result says which way it took. It also reads and changes the default browser, mail app and the default app of a file type (on Windows it opens Default apps and the agent clicks there step by step).",
+      "Fixed: on Windows, the agent waited without end when a command started another app (such as Notepad)."
+    ]
+  },
+  "0.67.9": {
+    "zh": [
+      "不拖慢别的应用：助手操作电脑时，高亮框不再一刻不停地读所有窗口；后台读应用目录、助手的进程和它运行的命令都让你的应用先用处理器；助手读一个大应用的窗口时有上限，那个应用不会卡住。",
+      "不抢焦点：你切到别的应用后，助手不往那里打字，也不把窗口拉回前面，而是停下来问你。授权页、远程控制的询问在你用别的应用时先发一条通知，点了才打开；自动更新装好后在后台打开。",
+      "快捷键、复制粘贴照常：操作结束时松开 Ctrl、Shift、Alt 等修饰键；停止键 Ctrl+Alt+Esc 只在助手操作电脑时占用；助手打字后剪贴板还是你原来复制的内容。",
+      "不占满网络、不关你的应用：更新下载限速 2 MB/s，远程桌面码率封顶 10 Mbit/s；Windows 上停下助手时，它打开的有窗口的应用（如记事本）留下。自动选模型在进行中的对话里保持原来的模型，上下文和缓存不丢。"
+    ],
+    "en": [
+      "Other apps stay fast: while the agent works on the computer, the rim no longer reads every window all the time; the catalog read, the agent's processes and the commands it runs leave the processor to your apps first; reading a big app's window has a limit, so that app does not stop.",
+      "No stolen focus: when you move to another app, the agent types nothing there and pulls no window back; it stops and asks you. A grant page or a remote control question comes as a notification while you work in another app, and opens on a click; an automatic update opens HXBot behind your app.",
+      "Shortcuts and copy and paste work: at the end of its work the agent lets go of Ctrl, Shift, Alt and the other modifier keys; the stop keys Ctrl+Alt+Esc are held only while the agent works on the computer; after the agent types, your clipboard still has your copy.",
+      "No full network, your apps stay open: update downloads take at most 2 MB/s and the remote desktop at most 10 Mbit/s; on Windows, the apps with a window that an agent opened (such as Notepad) stay open when the agent stops. Auto model keeps the model of a chat that goes on, so its context and cache stay."
+    ]
+  }
+}

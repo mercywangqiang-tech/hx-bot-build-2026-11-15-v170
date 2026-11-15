@@ -1,0 +1,167 @@
+# HXBot：在 GitHub 上构建三端安装包（构建仓库专用加固版：在官方 hx-build.yml 上增加更新文件校验、Windows 令牌/UTF-8 处理、安卓磁盘与内存加固；构建步骤不变）。
+# 用法：把本仓库推到你们自己的私有 GitHub 仓库 → Actions → “HXBot build” → Run workflow。
+# 产物在本次运行页面底部的 Artifacts 里，下载后用 hx/scripts/upload-downloads.sh 传到服务器。
+# 安卓签名：在仓库 Settings → Secrets 添加 HXBOT_ANDROID_KEYSTORE_BASE64（hx/keys/hxbot-release.jks 的 base64）
+# 和 HXBOT_ANDROID_KEYSTORE_PASSWORD。不配置时会临时生成签名，那样的 APK 只能全新安装、不能覆盖升级。
+# Mac 签名（v1.6.8）：在你自己的 Mac 上运行一次 bash hx/scripts/mac-signing-cert.sh 账号名/仓库名，它把固定证书写进
+# Secrets（HXBOT_MAC_CERT_P12_BASE64、HXBOT_MAC_CERT_PASSWORD），把证书指纹写进变量 HXBOT_MAC_CERT_SHA1。
+# 每一版都用这张证书签名，macOS 才认得升级后的 HXBot，用户的授权不会作废；签名身份不对的 Mac 版不上传。
+name: HXBot build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "要构建的平台（逗号分隔）：mac,windows,android"
+        default: "mac,windows,android"
+      allow_unsigned_mac:
+        description: "没有固定签名时也上传 Mac 测试包（yes / no）。这样的包不能发布：升级后用户的授权会作废"
+        default: "no"
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    if: contains(inputs.platforms, 'mac')
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - uses: actions/setup-node@v6
+        with: { node-version: 24 }
+      - run: python3 hx/rebrand.py
+      - run: bun install --frozen-lockfile
+      - name: Install the fixed signing certificate
+        id: signing
+        env:
+          P12: ${{ secrets.HXBOT_MAC_CERT_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.HXBOT_MAC_CERT_PASSWORD }}
+          DEVELOPER_ID: ${{ vars.HXBOT_MAC_TEAM_ID != '' && '1' || '0' }}
+        run: bash hx/scripts/mac-signing-keychain.sh
+      - run: bun run dist:mac
+        env:
+          HXBOT_MAC_IDENTITY: ${{ steps.signing.outputs.identity }}
+          HXBOT_MAC_DEVELOPER_ID: ${{ vars.HXBOT_MAC_TEAM_ID != '' && '1' || '0' }}
+      # 签名身份不对的 Mac 版不上传（hx/scripts/mac-signing-check.sh）
+      - name: Check the signing identity
+        env:
+          HXBOT_MAC_CERT_SHA1: ${{ vars.HXBOT_MAC_CERT_SHA1 }}
+          HXBOT_MAC_TEAM_ID: ${{ vars.HXBOT_MAC_TEAM_ID }}
+          ALLOW_UNSIGNED: ${{ inputs.allow_unsigned_mac }}
+        run: bash hx/scripts/mac-signing-check.sh dist/mac-arm64/HXBot.app
+      - name: Verify in-app update files (version, names, size, sha512)
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          ls -la dist
+          python3 hx/scripts/ci-verify-update-files.py mac
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-mac-arm64
+          # the installer, and the files of the in-app update (hx/scripts/upload-downloads.sh uploads them together)
+          path: |
+            dist/HXBot-*-arm64.dmg
+            dist/HXBot-*-arm64.dmg.blockmap
+            dist/HXBot-*-arm64.zip
+            dist/HXBot-*-arm64.zip.blockmap
+            dist/latest-mac.yml
+          if-no-files-found: error
+
+  windows:
+    if: contains(inputs.platforms, 'windows')
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - uses: actions/setup-node@v6
+        with: { node-version: 24 }
+      - run: python hx/rebrand.py
+        env:
+          PYTHONUTF8: "1"
+      - run: bun install --frozen-lockfile
+      - run: bun run dist:win
+        env:
+          # Avoid 403 when looking up the public the public nightly-labs runtime release.
+          GITHUB_TOKEN: ""
+          GH_TOKEN: ""
+      - name: Verify in-app update files (version, names, size, sha512)
+        shell: bash
+        env:
+          PYTHONUTF8: "1"
+        run: |
+          ls -la dist
+          python3 hx/scripts/ci-verify-update-files.py win
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-windows-x64
+          path: |
+            dist/HXBot-*-x64.exe
+            dist/HXBot-*-x64.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+  android:
+    if: contains(inputs.platforms, 'android')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Disk before cleanup
+        run: df -h / /mnt || df -h /
+      - name: Free runner disk
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: false
+          tool-cache: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+      - name: Disk after cleanup
+        run: |
+          sudo rm -rf /opt/hostedtoolcache/CodeQL /usr/local/share/boost || true
+          df -h / /mnt || df -h /
+          ls /usr/local/lib/android/sdk/ndk || true
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - uses: actions/setup-node@v6
+        with: { node-version: 24 }
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: "17" }
+      - name: Restore Android signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.HXBOT_ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.HXBOT_ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          mkdir -p hx/keys
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > hx/keys/hxbot-release.jks
+            printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=hxbot\nkeyPassword=%s\n' \
+              "$PWD/hx/keys/hxbot-release.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > hx/keys/keystore.properties
+          else
+            echo "::warning::未配置安卓签名密钥，本次使用临时签名。"
+          fi
+      - name: Give Gradle more memory
+        run: |
+          mkdir -p ~/.gradle
+          echo 'org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=2g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
+          echo 'org.gradle.workers.max=2' >> ~/.gradle/gradle.properties
+          SWAP=/mnt/swapfile-build; [ -d /mnt ] && [ -w /mnt ] || SWAP=/swapfile-build
+          sudo fallocate -l 8G "$SWAP" && sudo chmod 600 "$SWAP" && sudo mkswap "$SWAP" && sudo swapon "$SWAP" || echo "::warning::swap 未启用"
+          free -h; df -h / /mnt || df -h /
+      - run: bash hx/scripts/build-android.sh
+      - name: Disk after build
+        if: always()
+        run: df -h / /mnt || df -h /
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-android
+          path: dist-hx/HXBot-*-android.apk
+          if-no-files-found: error

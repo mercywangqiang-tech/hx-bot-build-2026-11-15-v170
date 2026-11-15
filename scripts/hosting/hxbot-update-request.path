@@ -1,0 +1,11 @@
+# HXBot asks for an update now with an empty file in its runtime directory. This starts
+# hxbot-update-request.service as root, which removes the file and never reads it.
+[Unit]
+Description=Watch for an HXBot update request
+
+[Path]
+PathExists=/run/hxbot/update-stage
+PathExists=/run/hxbot/update-install
+
+[Install]
+WantedBy=paths.target

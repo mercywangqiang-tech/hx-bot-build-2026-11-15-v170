@@ -1,0 +1,10 @@
+# Pulls the image of instance %i, and for an install makes the container again. `setup` replaces
+# /opt/hxbot-docker/instances/ with the folder of hxbot-instance.
+[Unit]
+Description=Update HXBot instance %i
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hxbot-docker/instances/hxbot-instance update-request %i
+TimeoutStartSec=45min

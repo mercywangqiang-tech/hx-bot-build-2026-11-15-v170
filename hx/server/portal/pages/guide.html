@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<title>使用指南 · HXBot</title>
+<meta name="description" content="HXBot 研究版使用指南：注册账号与登录、下载安装、首次设置、助手与对话、发布服务器与邀请成员、网页版与手机端、设置、数据安全与常见问题。">
+<link rel="alternate" hreflang="zh-CN" href="https://bot.hxallai.com/guide/">
+<link rel="alternate" hreflang="en" href="https://bot.hxallai.com/en/guide/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>(function(){var l,q=/[?&]lang=(en|zh)\b/.exec(location.search);if(q)l=q[1];else{try{l=localStorage.getItem("hxbot-portal-lang")}catch(e){}if(!l)l=(navigator.language||"zh").toLowerCase().indexOf("zh")===0?"zh":"en"}if(l==="en"){location.replace("/en/guide/"+location.hash);return}if(q){try{history.replaceState(null,"",location.pathname+location.hash)}catch(e){}}})();</script>
+<style>
+  /* HXBot · 使用指南。由 hx/scripts/site-pages.mjs 从 hx/docs/site/guide.zh.md 生成，请勿直接修改。 */
+  :root {
+    --blue: #0156D3; --blue-2: #3D8BFF; --violet: #8B6CF2; --orange: #EB6100;
+    --ink: #1F1F1F; --ink-2: #444746; --muted: #5F6368; --line: #E1E3E1; --paper: #F8FAFD; --chip: #E8F0FE;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--sans); color: var(--ink); background: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html.smooth { scroll-behavior: smooth; }
+  body { margin: 0; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  svg.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .skip { position: absolute; left: 12px; top: -48px; z-index: 30; padding: 8px 14px; border-radius: 999px; background: var(--blue); color: #FFFFFF; }
+  .skip:focus { top: 12px; }
+
+  header { position: sticky; top: 0; z-index: 20; background: #FFFFFF; box-shadow: 0 1px 0 var(--line); }
+  .bar { display: flex; align-items: center; gap: 12px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+  .brand:hover { text-decoration: none; }
+  .brand svg { width: 18px; height: 34px; flex: none; }
+  .spacer { flex: 1; }
+  .nav { display: flex; align-items: center; gap: 2px; }
+  .nav a { font-size: 14px; color: var(--ink-2); padding: 8px 12px; border-radius: 999px; white-space: nowrap; }
+  .nav a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .nav a[aria-current="page"] { color: var(--blue); background: var(--chip); }
+  .nav a.lang { margin-left: 6px; box-shadow: inset 0 0 0 1px var(--line); }
+  @media (max-width: 560px) { .brand .name { display: none; } .nav a { padding: 8px 10px; } }
+  /* 窄屏上五个入口放不下时，顶栏的入口可以左右滑动，页面本身不再被撑宽 */
+  @media (max-width: 480px) { .nav { min-width: 0; overflow-x: auto; scrollbar-width: none; } .nav::-webkit-scrollbar { display: none; }
+    .nav a { padding: 8px 8px; font-size: 13.5px; } }
+
+  .head { position: relative; overflow: hidden; padding: 56px 0 40px; border-bottom: 1px solid var(--line);
+    background: radial-gradient(55% 80% at 8% 10%, rgba(61, 139, 255, .10) 0%, rgba(61, 139, 255, 0) 62%),
+                radial-gradient(45% 70% at 92% 0%, rgba(139, 108, 242, .09) 0%, rgba(139, 108, 242, 0) 60%),
+                radial-gradient(35% 60% at 70% 110%, rgba(235, 97, 0, .06) 0%, rgba(235, 97, 0, 0) 70%), #FFFFFF; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    color: var(--blue); background: var(--chip); box-shadow: inset 0 0 0 1px #D3E3FD; }
+  h1 { margin: 16px 0 0; font-size: clamp(30px, 4.2vw, 46px); line-height: 1.22; font-weight: 600; letter-spacing: -.01em; }
+  html[lang="zh-CN"] h1 { letter-spacing: .02em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+  .meta b { font-weight: 500; color: var(--ink-2); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 32px; padding-bottom: 72px; }
+  .layout > main { min-width: 0; }
+  @media (min-width: 1000px) { .layout { grid-template-columns: 250px minmax(0, 1fr); gap: 56px; padding-top: 40px; } }
+  .toc { align-self: start; border-radius: 16px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }
+  @media (min-width: 1000px) { .toc { position: sticky; top: 88px; max-height: calc(100vh - 112px); overflow: auto; background: none; box-shadow: none; } }
+  .toc summary { cursor: pointer; padding: 12px 16px; font-size: 14px; font-weight: 600; color: var(--ink-2); list-style: none; }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc summary::after { content: "▾"; float: right; color: var(--muted); }
+  .toc[open] summary::after { content: "▴"; }
+  @media (min-width: 1000px) { .toc summary { padding: 0 10px 8px; cursor: default; pointer-events: none; } .toc summary::after, .toc[open] summary::after { content: none; } }
+  .toc ol { list-style: none; margin: 0; padding: 0 8px 12px; }
+  @media (min-width: 1000px) { .toc ol { padding: 0; } }
+  .toc a { display: block; padding: 6px 10px; border-radius: 8px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+  .toc a:hover { color: var(--blue); background: #F0F4F9; text-decoration: none; }
+  .toc a.is-active { color: var(--blue); background: var(--chip); }
+  .toc .sub a { padding-left: 24px; font-size: 13px; color: var(--muted); }
+
+  article { min-width: 0; max-width: 820px; font-size: 16px; }
+  html[lang="zh-CN"] article { line-height: 1.85; }
+  article h2 { margin: 52px 0 12px; font-size: 23px; line-height: 1.35; font-weight: 600; scroll-margin-top: 84px; }
+  article h3 { margin: 32px 0 8px; font-size: 18px; line-height: 1.4; font-weight: 600; scroll-margin-top: 84px; }
+  article > :first-child { margin-top: 0; }
+  article p { margin: 12px 0; }
+  article ul, article ol { margin: 12px 0; padding-left: 1.5em; }
+  article li { margin: 6px 0; }
+  article li > ul, article li > ol { margin: 6px 0; }
+  article a { overflow-wrap: anywhere; }
+  article strong { font-weight: 600; }
+  .anchor { margin-left: 10px; font-weight: 400; color: #C4C7C5; opacity: 0; transition: opacity .2s ease; }
+  h2:hover .anchor, h3:hover .anchor { opacity: 1; }
+  .anchor:hover { color: var(--blue); text-decoration: none; }
+  .note { margin: 20px 0; padding: 16px 20px; border-radius: 16px; background: linear-gradient(180deg, #F3F7FE 0%, #F8FAFD 100%);
+    box-shadow: inset 0 0 0 1px #D3E3FD; }
+  .note > :first-child { margin-top: 0; }
+  .note > :last-child { margin-bottom: 0; }
+  .note__t { margin-bottom: 6px !important; }
+  .note__t strong { color: var(--blue); }
+  .table { margin: 16px 0; overflow-x: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.65; }
+  th, td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { background: var(--paper); font-weight: 600; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .table--wide table { min-width: 720px; }
+  .table--wide td:first-child, .table--pair td:first-child { font-weight: 500; }
+  .table--pair td:first-child { white-space: nowrap; }
+  @media (max-width: 640px) {
+    .table--pair td:first-child { white-space: normal; min-width: 7em; }
+    .table--stack { overflow: visible; border-radius: 0; box-shadow: none; }
+    .table--stack table { min-width: 0; }
+    .table--stack thead { display: none; }
+    .table--stack tbody, .table--stack tr, .table--stack td { display: block; }
+    .table--stack tr { margin: 0 0 12px; padding: 6px 0; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+    .table--stack td { padding: 6px 16px; border: 0; }
+    .table--stack td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .table--stack td:first-child { font-size: 15.5px; font-weight: 600; }
+    .table--stack td:first-child::before { content: none; }
+  }
+  code { font-family: var(--mono); font-size: .88em; padding: .12em .4em; border-radius: 6px; background: #F1F3F4; overflow-wrap: anywhere; }
+  .code { position: relative; margin: 16px 0; }
+  .code pre { margin: 0; padding: 16px 18px; padding-right: 80px; overflow-x: auto; border-radius: 14px; background: #0B1220; color: #E3E3E3; font-size: 14px; line-height: 1.6; }
+  .code pre code { padding: 0; background: none; color: inherit; overflow-wrap: normal; }
+  .copy { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border: 0; border-radius: 999px; font: inherit; font-size: 12px;
+    color: #E3E3E3; background: rgba(255, 255, 255, .12); cursor: pointer; }
+  .copy:hover { background: rgba(255, 255, 255, .22); }
+  .top { display: inline-block; margin-top: 40px; font-size: 14px; }
+  .tag { display: inline-block; margin-right: 2px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 20px;
+    letter-spacing: .06em; vertical-align: 2px; color: #FFFFFF; }
+  .tag--hot { background: var(--orange); }
+  .tag--new { background: var(--blue); }
+  .on { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 20px; vertical-align: 1px;
+    color: var(--ink-2); background: #F1F3F4; white-space: nowrap; }
+  .shot { margin: 16px 0 20px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); background: #F5F5F7; }
+  .shot figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .bar { flex-wrap: wrap; height: auto; padding-top: 20px; padding-bottom: 20px; gap: 8px 18px; }
+  footer .brand { font-weight: 400; color: var(--muted); }
+  footer .links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--blue); }
+  @media print {
+    header, .toc, .anchor, .copy, .top, footer nav { display: none !important; }
+    .head { padding: 0 0 16px; background: none; }
+    .layout { display: block; padding: 16px 0 0; }
+    article { max-width: none; }
+    a { color: inherit; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<svg class="defs" aria-hidden="true" focusable="false"><defs><symbol id="hx-giraffe" viewBox="-6 -6 307.75 590.25"><path d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><path d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84ZM66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67ZM28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20ZM19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97ZM81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92ZM126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21ZM200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98ZM263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01ZM81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78ZM1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56ZM148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74ZM218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59ZM271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82ZM2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z" fill="#79512B"/><path d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></symbol></defs></svg>
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="HXBot · 门户首页"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span class="name">HXBot</span></a>
+    <span class="spacer"></span>
+    <nav class="nav" aria-label="HXBot"><a href="/guide/" aria-current="page">使用指南</a><a href="/whats-new/">新功能</a><a href="/terms/">服务条款</a><a href="/privacy/">隐私政策</a><a class="lang" href="/en/guide/" data-lang="en" hreflang="en" lang="en">English</a></nav>
+  </div>
+</header>
+<div class="head">
+  <div class="wrap">
+    <span class="chip">HXBot 研究版</span>
+    <h1>使用指南</h1>
+    <ul class="meta"><li><b>更新日期</b>：2026 年 11 月 15 日</li><li><b>版本</b> 1.3</li></ul>
+  </div>
+</div>
+<div class="wrap layout">
+  <details class="toc" open>
+    <summary>目录</summary>
+    <nav aria-label="目录"><ol><li><a href="#overview">1. HXBot 由哪些部分组成</a></li><li><a href="#sign-in">2. 注册账号并登录</a></li><li><a href="#install">3. 下载与安装</a></li><li><a href="#first-run">4. 首次启动桌面端</a></li><li><a href="#agents">5. 助手与对话</a></li><li><a href="#server">6. 服务端：发布服务器与邀请成员</a></li><li class="sub"><a href="#publish">6.1 发布服务器</a></li><li class="sub"><a href="#invite">6.2 邀请成员</a></li><li class="sub"><a href="#roles">6.3 角色与权限</a></li><li class="sub"><a href="#join">6.4 加入别人的服务器</a></li><li class="sub"><a href="#web">6.5 网页版</a></li><li><a href="#mobile">7. 在手机上使用</a></li><li><a href="#settings">8. 设置与账号</a></li><li><a href="#help">9. 帮助菜单与反馈</a></li><li><a href="#data">10. 数据、隐私与安全</a></li><li><a href="#faq">11. 常见问题</a></li><li><a href="#support">12. 获取支持</a></li></ol></nav>
+  </details>
+  <main id="main">
+    <article>
+<p>HXBot 是在你自己的电脑上运行一组 AI 智能体（在客户端中称为“助手”）的工作台。每个助手有自己的职责、工作区、对话和任务队列，可以互相发消息、传文件、操作内置浏览器；网页版和手机端用来远程查看进度、继续对话。本指南从注册账号讲到邀请同事，按顺序读一遍即可上手。</p>
+<aside class="note"><p class="note__t"><strong>五分钟上手</strong></p><ol><li>在 <a href="/">https://bot.hxallai.com</a> 点“创建账号”，用邮箱注册并设置密码（第 2 节）。</li><li>登录后下载 Mac 或 Windows 桌面端并安装（第 3 节）。</li><li>打开桌面端，用同一个邮箱和密码登录，选择“设置这台电脑”（第 4 节）。</li><li>选择“使用免费模型”或“使用我的 AI 订阅”，然后创建第一个助手（第 4、5 节）。</li><li>需要在手机、网页上使用或邀请同事时，发布服务器并创建邀请链接（第 6、7 节）。</li></ol></aside>
+<h2 id="overview">1. HXBot 由哪些部分组成<a class="anchor" href="#overview" aria-hidden="true" tabindex="-1">#</a></h2>
+<div class="table table--stack"><table><thead><tr><th scope="col">部分</th><th scope="col">作用</th><th scope="col">在哪里获取</th></tr></thead><tbody><tr><td data-label="部分">桌面端（Mac、Windows）</td><td data-label="作用">运行助手。装了桌面端的电脑就是你的“服务器”，助手、对话和文件都保存在这台电脑上</td><td data-label="在哪里获取">登录门户后在下载中心下载</td></tr><tr><td data-label="部分">网页版</td><td data-label="作用">在浏览器中远程使用你有权访问的服务器</td><td data-label="在哪里获取"><a href="/app">https://bot.hxallai.com/app</a></td></tr><tr><td data-label="部分">安卓端、iOS 端</td><td data-label="作用">在手机上查看进度、和助手对话、接收提醒</td><td data-label="在哪里获取">安卓：下载中心的 APK；iOS：下载中心的安装入口（TestFlight 或直接安装）</td></tr><tr><td data-label="部分">弘犀服务器</td><td data-label="作用">负责账号、登录、服务器目录、邀请、建立加密连接和中继</td><td data-label="在哪里获取">由弘犀智能运营，不保存你的对话和文件</td></tr></tbody></table></div>
+<p>几个常用说法：</p>
+<ul><li><strong>服务器（主机）</strong>：运行桌面端的那台电脑。“发布”服务器后，受邀的人可以从网页、手机或他们自己的桌面端连接进来。</li><li><strong>助手</strong>：一个有固定职责的 AI 智能体，例如“行程规划师”“收件箱助手”。</li><li><strong>频道</strong>：把多个助手（和成员）放在一起协作的对话。</li><li><strong>服务商</strong>：助手使用的 AI 模型来源，例如 ChatGPT、Claude、Grok、免费模型或兼容 OpenAI 接口的端点。</li></ul>
+<h2 id="sign-in">2. 注册账号并登录<a class="anchor" href="#sign-in" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>每个人用自己的账号使用 HXBot：用邮箱注册，设置自己的密码，所有客户端都用<strong>邮箱 + 密码</strong>登录。</p>
+<p><strong>注册账号：</strong></p>
+<ol><li>打开 <a href="/">https://bot.hxallai.com</a> ，在登录框里点“创建账号”。</li><li>填写邮箱和手机号码，点“下一步”。页面提示验证码已发送时，到邮箱和手机上查看（6 位数字，10 分钟内有效）。</li><li>填写验证码、用户名、密码（8～32 个字符，字母、数字、符号都要有）、职位和公司名称，点“完成注册”。注册完成后自动登录。</li></ol>
+<p>登录框下方显示“微信”“支付宝”等按钮时，也可以用这些账号登录：第一次使用时按页面提示注册新账号，或输入邮箱和密码绑定已有的账号；以后点按钮即可登录。</p>
+<p><strong>在门户登录：</strong></p>
+<ol><li>打开 <a href="/">https://bot.hxallai.com</a> 。</li><li>输入邮箱和密码，点“登录”。</li><li>登录后可以下载客户端、进入网页版。右上角“退出登录”可以退出。</li></ol>
+<p><strong>忘记密码：</strong>在登录框下方点“忘记了密码？”，输入注册邮箱，用邮件里的验证码设置新密码。设置后，其他设备上的登录会全部退出，要用新密码重新登录。收不到邮件时，用注册邮箱发邮件到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>。</p>
+<p><strong>注意：</strong></p>
+<ul><li>注册和找回密码都在门户页完成。桌面端、手机端和网页版的登录界面只需要输入邮箱和密码。</li><li>各个客户端都用同一个账号登录，登录后会看到同一组服务器。</li><li>密码只供你本人使用，不要告诉别人，也不要与其他网站共用同一个密码。我们只保存密码的加盐哈希，任何人都看不到你的密码。</li><li>页面提示“尝试太频繁”或“操作太频繁”时，请过几分钟（最长约 15 分钟）再试。两次获取验证码至少要隔 1 分钟，同一个手机号每天最多能收到 10 条验证码短信，超过后第二天再试。提示“密码输错次数太多”或“停留时间过长”时，点“重新开始”再输入一次。</li><li>短信验证码只支持中国大陆手机号。收不到验证码、或使用其他国家和地区的手机号时，请发邮件到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>。</li><li>一个邮箱、一个手机号码只能注册一个账号，用户名也不能和别人重复。提示“这个手机号已经注册了账号”时，请用那个账号登录（忘记了密码就点“忘记了密码？”）。</li><li>以前用共用登录口令登录过的用户：请用原来的邮箱“创建账号”并设置自己的密码，原来的服务器和成员关系都会保留。</li></ul>
+<h2 id="install">3. 下载与安装<a class="anchor" href="#install" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>登录门户后，在“客户端下载”中选择你的设备。</p>
+<div class="table table--stack"><table><thead><tr><th scope="col">设备</th><th scope="col">系统要求</th><th scope="col">安装说明</th></tr></thead><tbody><tr><td data-label="设备">Mac</td><td data-label="系统要求">Apple 芯片（M1 及以上），macOS 13 或更新</td><td data-label="安装说明">打开 dmg，把 HXBot 拖进“应用程序”</td></tr><tr><td data-label="设备">Windows</td><td data-label="系统要求">Windows 10 / 11，64 位</td><td data-label="安装说明">运行 exe 安装程序</td></tr><tr><td data-label="设备">Android</td><td data-label="系统要求">Android 7.0 或更新</td><td data-label="安装说明">用手机浏览器打开门户、登录后下载 APK 安装</td></tr><tr><td data-label="设备">iPhone / iPad</td><td data-label="系统要求">iOS 16.4 或更新</td><td data-label="安装说明">用 iPhone 或 iPad 打开门户、登录后看 iPhone / iPad 卡片上的按钮：“在 TestFlight 中安装”或“安装”，见下面的说明</td></tr></tbody></table></div>
+<p>iPhone 和 iPad 的安装方式以下载中心卡片上显示的为准：</p>
+<ul><li><strong>卡片上是“在 TestFlight 中安装”：</strong>先在 App Store 安装苹果的“TestFlight”，再点这个按钮，在 TestFlight 里点“安装”。任何 iPhone、iPad 都可以装，以后的新版本也在 TestFlight 里更新。</li><li><strong>卡片上是“安装”：</strong>这是直接安装，只适用于已经登记的设备。请先把设备标识（UDID）发到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 登记；登记后用 Safari 打开门户、登录后点“安装”，回到主屏幕等图标装好。iOS 16 及以上第一次打开前，要在“设置 → 隐私与安全性 → 开发者模式”里打开开发者模式并重启设备。微信等应用里的内置浏览器不能安装，请用 Safari。</li><li><strong>卡片上是“即将推出”：</strong>iOS 版还没有发布。</li></ul>
+<p>Mac 和 Windows 的研究版安装包没有做代码签名，系统第一次可能会拦截：</p>
+<ul><li><strong>Mac 提示“无法验证开发者”或“已损坏”：</strong>在“访达 → 应用程序”中右键点“HXBot”，选“打开”；仍无法打开时，在“终端”中运行下面的命令后再打开。</li></ul>
+<div class="code"><button class="copy" type="button" data-copy>复制</button><pre><code data-lang="bash">xattr -dr com.apple.quarantine &quot;/Applications/HXBot.app&quot;</code></pre></div>
+<ul><li><strong>Windows 出现“Windows 已保护你的电脑”：</strong>点“更多信息 → 仍要运行”。</li><li><strong>Android 提示禁止安装：</strong>按提示允许浏览器“安装未知应用”。如果之前装过签名不同的版本，请先卸载旧版本。</li></ul>
+<p><strong>更新：</strong>登录后客户端会自动检查新版本。平时的新版本可以先不装；大版本必须更新。助手和对话不会因为更新而丢失（仍建议定期备份）。</p>
+<ul><li><strong>桌面端：</strong>新版本在后台下载好后弹出窗口，列出这一版的新功能：点“立即更新”重启安装，或点“以后再说”继续使用（下次打开 HXBot 时再提醒）。<strong>大版本（版本号第二段变了，例如 0.68.0）必须更新</strong>：窗口挡住、不能关，点“立即更新”即可，还在下载时点了，下载完自动重启安装；10 分钟内没人点（例如没人看着的电脑），HXBot 会在空闲时自动重启安装。管理员也可以要求某个版本必须更新，这时窗口同样不能关。Windows 只下载有变化的部分；Mac 下载新版本，重启时替换。Mac 版要先拖进“应用程序”文件夹再打开（直接在 dmg 或“下载”文件夹里打开的不能在应用里更新）。更新失败时可以点“重试”，或点“打开下载页面”手动下载安装。</li><li><strong>手机端：</strong>整屏提示“更新 HXBot”，并自动打开新版本：安卓下载新的安装包，下载完成后打开、按提示安装；iPhone 在弹出的窗口里点“安装”。系统规定最后一步“安装”要你自己点。</li><li><strong>旧版本：</strong>桌面端 0.67.0、手机端 1.4.x 及更早的版本没有应用内更新，不能再登录，也不会出现“立即更新”。请用浏览器打开 <a href="/">https://bot.hxallai.com</a> 登录，在下载中心下载新版本，直接安装覆盖旧版本。</li><li><strong>升级到这一版时，所有设备都要重新登录一次。</strong></li><li>当前版本号在桌面端“设置 → 关于”中查看。</li></ul>
+<h2 id="first-run">4. 首次启动桌面端<a class="anchor" href="#first-run" aria-hidden="true" tabindex="-1">#</a></h2>
+<ol><li><strong>登录。</strong>输入邮箱和密码（还没有账号时先到 <a href="/">https://bot.hxallai.com</a> 注册）。登录页底部写着“继续即表示你接受服务条款并已阅读隐私政策”，点击可以查看全文。</li><li><strong>“帮助改进 HXBot”。</strong>研究版不收集使用统计和错误报告，无论你如何选择，客户端都不会发送这些数据。</li><li><strong>“HXBot 将在哪里运行？”</strong><ul><li>选“<strong>设置这台电脑</strong>”：助手、对话和文件都留在这台电脑上。大多数研究人员选这一项。</li><li>选“<strong>连接到主机</strong>”：使用别人运行的服务器。粘贴对方发来的 <a href="/join"><code>https://bot.hxallai.com/join</code></a> 邀请链接，点“查看邀请”，核对后点“连接到主机”。</li></ul></li><li><strong>选择 AI（“组建你的 AI 团队。”）。</strong><ul><li>“<strong>使用免费模型</strong>”：无需 AI 订阅。HXBot 会自动下载第三方开源工具 OpenCode，并使用它提供的免费模型。免费模型的可用性、地区限制和条款由其提供方决定。</li><li>“<strong>使用我的 AI 订阅</strong>”：使用你已有的 ChatGPT、Claude 或 Grok 等账号。在“连接你的套餐”中登录一次，助手即可使用你的套餐。</li></ul></li><li><strong>“HXBot 可能会控制你的电脑”。</strong>这一步说明 Computer Use（操控屏幕、键盘和鼠标）需要的系统权限。助手默认是“最大权限”：大多数事情直接做，修改工作区以外已有的文件、删除工作区以外的东西、以管理员身份运行命令、用保存的密码登录、付款这几类事先问你（见第 5 节）。请只运行你信任的任务，并做好备份。</li><li><strong>“创建第一个助手”。</strong>见第 5 节。</li></ol>
+<p><strong>使用其他模型：</strong>在服务器栏右键你的服务器 → “服务器设置” → “服务商”，可以连接更多服务商；“添加服务商或助手”中的“添加自定义服务商”支持任何兼容 OpenAI 接口的端点（例如国内大模型平台的兼容接口），“在这台电脑上发现”会列出本机运行的模型服务（例如 Ollama、LM Studio）。使用第三方模型服务时，请遵守其条款和地区限制。</p>
+<h2 id="agents">5. 助手与对话<a class="anchor" href="#agents" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>创建助手：</strong>点侧栏的“新建助手”，填写：</p>
+<ul><li><strong>名称</strong>；</li><li><strong>这个助手要帮你做什么？</strong>——写清它的职责、输出要求和边界，例如“每天整理行业新闻，按主题分类，附原文链接”；</li><li><strong>助手模型</strong>——选择服务商和模型；</li><li>也可以从“推荐”中挑一个模板，再按需修改。</li></ul>
+<p>然后点“创建助手”。</p>
+<p><strong>对话：</strong>在助手的对话框中输入任务，可以附加文件、使用语音输入。助手会在自己的工作区里工作，过程和结果都显示在对话中。需要另起一个话题时，用助手菜单中的“新话题”。</p>
+<p><strong>多个助手协作：</strong>用“新建频道”把几个助手放进同一个对话，让它们分工完成任务；用“新建文件夹”整理侧栏。</p>
+<p><strong>自动选择模型：</strong>在助手设置的“自动选择模型”里（在“模型”“备用模型”下面），桌面端 0.67.6 起默认打开（你改过设置的助手保持原样）。助手每接一件新工作，先判断是什么（闲聊、写作、编程、数据、看图、长资料、方案、操作电脑）、有多难，再从你已登录的模型里选一个；对话里会出现一行小字，例如“自动选模型 · 写作：由 GLM-5.3-Flash Free 来做。”。</p>
+<ul><li><strong>倾向：</strong>默认“质量优先”，每件工作用最合适、最强的模型；只有免费模型时用最强的免费模型。想省钱就选“免费优先”（免费模型够用就用免费的，难的工作才用订阅模型），也可以选“均衡”。</li><li><strong>点名模型：</strong>在消息里写“改用 Claude Opus 5.5 重答”，这一条就用它。</li><li><strong>做不下来时：</strong>一轮失败或助手说做不了，对话里会问一句；回复“重做”就换更强的模型再做一遍。</li><li><strong>候选模型：</strong>在“候选模型和最近的选择”里可以取消勾选不想用的模型，也能看到最近几次选了什么。</li><li><strong>判断方式：</strong>默认“规则，拿不准时问小模型”：拿不准的那条消息（不含附件内容）会发给一个便宜的模型判断类型；选“只用规则”就不发。规则和小模型都没把握时，助手沿用现在的模型。</li><li>你在模型下拉里手动选了一个模型，“自动选择模型”就会关掉。频道里的工作这一版不换模型。</li><li>桌面端 0.67.9 起，已经在进行中的对话里助手保持原来的模型和推理强度（换模型会让服务商那边从头开始，上下文和缓存都没了）；新对话、新任务，或者你点名换模型、说“重做”，或者发来当前模型看不了的图片、放不下的长资料时，才重新选。打招呼、道谢这类消息不再另外请小模型判断。</li></ul>
+<p><strong>连接 OpenCode 的全部服务商：</strong>点模型面板的“+”（或“设置 → 服务商”），点“添加”，选“OpenCode 全部服务商”（服务商设置页底部也有“连接服务商”）。窗口里是 OpenCode 能接的 200 多家服务商，可以搜索；最上面的 OpenCode Free 免费模型无需登录、已经可用。</p>
+<ul><li><strong>网页登录：</strong>像 ChatGPT、GitHub Copilot 这类，点“网页登录：…”，在打开的浏览器页面里登录，回到窗口会自动显示“已连接”；要粘贴代码的，把登录页显示的代码填进去。</li><li><strong>API 密钥：</strong>点“粘贴 API 密钥”，把服务商给你的密钥粘进去，点“连接”。</li><li><strong>本机凭据：</strong>AWS、Google Cloud、Claude Code 这类，用你电脑上已经登录好的凭据。</li><li>连上后，OpenCode 空闲时会自动重启，然后这家的模型出现在助手的模型选择里（在 OpenCode 下面，按服务商分组），也会进入“自动选择模型”的候选范围。点开已连接的服务商可以“断开”。</li><li>凭据由 OpenCode 保存在你的电脑上（和在终端里运行 <code>opencode auth login</code> 一样），HXBot 不另存。这个功能只在桌面版上有。</li></ul>
+<p><strong>建议卡：</strong>一件事值得几个助手分工，或者需要“做的”和“查的”分开时，助手会先出一张建议卡：建议几个智能体、每个角色做什么、各用什么模型（是否免费）、分几步、要用哪些应用、哪几步要你确认。点“开始”才动手；“改一改”告诉它要怎么改；“就用一个智能体”让它一个人做。在助手设置的“建议卡”里可以设成“每次长任务都出”或“不出”。</p>
+<p><strong>团队协作：</strong>有两个以上角色的建议卡，每个角色后面写着由谁来做：从你现有的助手里按专长选，没有合适的就新建一个成员。点“开始”后自动组队，建一个协作房间（在频道里），带头的按步骤分派：</p>
+<ul><li><strong>交接单：</strong>每次分派和转交都要写清目标、已完成、文件、未解决、下一步、不要碰，接手的成员不用再回头问。</li><li><strong>任务看板：</strong>每一步谁负责、做到哪、卡在哪，大家要用的事实和文件都记在看板上。</li><li><strong>在原来的对话里跟进：</strong>你和助手的对话里有一张进度卡，原地更新：交接了几次、用了多久、每一步由谁在做、做到哪一步。想插话、不做了或换人，直接跟助手说。做完后，助手在这里告诉你结果和产出的文件。</li><li><strong>共用技能和连接器：</strong>组队时，各成员工作区里的技能汇总成“团队技能表”，任何成员都能用；新建的成员带上发起助手的技能；连接器整台电脑共用。保密箱和保存的登录信息不共享。</li><li><strong>上限：</strong>团队最多 20 个成员（人数按工作自动定）、240 分钟、80 次交接；同时干活的成员数按这台电脑的内存自动控制，其余的排队。想改某一次的上限，直接跟助手说，例如“这次最多 3 个人、1 小时”“再给 30 分钟”，在网页版和手机上说也一样。助手设置的“建议卡”下面有一行团队上限的摘要，打开“调整上限”可以改默认值，以及新建的成员在团队结束后收起还是留下。到了上限，或者同一件工作失败两次，团队就停下来，助手问你接下来怎么做。</li></ul>
+<p><strong>左侧导航：</strong>“助手”是对话主界面；“日程”“任务”“工作流”用来安排定时任务和自动化流程；“用量”查看各服务商的使用情况；“资料库”查看和管理文件；“设置”见第 8 节。</p>
+<p><strong>权限：最大权限。</strong>每个助手默认“最大权限”（以前的助手升级到这一版时也改成了最大权限，包括原来是“完全访问”的），在助手设置的“权限”里可以查看和修改：</p>
+<ul><li><strong>不用问：</strong>读取任何位置的文件；在自己的工作区、共享文件夹、你添加的文件夹和临时文件夹里新建、修改、删除；在任何位置新建文件；运行命令；打开和操作网站；截图；网络搜索；Computer Use（操控屏幕、键盘和鼠标）。</li><li><strong>先问你：</strong>修改工作区以外已经有的文件；删除工作区以外的文件；读取或写入存放密钥和登录信息的位置（例如 <code>~/.ssh</code>、钥匙串、浏览器的资料文件夹、HXBot 自己的数据和保密箱）；以管理员身份运行命令（sudo 等）；看不出要删除什么的命令；在网页上填银行卡付款。</li><li><strong>不用问（v1.6.8 起）：</strong>用保密箱里保存的密码自动登录网站（包括验证码），删除保密箱里的条目。</li><li><strong>确认卡片：</strong>助手会在对话里弹出卡片，写明为什么、要做什么、对哪些文件、命令或网站做。选“<strong>允许一次</strong>”只这一次有效（每个对象用一次，任务结束后没用完的也收回）；选“<strong>始终允许</strong>”以后所有助手做同样的事都不再问（文件按所在的文件夹记住）；选“<strong>拒绝</strong>”或跳过就不做。也可以在卡片里写附加条件（例如“只改第 3 页”），原话转给助手。<strong>付款没有“始终允许”，每次都要确认。</strong></li><li><strong>对话里先问：</strong>发邮件、发消息、发布内容、替你接受条款之前，以及用 Computer Use 输入密码或付款之前，助手会先在对话里问你（这些 HXBot 看不到，靠助手遵守）。</li><li><strong>规则和记录：</strong>“始终允许”的规则在“设置 → 授权与记录”里可以查看和删除；那里也记录助手做过的值得留意的事（工作区以外的读取和修改、删除、命令、截图、网络搜索、登录、付款，以及你的每次确认），只保存在这台电脑上，保留最近 2000 条，可以清空。</li><li><strong>谁能同意：</strong>只有服务器所有者能允许，团队成员只能拒绝。</li><li><strong>完全访问：</strong>助手什么都不问，包括删除文件、以管理员身份运行命令和付款。要在“权限”里手动选择，并确认两次；任务做完后建议改回最大权限。</li><li><strong>Computer Use：</strong>在“设置 → Computer Use”中开启。macOS 上一步步操作只要“辅助功能”，截屏要“屏幕录制”。点“授予”：系统设置打开到那一页，“辅助功能”的开关请你点一下（macOS 的规定），之后“屏幕录制”的开关由 HXBot 自己打开，macOS 要密码时你输入密码或按指纹即可。某一项显示打开却不算数时，HXBot 先清掉自己的旧条目再请你授权。v1.6.8 起每一版都用同一个签名，授权一次，以后升级都有效（从更早的版本升上来要再授权一次）。还没授权时，助手第一次要操作应用，HXBot 打开系统设置里缺的那一页（v1.7.0 起：你正在用别的应用时只发一条通知，点了才打开），并在对话里说清缺哪一项；授权后再说一次就能接着做。HXBot 不在“应用程序”文件夹里运行时，第一次打开会问你要不要移过去。</li><li><strong>装应用（Mac）：</strong>跟助手说“把下载好的 Firefox 装好”。.app、.zip、.dmg 里的应用由 HXBot 装进“应用程序”文件夹，装之前在对话里写出它的开发者和是否经过苹果公证；已经装过的先问你，同意后才替换，旧版放进废纸篓（名字是“应用名 旧版本号”，可以放回）；正在运行的请你先退出。.pkg 交给系统的安装器，密码由你自己输入。macOS 不让替换时，HXBot 打开“App 管理”那一页并自己打开开关，你输入密码或按指纹。</li><li><strong>应用命令和脚本（v1.6.9 起）：</strong>助手可以直接让应用切到前台、隐藏、退出、把窗口放到左半边或右半边、最大化，读出 Mac 应用的菜单并点其中的命令，读和改默认浏览器、邮件应用和按文件类型的默认应用，例如“退出备忘录”“把默认浏览器改成 Chrome”。退出时先正常退出并核对；应用问要不要保存时由你在它的窗口里选，强制退出要你在对话里同意。助手还能运行 AppleScript、JXA、快捷指令（Mac）和 PowerShell（Windows），用来操作 Excel、Word 这类应用；删除、发送这类脚本先问你，要管理员权限的不运行。这些都在 HXBot 主程序里做，不经过助手的命令行。Mac 上第一次控制某个应用时，系统会问是否允许 HXBot 控制它，点“好”；拒绝过的到“系统设置 → 隐私与安全性 → 自动化”里打开。Windows 只让你自己改默认应用，HXBot 打开“默认应用”页，助手在那里一步步点。一条路走不通，助手自动换下一条（直达 → 命令 → 控件 → 看图），并写明走的是哪条。</li><li><strong>打开应用后一步步操作：</strong>跟助手说在哪个应用里做什么，例如“在备忘录里新建一条，写上明天上午 10 点的会”。助手先在对话里列出步骤（一张进度卡），再用鼠标和键盘一步步做：点按钮、输入文字、按快捷键、滚动、拖动、点菜单。每一步都核对界面有没有按预期变化，做不下去就停下来说明卡在哪里，或者换一种做法。能在后台点的就不抢你的鼠标。发送、付款、购买、删除、发布之前，先在对话里问你。随时按 ⌃⌥Esc（Windows：Ctrl+Alt+Esc），助手在这台电脑上的操作马上停下（v1.7.0 起这组键只在助手操作电脑时占用，平时还给其他应用）。</li><li><strong>不打扰其他应用（v1.7.0 起）：</strong>助手输入文字、按快捷键之前先看最前面的是不是它在操作的应用；你切到了别的应用，它就不发按键，也不把窗口拉回前面，而是停下来请你回去后再说。一次操作结束时松开所有修饰键，剪贴板保持你原来复制的内容。高亮框每秒最多读两次窗口，助手的进程和它运行的命令以低于正常的优先级运行，读大应用的窗口有上限，别的应用不会被拖慢或卡住。更新下载限速 2 MB/s，远程桌面最多 10 Mbit/s；Windows 上停下助手时，它打开的有窗口的应用留下。</li><li><strong>直接打开和直接修改：</strong>开了 Computer Use 的助手可以按名称直接打开这台电脑上的应用、系统设置的某一页、文件夹、文档和网址，也可以直接修改深色模式、程序坞、任务栏等常用设置，不用截图和点鼠标。例如“打开蓝牙设置”“把深色模式打开”；中文名也可以用拼音说，例如“wangyiyun”。隐私与安全、密码这类页面，助手只打开，由你自己修改；第一次修改外观或程序坞时，macOS 会问一次是否允许 HXBot 控制“系统事件”。Windows 的屏幕亮度要先在“设置 → Computer Use → 这台电脑上的应用和设置”中运行一次自检（不会改变任何设置的值），通过后助手才直接修改；在那之前助手会打开设置页去改。在同一处还可以重新建立目录（新装的应用找不到时用）。</li><li><strong>限制：</strong>HXBot 只能从命令本身看出要修改、删除哪些文件；助手写的脚本或程序自己去改、去删的文件看不出来，用变量写的位置也只能按“看不出来”处理。在 Mac 上用 Cursor、Kimi、DeepSeek 等服务商时，助手自己的命令被系统限制在工作区等文件夹里，不能在外面新建文件（Homebrew、npm、pip 等装软件的文件夹除外）；装应用、截屏、控制别的应用和运行 AppleScript 由 HXBot 来做。OpenCode 每一步都先问 HXBot，v1.6.8 起不受这个限制。处理重要资料时，请先备份，并把资料和助手的工作区分开存放。</li></ul>
+<p><strong>用好助手的几条建议：</strong></p>
+<ul><li>一个助手一个职责，职责写得越具体，结果越稳定。</li><li>对重要的输出和不可逆的操作（删除文件、发送邮件、付款）先核实再执行。</li><li>网页、邮件和文件中可能藏有诱导助手执行恶意操作的内容（提示注入），不要让助手处理来源不明的内容。确认卡片上看不懂原因时选择拒绝，“始终允许”只给你确实放心的文件夹和命令。</li><li>不要让助手处理涉密信息、他人的敏感个人信息或生产系统。</li></ul>
+<p><strong>助手头像：</strong>每个助手的头像是 30 种小动物之一（长颈鹿、小犀牛、小猪、小马、小象、小鱼等），和 HXBot 的长颈鹿标志同一画风。在助手设置里点头像右下角的笔，可以在“动物”“更多动物”里换一只，在颜色里换颜色，也可以上传自己的图片。</p>
+<h2 id="server">6. 服务端：发布服务器与邀请成员<a class="anchor" href="#server" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>“服务器”就是运行 HXBot 桌面端的那台电脑。发布服务器后，你可以从网页版和手机上使用它，也可以邀请同事一起使用其中的助手。服务器所在的电脑需要开机、联网并运行桌面端，别人才能连接。</p>
+<h3 id="publish">6.1 发布服务器<a class="anchor" href="#publish" aria-hidden="true" tabindex="-1">#</a></h3>
+<ol><li>在 Mac 或 Windows 上打开桌面端，用邮箱和密码登录。</li><li>在左侧服务器栏右键当前服务器（或点“…”），选“服务器设置”，打开“成员”。</li><li>打开“发布该服务器”。显示“可在公网访问，仅受邀者可以登录。”即表示发布成功。</li></ol>
+<p>发布后，你自己可以立即在网页版和手机上看到这台服务器；其他人需要你的邀请才能加入。</p>
+<h3 id="invite">6.2 邀请成员<a class="anchor" href="#invite" aria-hidden="true" tabindex="-1">#</a></h3>
+<ol><li>在“服务器设置 → 成员”中点“邀请成员”。</li><li>“邀请方式”选择：<ul><li>“<strong>邀请链接</strong>”：一次性链接，24 小时后过期，用过一次即失效；</li><li>“<strong>永久链接</strong>”：不会过期，可多次使用，任何拿到它的人都能加入，只发给你信任的人。</li></ul></li><li>“邀请角色”选择“成员”或“管理员”。</li><li>点“创建链接”，再点“复制链接”，通过你自己的渠道发给对方；对方用手机时，也可以点“显示邀请二维码”让对方扫码。</li></ol>
+<p>请优先使用“邀请链接”或“永久链接”；“邮箱”方式在研究版中可能不可用。</p>
+<p>每个邀请链接都不同，形如 <code>https://bot.hxallai.com/join?api=…&amp;server=…&amp;fingerprint=…&amp;invite=…</code>，里面带着服务器的编号、身份指纹和一次性凭证，所以无法提前给出一个通用链接。不再需要的邀请可以在“待处理的邀请”中撤销。</p>
+<h3 id="roles">6.3 角色与权限<a class="anchor" href="#roles" aria-hidden="true" tabindex="-1">#</a></h3>
+<div class="table table--pair"><table><thead><tr><th scope="col">角色</th><th scope="col">可以做什么</th></tr></thead><tbody><tr><td data-label="角色">所有者</td><td data-label="可以做什么">运行服务器的人。可以发布或停止发布服务器、邀请和移除成员、调整角色和权限，并使用所有助手</td></tr><tr><td data-label="角色">管理员</td><td data-label="可以做什么">协助管理成员和邀请，可以使用所有助手</td></tr><tr><td data-label="角色">成员</td><td data-label="可以做什么">按“角色”设置使用允许的助手</td></tr></tbody></table></div>
+<ul><li>在“服务器设置 → 角色”中选择成员可以使用哪些助手。成员拥有“所有人”和自己所属角色中最高的访问权限；所有者和管理员可以使用所有助手。</li><li>在“成员”列表中可以“设为管理员”“设为成员”或“移除成员”。被移除的成员会失去对该服务器及其共享对话的访问权限。</li><li>“审计日志”记录成员、角色和助手访问权限的变更，最新的在前，主机保留最近 500 条。</li><li>同一服务器的成员可以互相看到邮箱、显示名称和头像。成员的对话和发送的文件保存在所有者的电脑上，所有者和管理员可能看到它们。</li></ul>
+<h3 id="join">6.4 加入别人的服务器<a class="anchor" href="#join" aria-hidden="true" tabindex="-1">#</a></h3>
+<ol><li>先在 <a href="/">https://bot.hxallai.com</a> 登录（还没有账号请先点“创建账号”）。</li><li>选择一种方式打开邀请：<ul><li>网页版：打开 <a href="/app">https://bot.hxallai.com/app</a> ，点“用邀请加入”；</li><li>桌面端、安卓端或 iOS 端：点服务器栏的“添加服务器”；</li><li>也可以直接在浏览器里打开收到的邀请链接，页面会引导你在 HXBot 中打开它；手机上可以“扫描邀请二维码”。</li></ul></li><li>粘贴链接，点“查看邀请”。确认页面显示这是一份已验证的邀请，核对服务器名称、访问权限和过期时间后，点“连接”。</li></ol>
+<p>发到指定邮箱的邀请只对该邮箱有效，请用对应的邮箱登录。想退出时，在服务器栏右键该服务器，选“离开服务器”。</p>
+<h3 id="web">6.5 网页版<a class="anchor" href="#web" aria-hidden="true" tabindex="-1">#</a></h3>
+<p>网页版地址是 <a href="/app">https://bot.hxallai.com/app</a> ，会列出你发布或加入的服务器。建议使用最新版的 Chrome、Edge、Safari 或 Firefox，手机浏览器也可以使用。网页版通过加密连接直接访问服务器所在的电脑，不在浏览器中保存对话内容；服务器所在的电脑关机或桌面端未运行时，网页版无法使用该服务器。</p>
+<h2 id="mobile">7. 在手机上使用<a class="anchor" href="#mobile" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>安装：</strong>Android 用户在手机浏览器中打开 <a href="/">https://bot.hxallai.com</a> ，登录后下载 APK 安装；iPhone、iPad 用户用 Safari 打开同一地址，登录后点 iPhone / iPad 卡片上的按钮安装（TestFlight 或直接安装，见第 3 节）。</p>
+<p><strong>登录：</strong>两种方式任选其一。</p>
+<ul><li>在手机上直接用邮箱和密码登录；</li><li>用桌面端扫码登录：在桌面端打开“设置 → 手机连接”，点“添加手机”，选“已安装，登录”；在手机上打开 HXBot，点“扫描二维码”，把相机对准电脑屏幕。手机还没装应用时选“未安装，获取应用”，扫码打开下载页。</li></ul>
+<p><strong>使用：</strong>手机会列出你的服务器，可以查看助手的进度、继续对话、语音输入，也可以从其他应用“分享”文字、图片和文件给 HXBot。手机端会在本机加密缓存它显示过的内容，退出登录时删除。</p>
+<p><strong>管理手机：</strong>在桌面端“设置 → 手机连接 → 你的手机”中查看已登录的手机；在手机端“设置 → 已登录设备”中管理登录。</p>
+<h2 id="settings">8. 设置与账号<a class="anchor" href="#settings" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>桌面端“设置”的左侧分成“设置”“功能”“数据与安全”三组，最下面一条细线下面是“关于”和“获取帮助”。窗口顶部的搜索框能搜到所有设置项。主要分区：</p>
+<div class="table table--stack"><table><thead><tr><th scope="col">分组</th><th scope="col">分区</th><th scope="col">用途</th></tr></thead><tbody><tr><td data-label="分组">设置</td><td data-label="分区">通用</td><td data-label="用途">控制 HXBot 在这台电脑上的行为</td></tr><tr><td data-label="分组">设置</td><td data-label="分区">个人资料</td><td data-label="用途">修改显示名称和头像；在“账号会话”中查看并退出已登录的设备</td></tr><tr><td data-label="分组">功能</td><td data-label="分区">助手</td><td data-label="用途">选择助手在你未单独设置时可以做什么</td></tr><tr><td data-label="分组">功能</td><td data-label="分区">通知</td><td data-label="用途">选择提醒你的方式</td></tr><tr><td data-label="分组">功能</td><td data-label="分区">语音</td><td data-label="用途">消息框中的听写。可以使用本机模型，或你选择的第三方语音服务</td></tr><tr><td data-label="分组">功能</td><td data-label="分区">Computer Use</td><td data-label="用途">允许助手查看屏幕、操作键盘和鼠标；查看这台电脑上的应用和设置目录，运行自检</td></tr><tr><td data-label="分组">功能</td><td data-label="分区">手机连接</td><td data-label="用途">添加、管理已登录的手机</td></tr><tr><td data-label="分组">数据与安全</td><td data-label="分区">授权与记录</td><td data-label="用途">查看和删除“始终允许”的规则；查看助手做过的值得留意的事</td></tr><tr><td data-label="分组">最下面</td><td data-label="分区">关于</td><td data-label="用途">查看当前版本和更新进度（新版本自动下载，点“立即更新”安装）；打开官网、服务条款和隐私政策</td></tr><tr><td data-label="分组">最下面</td><td data-label="分区">获取帮助</td><td data-label="用途">打开本指南；给 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 写邮件反馈</td></tr></tbody></table></div>
+<p><strong>退出登录：</strong>点账号菜单中的“退出登录”。</p>
+<p><strong>注销账号：</strong>在“设置 → 个人资料”最下面点“注销账号…”，输入密码确认（没有设置过密码的账号，例如只用第三方登录的，改用这个账号的邮箱确认）。账号立即删除、不能恢复：注册资料、绑定的第三方账号、所有设备上的登录、加入的服务器和你发布的服务器都会删除，同一个邮箱和手机号码以后可以重新注册；你电脑上的助手、对话和文件不受影响。手机端在“设置 → 个人资料 → 注销账号”，网页版同样在“设置 → 个人资料”。也可以用账号邮箱发邮件到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 申请，我们核验后在 15 个工作日内处理。</p>
+<h2 id="help">9. 帮助菜单与反馈<a class="anchor" href="#help" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>客户端中的帮助（?）菜单：</p>
+<div class="table table--pair"><table><thead><tr><th scope="col">菜单项</th><th scope="col">打开</th></tr></thead><tbody><tr><td data-label="菜单项">使用指南</td><td data-label="打开">本页</td></tr><tr><td data-label="菜单项">服务端</td><td data-label="打开">本页第 6 节：发布服务器与邀请成员</td></tr><tr><td data-label="菜单项">下载最新版本</td><td data-label="打开">门户的下载中心</td></tr><tr><td data-label="菜单项">发送反馈</td><td data-label="打开">给 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 写邮件</td></tr></tbody></table></div>
+<p>“设置 → 获取帮助”里也能打开本指南、写反馈邮件。</p>
+<p>反馈问题时，请尽量附上：使用的设备和系统版本，HXBot 的版本号（“设置 → 关于”），操作步骤和截图；与服务商有关的问题，可以在服务商设置中点“复制诊断信息”一并发来。诊断信息可能包含文件路径等内容，发送前请先检查。</p>
+<h2 id="data">10. 数据、隐私与安全<a class="anchor" href="#data" aria-hidden="true" tabindex="-1">#</a></h2>
+<div class="table table--pair"><table><thead><tr><th scope="col">数据</th><th scope="col">保存在哪里</th></tr></thead><tbody><tr><td data-label="数据">助手、对话、文件、工作区、浏览器数据</td><td data-label="保存在哪里">运行桌面端的电脑上（加入他人服务器时，在该服务器所有者的电脑上）</td></tr><tr><td data-label="数据">“始终允许”的规则和授权记录</td><td data-label="保存在哪里">运行桌面端的电脑上（HXBot 的数据文件夹，只有你的系统账户能读）</td></tr><tr><td data-label="数据">模型服务的登录状态和密钥</td><td data-label="保存在哪里">运行桌面端的电脑上</td></tr><tr><td data-label="数据">账号（邮箱、用户名、手机号码、职位、公司名称、密码的加盐哈希）、登录会话、服务器目录、成员与邀请</td><td data-label="保存在哪里">弘犀服务器（中国大陆）</td></tr><tr><td data-label="数据">远程连接中传输的内容</td><td data-label="保存在哪里">端到端加密传输，弘犀服务器无法读取，也不保存</td></tr><tr><td data-label="数据">模型调用</td><td data-label="保存在哪里">由你选择的服务商处理，适用其条款和隐私政策</td></tr></tbody></table></div>
+<ul><li>研究版不收集使用统计和错误报告。</li><li>用系统自带的备份工具（例如 Mac 的“时间机器”、Windows 的“文件历史记录”）定期备份你的用户目录。</li><li>详细说明见《隐私政策》（<a href="/privacy/">https://bot.hxallai.com/privacy/</a>）和《服务条款》（<a href="/terms/">https://bot.hxallai.com/terms/</a>）。</li></ul>
+<p><strong>使用限制：</strong>研究版仅限非商业研究使用，不得用于任何商业用途，例如客户项目交付、收费服务、产品演示或销售支持。</p>
+<p><strong>保密箱</strong>：密码、API 密钥、令牌，以及网站和应用的登录信息，请存进保密箱（桌面端：服务器设置 → 保密箱；手机端：服务器设置里的“保密箱”）。助手使用这些机密时只拿到文件路径，或由 HXBot 替它自动填写，AI 模型看不到明文。请不要在聊天里发送密码：聊天框发现消息里像有密码或密钥时，会先拦下提醒，你可以点“打开保密箱”改存，或点“仍然发送”。助手需要密码或密钥时，也会弹出保密表单让你填写。</p>
+<h2 id="faq">11. 常见问题<a class="anchor" href="#faq" aria-hidden="true" tabindex="-1">#</a></h2>
+<p><strong>登录时提示“该邮箱不在研究版名单中”？</strong>研究版只对名单内的邮箱开放。请发邮件到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 申请开通。</p>
+<p><strong>提示“尝试太频繁”或“密码输错次数太多”？</strong>为防止暴力破解，登录有频率限制。请等约 15 分钟后重试，并确认密码输入正确（注意大小写和全角、半角）。忘记密码时，在门户登录框下方点“忘记了密码？”。</p>
+<p><strong>收不到邮箱验证码或短信验证码？</strong>先看垃圾邮件箱，确认邮箱和手机号没有写错；验证码 10 分钟内有效，60 秒后可以重新获取。同一个手机号每天最多获取 10 次。短信验证码只支持中国大陆手机号。仍然收不到时，请发邮件到 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>。</p>
+<p><strong>提示“这个邮箱已经注册”“这个手机号已经注册了账号”或“这个用户名已经有人用了”？</strong>一个邮箱、一个手机号码都只能注册一个账号，请用已有的账号登录，忘记了密码就点“忘记了密码？”；用户名不能与别人重复，换一个即可。</p>
+<p><strong>网页版或手机上看不到我的服务器？</strong>请确认：服务器所在的电脑已开机、联网，桌面端正在运行；服务器已经发布（第 6.1 节）；你在各端登录的是同一个账号。</p>
+<p><strong>一直显示“正在连接”或“连接失败”？</strong>可能是网络限制了点对点连接。HXBot 会自动改用中继；公司或学校网络如果拦截了中继端口，请让网络管理员放行到 turn.bot.hxallai.com 的 UDP / TCP 3478 和 TCP 5349 端口。也可以换一个网络，或重启桌面端后再试。</p>
+<p><strong>邀请链接打不开或提示过期？</strong>一次性邀请 24 小时后过期，并且只能用一次；发到指定邮箱的邀请只对该邮箱有效。请让服务器所有者创建新的链接。</p>
+<p><strong>打开某个地址显示“找不到页面”？</strong>链接可能已失效或输错。请回到 <a href="/">https://bot.hxallai.com</a> 重新进入。</p>
+<p><strong>助手调用模型失败？</strong>请在“服务器设置 → 服务商”中检查服务商的登录状态、密钥、额度和地区限制；免费模型的可用性由其提供方决定，失败时可以换一个服务商。</p>
+<p><strong>如何更新到新版本？</strong>客户端会自动更新：桌面端自动下载，在弹出的窗口里点“立即更新”即可；手机端自动打开新版本，你点“安装”即可，见第 3 节“更新”。</p>
+<p><strong>提示“这个版本的 HXBot 太旧了”，登录不了？</strong>这一版起旧版本不能再登录。请用浏览器打开 <a href="/">https://bot.hxallai.com</a> 登录，下载新版本安装后再登录。</p>
+<p><strong>升级后要求重新登录？</strong>升级到这一版时，所有设备的登录都会失效一次，用邮箱和密码重新登录即可，助手和对话都在。</p>
+<p><strong>Mac 上弹出“HXBot 想要使用你储存在钥匙串的‘HXBot Safe Storage’中的机密信息”？</strong>这是旧版本的问题，新版本已经不再使用钥匙串：登录状态、API 密钥等机密都保存在 HXBot 自己的加密保密箱里（数据文件夹中，只有你的 Mac 账户能读），启动和升级都不会再弹这个框。从旧版本升级后，请重新登录一次，并把之前保存的 API 密钥再填一次；之后一直有效。钥匙串里旧的“HXBot Safe Storage”项目可以在“钥匙串访问”里删除，也可以不管。</p>
+<p><strong>换电脑后数据会同步吗？</strong>不会。助手、对话和文件保存在原来那台电脑上。你可以继续把原来的电脑作为服务器发布，从新电脑“添加服务器”连接它。</p>
+<p><strong>可以用于商业项目吗？</strong>不可以。研究版仅限非商业研究使用。</p>
+<h2 id="support">12. 获取支持<a class="anchor" href="#support" aria-hidden="true" tabindex="-1">#</a></h2>
+<ul><li>邮件：<a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 。请写明你的邮箱、设备和问题描述，我们会尽快回复。</li><li>账号和验证码问题、开通名单、注销账号、行使个人信息权利，也请发邮件到这个地址。</li><li>相关文档：《服务条款》（<a href="/terms/">https://bot.hxallai.com/terms/</a>）、《隐私政策》（<a href="/privacy/">https://bot.hxallai.com/privacy/</a>）、客户端许可协议（随安装包提供，也可在门户页脚的“许可协议”查看）。</li></ul>
+    <a class="top" href="#">返回顶部 ↑</a>
+    </article>
+  </main>
+</div>
+<footer>
+  <div class="wrap bar">
+    <span class="brand"><svg aria-hidden="true"><use href="#hx-giraffe" width="100%" height="100%"/></svg><span>© 2026 弘犀智能</span></span>
+    <span class="spacer"></span>
+    <nav class="links" aria-label="许可协议"><a href="/guide/">使用指南</a><a href="/whats-new/">新功能</a><a href="/terms/">服务条款</a><a href="/privacy/">隐私政策</a><a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener">许可协议</a><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026163032号</a></nav>
+  </div>
+</footer>
+<script>
+(function () {
+  "use strict";
+  var KEY = "hxbot-portal-lang";
+  // 打开带 #章节 的地址时直接跳到该章节，之后页内跳转再平滑滚动
+  window.addEventListener("load", function () { setTimeout(function () { document.documentElement.classList.add("smooth"); }, 0); });
+  // 切换语言：记住选择，并保留当前章节（#…）
+  Array.prototype.forEach.call(document.querySelectorAll("[data-lang]"), function (a) {
+    a.addEventListener("click", function () {
+      try { localStorage.setItem(KEY, a.getAttribute("data-lang")); } catch (e) {}
+      a.setAttribute("href", a.getAttribute("href").split("#")[0] + location.hash);
+    });
+  });
+  // 目录：窄屏默认收起，点了章节后收起；滚动时高亮当前章节
+  var toc = document.querySelector(".toc");
+  var narrow = window.matchMedia && matchMedia("(max-width: 999px)");
+  if (toc && narrow && narrow.matches) toc.removeAttribute("open");
+  if (toc) toc.addEventListener("click", function (e) {
+    if (e.target.closest("a") && narrow && narrow.matches) toc.removeAttribute("open");
+  });
+  var links = {};
+  Array.prototype.forEach.call(document.querySelectorAll(".toc a[href^='#']"), function (a) { links[a.getAttribute("href").slice(1)] = a; });
+  var current = null;
+  function mark(id) {
+    if (current === id || !links[id]) return;
+    if (current && links[current]) links[current].classList.remove("is-active");
+    links[id].classList.add("is-active");
+    current = id;
+  }
+  var heads = document.querySelectorAll("article h2[id], article h3[id]");
+  var pending = false;
+  function spy() {
+    pending = false;
+    var id = heads.length ? heads[0].id : null;
+    for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top <= 110) id = heads[i].id; else break; }
+    mark(id);
+  }
+  window.addEventListener("scroll", function () { if (!pending) { pending = true; requestAnimationFrame(spy); } }, { passive: true });
+  window.addEventListener("load", spy);
+  spy();
+  // 代码块“复制”按钮
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (button) {
+    button.addEventListener("click", function () {
+      var text = button.parentNode.querySelector("code").textContent;
+      var label = button.textContent;
+      var done = function () { button.textContent = document.documentElement.lang === "en" ? "Copied" : "已复制"; setTimeout(function () { button.textContent = label; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {});
+    });
+  });
+})();
+</script>
+</body>
+</html>
