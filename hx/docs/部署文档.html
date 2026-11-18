@@ -139,7 +139,7 @@ pre code { display: block; padding: 0; background: none; color: var(--ink); font
   </div>
 </div></header>
 <div class="hero">
-  <div class="eyebrow">HXBot · 服务器部署文档 · 2026 年 11 月 15 日</div>
+  <div class="eyebrow">HXBot · 服务器部署文档 · 2026 年 11 月 18 日</div>
   <h1>HXBot 研究版 · 服务器部署文档</h1>
   <p class="lead">本文档把 HXBot 的服务器端部署到现有的阿里云 ECS（与官网 www.hxallai.com 同一台服务器）。按顺序逐步执行即可，每一步都有“检查”小节，检查通过再做下一步。</p>
   <div class="chips"><span class="chip">服务器：阿里云 ECS（与官网同一台）</span><span class="chip">域名：<strong>bot.hxallai.com</strong> 等 4 个子域名（无需另行备案）</span><span class="chip">运行方式：Docker</span><span class="chip">证书：Let's Encrypt（自动续期）</span></div>
@@ -150,7 +150,7 @@ pre code { display: block; padding: 0; background: none; color: var(--ink); font
 <p><strong>这台服务器：</strong>阿里云 ECS launch-advisor-20261014（华南1 深圳 E），公网 IP <strong>47.119.145.170</strong>，Ubuntu 26.04 64 位，8 核 32 GiB，系统盘 40 GiB，公网带宽 10 Mbps。下文的命令都已经按它写好。</p>
 <p><strong>每个版本交付四份文档，各管一件事：</strong></p>
 <div class="tbl tbl--stack tbl--2"><table><thead><tr><th scope="col">文档</th><th scope="col">什么时候看</th></tr></thead><tbody><tr><th scope="row">部署文档（本文）</th><td data-label="什么时候看">在服务器上从头部署 HXBot（第 0～11 节），以及日常运维（第 12 节起：用户管理、备份恢复、停用）</td></tr><tr><th scope="row">上线操作手册</th><td data-label="什么时候看"><strong>每个新版本上线时看它</strong>：通知用户、上传客户端、升级服务器、检查，按这台服务器写好了每一步</td></tr><tr><th scope="row">客户端构建</th><td data-label="什么时候看">打 Mac、Windows、安卓、iPhone 安装包（在 GitHub 上打，或在自己的电脑上打）</td></tr><tr><th scope="row">服务器构建</th><td data-label="什么时候看">从源码自己打服务器部署包（平时用交付件里打好的包，不用自己打）</td></tr></tbody></table></div>
-<p><strong>适用版本：v1.7.0（2026-11-15）。</strong>本文档只描述当前版本：全新部署按第 0～11 节依次执行；已经部署过的服务器，从任何旧版本升级只看第 12 节“升级到新版本”（v1.6.2 起一条命令升级，也可以打开自动更新；服务器上用的还是共用登录口令的，还要看同一节的“从共用登录口令升级”）。</p>
+<p><strong>适用版本：v1.7.1（2026-11-18）。</strong>本文档只描述当前版本：全新部署按第 0～11 节依次执行；已经部署过的服务器，从任何旧版本升级只看第 12 节“升级到新版本”（v1.6.2 起一条命令升级，也可以打开自动更新；服务器上用的还是共用登录口令的，还要看同一节的“从共用登录口令升级”）。</p>
 <p>每个人注册自己的账号，用邮箱和自己的密码登录。与账号有关的内容在这几处：数据库不用安装（第 8.1 节）；注册时给邮箱发验证码用的发信邮箱（第 5.3 节）；验证手机号用的阿里云短信（第 5.4 节）；微信、支付宝、抖音、Apple、Google、Facebook 登录（第 5.5 节和附录 A）；注册第一个账号（第 10 节）；查看和管理用户、备份数据库（第 12 节）。iOS 版从注册苹果开发者账号、付费、打包、上传到用户安装和以后更新的全过程，在第 11.2～11.11 节。</p>
 <p>部署中遇到问题，或需要安装和部署方面的支持，请发邮件至 <a href="mailto:bot@hxallai.com">bot@hxallai.com</a>。</p></div>
 </div>
@@ -159,7 +159,7 @@ pre code { display: block; padding: 0; background: none; color: var(--ink); font
   <main>
     <section id="s0">
       <h2><span class="n">0</span>部署前准备</h2>
-      <div class="tbl tbl--stack"><table><thead><tr><th scope="col">项目</th><th scope="col">要求</th><th scope="col">怎么确认</th></tr></thead><tbody><tr><th scope="row">服务器</th><td data-label="要求">2 核 4 GB 内存以上，剩余磁盘 10 GB 以上</td><td data-label="怎么确认"><code>free -h</code>、<code>df -h /</code></td></tr><tr><th scope="row">操作系统</th><td data-label="要求">Alibaba Cloud Linux 3、Ubuntu 22.04/24.04/26.04（官网服务器 47.119.145.170 是 Ubuntu 26.04；CentOS 7/8 已停止维护，不建议）</td><td data-label="怎么确认"><code>cat /etc/os-release</code></td></tr><tr><th scope="row">Python 3</th><td data-label="要求">系统自带的 python3 即可（3.6 及以上）</td><td data-label="怎么确认"><code>python3 --version</code>；没有就 <code>dnf -y install python3</code> 或 <code>apt-get install -y python3</code></td></tr><tr><th scope="row">权限</th><td data-label="要求">root</td><td data-label="怎么确认"><code>whoami</code> 显示 root</td></tr><tr><th scope="row">nginx</th><td data-label="要求">官网正在使用的 nginx（系统自带或宝塔面板均可）</td><td data-label="怎么确认"><code>nginx -v</code></td></tr><tr><th scope="row">数据库</th><td data-label="要求"><strong>不用准备，也不用安装。</strong>用户账号存在账号服务自带的轻量数据库（SQLite）里，第 8 节启动服务时自动建好（第 8.1 节）</td><td data-label="怎么确认">无</td></tr><tr><th scope="row">发信邮箱</th><td data-label="要求"><a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 的 SMTP 服务器地址和密码。注册时给用户邮箱发验证码、找回密码都用它（第 5.3 节）。默认开启，可以关闭</td><td data-label="怎么确认">能用网页登录这个邮箱；知道它是哪家的企业邮箱</td></tr><tr><th scope="row">阿里云短信</th><td data-label="要求">注册时用短信验证手机号（第 5.4 节）。要用已完成企业实名认证的阿里云账号申请资质、签名和模板，<strong>审核最快 3～5 个工作日</strong>。默认开启，可以关闭；没批下来之前先关闭它上线</td><td data-label="怎么确认">能登录公司的阿里云控制台</td></tr><tr><th scope="row">第三方登录（可选）</th><td data-label="要求">微信、支付宝、抖音、Apple、Google、Facebook。每一家都要用公司名义在它的开放平台申请应用并审核（附录 A）。一家都不配置也能上线，以后批下来一家开一家</td><td data-label="怎么确认">按需</td></tr><tr><th scope="row">联系邮箱</th><td data-label="要求"><a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 显示在各端登录页、下载页和验证码邮件上，用户遇到账号问题会发邮件到这里</td><td data-label="怎么确认">能正常收信</td></tr><tr><th scope="row">部署包</th><td data-label="要求">hxbot-server-v1.7.0.zip（本次交付件之一）</td><td data-label="怎么确认">已下载到电脑</td></tr></tbody></table></div>
+      <div class="tbl tbl--stack"><table><thead><tr><th scope="col">项目</th><th scope="col">要求</th><th scope="col">怎么确认</th></tr></thead><tbody><tr><th scope="row">服务器</th><td data-label="要求">2 核 4 GB 内存以上，剩余磁盘 10 GB 以上</td><td data-label="怎么确认"><code>free -h</code>、<code>df -h /</code></td></tr><tr><th scope="row">操作系统</th><td data-label="要求">Alibaba Cloud Linux 3、Ubuntu 22.04/24.04/26.04（官网服务器 47.119.145.170 是 Ubuntu 26.04；CentOS 7/8 已停止维护，不建议）</td><td data-label="怎么确认"><code>cat /etc/os-release</code></td></tr><tr><th scope="row">Python 3</th><td data-label="要求">系统自带的 python3 即可（3.6 及以上）</td><td data-label="怎么确认"><code>python3 --version</code>；没有就 <code>dnf -y install python3</code> 或 <code>apt-get install -y python3</code></td></tr><tr><th scope="row">权限</th><td data-label="要求">root</td><td data-label="怎么确认"><code>whoami</code> 显示 root</td></tr><tr><th scope="row">nginx</th><td data-label="要求">官网正在使用的 nginx（系统自带或宝塔面板均可）</td><td data-label="怎么确认"><code>nginx -v</code></td></tr><tr><th scope="row">数据库</th><td data-label="要求"><strong>不用准备，也不用安装。</strong>用户账号存在账号服务自带的轻量数据库（SQLite）里，第 8 节启动服务时自动建好（第 8.1 节）</td><td data-label="怎么确认">无</td></tr><tr><th scope="row">发信邮箱</th><td data-label="要求"><a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 的 SMTP 服务器地址和密码。注册时给用户邮箱发验证码、找回密码都用它（第 5.3 节）。默认开启，可以关闭</td><td data-label="怎么确认">能用网页登录这个邮箱；知道它是哪家的企业邮箱</td></tr><tr><th scope="row">阿里云短信</th><td data-label="要求">注册时用短信验证手机号（第 5.4 节）。要用已完成企业实名认证的阿里云账号申请资质、签名和模板，<strong>审核最快 3～5 个工作日</strong>。默认开启，可以关闭；没批下来之前先关闭它上线</td><td data-label="怎么确认">能登录公司的阿里云控制台</td></tr><tr><th scope="row">第三方登录（可选）</th><td data-label="要求">微信、支付宝、抖音、Apple、Google、Facebook。每一家都要用公司名义在它的开放平台申请应用并审核（附录 A）。一家都不配置也能上线，以后批下来一家开一家</td><td data-label="怎么确认">按需</td></tr><tr><th scope="row">联系邮箱</th><td data-label="要求"><a href="mailto:bot@hxallai.com">bot@hxallai.com</a> 显示在各端登录页、下载页和验证码邮件上，用户遇到账号问题会发邮件到这里</td><td data-label="怎么确认">能正常收信</td></tr><tr><th scope="row">部署包</th><td data-label="要求">hxbot-server-v1.7.1.zip（本次交付件之一）</td><td data-label="怎么确认">已下载到电脑</td></tr></tbody></table></div>
       <p><strong>时间怎么安排。</strong>服务器当天就能部署好并开放注册；需要等的只有外部审核。建议的顺序：</p>
       <ol><li>今天：按第 1～10 节部署。发信邮箱当场配好（第 5.3 节）；阿里云短信还没批下来的，先关闭手机验证（第 5.4 节开头的一条命令）。部署完，用户就可以用“邮箱 + 邮箱验证码”注册。</li><li>同时：提交阿里云短信的资质、签名、模板（第 5.4 节），以及想要的几家第三方登录的应用（附录 A）。</li><li>批下来一样开一样：每次只是在服务器上填几项设置、重启账号服务（约 10 秒），已经登录的人不受影响。</li></ol>
       <p>下文命令都在服务器上以 root 执行。用 SSH 登录服务器：<code>ssh root@47.119.145.170</code>。</p>
@@ -239,11 +239,11 @@ docker run --rm node:24-bookworm-slim node -v</code></pre></div>
     <section id="s4">
       <h2><span class="n">4</span>上传部署包</h2>
       <p>在你自己的电脑上执行：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.0.zip root@47.119.145.170:/opt/</code></pre></div>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.1.zip root@47.119.145.170:/opt/</code></pre></div>
       <p>在服务器上执行：</p>
       <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>command -v unzip &gt;/dev/null || (dnf -y install unzip || apt-get install -y unzip)
 mkdir -p /opt/hxbot &amp;&amp; cd /opt/hxbot
-unzip -o /opt/hxbot-server-v1.7.0.zip <span class="c"> # 解压出 /opt/hxbot/server</span>
+unzip -o /opt/hxbot-server-v1.7.1.zip <span class="c"> # 解压出 /opt/hxbot/server</span>
 chmod +x server/scripts/*.sh server/account/entrypoint.sh server/coturn/entrypoint.sh
 ls server</code></pre></div>
       <p><strong>检查</strong>：<code>ls -A server</code> 能看到 <code>.env.example  account  coturn  docker-compose.yml  nginx  portal  scripts  signal  部署文档.html  部署文档.md</code> 等。</p>
@@ -448,7 +448,7 @@ bash scripts/users.sh list</code></pre></div>
       <p>客户端在 GitHub 上打包，或者在各自的系统上打包（Mac 版在 Mac 上、Windows 版在 Windows 上），方法见《客户端构建》。<strong>每个新版本上传客户端按《上线操作手册》第 3 步做</strong>（已经按这台服务器写好）；本节是第一次部署时的上传方法和原理。打好的安装包传到服务器的下载中心，用户登录下载页就能下载。iOS 版比另外三个多出“注册苹果开发者账号”这一段，从 11.2 节起单独、完整地写。</p>
       <h3 id="s11-1">11.1 Mac、Windows、Android 安装包</h3>
       <p>在打包的那台电脑上（源码目录里）执行，一次可以传多个文件：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>bash hx/scripts/upload-downloads.sh root@47.119.145.170 dist/HXBot-0.67.9-arm64.dmg</code></pre></div>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>bash hx/scripts/upload-downloads.sh root@47.119.145.170 dist/HXBot-0.68.0-arm64.dmg</code></pre></div>
       <p><strong>Mac 版要有固定签名（v1.6.8 起）。</strong>在 Mac 上上传时，脚本先从 dmg 旁边的 zip 里取出 HXBot.app，核对签名身份是 HXBot 的固定证书（或以后的 Developer ID）；没有固定签名的包（例如在自己 Mac 上打的）不上传，因为 macOS 按签名记授权，这样的包一传上去，所有 Mac 用户升级后都要重新授权。发布用 GitHub 上打的 Mac 包，见《客户端构建》第 6.3 节第二部分。</p>
       <p><strong>应用内更新用的文件会一并上传。</strong>打包时 dmg 和 exe 旁边还会生成几个文件，用户在应用里更新时用的就是它们：Mac 的 <code>HXBot-版本号-arm64.zip</code> 和 <code>latest-mac.yml</code>，Windows 的 <code>HXBot-版本号-x64.exe.blockmap</code> 和 <code>latest.yml</code>。上传 dmg 或 exe 时，这条命令会把同一目录里、同一版本的这几个文件放到服务器的 <code>/opt/hxbot/downloads/updates/desktop/</code>，<code>latest*.yml</code> 最后传，服务器核对文件都齐了才换上，换上之前已经装好的客户端看到的还是原来的版本。旧版本的 <code>.blockmap</code> 留在服务器上（Windows 增量下载要用），旧的 Mac ZIP 自动删除。命令输出的“应用内更新”一段列出现在各端在应用里能更新到的版本；某个文件缺了或版本对不上，会提示“这次不更新 …… 的应用内更新”，这时用户仍能在下载页手动下载新版。</p>
       <p>安卓安装包传上去后，下载中心同时给它一个随机串地址（<code>/ota/随机串/HXBot.apk</code>）：手机里点“更新”时由系统浏览器下载，系统浏览器不带登录状态，所以和 iOS 的无线安装一样用随机串；换了安装包就换新的随机串，旧地址随即失效。</p>
@@ -507,8 +507,8 @@ brew install cocoapods</code></pre></div>
       <p><strong>第 6 步：登记至少一台 iPhone 或 iPad。这一步不能省</strong>：开发者账号里一台设备都没有时，Xcode 生成不了签名用的描述文件，打包会失败（报 <code>Your team has no devices</code>）。走路线 B 的，把要安装的每一台设备都在这里登记。</p>
       <ol><li>取设备编号（UDID）：用数据线把 iPhone 连到 Mac，手机上点“信任”。打开“访达”，在左边栏点这台 iPhone，再点设备名称下面那一行灰色小字（型号、容量那一行），点到显示 UDID 为止，在上面点右键 →“拷贝 UDID”。</li><li>在浏览器打开 <a href="https://developer.apple.com/account/resources/devices/list" target="_blank" rel="noopener">https://developer.apple.com/<wbr>account/<wbr>resources/<wbr>devices/<wbr>list</a> ，点“Devices”旁边的 <code>+</code>。</li><li>Platform 选 iOS, iPadOS, tvOS, watchOS, visionOS；Device Name 填一个认得出的名字（如“张三的 iPhone”）；Device ID (UDID) 粘贴刚才拷贝的编号。</li><li>点 Continue，再点 Register。</li></ol>
       <p>用户不在身边、手边也没有 Mac 时，让他在 Windows 电脑上装 iTunes，连上手机后点设备图标，在“摘要”页点“序列号”那一行，它会变成 UDID，右键拷贝后发给你。</p>
-      <p><strong>第 7 步：解压源码并检查环境。</strong>把源码包 <code>hxbot-source-v1.7.0.zip</code> 拷到 Mac 上，在终端里进入它所在的文件夹：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip hxbot-source-v1.7.0.zip
+      <p><strong>第 7 步：解压源码并检查环境。</strong>把源码包 <code>hxbot-source-v1.7.1.zip</code> 拷到 Mac 上，在终端里进入它所在的文件夹：</p>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip hxbot-source-v1.7.1.zip
 cd hx-bot
 bash hx/scripts/build-ios.sh --check</code></pre></div>
       <p>每一行都是 <code>[通过]</code> 才算准备好。出现 <code>[缺少]</code> 的，照它下面“处理”一行做完，再运行一次。全部通过时屏幕显示：</p>
@@ -651,11 +651,13 @@ bash hx/scripts/upload-downloads.sh root@47.119.145.170 dist-hx/HXBot-1.5.0-ios.
       <h3 id="s12-2">升级到新版本</h3>
       <p><strong>每个新版本上线按交付件里的《上线操作手册》做</strong>：它按这台服务器写好了每一步（先确认服务器现状、通知用户、上传客户端、升级、检查），比本节更细。本节讲升级的原理和手工方法，作为备查。</p>
       <p>每个新版本有两个服务器包，任选一个。<code>.env</code>、账号数据库和下载目录里的安装包都会保留；数据库里新版本增加的表在启动时自动建好。</p>
-      <div class="tbl tbl--stack"><table><thead><tr><th scope="col">包</th><th scope="col">内容</th><th scope="col">什么时候用</th></tr></thead><tbody><tr><th scope="row"><code>hxbot-server-v1.7.0.zip</code>（全量包）</th><td data-label="内容">完整的服务器程序</td><td data-label="什么时候用">全新部署；从任何旧版本升级</td></tr><tr><th scope="row"><code>hxbot-server-update-v1.7.0.zip</code>（更新包）</th><td data-label="内容">只有上一版本以来变动的文件，小得多</td><td data-label="什么时候用">服务器正好是上一版本时（交付说明里写着起点版本。不是的话脚本会拒绝，并提示改用全量包）</td></tr></tbody></table></div>
+      <div class="tbl tbl--stack"><table><thead><tr><th scope="col">包</th><th scope="col">内容</th><th scope="col">什么时候用</th></tr></thead><tbody><tr><th scope="row"><code>hxbot-server-v1.7.1.zip</code>（全量包）</th><td data-label="内容">完整的服务器程序</td><td data-label="什么时候用">全新部署；从任何旧版本升级</td></tr><tr><th scope="row"><code>hxbot-server-update-v1.7.1.zip</code>（更新包）</th><td data-label="内容">只有上一版本以来变动的文件，小得多</td><td data-label="什么时候用">服务器正好是上一版本时（交付说明里写着起点版本。不是的话脚本会拒绝，并提示改用全量包）</td></tr></tbody></table></div>
       <p><strong>先上传新的客户端安装包，再升级服务器。</strong>服务器升级后会告诉手机端有新版本（手机端打开的是下载中心里的安装包）；从 v1.6.2 起，服务器还会拒绝低于最低版本的客户端（v1.6.3 起桌面端的最低版本是这一版的“主.次.0”，所以只有大版本必须更新，见下面“升级到 v1.6.3 时”），用户只能去下载中心或在应用里拿新版本，所以新的安装包一定要先按第 11 节传上去。</p>
       <p><strong>从 v1.6 之前的版本升级到 v1.6 及以后时，用下面的“方法二：手工升级”，并先看完“从共用登录口令升级”一小节</strong>：登录方式变了，手工升级的第 2 步里要多做两件事，升级后要通知用户。</p>
+      <p><strong>升级到 v1.7.1 时</strong>：</p>
+      <ul><li>这一版改桌面端：多开智能体不卡死、团队不设上限、不拒绝只排队。桌面端按可用内存、电池、温度、处理器降速和主进程的忙闲决定同时跑几个回合（2～16 个），多出来的排队；团队取消“最多 20 人 · 240 分钟 · 80 次交接”，分派一律接收、排队，团队卡住时暂停并问用户；频道列表的未读数只数新来的消息，用久了不再变慢。这些都在用户自己的电脑上，<strong>服务器不参与、不保存</strong>，也不用做任何配置。服务器程序变的是版本号、网页版（随桌面端的界面）、门户的新功能页（加了“桌面端 0.68.0”一节）和客户端最低版本。</li><li><strong>0.68.0 是大版本，必须更新：</strong>升级后服务器只让 0.68.0 及以后的桌面端登录（最低版本取这一版的“主.次.0”）。0.67.1～0.67.9 的桌面端在新安装包上传后就会自动下载 0.68.0，弹出不能关闭的“更新 HXBot”窗口；所以先通知用户，选人少的时候上传。手机端仍是 1.5.0，不受影响。</li><li>nginx 配置、<code>.env</code>、数据库都不变，用户不用重新登录。这一版只交付全量包（没有更新包），服务器是 v1.7.0～v1.6.2 都用全量包。</li><li>桌面端升到 0.68.0：按《客户端构建》在 GitHub 上重新打包 Mac 和 Windows 版（源码推到放着 Mac 签名证书的仓库 <code>mercywangqiang-tech/hx-bot-build</code>），<strong>先上传桌面端，再升级服务器</strong>；上线前按《上线操作手册》第 1.6 节第一部分在真机上补看。</li></ul>
       <p><strong>升级到 v1.7.0 时</strong>：</p>
-      <ul><li>这一版只改桌面端：HXBot 不打扰其他应用（高亮框少读窗口、Windows 上不挂全局鼠标钩子、按键只发给目标应用、松开修饰键、授权页和远程控制询问先发通知、停止键只在操作电脑时占用、剪贴板放回、助手进程低于正常优先级、读窗口有上限、更新下载限速 2 MB/s、远程桌面码率封顶 10 Mbit/s、Windows 上停助手时留下它打开的应用、自动选择模型在进行中的对话里保持原模型）。服务器程序只有版本号和门户的新功能页变了。</li><li>nginx 配置、<code>.env</code>、数据库都不变，用户不用重新登录。服务器现在是 v1.6.9 的，用更新包或全量包都可以；是 v1.6.8～v1.6.2 的（跳过了中间的版本），用全量包。</li><li>桌面端升到 0.67.9，手机端仍是 1.5.0：按《客户端构建》在 GitHub 上重新打包 Mac 和 Windows 版（源码推到放着 Mac 签名证书的仓库 <code>mercywangqiang-tech/hx-bot-build</code>），<strong>先上传桌面端，再升级服务器</strong>；上线前按《上线操作手册》第 1.6 节第一部分在真机上补看。</li></ul>
+      <ul><li>这一版只改桌面端：HXBot 不打扰其他应用（高亮框少读窗口、Windows 上不挂全局鼠标钩子、按键只发给目标应用、松开修饰键、授权页和远程控制询问先发通知、停止键只在操作电脑时占用、剪贴板放回、助手进程低于正常优先级、读窗口有上限、更新下载限速 2 MB/s、远程桌面码率封顶 10 Mbit/s、Windows 上停助手时留下它打开的应用、自动选择模型在进行中的对话里保持原模型）。服务器程序只有版本号和门户的新功能页变了。</li><li>nginx 配置、<code>.env</code>、数据库都不变，用户不用重新登录。服务器现在是 v1.6.9 的，用更新包或全量包都可以；是 v1.6.8～v1.6.2 的（跳过了中间的版本），用全量包。</li><li>桌面端升到 0.67.9，手机端仍是 1.5.0：按《客户端构建》在 GitHub 上重新打包 Mac 和 Windows 版（源码推到放着 Mac 签名证书的仓库 <code>mercywangqiang-tech/hx-bot-build</code>），<strong>先上传桌面端，再升级服务器</strong>；上线前在真机上补看的内容见《上线操作手册》第 1.6 节第二部分。</li></ul>
       <p><strong>升级到 v1.6.9 时</strong>：</p>
       <ul><li>这一版给桌面端加了“应用命令”和“运行脚本”：开了 Computer Use 的助手可以让应用切到前台、隐藏、退出（先正常退出，应用问要不要保存时交给用户，强制退出先问）、摆窗口、点 Mac 应用菜单里的命令、读和改默认应用，也可以运行 AppleScript、JXA、快捷指令（Mac）和 PowerShell（Windows），都在 HXBot 主程序里做；一条路走不通自动换下一条（直达 → 命令 → 控件 → 看图）。修好了 Windows 上命令启动了别的应用后助手一直等着。这些都在用户自己的电脑上，<strong>服务器不参与、不保存</strong>，也不用做任何配置。官网《新功能与亮点》（<code>/whats-new/</code>）加了“桌面端 0.67.8”一节（一张截图），使用指南（<code>/guide/</code>）的 Computer Use 一段加了“应用命令和脚本”；《隐私政策》不变（1.5 版）。</li><li>nginx 配置、<code>.env</code>、数据库都不变，用户不用重新登录。服务器现在是 v1.6.8 的，用更新包或全量包都可以；是 v1.6.7～v1.6.2 的（跳过了 v1.6.8），用全量包，并看下面各版的一段（上线前要在真机上补看的内容见《上线操作手册》第 1.6 节）。</li><li>桌面端升到 0.67.8，手机端仍是 1.5.0：按《客户端构建》在 GitHub 上重新打包 Mac 和 Windows 版（源码推到放着 Mac 签名证书的仓库 <code>mercywangqiang-tech/hx-bot-build</code>），用第 11.1 节的命令上传，<strong>再</strong>升级服务器。上传后已经装着 0.67.1～0.67.7 的桌面端会自动下载新版本（0.67.2 起弹出窗口介绍新功能，不强制）；Mac 上从 0.67.7 升上来的授权照样有效。手机端不用重新打包，也不受影响。网页版随服务器一起更新。</li></ul>
       <p><strong>升级到 v1.6.8 时</strong>：</p>
@@ -675,25 +677,25 @@ bash hx/scripts/upload-downloads.sh root@47.119.145.170 dist-hx/HXBot-1.5.0-ios.
       <p><strong>从 v1.6.1 之前的版本升级时</strong>：v1.6.1 起品牌名统一为 HXBot，客户端的安装包名变成 HXBot-版本号-…（如桌面端 HXBot-0.67.1-…、手机端 HXBot-1.5.0-…），要按《客户端构建.md》重新打包并上传到下载中心。Mac 用户装好新版后，确认能打开，再把旧的“HX Bot”应用拖到废纸篓（设置、登录、保密箱都在原来的数据文件夹里，新版继续用）；Windows 安装新版时会自动卸载旧版。新设或重设的密码要同时包含字母、数字和符号，已经设置的密码照常登录。</p>
       <p>#### 方法一：一条命令升级（推荐）</p>
       <p><strong>第 1 步：把包传到服务器。</strong>在你的电脑上执行（文件名换成拿到的包）：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.0.zip root@47.119.145.170:/opt/</code></pre></div>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.1.zip root@47.119.145.170:/opt/</code></pre></div>
       <p><strong>第 2 步：在服务器上执行一条命令。</strong>服务器已经是 v1.6.2 或更新的版本时：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>bash /opt/hxbot/server/scripts/update.sh /opt/hxbot-server-v1.7.0.zip</code></pre></div>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>bash /opt/hxbot/server/scripts/update.sh /opt/hxbot-server-v1.7.1.zip</code></pre></div>
       <p>服务器还是 v1.6.1（还没有这个脚本）时，先从包里取出脚本再运行，两行：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip -o -j /opt/hxbot-server-v1.7.0.zip server/scripts/update.sh -d /tmp/hxbot-update
-bash /tmp/hxbot-update/update.sh /opt/hxbot-server-v1.7.0.zip</code></pre></div>
-      <p>用更新包时把文件名换成 <code>hxbot-server-update-v1.7.0.zip</code>，命令相同。脚本做的事和下面手工升级的 8 行相同，另外：</p>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip -o -j /opt/hxbot-server-v1.7.1.zip server/scripts/update.sh -d /tmp/hxbot-update
+bash /tmp/hxbot-update/update.sh /opt/hxbot-server-v1.7.1.zip</code></pre></div>
+      <p>用更新包时把文件名换成 <code>hxbot-server-update-v1.7.1.zip</code>，命令相同。脚本做的事和下面手工升级的 8 行相同，另外：</p>
       <ul><li>先核对包：是不是 HXBot 的部署包；更新包要求这台服务器正好是它的起点版本；同一版本不会重装、也不会装回更旧的版本（确实要这样做时在命令最后加 <code>--force</code>）。</li><li>升级前先运行一遍 check.sh，记下已经失败的项（例如某个域名还没解析），升级后只把<strong>新出现</strong>的失败当作问题。</li><li>备份：账号数据库（同 backup.sh）、server/ 和 portal/ 目录（含 .env，放在 <code>/opt/hxbot/backups/server-日期-时间.tgz</code>，只有 root 能读，保留最近 5 份）、nginx 站点配置、正在用的镜像。</li><li>新版本需要、而 .env 里还没填的配置（<code>set-env.sh --show</code> 新出现“提醒：”或“还没有填写”），在启动新版本之前就停下来。</li><li>放上新文件，更新门户页和 nginx 配置，<code>docker compose up -d --build</code>，等账号服务就绪，再运行 check.sh。刚重启的信令服务要几秒才开始监听、coturn 的第一次健康检查在启动 15 秒后，所以没通过的项每 5 秒重查，最多等 2 分钟才算失败（v1.6.2 的脚本不等，会把正常的升级误判为失败而回滚；v1.6.2 的服务器升级时会自动改用新包里的脚本）。</li><li><strong>其中任何一步出错，或者 check.sh 出现升级前没有的失败项，自动回滚</strong>：文件、nginx 配置、镜像都换回升级前的；新版本已经启动过的，账号数据库也换回升级前一刻的备份。最后显示“已回滚到 ……”和原因，照原因处理后重新运行同一条命令。</li></ul>
       <p>最后一行显示 <code>✔ 已升级到 版本号</code> 就完成了。整个过程几分钟（主要是构建镜像），账号服务会暂停约 10 秒（备份）、重启一次，已经建立的远程连接不受影响。回滚会把这几分钟里新注册的账号、改的密码也一起换回升级前，所以尽量在没人用的时候升级。每次升级的输出都记在 <code>/var/log/hxbot/update.log</code>。</p>
       <p>#### 方法二：手工升级</p>
       <p>用于 v1.6 之前的版本，或者想一步一步看着做的时候。只能用全量包。</p>
       <p><strong>手工第 1 步：把部署包传到服务器。</strong>在你的电脑上执行（把 <code>v1.6.2</code> 换成拿到的版本号）：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.0.zip root@47.119.145.170:/opt/</code></pre></div>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>scp hxbot-server-v1.7.1.zip root@47.119.145.170:/opt/</code></pre></div>
       <p><strong>手工第 2 步：在服务器上逐行执行。</strong>任何一行报错就停下来处理，不要跳过：</p>
       <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>cd /opt/hxbot
 bash server/scripts/backup.sh                             <span class="c"> # 1. 备份账号数据库</span>
 install -m 600 server/.env /root/hxbot.env.bak            <span class="c"> # 2. 备份配置</span>
 rm -rf server/account/dist server/account/migrations      <span class="c"> # 3. 删除旧的程序文件（不影响数据和配置）</span>
-unzip -o /opt/hxbot-server-v1.7.0.zip                     <span class="c"> # 4. 解压新版本（压缩包里没有 .env，不会覆盖配置）</span>
+unzip -o /opt/hxbot-server-v1.7.1.zip                     <span class="c"> # 4. 解压新版本（压缩包里没有 .env，不会覆盖配置）</span>
 cp -r server/portal/. portal/                             <span class="c"> # 5. 更新门户首页和使用指南、条款、隐私政策页面</span>
 cd server
 bash scripts/setup-https.sh                               <span class="c"> # 6. 更新 nginx 配置（已有证书不会重新申请，不用写邮箱）</span>
@@ -837,7 +839,7 @@ echo &quot;  ufw: $(command -v ufw &gt;/dev/null &amp;&amp; ufw status | head -1
     <section id="appendix-b">
       <h2>附录 B：服务器拉不到镜像时，改用离线镜像</h2>
       <p>如果第 8 步一直卡在下载镜像，可以在任意一台能访问 Docker Hub 的电脑（例如装了 Docker Desktop 的 Mac）上把镜像做好，再传到服务器。先在服务器上执行 <code>uname -m</code> 确认架构：<code>x86_64</code> 用 <code>linux/amd64</code>，<code>aarch64</code> 用 <code>linux/arm64</code>。</p>
-      <p>在那台电脑上（解压 hxbot-server-v1.7.0.zip 后进入 server 目录）：</p>
+      <p>在那台电脑上（解压 hxbot-server-v1.7.1.zip 后进入 server 目录）：</p>
       <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>P=linux/amd64
 docker build --platform $P -t hxbot/account:local account
 docker build --platform $P -t hxbot/signal:local signal
@@ -852,7 +854,7 @@ cd /opt/hxbot/server &amp;&amp; docker compose up -d      <span class="c"> # 注
     </section>
   </main>
 </div>
-<footer class="foot"><div><span>© 2026 弘犀智能 · 安装与部署支持：<a href="mailto:bot@hxallai.com?subject=HXBot%20%E5%AE%89%E8%A3%85%E4%B8%8E%E9%83%A8%E7%BD%B2%E6%94%AF%E6%8C%81">bot@hxallai.com</a></span><span>由 部署文档.md 生成 · 2026 年 11 月 15 日</span></div></footer>
+<footer class="foot"><div><span>© 2026 弘犀智能 · 安装与部署支持：<a href="mailto:bot@hxallai.com?subject=HXBot%20%E5%AE%89%E8%A3%85%E4%B8%8E%E9%83%A8%E7%BD%B2%E6%94%AF%E6%8C%81">bot@hxallai.com</a></span><span>由 部署文档.md 生成 · 2026 年 11 月 18 日</span></div></footer>
 <script>
 (function () {
   var bar = document.querySelector('.bar');
