@@ -1036,7 +1036,10 @@ def translate(r) -> None:
     owner = _english_modules(r, checks)
     english_order: dict[str, list[str]] = {}
     done: dict[str, list[str]] = {}
+    removed = checks.removed_keys()
     for key in KEYS:
+        if key in removed:  # 已不再使用、被删掉的文字（hx/unused-messages.txt），不写译文
+            continue
         if key not in owner:
             r.errors.append(f"translations.py: {key} is not in the English catalog")
             continue
@@ -1082,7 +1085,8 @@ def check_placeholders() -> list[str]:
                 problems.append(f"{locale}: {phrase} missing")
                 continue
             names = set(re.findall(r"\{(\w+)\}", value))
-            expected = V167_PLACEHOLDERS.get(phrase, set()) if phrase in V167_KEYS.values() else \
+            expected = V171_PLACEHOLDERS.get(phrase, set()) if phrase in V171_KEYS.values() else \
+                V167_PLACEHOLDERS.get(phrase, set()) if phrase in V167_KEYS.values() else \
                 V166_PLACEHOLDERS.get(phrase, set()) if phrase in V166_KEYS.values() else \
                 OPENCODE_PLACEHOLDERS.get(phrase, set()) if phrase in OPENCODE_KEYS.values() else \
                 V165_PLACEHOLDERS.get(phrase, set()) if phrase in V165_KEYS.values() else \
@@ -1406,3 +1410,11 @@ from translations_v170 import NEW as _V170_NEW, NEW_KEYS as V170_KEYS  # noqa: E
 KEYS.update(V170_KEYS)
 for _locale in LOCALES:
     PHRASES[_locale].update(_V170_NEW[_locale])
+
+# v1.7.1：并发（一）团队不设上限、守护、排队与容量（hx/flow.py）
+from translations_v171 import NEW as _V171_NEW, NEW_KEYS as V171_KEYS  # noqa: E402
+from translations_v171 import PLACEHOLDERS as V171_PLACEHOLDERS  # noqa: E402
+
+KEYS.update(V171_KEYS)
+for _locale in LOCALES:
+    PHRASES[_locale].update(_V171_NEW[_locale])

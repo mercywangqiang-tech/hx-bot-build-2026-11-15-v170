@@ -847,9 +847,21 @@ export class MailboxStore {
     return ids;
   }
 
+  /**
+   * HXBot (v1.7.1, BUG-CONC-01): the index of the last read. Each check of a waiting lane read it again
+   * (`nextQueued`), over every message the mailbox keeps. The list changes only by a push, by a new
+   * filtered array or by a new state, so the same array with the same length has the same messages.
+   */
+  #messageIndex: { source: StoredMessage[]; length: number; byId: Map<string, StoredMessage> } | null = null;
+
   /** Indexed once for a whole read, so a read over many deliveries does not scan the messages for each one. */
   #messagesById(): Map<string, StoredMessage> {
-    return new Map(this.#state.messages.map((message) => [message.id, message]));
+    const source = this.#state.messages;
+    const held = this.#messageIndex;
+    if (held?.source === source && held.length === source.length) return held.byId;
+    const byId = new Map(source.map((message) => [message.id, message]));
+    this.#messageIndex = { source, length: source.length, byId };
+    return byId;
   }
 
   /** The task a delivery runs in, or null for the agent's own chat. */

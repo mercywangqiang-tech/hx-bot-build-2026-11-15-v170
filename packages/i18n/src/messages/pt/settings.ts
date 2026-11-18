@@ -908,17 +908,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Conectar serviços",
   "settings.hxOpenCode.noWay": "Conecte este serviço em um terminal com opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Preencha: {field}",
-  "settings.hxAutoModel.team.members": "Membros da equipe no máximo",
-  "settings.hxAutoModel.team.minutes": "Tempo máximo da equipe",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Passagens no máximo",
   "settings.hxAutoModel.team.temporary": "Membros criados para uma equipe",
   "settings.hxAutoModel.team.temporary.collapse": "Ocultar quando a equipe terminar",
   "settings.hxAutoModel.team.temporary.keep": "Manter",
-  "settings.hxAutoModel.team.description":
-    "Iniciar um cartão com vários papéis forma uma equipe: o HXBot escolhe agentes pelas habilidades, cria membros para os papéis que faltam e abre uma sala de equipe. O progresso e o resultado voltam para este chat. Ao chegar a um limite, a equipe para e pergunta a você.",
-  "settings.hxAutoModel.team.summary": "Equipas: até {members} membros · {minutes} min · {rounds} passagens",
-  "settings.hxAutoModel.team.summaryDescription":
-    "O HXBot dimensiona cada equipa pelo trabalho. Para mudar os limites de uma equipa, diga-o no chat.",
-  "settings.hxAutoModel.team.change": "Mudar os limites",
+  "settings.hxAutoModel.team.capacity":
+    "Equipe: membros conforme o trabalho; este computador decide quantos trabalham ao mesmo tempo (agora {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Iniciar em um cartão com vários papéis cria uma equipe: o HXBot escolhe agentes pela habilidade, cria membros para os papéis que faltam e abre uma sala da equipe. O progresso e o resultado voltam a esta conversa. Uma equipe não tem limites; se não avança, ela pausa e pergunta a você. Para definir um limite para uma equipe, diga isso na conversa.",
 } as const satisfies PartialTranslation<typeof source>;

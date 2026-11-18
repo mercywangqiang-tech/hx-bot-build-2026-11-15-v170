@@ -1,0 +1,650 @@
+{
+  "title": "并发基线-v1.7.1",
+  "requirement": "BUG-CONC-01（需求规格说明书 V2.1 第 5.1 节）",
+  "script": "scripts/hx-flow-stress-e2e.ts（--minutes=30 --rss-mb=150 --teams=16,4,4），假智能体 scripts/provider-fakes/agents/hx-team-worker.ts",
+  "machine": "Linux 容器，Electron 以 hxstress 用户在 xvfb 下运行；没有账号服务时窗口停在“无法连接账号服务”页",
+  "gates": {
+    "mainLoopP99Ms": 200,
+    "mainLoopMaxMs": 1000,
+    "windowUnresponsiveMs": 2000,
+    "refused": 0,
+    "stopWithinMs": 2000
+  },
+  "before": {
+    "label": "before",
+    "startedAt": "2026-11-18T00:44:54.748Z",
+    "minutes": 30,
+    "load": {
+      "teams": [16, 4, 4],
+      "agents": {
+        "starters": 3,
+        "members": 24,
+        "chats": 3,
+        "routines": 6
+      },
+      "rssMbPerAgentTurn": 150
+    },
+    "mainEventLoopRun": {
+      "p50": 10.223615,
+      "p99": 31.719423,
+      "p999": 86.966271,
+      "max": 568.328191,
+      "count": 167536
+    },
+    "mainEventLoopPerSampleP99Max": 98.959359,
+    "window": {
+      "frames": 107692,
+      "maxFrameMs": 250,
+      "unresponsiveOver2s": 0,
+      "longestTaskMs": 121
+    },
+    "ipc": {
+      "messagesPerSecondMax": 82.4,
+      "bytesPerSecondMax": 1504276
+    },
+    "sqliteWrites": {
+      "writes": 152607,
+      "p99": 0.5705369999632239,
+      "max": 12.894830999999613
+    },
+    "runningMax": 32,
+    "agentRssMbMax": 5537,
+    "mainRssMbMax": 446,
+    "turns": 619,
+    "memberTurns": 183,
+    "assigns": 435,
+    "refused": 252,
+    "teamsDone": 60,
+    "rounds": [21, 20, 20],
+    "stop": {
+      "lateMemberStarts": 0,
+      "rooms": 1,
+      "issueMs": 93
+    },
+    "workerErrors": 0,
+    "sendErrors": [],
+    "gates": {
+      "loopP99Under200": true,
+      "loopMaxUnder1000": true,
+      "windowNoFreeze2s": true,
+      "refusedZero": false,
+      "stopWithin2s": true
+    },
+    "events": null,
+    "computerStalls": null,
+    "profile": {
+      "seconds": 180.3,
+      "busySeconds": 19.4,
+      "sqliteByCaller": [
+        {
+          "caller": "list index.js:353181",
+          "ms": 6606
+        },
+        {
+          "caller": "dispatch index.js:305809",
+          "ms": 562
+        },
+        {
+          "caller": "Promise.resolve.StatementSync.<computed> :24",
+          "ms": 370
+        },
+        {
+          "caller": "tasks index.js:353282",
+          "ms": 249
+        },
+        {
+          "caller": "task index.js:353275",
+          "ms": 232
+        },
+        {
+          "caller": "assignments index.js:353289",
+          "ms": 135
+        },
+        {
+          "caller": "messages index.js:353259",
+          "ms": 131
+        },
+        {
+          "caller": "(anon) index.js:320119",
+          "ms": 125
+        }
+      ]
+    },
+    "error": null
+  },
+  "after": {
+    "label": "after9",
+    "startedAt": "2026-11-18T08:23:12.867Z",
+    "minutes": 30,
+    "load": {
+      "teams": [16, 4, 4],
+      "agents": {
+        "starters": 3,
+        "members": 24,
+        "chats": 3,
+        "routines": 6
+      },
+      "rssMbPerAgentTurn": 150
+    },
+    "mainEventLoopRun": {
+      "p50": 10.248191,
+      "p99": 24.903679,
+      "max": 541.065215,
+      "p999": 143.917055,
+      "count": 166075
+    },
+    "mainEventLoopPerSampleP99Max": 136.970239,
+    "window": {
+      "frames": 107876,
+      "maxFrameMs": 216.59999999999854,
+      "unresponsiveOver2s": 0,
+      "longestTaskMs": 193
+    },
+    "ipc": {
+      "messagesPerSecondMax": 35.4,
+      "bytesPerSecondMax": 1380440
+    },
+    "sqliteWrites": {
+      "writes": 118115,
+      "p99": 1.0201219999580644,
+      "max": 16.65177500003483
+    },
+    "runningMax": 12,
+    "agentRssMbMax": 4597,
+    "mainRssMbMax": 506,
+    "turns": 496,
+    "memberTurns": 198,
+    "assigns": 198,
+    "refused": 0,
+    "teamsDone": 28,
+    "rounds": [9, 10, 11],
+    "stop": {
+      "lateMemberStarts": 0,
+      "rooms": 2,
+      "issueMs": 705
+    },
+    "workerErrors": 0,
+    "sendErrors": [],
+    "gates": {
+      "loopP99Under200": true,
+      "loopMaxUnder1000": true,
+      "windowNoFreeze2s": true,
+      "refusedZero": true,
+      "stopWithin2s": true
+    },
+    "events": null,
+    "computerStalls": [],
+    "profile": {
+      "seconds": 180.3,
+      "busySeconds": 19.4,
+      "sqliteByCaller": [
+        {
+          "caller": "list index.js:355340",
+          "ms": 1307
+        },
+        {
+          "caller": "openTaskIds index.js:308724",
+          "ms": 1219
+        },
+        {
+          "caller": "channelsWithOpenWork index.js:355502",
+          "ms": 972
+        },
+        {
+          "caller": "dispatch index.js:307915",
+          "ms": 540
+        },
+        {
+          "caller": "Promise.resolve.StatementSync.<computed> :24",
+          "ms": 344
+        },
+        {
+          "caller": "task index.js:355460",
+          "ms": 316
+        },
+        {
+          "caller": "assignmentForDelivery index.js:355556",
+          "ms": 261
+        },
+        {
+          "caller": "tasks index.js:355467",
+          "ms": 179
+        }
+      ]
+    },
+    "error": null
+  },
+  "aged": {
+    "note": "老库：修复后 30 分钟测试留下的数据库，频道消息复制 30 倍（17,216 条、89 MB），10 分钟；两边用同一份种子库",
+    "before": {
+      "label": "aged-before",
+      "startedAt": "2026-11-18T04:25:16.927Z",
+      "minutes": 10,
+      "load": {
+        "teams": [16, 4, 4],
+        "agents": {
+          "starters": 3,
+          "members": 24,
+          "chats": 3,
+          "routines": 6
+        },
+        "rssMbPerAgentTurn": 150
+      },
+      "mainEventLoopRun": {
+        "p50": 10.330111,
+        "p99": 612.368383,
+        "max": 26407.337983,
+        "p999": 951.058431,
+        "count": 23775
+      },
+      "mainEventLoopPerSampleP99Max": 1263.534079,
+      "window": {
+        "frames": 37992,
+        "maxFrameMs": 316.6999999999971,
+        "unresponsiveOver2s": 0,
+        "longestTaskMs": 294
+      },
+      "ipc": {
+        "messagesPerSecondMax": 115.2,
+        "bytesPerSecondMax": 990878
+      },
+      "sqliteWrites": {
+        "writes": 67664,
+        "p99": 1.4643419999920297,
+        "max": 24.497968000010587
+      },
+      "runningMax": 17,
+      "agentRssMbMax": 5838,
+      "mainRssMbMax": 536,
+      "turns": 195,
+      "memberTurns": 48,
+      "assigns": 108,
+      "refused": 60,
+      "teamsDone": 16,
+      "rounds": [5, 5, 6],
+      "stop": {
+        "lateMemberStarts": 0,
+        "rooms": 0,
+        "issueMs": 2
+      },
+      "workerErrors": 0,
+      "sendErrors": [],
+      "gates": {
+        "loopP99Under200": false,
+        "loopMaxUnder1000": false,
+        "windowNoFreeze2s": true,
+        "refusedZero": false,
+        "stopWithin2s": true,
+        "eventsMatch": true
+      },
+      "events": {
+        "agentTurns": {
+          "stored": 115,
+          "window": 115,
+          "lost": 0,
+          "lostTurnIds": [],
+          "extra": 0,
+          "wrongStatus": 0
+        },
+        "channelTurns": {
+          "stored": 80
+        },
+        "turnEnds": {
+          "agents": 195,
+          "privateQuestions": 0,
+          "stored": 195
+        },
+        "usage": {
+          "replies": 195,
+          "records": 195,
+          "reportedUsd": 0.48000000000000026,
+          "recordedUsd": 0.48
+        }
+      },
+      "computerStalls": [
+        {
+          "at": 6131,
+          "loopMaxMs": 26407.337983,
+          "pressure": null
+        },
+        {
+          "at": 49948,
+          "loopMaxMs": 1096.810495,
+          "pressure": {
+            "cpuSomeMs": 597,
+            "ioSomeMs": 29,
+            "ioFullMs": 24
+          }
+        },
+        {
+          "at": 235172,
+          "loopMaxMs": 1365.245951,
+          "pressure": {
+            "cpuSomeMs": 299,
+            "ioSomeMs": 20,
+            "ioFullMs": 15
+          }
+        },
+        {
+          "at": 328466,
+          "loopMaxMs": 1071.644671,
+          "pressure": {
+            "cpuSomeMs": 65,
+            "ioSomeMs": 3,
+            "ioFullMs": 2
+          }
+        },
+        {
+          "at": 357231,
+          "loopMaxMs": 1027.604479,
+          "pressure": {
+            "cpuSomeMs": 78,
+            "ioSomeMs": 21,
+            "ioFullMs": 20
+          }
+        },
+        {
+          "at": 417975,
+          "loopMaxMs": 1226.833919,
+          "pressure": {
+            "cpuSomeMs": 314,
+            "ioSomeMs": 26,
+            "ioFullMs": 24
+          }
+        },
+        {
+          "at": 464242,
+          "loopMaxMs": 1263.534079,
+          "pressure": {
+            "cpuSomeMs": 105,
+            "ioSomeMs": 7,
+            "ioFullMs": 6
+          }
+        },
+        {
+          "at": 469257,
+          "loopMaxMs": 1313.865727,
+          "pressure": {
+            "cpuSomeMs": 93,
+            "ioSomeMs": 1,
+            "ioFullMs": 1
+          }
+        },
+        {
+          "at": 526961,
+          "loopMaxMs": 1263.534079,
+          "pressure": {
+            "cpuSomeMs": 120,
+            "ioSomeMs": 13,
+            "ioFullMs": 11
+          }
+        }
+      ],
+      "profile": null,
+      "error": null
+    },
+    "after": {
+      "label": "aged-after",
+      "startedAt": "2026-11-18T04:14:14.691Z",
+      "minutes": 10,
+      "load": {
+        "teams": [16, 4, 4],
+        "agents": {
+          "starters": 3,
+          "members": 24,
+          "chats": 3,
+          "routines": 6
+        },
+        "rssMbPerAgentTurn": 150
+      },
+      "mainEventLoopRun": {
+        "p50": 10.313727,
+        "p99": 39.256063,
+        "max": 1134.559231,
+        "p999": 242.352127,
+        "count": 53136
+      },
+      "mainEventLoopPerSampleP99Max": 289.669119,
+      "window": {
+        "frames": 35835,
+        "maxFrameMs": 200,
+        "unresponsiveOver2s": 0,
+        "longestTaskMs": 202
+      },
+      "ipc": {
+        "messagesPerSecondMax": 74.8,
+        "bytesPerSecondMax": 834844
+      },
+      "sqliteWrites": {
+        "writes": 56478,
+        "p99": 0.5650139999343082,
+        "max": 64.65535200000068
+      },
+      "runningMax": 9,
+      "agentRssMbMax": 5281,
+      "mainRssMbMax": 556,
+      "turns": 159,
+      "memberTurns": 51,
+      "assigns": 51,
+      "refused": 0,
+      "teamsDone": 8,
+      "rounds": [2, 3, 4],
+      "stop": {
+        "lateMemberStarts": 0,
+        "rooms": 1,
+        "issueMs": 60
+      },
+      "workerErrors": 0,
+      "sendErrors": [],
+      "gates": {
+        "loopP99Under200": true,
+        "loopMaxUnder1000": false,
+        "windowNoFreeze2s": true,
+        "refusedZero": true,
+        "stopWithin2s": true,
+        "eventsMatch": true
+      },
+      "events": {
+        "agentTurns": {
+          "stored": 90,
+          "window": 90,
+          "lost": 0,
+          "lostTurnIds": [],
+          "extra": 0,
+          "wrongStatus": 0
+        },
+        "channelTurns": {
+          "stored": 68
+        },
+        "turnEnds": {
+          "agents": 158,
+          "privateQuestions": 1,
+          "stored": 158
+        },
+        "usage": {
+          "replies": 157,
+          "records": 157,
+          "reportedUsd": 0.49000000000000027,
+          "recordedUsd": 0.49
+        }
+      },
+      "computerStalls": [
+        {
+          "at": 5726,
+          "loopMaxMs": 1134.559231,
+          "pressure": null
+        }
+      ],
+      "profile": null,
+      "error": null
+    }
+  },
+  "events": {
+    "label": "aged-after",
+    "startedAt": "2026-11-18T04:14:14.691Z",
+    "minutes": 10,
+    "load": {
+      "teams": [16, 4, 4],
+      "agents": {
+        "starters": 3,
+        "members": 24,
+        "chats": 3,
+        "routines": 6
+      },
+      "rssMbPerAgentTurn": 150
+    },
+    "mainEventLoopRun": {
+      "p50": 10.313727,
+      "p99": 39.256063,
+      "max": 1134.559231,
+      "p999": 242.352127,
+      "count": 53136
+    },
+    "mainEventLoopPerSampleP99Max": 289.669119,
+    "window": {
+      "frames": 35835,
+      "maxFrameMs": 200,
+      "unresponsiveOver2s": 0,
+      "longestTaskMs": 202
+    },
+    "ipc": {
+      "messagesPerSecondMax": 74.8,
+      "bytesPerSecondMax": 834844
+    },
+    "sqliteWrites": {
+      "writes": 56478,
+      "p99": 0.5650139999343082,
+      "max": 64.65535200000068
+    },
+    "runningMax": 9,
+    "agentRssMbMax": 5281,
+    "mainRssMbMax": 556,
+    "turns": 159,
+    "memberTurns": 51,
+    "assigns": 51,
+    "refused": 0,
+    "teamsDone": 8,
+    "rounds": [2, 3, 4],
+    "stop": {
+      "lateMemberStarts": 0,
+      "rooms": 1,
+      "issueMs": 60
+    },
+    "workerErrors": 0,
+    "sendErrors": [],
+    "gates": {
+      "loopP99Under200": true,
+      "loopMaxUnder1000": false,
+      "windowNoFreeze2s": true,
+      "refusedZero": true,
+      "stopWithin2s": true,
+      "eventsMatch": true
+    },
+    "events": {
+      "agentTurns": {
+        "stored": 90,
+        "window": 90,
+        "lost": 0,
+        "lostTurnIds": [],
+        "extra": 0,
+        "wrongStatus": 0
+      },
+      "channelTurns": {
+        "stored": 68
+      },
+      "turnEnds": {
+        "agents": 158,
+        "privateQuestions": 1,
+        "stored": 158
+      },
+      "usage": {
+        "replies": 157,
+        "records": 157,
+        "reportedUsd": 0.49000000000000027,
+        "recordedUsd": 0.49
+      }
+    },
+    "computerStalls": [
+      {
+        "at": 5726,
+        "loopMaxMs": 1134.559231,
+        "pressure": null
+      }
+    ],
+    "profile": null,
+    "error": null
+  },
+  "realUi": {
+    "note": "真实主界面：本机起账号服务（apps/auth-api，vite dev，端口 3100），登录本机注册的测试账号后跑同一压力脚本 30 分钟（--auth-url --auth-account）",
+    "label": "ui1",
+    "startedAt": "2026-11-18T07:51:46.574Z",
+    "minutes": 30,
+    "load": {
+      "teams": [16, 4, 4],
+      "agents": {
+        "starters": 3,
+        "members": 24,
+        "chats": 3,
+        "routines": 6
+      },
+      "rssMbPerAgentTurn": 150
+    },
+    "mainEventLoopRun": {
+      "p50": 10.338303,
+      "p99": 18.808831,
+      "max": 600.834047,
+      "p999": 172.621823,
+      "count": 165561
+    },
+    "mainEventLoopPerSampleP99Max": 123.600895,
+    "window": {
+      "frames": 108752,
+      "maxFrameMs": 283.1999999999998,
+      "unresponsiveOver2s": 0,
+      "longestTaskMs": 237
+    },
+    "ipc": {
+      "messagesPerSecondMax": 53.4,
+      "bytesPerSecondMax": 793028
+    },
+    "sqliteWrites": {
+      "writes": 87960,
+      "p99": 1.2853439999744296,
+      "max": 8.243474000017159
+    },
+    "runningMax": 9,
+    "agentRssMbMax": 3447,
+    "mainRssMbMax": 464,
+    "turns": 354,
+    "memberTurns": 117,
+    "assigns": 117,
+    "refused": 0,
+    "teamsDone": 17,
+    "rounds": [5, 7, 7],
+    "stop": {
+      "lateMemberStarts": 0,
+      "rooms": 3,
+      "issueMs": 1795
+    },
+    "workerErrors": 0,
+    "sendErrors": [],
+    "gates": {
+      "loopP99Under200": true,
+      "loopMaxUnder1000": true,
+      "windowNoFreeze2s": true,
+      "refusedZero": true,
+      "stopWithin2s": true
+    },
+    "events": null,
+    "computerStalls": [],
+    "profile": null,
+    "error": null
+  },
+  "rootCause": [
+    "调度：V1.7.0 桌面端没有容量闸（memory-hold 在桌面端拿到 null，永远放行；drain-scheduler 上限 null），全部回合一起开始：同时在跑 32、智能体进程 5.5 GB、分派被拒 58%。修法：容量闸 B + 公平排队 + 不拒绝只排队。",
+    "持久化（随历史线性变慢，上游）：ChannelStore.list 每次把读者没读过的频道的全部消息逐条 json_extract 再数未读，侧栏和回复提醒在每个 channels-changed 上各读一遍；89 MB 时每次 209 ms。修法：记住数到哪一条，只数新来的。",
+    "持久化（随历史变慢，上游）：启动时 recover 对每个频道线程整份快照 capture，每次读整个频道历史；89 MB 时主进程卡 49 s。修法：按 id 读。",
+    "调度（排队放大，上游）：hasAgentAssignmentInState 无索引扫全部历史分派、#scheduling 读全部频道、信箱 #messagesById 每次建全量 Map、TurnSlots.mayStart 每条线路问多遍。修法：一轮一查/只读有工作的频道/复用索引/只问一次。",
+    "不是原因：事件传输（≤ 82 条/秒、≤ 1.5 MB/秒，无积压）、SQLite 写（p99 < 1 ms）、这一页的界面更新（最长帧 ≤ 300 ms）。"
+  ]
+}

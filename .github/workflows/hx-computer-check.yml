@@ -1,0 +1,184 @@
+# HXBot 电脑操控：真系统检查（私有仓库里跑的版本）。
+# 只在两种情况下运行，推送、定时都不触发（私有仓库里跑一次约扣 200 分钟额度）：
+#   1. 仓库页面 → Actions → “HXBot computer check” → Run workflow，可以改机器清单、关掉截图；
+#   2. “HXBot build” 打安装包时选了 computer_check = yes，在打包旁边同时跑，打包不等它。
+# 流程：prepare（Linux）跑电脑操控的单元测试和这份工作流的检查，把检查程序打成一个文件
+# hx-computer-check.mjs → machine（每台 Mac、Windows 机器一格，只用 Node 运行这个文件）→
+# summary（合并成绩单；有失败的项、或有机器没交回结果时整次运行标红）。
+# 公开仓库里不计费的版本见 hx/computer-check/public-workflow.yml。
+name: HXBot computer check
+
+on:
+  workflow_dispatch:
+    inputs:
+      machines:
+        description: "检查的机器（逗号分隔）"
+        default: "macos-15,macos-26,windows-2025,windows-2022,windows-11-arm"
+      screenshots:
+        description: "截图（每个设置页一张，每项设置改前改后各一张）"
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      machines:
+        description: "检查的机器（逗号分隔）"
+        type: string
+        default: "macos-15,macos-26,windows-2025,windows-2022,windows-11-arm"
+      screenshots:
+        description: "截图"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      machines: ${{ steps.machines.outputs.machines }}
+      expected: ${{ steps.machines.outputs.expected }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Pick the machines
+        id: machines
+        env:
+          MACHINES: ${{ inputs.machines || 'macos-15,macos-26,windows-2025,windows-2022,windows-11-arm' }}
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, os, re
+          names = [name.strip() for name in os.environ["MACHINES"].split(",") if name.strip()]
+          for name in names:
+              if not re.fullmatch(r"[\w.-]+", name):
+                  raise SystemExit(f"机器名不对：{name}")
+          if not names:
+              raise SystemExit("机器清单是空的。")
+          # One start of PowerShell takes 22 seconds on windows-11-arm, so its check gets more time.
+          include = [
+              {
+                  "machine": name,
+                  "budget": 85 if name.endswith("-arm") else 35,
+                  "timeout": 100 if name.endswith("-arm") else 45,
+              }
+              for name in names
+          ]
+          print("machines=" + json.dumps(include))
+          print("expected=" + ",".join(names))
+          EOF
+      - run: python3 hx/rebrand.py
+      - run: bun install --frozen-lockfile
+      - name: Unit tests of computer control
+        run: bunx vitest run src/backend/hx-computer
+      - name: Check this workflow and the push script
+        run: python3 hx/tests/test_github_check.py
+      - name: Bundle the check into one file
+        run: bash hx/scripts/computer-check-bundle.sh dist-check
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-computer-check-program
+          path: dist-check/hx-computer-check.mjs
+          if-no-files-found: error
+          retention-days: 7
+
+  machine:
+    name: ${{ matrix.machine }}
+    needs: prepare
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.machines) }}
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          name: hxbot-computer-check-program
+          path: .
+      - name: Run the check
+        shell: bash
+        env:
+          MACHINE: ${{ matrix.machine }}
+          BUDGET: ${{ matrix.budget }}
+          SCREENSHOTS: ${{ inputs.screenshots }}
+        run: |
+          flags=""
+          if [ "$SCREENSHOTS" = "false" ]; then flags="--no-screenshots"; fi
+          node hx-computer-check.mjs --out out --machine "$MACHINE" --budget-minutes "$BUDGET" $flags
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f out/summary.md ]; then
+            cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "检查程序没有写出成绩单。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-check-${{ matrix.machine }}
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
+
+  summary:
+    name: summary
+    needs: [prepare, machine]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          name: hxbot-computer-check-program
+          path: .
+      - name: Download the results of every machine
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          path: all
+          pattern: hxbot-check-*
+      - name: Merge the reports
+        id: merge
+        shell: bash
+        env:
+          EXPECTED: ${{ needs.prepare.outputs.expected }}
+        run: |
+          mkdir -p all
+          set +e
+          node hx-computer-check.mjs --merge all --expected "$EXPECTED" > /dev/null
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          if [ -f all/overview.md ]; then
+            cat all/overview.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "没有合并出总成绩单。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the overview
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-check-all
+          path: all
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Verdict
+        if: steps.merge.outputs.code != '0'
+        shell: bash
+        run: |
+          echo "有失败的项，或有机器没有交回结果。见上面的成绩单。"
+          exit 1

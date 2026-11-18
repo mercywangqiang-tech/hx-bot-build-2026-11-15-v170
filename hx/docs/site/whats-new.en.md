@@ -1,19 +1,67 @@
 ---
 title: What's new
 kicker: HXBot Research Edition
-updated: November 15, 2026
-version: Desktop 0.67.9 · Mobile 1.5.0
+updated: November 18, 2026
+version: Desktop 0.68.0 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
 This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: when a new desktop version is out, the app shows a window with what is new; click Update now. The data in the screenshots is demo data.
+
+## Desktop 0.68.0: many agents at once without freezes, teams with no limits {#desktop-0-68-0}
+
+November 18, 2026 · Desktop and web 0.68.0 · Mobile 1.5.0 (no change this time)
+
+> **Highlights**
+> 1. {NEW} Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
+> 2. Teams have no limit on members, time or handoffs: each handoff is accepted and waits in the queue, and none is sent back because "too many are busy". When a team makes no progress, goes in a loop or nobody answers the spend reminders, it pauses and asks you. {on:Desktop}
+> 3. No slowdown after long use: the channel list counts only the new messages, and the queue and the scheduler look only at work that is not done. {on:Desktop}
+
+### This computer sets how many turns run at the same time {#desktop-0-68-0-capacity}
+
+![Many agents at once: the team line in the settings says this computer decides how many work at once, and the progress card keeps the handoffs and the time](/hx-portal/whats-new/team-open.en.jpg)
+
+- **How it is set:** HXBot keeps 2 GB or 15% of the memory (the larger) free, and divides the rest of the free memory by the memory that one turn uses.
+  - On battery: three quarters of that.
+  - When the computer is hot: half; when it is very hot: 1.
+  - When the processor is slowed down: three quarters; when the main process is slow: 1 less.
+  - The result is at least 2 and at most 16.
+- **Up and down:** HXBot looks every 5 seconds. When memory gets low, fewer turns start at once. More start only after 3 looks in a row with enough memory. When the number goes down, the turns that run finish, and new ones wait.
+- **The order of the queue:**
+  - Your own messages come first. When 3 or more turns can run, one place is always kept for you.
+  - Next is the work on the critical path, then the work of team members. Scheduled tasks and background work come last.
+  - Work that waits longer moves up: one step for each 2 minutes.
+  - When several teams run, they take turns by the time each used recently, so that one large team does not fill the computer. When only one team runs, it can use all of it.
+- **Idle processes close:** when a team member's process was idle for 4 minutes or more, HXBot closes the one that was idle longest, one at a time, and the memory goes back to your apps.
+- **Where to see it:** in the assistant settings, below "Proposal card", one line says "Team: members as the work needs; this computer decides how many work at once (now n)".
+
+### Teams with no limits pause and ask you when they are stuck {#desktop-0-68-0-team}
+
+- **No handoff is sent back:** every handoff from the lead is accepted, goes on the board and waits, and starts when this computer has room. The limit "at most 20 members · 240 minutes · 80 handoffs" is gone. A handoff form must still have all six parts; a form with a part missing is still sent back.
+- **Only your limits count:** say in the chat "at most 3 members this time", "spend at most ¥50" or "do not ask me this time, run to the end". It is for this one team only. A "limit" that the lead writes in a handoff form changes nothing.
+- **A stuck team pauses:** in each of these cases the team pauses: no new work starts, the work that runs finishes, and then it asks you to continue, finish up or stop.
+  - 30 minutes of real work with no progress (no work done, no file changed, no plan step moved); the time in the queue or waiting for your answer does not count.
+  - The same work goes from member to member 3 times with no file change and no fewer open items, or one member gets almost the same work 3 times.
+  - Much more work is opened than finished, or the work is split too deep: first the lead only gets a reminder to bring the work together; if it happens again, the team pauses.
+  - 24 hours of real work.
+  - 10 spend reminders in a row with no answer. A team that you told "do not ask me this time" does not pause for this one.
+- **Two failures stop it:** when the same work fails two times for certain, the team stops, as before.
+- **Spend reminders:** pay as you go: about each ¥20. A plan: when 25%, 50% and 80% of this period are used. An unknown price: each 5 million tokens that are not cached. At most one in 15 minutes.
+- **The lead knows:** the team notes, the reply to each handoff and the proposal card say how many turns this computer runs at the same time, how many run and how many wait. A handoff reply says "Queued, place n: … about m min".
+
+### No slowdown after long use {#desktop-0-68-0-faster}
+
+- **Unread counts in the channel list:** before, each refresh of the sidebar counted all the messages of each channel that you never opened (such as team rooms) again, and a reply refreshes it while it is written, so HXBot got slower the longer you used it. Now only the new messages are counted. With 89 MB of messages, one refresh went from about 210 ms to 5 to 12 ms, with the same unread counts.
+- **Queue checks:** before, each check read all the handoffs ever made. Now one read serves until a handoff changes.
+- **Scheduling:** before, each pass read all the tasks of all channels, also of team rooms that were done long ago. Now it reads only the channels with work that is not done.
+- **Tested:** 3 teams with 24 members in all, 3 chats and 6 scheduled tasks at full load for 30 minutes: 0 handoffs sent back (before: 58%); main process event loop p99 about 31 ms for the whole run, the longest delay 0.5 s; the window never stopped answering for more than 2 seconds; after the stop button, no new member started within 2 seconds.
 
 ## Desktop 0.67.9: HXBot leaves your other apps alone {#desktop-0-67-9}
 
 November 15, 2026 · Desktop and web 0.67.9 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. {NEW} Other apps stay fast: the rim no longer reads every window all the time, and background work and the agent's commands leave the processor to your apps first. {on:Desktop}
+> 1. Other apps stay fast: the rim no longer reads every window all the time, and background work and the agent's commands leave the processor to your apps first. {on:Desktop}
 > 2. No stolen focus: when you move to another app, the agent types nothing there and pulls no window back; a grant page or a remote control question comes as a notification first. {on:Desktop}
 > 3. Shortcuts and copy and paste work, and the network has room: the modifier keys are let go, your clipboard keeps your copy, and updates and the remote desktop have a speed limit. {on:Desktop}
 

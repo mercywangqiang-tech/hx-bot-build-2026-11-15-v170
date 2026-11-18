@@ -60,6 +60,7 @@ import {
 import { ChannelMemoryStore } from "./channel-memory-store";
 import { CHANNEL_REPLY_ID_PREFIX, channelReplyExpectedResult, checkChannelReply, isReplyTask } from "./channel-replies";
 import { type ChannelAssignment, type ChannelContext, ChannelStore } from "./channel-store";
+import { hxFlow } from "./hx-flow/ledger";
 import type { HxBotDatabase } from "./hxbot-database";
 import type { DeliveryContext, MailboxStore } from "./mailbox-store";
 import { type MessageDeleteAccess, MessageDeleteRefused } from "./message-delete";
@@ -1176,7 +1177,10 @@ export class ChannelService {
 
   /** Every task by id and every active assignment, across all channels. */
   #scheduling(): { tasks: ReadonlyMap<string, ChannelTask>; assignments: ChannelAssignment[] } {
-    const ids = this.store.ids();
+    // HXBot (v1.7.1, BUG-CONC-01): only the channels with work that is not done. The rooms of the
+    // teams that are done stay, and reading all of them at each pump was a part of each stall.
+    const open = this.store.channelsWithOpenWork();
+    const ids = this.store.ids().filter((id) => open.has(id));
     return {
       tasks: new Map(ids.flatMap((id) => this.store.tasks(id)).map((task) => [task.id, task])),
       assignments: ids.flatMap((id) => this.store.assignments(id)).filter(activeAssignment),
@@ -1200,7 +1204,12 @@ export class ChannelService {
     // alone does not show that the task is free: the assignment of the previous owner does.
     return (
       assignments.some((assignment) => assignment.agentId === task.ownerAgentId || assignment.taskId === task.id) ||
-      assignments.filter((assignment) => assignment.channelId === task.channelId).length >= CHANNEL_PARALLEL_LIMIT ||
+      // HXBot (v1.7.1, CONC-04): a team room has no limit of its own. The HX-Flow ledger gives it a
+      // place, so team work with no place stays on the board and takes no resource.
+      (hxFlow.isTeamRoom(task.channelId)
+        ? !hxFlow.hasPlace(task.channelId, task.id)
+        : assignments.filter((assignment) => assignment.channelId === task.channelId).length >=
+          CHANNEL_PARALLEL_LIMIT) ||
       task.dependencies.some((id) => {
         const dependency = tasks.get(id);
         return !dependency || !settled(dependency);
@@ -1815,6 +1824,8 @@ export class ChannelService {
         pendingOutcome: null,
       };
       yield* channelSync(() => this.store.update(channel, { assignments: [assignment] }));
+      // HXBot (v1.7.1): the place that the ledger gave stays taken until the turn starts.
+      if (hxFlow.isTeamRoom(channelId)) hxFlow.dispatched(task.id);
       // The request message belongs to the task that the request created, not to a child task that
       // only inherits the id. A send commits its uploads before it is accepted, so `committing`
       // now only serves a task an earlier version queued with its drafts still open: it turns
@@ -2693,13 +2704,13 @@ export class ChannelService {
     // holds every message of the whole conversation. A read of the task table and two scans of the
     // channel history for each of them made one capture cost the square of the transcript.
     const tasks = new Map(this.store.tasks(channelId).map((task) => [task.id, task] as const));
-    // A delta reads the few messages of its turn by id. A whole snapshot reads the history once.
-    const history =
-      turnId === undefined
-        ? new Map(this.store.messages(channelId).map((message) => [message.id, message] as const))
-        : new Map<string, ChannelMessage | null>();
+    // HXBot (v1.7.1, BUG-CONC-01): each message is read by id, also for a whole snapshot. At start-up
+    // `recover` captures every member thread of every channel; reading the whole channel history for
+    // each of them held the main process for 49 s with 89 MB of channel messages. A member's thread
+    // holds only its own messages, and `message` leaves out a deleted one as `messages` does.
+    const history = new Map<string, ChannelMessage | null>();
     const existing = (id: string): ChannelMessage | undefined => {
-      if (turnId !== undefined && !history.has(id)) history.set(id, this.store.message(channelId, id));
+      if (!history.has(id)) history.set(id, this.store.message(channelId, id));
       return history.get(id) ?? undefined;
     };
     const messages: ChannelMessage[] = [];
@@ -3407,7 +3418,9 @@ export class ChannelService {
       return refuse("A source message is unavailable. Use the ids of shared channel messages.");
     const root = tasks.find((item) => item.id === task.rootTaskId);
     if (!root) return yield* channelFailure(new Error("The root task is unavailable."));
-    if (root.assignmentCount >= CHANNEL_ASSIGNMENT_LIMIT) {
+    // HXBot (v1.7.1, CONC-04): a team room is not paused at 8 assignments of one root task; the team
+    // guards (loops, spread, no progress) watch it instead (src/backend/hx-team).
+    if (root.assignmentCount >= CHANNEL_ASSIGNMENT_LIMIT && !hxFlow.isTeamRoom(channelId)) {
       yield* channelSync(() =>
         this.store.update(
           channel,

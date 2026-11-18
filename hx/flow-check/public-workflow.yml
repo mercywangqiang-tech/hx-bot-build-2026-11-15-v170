@@ -1,0 +1,54 @@
+# HXBot v1.7.1（HX-Flow）：Windows、macOS 真系统上的读数检查（放在公开仓库里跑的版本）。
+# 由 hx/scripts/flow-check-public.sh 生成：__BRANCH__ 会换成实际的分支名。推送到这个分支就跑一遍。
+#   Windows：tasklist 读智能体进程内存；常驻 PowerShell 的就绪时间和每次回答的耗时（对照每次新起一个）；
+#            停进程前列进程树，停下后有窗口的应用留下。
+#   macOS：vm_stat 估算的可用内存与内核内存压力等级、memory_pressure 对照记录一次（CONC-01-A4）。
+name: HXBot flow check
+
+on:
+  push:
+    branches: [__BRANCH__]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  machine:
+    name: ${{ matrix.machine }}
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [windows-2025, windows-2022, windows-11-arm, macos-15, macos-26]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run the check
+        shell: bash
+        env:
+          MACHINE: ${{ matrix.machine }}
+        run: node hx-flow-system-check.mjs --out out --machine "$MACHINE"
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f out/summary.md ]; then
+            cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+            # Also in the log, which can be read without downloading the results.
+            cat out/summary.md
+            if [ -f out/report.json ]; then cat out/report.json; fi
+          else
+            echo "检查程序没有写出结果。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-flow-${{ matrix.machine }}
+          path: out
+          if-no-files-found: warn
+          retention-days: 14

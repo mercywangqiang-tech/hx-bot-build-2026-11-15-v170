@@ -61,6 +61,8 @@ const config: KnipConfig = {
     "notepad.exe",
     // HXBot (v1.7.0): the quiet check moves the user to File Explorer.
     "explorer.exe",
+    // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).
+    "tasklist.exe",
     // Opens the interactive provider sign-in CLI on Linux.
     "xterm",
     // Builds the remote desktop runtime.

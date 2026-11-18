@@ -20,6 +20,15 @@ export const HX_TEAM_TOOL_NAMES: ReadonlySet<string> = new Set([
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
+/** v1.7.1 (TEAM-01): the bounds of one call, not limits of a team. */
+const HX_TEAM_MOST_ROLES = 100;
+const HX_TEAM_MOST_STEPS = 100;
+/** Written in the record when the user named no time: 24 hours, for an older version that reads it. */
+export const HX_TEAM_OPEN_MINUTES = 1440;
+/** Written in the record when the user named no handoff limit, for an older version that reads it. */
+export const HX_TEAM_OPEN_ROUNDS = 1_000_000;
+const HX_TEAM_MOST_MINUTES = 7 * 24 * 60;
+
 const HX_TEAM_ROLE = z.strictObject({
   name: text(40).describe("Such as Writer or Checker."),
   kind: z.enum(["plan", "do", "check"]),
@@ -40,24 +49,26 @@ const HX_TEAM_STEP = z.strictObject({
 
 const START_TEAM_SHAPE = {
   goal: text(8_000).describe("The whole brief, in the user's language. Members do not see this chat."),
-  // v1.6.7: up to 20 members and 30 steps (the user, 2026-11-14).
-  roles: z.array(HX_TEAM_ROLE).min(1).max(20),
-  steps: z.array(HX_TEAM_STEP).min(1).max(30),
+  // v1.7.1 (TEAM-01): the members are as many as the work needs; the bounds only keep one call sane.
+  roles: z.array(HX_TEAM_ROLE).min(1).max(HX_TEAM_MOST_ROLES),
+  steps: z.array(HX_TEAM_STEP).min(1).max(HX_TEAM_MOST_STEPS),
   apps: z.array(text(60)).max(6).optional(),
   confirm: z.array(text(160)).max(4).optional(),
   paths: z.array(text(INPUT_LIMITS.path)).max(10).optional().describe("Local files the lead gets with the brief."),
   limits: z
     .strictObject({
-      members: z.number().int().min(1).max(20).optional(),
-      minutes: z.number().int().min(10).max(480).optional(),
-      rounds: z.number().int().min(5).max(200).optional(),
+      members: z.number().int().min(1).max(HX_TEAM_MOST_ROLES).optional(),
+      minutes: z.number().int().min(1).max(HX_TEAM_MOST_MINUTES).optional().describe("Minutes of real work."),
+      rounds: z.number().int().min(1).max(HX_TEAM_OPEN_ROUNDS).optional(),
+      spend: z.number().min(1).max(1_000_000).optional().describe("Yuan."),
+      noAsk: z.boolean().optional().describe("The user said not to ask."),
     })
     .optional()
-    .describe("Only limits the user named for this team; the agent's settings give the rest."),
+    .describe("Only limits the user named for this team; a team has none by default."),
 };
 
 const TEAM_SHAPE = {
-  action: z.enum(["status", "message", "stop", "swap", "keep", "limits"]),
+  action: z.enum(["status", "message", "stop", "swap", "keep", "limits", "priority", "continue", "finish"]),
   teamId: text(INPUT_LIMITS.identifier).optional().describe("Omit it for your newest team."),
   text: text(4_000).optional().describe("message: the user's words for the team."),
   member: text(80)
@@ -66,13 +77,17 @@ const TEAM_SHAPE = {
   agentId: text(INPUT_LIMITS.identifier)
     .optional()
     .describe("swap: the agent that takes over. Omit it to make a new member for the role."),
-  minutes: z.number().int().min(10).max(480).optional().describe("limits: the new time limit the user named."),
-  rounds: z.number().int().min(5).max(200).optional().describe("limits: the new handoff limit the user named."),
+  minutes: z.number().int().min(1).max(HX_TEAM_MOST_MINUTES).optional().describe("limits: minutes of real work."),
+  rounds: z.number().int().min(1).max(HX_TEAM_OPEN_ROUNDS).optional().describe("limits: handoffs."),
+  spend: z.number().min(1).max(1_000_000).optional().describe("limits: yuan."),
+  noAsk: z.boolean().optional().describe("limits: the user said not to ask."),
+  clear: z.boolean().optional().describe("limits: take every limit away."),
+  level: z.enum(["urgent", "normal", "relaxed"]).optional().describe("priority: what the user said."),
 };
 
 const TEAM_BOARD_SHAPE = {
   action: z.enum(["read", "step", "fact", "file"]),
-  step: z.number().int().min(1).max(30).optional(),
+  step: z.number().int().min(1).max(HX_TEAM_MOST_STEPS).optional(),
   state: z.enum(["todo", "doing", "blocked", "done"]).optional(),
   note: z.string().trim().max(500).optional(),
   text: text(500).optional().describe("fact: a short fact every member should know."),
@@ -94,7 +109,7 @@ export const HX_TEAM_TOOL_DEFINITIONS = [
   {
     name: HX_TEAM_TOOL,
     description:
-      "A team you started: status (board and progress), message (pass the user's words to the team), stop, swap (replace a member), keep (keep the members made for it), limits (the user's new time or handoff limit). Use it when the user asks about the team or wants a change.",
+      "A team you started: status, message (the user's words to the team), stop, swap (a member), keep (the members made for it), limits (a limit the user named), priority, continue or finish (the user's answer to a pause). Use it when the user asks about the team or wants a change.",
     shape: TEAM_SHAPE,
   },
   {

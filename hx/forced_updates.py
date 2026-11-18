@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import brand_rename
@@ -320,11 +321,24 @@ def update_policy(r) -> None:
         r.errors.append(f"hx/release-notes.json: 没有桌面端 {VERSIONS['desktop']} 的新功能")
         return
     text = json.dumps({"version": VERSIONS["desktop"], "zh": notes["zh"], "en": notes["en"]}, ensure_ascii=False)
+    block = ("# HXBot: what is new in this version, for the update window (hx/release-notes.json).\n"
+             f"releaseInfo:\n  releaseNotes: {json.dumps(text, ensure_ascii=False)}\n")
+    # v1.7.1: a tree that already has the block of an earlier version, or of earlier notes, keeps one block only.
+    # A second releaseInfo is a duplicate YAML key, and electron-builder takes the wrong notes or stops.
+    builder = r.read("electron-builder.yml")
+    seen = []
+    def keep(match):
+        if match.group(0) == block and not seen:
+            seen.append(True)
+            return match.group(0)
+        return ""
+    kept = re.sub(r"# HXBot: what is new in this version, for the update window \(hx/release-notes\.json\)\.\n"
+                  r"releaseInfo:\n  releaseNotes: [^\n]*\n", keep, builder)
+    if kept != builder:
+        r.write("electron-builder.yml", kept)
     r.replace("electron-builder.yml",
               f"publish:\n  provider: generic\n  url: {r.SITE}/updates/desktop\n",
-              f"publish:\n  provider: generic\n  url: {r.SITE}/updates/desktop\n"
-              "# HXBot: what is new in this version, for the update window (hx/release-notes.json).\n"
-              f"releaseInfo:\n  releaseNotes: {json.dumps(text, ensure_ascii=False)}\n")
+              f"publish:\n  provider: generic\n  url: {r.SITE}/updates/desktop\n" + block)
 
 
 def rep_contracts(r) -> None:

@@ -133,7 +133,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "העבודה הזו לא הצליחה. השב „redo” כדי לעשות אותה שוב עם {model}.",
   "status.agent.hxTeam.started": "הצוות התחיל: {members}; {lead} מוביל. ההתקדמות תחזור לכאן.",
   "status.agent.hxTeam.assigned": "צוות · {from} העביר את „{task}” אל {to} (העברה {count} מתוך {limit}).",
-  "status.agent.hxTeam.transferred": "צוות · {from} העביר את כל המשימה אל {to} (העברה {count} מתוך {limit}).",
   "status.agent.hxTeam.returned": "צוות · {name} החזיר תוצאה ({done} מתוך {steps} שלבים הושלמו).",
   "status.agent.hxTeam.failedOnce":
     "צוות · {name} לא הצליח לסיים חלק מהעבודה; אם זה ייכשל שוב, הצוות ייעצר וישאל אותך.",
@@ -152,7 +151,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "צוות · החברים שנוצרו עבורו הוסתרו: {names}.",
   "status.agent.hxComputer.plan": "עבודה במחשב הזה · {app} · {keys} עוצר אותה",
   "status.agent.hxComputer.stopped": "העבודה במחשב הזה נעצרה: לחצת על מקשי העצירה.",
-  "status.agent.hxTeam.progress": "צוות · העברות {count}/{limit} · {minutes}/{max} דק׳",
   "status.agent.hxComputer.needBoth":
     "השליטה במחשב צריכה שתי הרשאות: הקלטת מסך ונגישות. הגדרות המערכת פתוחות בראשונה: הפעל שם את HXBot, ואז את השנייה. בקש שוב כששתיהן פועלות. הגדרות ← שליטה במחשב מציג את שתיהן.",
   "status.agent.hxComputer.needScreen":
@@ -160,4 +158,17 @@ export const messages = {
   "status.agent.hxComputer.needAccessibility":
     "השליטה במחשב צריכה הרשאת נגישות. הגדרות המערכת פתוחות בדף הזה: הפעל שם את HXBot ובקש שוב. הגדרות ← שליטה במחשב מציג אותה גם כן.",
   "status.agent.hxComputer.notRunning": "השליטה במחשב לא פועלת: {reason}. הגדרות ← שליטה במחשב מציג את הסיבה.",
+  "status.agent.hxTeam.handedOver": "צוות · {from} העביר את כל המשימה אל {to} (העברה {count}).",
+  "status.agent.hxTeam.progressOpen": "צוות · {count} העברות · {minutes} דק׳",
+  "status.agent.hxTeam.progressPaused": "צוות · מושהה, ממתין לך · {count} העברות · {minutes} דק׳",
+  "status.agent.hxTeam.paused":
+    "הצוות הושהה: {reason} הוא לא מתחיל עבודה חדשה; עבודה שרצה מסתיימת. להמשיך, לסכם או לעצור?",
+  "status.agent.hxTeam.continued": "צוות · ממשיך.",
+  "status.agent.hxTeam.wrapUp": "צוות · המוביל מסכם עם מה שיש לצוות.",
+  "status.agent.hxTeam.priority.urgent": "צוות · דחוף יותר: קודם לצוותים אחרים עד שיסתיים.",
+  "status.agent.hxTeam.priority.normal": "צוות · חזר לסדר הרגיל.",
+  "status.agent.hxTeam.priority.relaxed": "צוות · לא דחוף: צוותים אחרים קודמים לו עד שיסתיים.",
+  "status.agent.hxTeam.spend.api": "צוות · הוצאו עד עכשיו כ־¥{yuan}. הוא ממשיך; אמור מגבלה כדי לעצור אותו שם.",
+  "status.agent.hxTeam.spend.plan": "צוות · נוצלו {percent}% מתקופת התוכנית. הוא ממשיך; אמור מגבלה כדי לעצור אותו שם.",
+  "status.agent.hxTeam.spend.tokens": "צוות · נוצלו עד עכשיו כ־{millions} מיליון אסימונים (המחיר לא ידוע). הוא ממשיך.",
 } as const satisfies PartialTranslation<typeof source>;

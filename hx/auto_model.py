@@ -270,13 +270,20 @@ HOST = (
     '          this.#emitError("model_switch_marker_failed", error, agentId);\n'
     "        }\n"
     "      },\n"
-    "      judge: (_agentId, model, prompt, signal) => {\n"
+    "      judge: (agentId, model, prompt, signal) => {\n"
     "        // The judge waits for no one: when a background call holds the spare client, the rules decide.\n"
     '        if (this.#profileClients.busy()) return Promise.reject(new Error("The spare client is busy."));\n'
     "        const client = this.#providers.createProfileClient(model.provider, model.providerAccountId);\n"
     "        return Effect.runPromise(\n"
     "          this.#profileClients.run(client, (cancelled) =>\n"
-    "            generateTextWithoutTools(client, withBackgroundEffort(model), prompt, () => cancelled() || signal.aborted),\n"
+    "            // HXBot (v1.7.1): the judge's tokens are the agent's usage, as a memory review's are.\n"
+    "            generateTextWithoutTools(\n"
+    "              client,\n"
+    "              withBackgroundEffort(model),\n"
+    "              prompt,\n"
+    "              () => cancelled() || signal.aborted,\n"
+    '              sideSessionUsageObserver("auto-model", this.#store.database.usage, agentId, model.provider, model.id),\n'
+    "            ),\n"
     "          ),\n"
     "          { signal },\n"
     "        );\n"
@@ -300,6 +307,13 @@ HOST = (
 
 
 def service(r) -> None:
+    # v1.7.1：自动选模型的“小模型判断”、频道摘要和路由、旁问也记进助手的用量（原来不记：费用提醒和用量页少算；
+    # 频道和旁问两处的接线在 hx/flow.py 的 side_usage）。
+    r.replace("src/backend/agent/usage-collection.ts",
+              '  kind: "memory-review" | "web-search",\n',
+              '  // HXBot (v1.7.1): "auto-model" is the judge of the automatic model choice; "channel" a channel\n'
+              '  // summary or routing turn; "side-question" a side question about the chat.\n'
+              '  kind: "memory-review" | "web-search" | "auto-model" | "channel" | "side-question",\n')
     service = "src/backend/agent-service.ts"
     brand_rename.add_import(r, service, 'import { hxAutoModelStore } from "./hx-auto-model/store";')
     brand_rename.add_import(r, service, 'import { type HxAutoHost, hxAutoRouter } from "./hx-auto-model/router";')

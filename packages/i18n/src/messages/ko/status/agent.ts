@@ -106,7 +106,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "이 작업이 잘 되지 않았습니다. “redo”라고 답하면 {model}(으)로 다시 합니다.",
   "status.agent.hxTeam.started": "팀을 시작했습니다: {members}. {lead}이(가) 이끕니다. 진행 상황은 여기로 돌아옵니다.",
   "status.agent.hxTeam.assigned": "팀 · {from}이(가) 「{task}」을(를) {to}에게 맡겼습니다 (인계 {count}/{limit}회).",
-  "status.agent.hxTeam.transferred": "팀 · {from}이(가) 작업 전체를 {to}에게 넘겼습니다 (인계 {count}/{limit}회).",
   "status.agent.hxTeam.returned": "팀 · {name}이(가) 결과를 돌려주었습니다 ({steps}단계 중 {done}단계 완료).",
   "status.agent.hxTeam.failedOnce":
     "팀 · {name}이(가) 작업 일부를 끝내지 못했습니다. 같은 작업이 다시 실패하면 팀이 멈추고 물어봅니다.",
@@ -125,7 +124,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "팀 · 이 팀을 위해 만든 멤버를 숨겼습니다: {names}.",
   "status.agent.hxComputer.plan": "이 컴퓨터에서의 작업 · {app} · {keys}로 멈춤",
   "status.agent.hxComputer.stopped": "이 컴퓨터에서의 작업이 멈췄습니다: 정지 키를 눌렀습니다.",
-  "status.agent.hxTeam.progress": "팀 · 인계 {count}/{limit} · {minutes}/{max}분",
   "status.agent.hxComputer.needBoth":
     "컴퓨터 제어에는 화면 기록과 손쉬운 사용, 두 가지 권한이 필요합니다. 시스템 설정에서 첫 번째 항목을 열었습니다. HXBot을 켜고 두 번째도 켠 뒤 다시 요청하세요. 설정 → 컴퓨터 제어에서도 볼 수 있습니다.",
   "status.agent.hxComputer.needScreen":
@@ -134,4 +132,20 @@ export const messages = {
     "컴퓨터 제어에는 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 해당 페이지를 열었습니다. HXBot을 켜고 다시 요청하세요. 설정 → 컴퓨터 제어에서도 볼 수 있습니다.",
   "status.agent.hxComputer.notRunning":
     "컴퓨터 제어가 실행되지 않습니다: {reason}. 설정 → 컴퓨터 제어에서 이유를 볼 수 있습니다.",
+  "status.agent.hxTeam.handedOver": "팀 · {from}님이 작업 전체를 {to}님에게 넘겼습니다({count}번째 인계).",
+  "status.agent.hxTeam.progressOpen": "팀 · 인계 {count}회 · {minutes}분",
+  "status.agent.hxTeam.progressPaused": "팀 · 일시 중지, 결정을 기다림 · 인계 {count}회 · {minutes}분",
+  "status.agent.hxTeam.paused":
+    "팀을 일시 중지했습니다: {reason} 새 작업은 시작하지 않고, 진행 중인 작업은 끝냅니다. 계속할까요, 마무리할까요, 멈출까요?",
+  "status.agent.hxTeam.continued": "팀 · 계속합니다.",
+  "status.agent.hxTeam.wrapUp": "팀 · 리더가 지금까지의 결과로 마무리합니다.",
+  "status.agent.hxTeam.priority.urgent": "팀 · 더 급함: 끝날 때까지 다른 팀보다 먼저 진행합니다.",
+  "status.agent.hxTeam.priority.normal": "팀 · 보통 순서로 돌아갔습니다.",
+  "status.agent.hxTeam.priority.relaxed": "팀 · 급하지 않음: 끝날 때까지 다른 팀이 먼저 진행합니다.",
+  "status.agent.hxTeam.spend.api":
+    "팀 · 지금까지 약 ¥{yuan}을 썼습니다. 계속 진행합니다. 한도를 말하면 거기서 멈춥니다.",
+  "status.agent.hxTeam.spend.plan":
+    "팀 · 요금제 기간의 {percent}%를 썼습니다. 계속 진행합니다. 한도를 말하면 거기서 멈춥니다.",
+  "status.agent.hxTeam.spend.tokens":
+    "팀 · 지금까지 약 {millions}백만 토큰을 썼습니다(가격 알 수 없음). 계속 진행합니다.",
 } as const satisfies PartialTranslation<typeof source>;

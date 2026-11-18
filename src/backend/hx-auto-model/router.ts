@@ -31,6 +31,7 @@ import {
 import type { AgentModelOption, AgentProviderId, AgentReasoningEffort } from "@hxbot/contracts/ipc";
 import { sourceText } from "@hxbot/i18n";
 import { createHxBotLogger } from "@hxbot/logging";
+import { hxFlow } from "../hx-flow/ledger";
 import { HX_JUDGE_BELOW, type HxAttachmentInfo, hxClassifyWork } from "./classify";
 import { HX_JUDGE_TIMEOUT_MS, hxJudgeModel, hxJudgePrompt, hxParseJudge, hxWithin } from "./judge";
 import { type HxAutoModelStore, hxAutoModelStore } from "./store";
@@ -302,6 +303,8 @@ export class HxAutoRouter {
       });
       if (choice) preview[work] = { ...hxRefOf(choice.model), name: choice.model.name };
     }
+    // v1.7.1: the turns this computer runs at the same time now, for the line about teams.
+    const parallel = hxFlow.capacity().budget;
     return {
       agentId,
       settings,
@@ -309,6 +312,7 @@ export class HxAutoRouter {
       preview,
       freeQuota: { blockedUntil: this.#store.freeBlockedUntil(now), usedToday: this.#store.freeUsedToday(now) },
       decisions: this.#store.decisions(agentId, 20),
+      ...(parallel === null ? {} : { parallel }),
     };
   }
 

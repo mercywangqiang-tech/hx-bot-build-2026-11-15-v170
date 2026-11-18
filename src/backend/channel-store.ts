@@ -109,12 +109,38 @@ interface ChannelChange {
   assignments: ChannelAssignment[];
 }
 
+/** HXBot (v1.7.1, BUG-CONC-01): what decides whether a stored channel message counts as unread. */
+function unreadKind(entry: unknown): string {
+  if (!isChannelMessage(entry)) return "";
+  return `${isDeletedChannelMessage(entry) ? 1 : 0}\n${entry.author.id}\n${entry.message.itemType ?? ""}`;
+}
+
+/** HXBot (v1.7.1, BUG-CONC-01): the unread count of one channel for one reader, as `list` last read it. */
+interface HeldUnread {
+  /** The read position it was counted from. */
+  through: number;
+  /** The last sequence it counted. */
+  counted: number;
+  count: number;
+}
+
 /**
  * Owns durable channel records. Every change and its retry receipt commit together.
  */
 export class ChannelStore {
   /** By channel: how many times a message changed in place after it was complete, in this process. */
   readonly #completedMessageChanges = new Map<string, number>();
+
+  /**
+   * HXBot (v1.7.1, BUG-CONC-01): by channel, then by reader: the unread counts of the last `list`.
+   * Counting read every message of a channel that its reader never read (a team room the person does
+   * not open), with nine JSON reads for each. The time grew with the history: 10 ms for 3 MB of
+   * messages, 209 ms for 89 MB, and `list` runs on every `channels-changed`, twice (the sidebar and
+   * the reply notification), while each streaming reply sends them. A list now counts only the
+   * messages after the ones it counted before. A changed message that changes how it counts
+   * (deleted, its author, its kind), a deleted history and a rebuilt channel count it all again.
+   */
+  readonly #unread = new Map<string, Map<string, HeldUnread>>();
 
   constructor(readonly database: HxBotDatabase) {}
 
@@ -181,20 +207,10 @@ export class ChannelStore {
                 AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'plan'
                 AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'subagents'
               ORDER BY m.sequence DESC, m.message_id DESC LIMIT 1) AS latest_json,
-            (SELECT COUNT(*) FROM projection_channel_messages AS m
-              WHERE m.channel_id = c.channel_id
-                AND m.sequence > COALESCE(
-                  (SELECT r.through_sequence FROM projection_channel_reads AS r
-                    WHERE r.channel_id = c.channel_id AND r.member_id = ?), 0)
-                AND ${SHOWN_MESSAGE_SQL.replaceAll("message_json", "m.message_json")}
-                AND json_extract(m.message_json, '$.author.id') IS NOT ?
-                AND json_extract(m.message_json, '$.author.id') IS NOT ?
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'plan'
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'subagents'
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'channel-change'
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'context-reset'
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'commentary'
-                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') NOT LIKE ?) AS unread,
+            COALESCE((SELECT r.through_sequence FROM projection_channel_reads AS r
+              WHERE r.channel_id = c.channel_id AND r.member_id = ?), 0) AS read_through,
+            (SELECT MAX(m.sequence) FROM projection_channel_messages AS m
+              WHERE m.channel_id = c.channel_id) AS last_sequence,
             (SELECT COUNT(*) FROM projection_channel_tasks AS t
               WHERE t.channel_id = c.channel_id
                 AND json_extract(t.task_json, '$.state') = 'running') AS running,
@@ -203,7 +219,7 @@ export class ChannelStore {
                 AND json_extract(t.task_json, '$.state') IN ('queued', 'waiting', 'running')) AS open
             FROM projection_channels AS c ORDER BY c.rowid`,
         )
-        .all(memberId, memberId, excludedId, `${CHANNEL_ROUTING_EVENT_ITEM_TYPE_PREFIX}%`),
+        .all(memberId),
     );
     const threads = new Map<string, ChannelThread[]>();
     for (const row of databaseRows(
@@ -220,8 +236,10 @@ export class ChannelStore {
       };
       threads.set(channelId, [...(threads.get(channelId) ?? []), thread]);
     }
-    return rows.map((row) => {
+    const listed = new Set<string>();
+    const summaries = rows.map((row) => {
       const channel = decodeChannel(JSON.parse(requiredStringColumn(row, "channel_json")));
+      listed.add(channel.id);
       const latestJson = row.latest_json;
       const latest =
         typeof latestJson === "string" && latestJson.length > 0
@@ -233,7 +251,13 @@ export class ChannelStore {
           : undefined;
       return {
         ...channel,
-        unreadCount: Number(row.unread ?? 0),
+        unreadCount: this.#unreadCount(
+          channel.id,
+          memberId,
+          excludedId,
+          Number(row.read_through ?? 0),
+          Number(row.last_sequence ?? 0),
+        ),
         activeTasks: Number(row.running ?? 0),
         openTasks: Number(row.open ?? 0),
         lastMessage: latest
@@ -252,6 +276,46 @@ export class ChannelStore {
         ),
       };
     });
+    // A deleted channel keeps no count.
+    for (const channelId of this.#unread.keys()) if (!listed.has(channelId)) this.#unread.delete(channelId);
+    return summaries;
+  }
+
+  /** HXBot (v1.7.1, BUG-CONC-01): the unread count of a channel; counts only what `list` did not count yet. */
+  #unreadCount(channelId: string, memberId: string, excludedId: string, through: number, last: number): number {
+    const reader = `${memberId}\n${excludedId}`;
+    const held = this.#unread.get(channelId)?.get(reader);
+    // A read position that moved, or fewer messages than were counted (a rolled-back write), counts it all.
+    const kept = held && held.through === through && held.counted <= last ? held : null;
+    const from = kept ? kept.counted : through;
+    let count = kept ? kept.count : 0;
+    if (last > from) {
+      const row = databaseRow(
+        this.database.connection
+          .prepare(
+            `SELECT COUNT(*) AS count FROM projection_channel_messages AS m
+              WHERE m.channel_id = ? AND m.sequence > ? AND m.sequence <= ?
+                AND ${SHOWN_MESSAGE_SQL.replaceAll("message_json", "m.message_json")}
+                AND json_extract(m.message_json, '$.author.id') IS NOT ?
+                AND json_extract(m.message_json, '$.author.id') IS NOT ?
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'plan'
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'subagents'
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'channel-change'
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'context-reset'
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') != 'commentary'
+                AND COALESCE(json_extract(m.message_json, '$.message.itemType'), '') NOT LIKE ?`,
+          )
+          .get(channelId, from, last, memberId, excludedId, `${CHANNEL_ROUTING_EVENT_ITEM_TYPE_PREFIX}%`),
+      );
+      count += row ? requiredNumberColumn(row, "count") : 0;
+    }
+    // Inside a transaction the rows can still roll back: keep nothing.
+    if (!this.database.connection.isTransaction) {
+      const readers = this.#unread.get(channelId) ?? new Map<string, HeldUnread>();
+      readers.set(reader, { through, counted: Math.max(from, last), count });
+      this.#unread.set(channelId, readers);
+    }
+    return count;
   }
 
   create(channelId: string, draft: ChannelDraft): Channel {
@@ -347,19 +411,62 @@ export class ChannelStore {
     );
   }
 
+  /**
+   * HXBot (v1.7.1, BUG-CONC-01): the agents that have an assignment in these states. The query reads
+   * every assignment row that was ever written (no index), and `mayDrain` asked it for each waiting
+   * lane at each queue check: in the stress run the time grew with the history, to 4.8 s of every
+   * 180 s and stalls of the main process of 0.5 to 0.8 s after 15 minutes. One read now serves
+   * until an assignment is written (`project`, a deleted channel) or the event loop turns.
+   */
+  #agentsInState: { states: string; agents: ReadonlySet<string> } | null = null;
+
+  /**
+   * HXBot (v1.7.1, BUG-CONC-01): the channels with a task that is not done (queued, running, waiting
+   * or paused) or an assignment that starts, runs or waits. Only they have work to schedule; a
+   * task's root and its dependencies are in its own channel.
+   */
+  channelsWithOpenWork(): ReadonlySet<string> {
+    return new Set(
+      databaseRows(
+        this.database.connection
+          .prepare(
+            `SELECT channel_id FROM projection_channel_tasks
+              WHERE json_extract(task_json, '$.state') IN ('queued', 'running', 'waiting', 'paused')
+            UNION
+            SELECT channel_id FROM projection_channel_assignments
+              WHERE json_extract(assignment_json, '$.state') IN ('starting', 'running', 'queued')`,
+          )
+          .all(),
+      ).map((row) => requiredStringColumn(row, "channel_id")),
+    );
+  }
+
   /** `hasAssignmentInState` for the assignments of one agent. `mayDrain` asks this on every queue check. */
   hasAgentAssignmentInState(agentId: string, states: readonly ChannelAssignment["state"][]): boolean {
     if (!states.length) return false;
-    const placeholders = states.map(() => "?").join(", ");
-    return (
-      this.database.connection
-        .prepare(
-          `SELECT 1 FROM projection_channel_assignments
-            WHERE json_extract(assignment_json, '$.agentId') = ?
-              AND json_extract(assignment_json, '$.state') IN (${placeholders}) LIMIT 1`,
-        )
-        .get(agentId, ...states) !== undefined
-    );
+    const key = states.join("\n");
+    let held = this.#agentsInState;
+    if (held?.states !== key) {
+      const placeholders = states.map(() => "?").join(", ");
+      const agents = new Set(
+        databaseRows(
+          this.database.connection
+            .prepare(
+              `SELECT DISTINCT json_extract(assignment_json, '$.agentId') AS agent_id
+                FROM projection_channel_assignments
+                WHERE json_extract(assignment_json, '$.state') IN (${placeholders})`,
+            )
+            .all(...states),
+        ).map((row) => String(row.agent_id)),
+      );
+      const fresh = { states: key, agents };
+      held = fresh;
+      this.#agentsInState = fresh;
+      setImmediate(() => {
+        if (this.#agentsInState === fresh) this.#agentsInState = null;
+      });
+    }
+    return held.agents.has(agentId);
   }
 
   /**
@@ -580,6 +687,8 @@ export class ChannelStore {
           const entry = row ? JSON.parse(requiredStringColumn(row, "message_json")) : null;
           if (isChannelMessage(entry)) writeMessage.run(JSON.stringify(deletedChannelMessage(entry)), channel.id, id);
         }
+        // HXBot (v1.7.1, BUG-CONC-01): no message of the channel counts as unread now.
+        this.#unread.delete(channel.id);
         tx.prepare(
           "INSERT INTO projection_channel_summaries VALUES (?, ?, ?, ?) ON CONFLICT(channel_id) DO UPDATE SET version = excluded.version, through_sequence = excluded.through_sequence, text = excluded.text",
         ).run(channel.id, summary.version, summary.throughSequence, summary.text);
@@ -649,6 +758,8 @@ export class ChannelStore {
         "INSERT INTO projection_channel_messages VALUES (?, ?, ?, ?) ON CONFLICT(channel_id, message_id) DO UPDATE SET message_json = excluded.message_json",
       ).run(change.channel.id, message.id, assigned, JSON.stringify({ ...message, sequence: assigned }));
       const before = existing ? JSON.parse(requiredStringColumn(existing, "message_json")) : null;
+      // HXBot (v1.7.1, BUG-CONC-01): the kept unread counts of the channel include this message as it was.
+      if (existing && unreadKind(before) !== unreadKind(message)) this.#unread.delete(change.channel.id);
       // Only a change to what a model reads makes a summary or a cursor that covers the message
       // wrong. A continued task marks its earlier turn superseded, and in a long channel that reset
       // the summary to the first message on almost every turn of the lead (#3761).
@@ -670,6 +781,8 @@ export class ChannelStore {
       db.prepare(
         "INSERT INTO projection_channel_tasks VALUES (?, ?, ?) ON CONFLICT(task_id) DO UPDATE SET task_json = excluded.task_json",
       ).run(task.id, change.channel.id, JSON.stringify(task));
+    // HXBot (v1.7.1): an assignment changes, so the agents with assignments are read again.
+    if (change.assignments.length) this.#agentsInState = null;
     for (const assignment of change.assignments)
       db.prepare(
         "INSERT INTO projection_channel_assignments VALUES (?, ?, ?, ?, ?) ON CONFLICT(assignment_id) DO UPDATE SET delivery_id = excluded.delivery_id, assignment_json = excluded.assignment_json",
@@ -841,6 +954,8 @@ export class ChannelStore {
           db.prepare(`DELETE FROM ${table} WHERE channel_id = ?`).run(channelId);
         }
         db.prepare("DELETE FROM projection_channels WHERE channel_id = ?").run(channelId);
+        // HXBot (v1.7.1): the assignments of the channel are gone.
+        this.#agentsInState = null;
 
         for (const threadId of threadIds) {
           deleteAggregateHistory(db, "thread", [threadId]);
@@ -1002,6 +1117,8 @@ export class ChannelStore {
   /** Rebuilds channel projections from committed events without changing agent threads. */
   rebuild(channelId: string): void {
     const db = this.database.connection;
+    // HXBot (v1.7.1, BUG-CONC-01): the messages are written again.
+    this.#unread.delete(channelId);
     db.exec("BEGIN IMMEDIATE");
     try {
       const events = databaseRows(

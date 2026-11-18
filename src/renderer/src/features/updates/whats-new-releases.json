@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.68.0",
+    "date": "2026-11-18",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Many agents no longer freeze the computer: HXBot decides how many turns run at once from the free memory, the battery, the temperature and how busy the app is; the rest wait in a queue. Your own messages always keep a place, and work that waits longer moves up.",
+          "Teams have no limits: as many members as the work needs, with no 20 members, 240 minutes or 80 handoffs. Every handoff is taken and queued for this computer, and the reply says its place and about how long. A limit counts only when you name it in the chat, for that team only.",
+          "Teams watch their own progress: 30 minutes of real work with no progress, the same work changing hands again and again, work that only spreads (the first time, only the lead gets a reminder), 10 spend reminders with no answer, or 24 hours of work makes the team start nothing new and ask you to continue, wrap up or stop.",
+          "No slowdown after long use: the channel list counts only new messages, and the queue and the scheduler look only at work that is not done. In Settings, the team line says how many turns this computer runs at once now."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.67.9",
     "date": "2026-11-15",
     "notices": [],

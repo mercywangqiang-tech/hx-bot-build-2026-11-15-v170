@@ -99,7 +99,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Este trabajo no salió bien. Responde «redo» para hacerlo de nuevo con {model}.",
   "status.agent.hxTeam.started": "Equipo iniciado: {members}; lo dirige {lead}. El avance vuelve aquí.",
   "status.agent.hxTeam.assigned": "Equipo · {from} dio «{task}» a {to} (entrega {count} de {limit}).",
-  "status.agent.hxTeam.transferred": "Equipo · {from} pasó toda la tarea a {to} (entrega {count} de {limit}).",
   "status.agent.hxTeam.returned": "Equipo · {name} devolvió un resultado ({done} de {steps} pasos hechos).",
   "status.agent.hxTeam.failedOnce":
     "Equipo · {name} no pudo terminar una parte del trabajo; si vuelve a fallar, el equipo se detiene y te pregunta.",
@@ -119,7 +118,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Equipo · Los miembros creados para él están ocultos: {names}.",
   "status.agent.hxComputer.plan": "Trabajo en este ordenador · {app} · {keys} lo detiene",
   "status.agent.hxComputer.stopped": "Trabajo en este ordenador detenido: pulsaste las teclas de parada.",
-  "status.agent.hxTeam.progress": "Equipo · traspasos {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "El uso del equipo necesita dos permisos: Grabación de pantalla y Accesibilidad. Ajustes del Sistema está abierto en el primero: activa HXBot allí y luego el segundo. Vuelve a pedirlo cuando ambos estén activos. Ajustes → Uso del equipo muestra los dos.",
   "status.agent.hxComputer.needScreen":
@@ -128,4 +126,20 @@ export const messages = {
     "El uso del equipo necesita el permiso de Accesibilidad. Ajustes del Sistema está abierto en esa página: activa HXBot allí y vuelve a pedirlo. Ajustes → Uso del equipo también lo muestra.",
   "status.agent.hxComputer.notRunning":
     "El uso del equipo no está en marcha: {reason}. Ajustes → Uso del equipo muestra el motivo.",
+  "status.agent.hxTeam.handedOver": "Equipo · {from} entregó toda la tarea a {to} (traspaso {count}).",
+  "status.agent.hxTeam.progressOpen": "Equipo · {count} traspasos · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Equipo · en pausa, te espera · {count} traspasos · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "El equipo está en pausa: {reason} No empieza trabajo nuevo; el que está en curso termina. ¿Continuar, cerrar o parar?",
+  "status.agent.hxTeam.continued": "Equipo · Continúa.",
+  "status.agent.hxTeam.wrapUp": "Equipo · El líder cierra con lo que tiene el equipo.",
+  "status.agent.hxTeam.priority.urgent": "Equipo · Más urgente: va antes que otros equipos hasta que termine.",
+  "status.agent.hxTeam.priority.normal": "Equipo · Vuelve al orden normal.",
+  "status.agent.hxTeam.priority.relaxed": "Equipo · No urgente: otros equipos van primero hasta que termine.",
+  "status.agent.hxTeam.spend.api":
+    "Equipo · Unos ¥{yuan} gastados hasta ahora. Sigue trabajando; di un límite para pararlo ahí.",
+  "status.agent.hxTeam.spend.plan":
+    "Equipo · Se usó el {percent} % del periodo del plan. Sigue trabajando; di un límite para pararlo ahí.",
+  "status.agent.hxTeam.spend.tokens":
+    "Equipo · Unos {millions} millones de tokens usados hasta ahora (precio desconocido). Sigue trabajando.",
 } as const satisfies PartialTranslation<typeof source>;

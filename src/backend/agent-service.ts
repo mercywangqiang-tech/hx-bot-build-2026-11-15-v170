@@ -256,8 +256,11 @@ import { type HxAutoHost, hxAutoRouter } from "./hx-auto-model/router";
 import { hxAutoModelStore } from "./hx-auto-model/store";
 import { hxComputer, hxComputerAgentsToStop, hxComputerLine, hxComputerStoppedText } from "./hx-computer/computer";
 import { hxDriverAddress } from "./hx-computer/driver";
+import { HX_IDLE_MIN_MS, hxWithIdlePolicy } from "./hx-flow/idle";
+import { hxFlow } from "./hx-flow/ledger";
 import { hxProgressMessage } from "./hx-progress/progress";
 import { type HxTeamPort, hxTeamLine, hxTeams } from "./hx-team/service";
+import { hxReadSpend } from "./hx-team/spend";
 import type { SignInRegion } from "./kimi-region";
 import type { LinkWallet } from "./link-wallet";
 import type { MailboxStore } from "./mailbox-store";
@@ -449,6 +452,11 @@ export interface AgentServiceOptions {
    * while memory is low, and only a fixed number of turns run at the same time.
    */
   hostMemory?: HostMemory | null;
+  /**
+   * HXBot (v1.7.1, CONC-01): the turn budget of a desktop computer (src/main/hx-flow-memory.ts). It
+   * limits the turns that run at the same time and never holds every turn, as a server's low memory does.
+   */
+  hxDesktopMemory?: HostMemory | null;
   /** When an idle Codex session is unloaded, and how many idle sessions one app server keeps. Tests make it short. */
   codexIdleSessions?: { releaseAfterMs: number; idleLimit: number };
 }
@@ -577,6 +585,7 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
       computerUseMcpServer = () => null,
       githubConnector = null,
       hostMemory = null,
+      hxDesktopMemory = null,
       busyMessageMode = () => DEFAULT_BUSY_MESSAGE_MODE,
     } = options;
     this.#developmentDefaults = developmentDefaults;
@@ -1271,7 +1280,22 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
               : model;
           const client = this.#providers.createProfileClient(selected.provider, selected.providerAccountId);
           return yield* this.#profileClients
-            .run(client, (cancelled) => generateTextWithoutTools(client, turnModel, prompt, cancelled))
+            .run(client, (cancelled) =>
+              generateTextWithoutTools(
+                client,
+                turnModel,
+                prompt,
+                cancelled,
+                // HXBot (v1.7.1, BUG-CONC-01-A3): a channel summary or routing turn is the agent's usage.
+                sideSessionUsageObserver(
+                  "channel",
+                  this.#store.database.usage,
+                  selected.id,
+                  selected.provider,
+                  model.id,
+                ),
+              ),
+            )
             .pipe(
               // A routing turn can be the first one a spent plan refuses: in its completion, or as the
               // error of the `turn/start` request. It holds the model that ran it the way a refused member turn
@@ -1420,12 +1444,16 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           : null,
     });
     this.#memoryHold = new MemoryHold({
-      memory: hostMemory,
+      memory: hostMemory ?? hxDesktopMemory,
       hooks: {
         scheduleAll: () => {
           for (const agent of this.#store.list()) this.#drain.scheduleDrain(agent.id);
         },
-        retryWaiting: () => this.#drain.retrySlotWaiters(),
+        retryWaiting: () => {
+          // HXBot (v1.7.1): at each memory sample the ledger counts the team shares and pumps the team rooms.
+          hxFlow.tick(undefined, true);
+          this.#drain.retrySlotWaiters();
+        },
         releaseIdleThreads: () =>
           Effect.sync(() => this.#codexIdleSessions.releaseIdle()).pipe(
             Effect.andThen(this.#providers.releaseIdleThreads()),
@@ -1433,6 +1461,32 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
         releaseQuietBackgroundThreads: () => this.#providers.releaseQuietBackgroundThreads(),
         emitError: (code, error, agentId) => this.#emitError(code, error, agentId),
       },
+    });
+    // HXBot (v1.7.1): what the HX-Flow ledger reads of the channels and the usage limits.
+    hxFlow.attachChannels({
+      isRequest: (channelId, taskId) =>
+        this.channels.store.tasks(channelId).find((task) => task.id === taskId)?.parentTaskId === null,
+      wakeRooms: () => {
+        for (const channelId of this.channels.store.ids())
+          if (hxFlow.isTeamRoom(channelId))
+            Effect.runFork(this.channels.wake(channelId).pipe(Effect.catch(() => Effect.void)));
+      },
+    });
+    hxFlow.attachMachine({
+      // G6: the longest idle member thread of 4 minutes or more (src/backend/hx-flow/idle.ts).
+      releaseIdle: () =>
+        hxWithIdlePolicy(HX_IDLE_MIN_MS, 1, () => {
+          this.#codexIdleSessions.releaseIdle();
+          Effect.runFork(this.#providers.releaseIdleThreads().pipe(Effect.catch(() => Effect.void)));
+        }),
+      limitedModels: () => [
+        ...new Set(
+          this.#store
+            .list()
+            .filter((agent) => !this.#usageLimits.mayDrain(agent.id))
+            .map((agent) => agent.model),
+        ),
+      ],
     });
     this.#usageLimits = new UsageLimitGate({
       store,
@@ -2556,6 +2610,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
             { ...model, defaultReasoningEffort: agent.reasoningEffort },
             sideQuestionPrompt(agent, messages, input),
             cancelled,
+            // HXBot (v1.7.1, BUG-CONC-01-A3): a side question is the agent's usage.
+            sideSessionUsageObserver("side-question", this.#store.database.usage, agent.id, agent.provider, model.id),
           ),
         )
         .pipe(
@@ -3571,6 +3627,28 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
             sourcePaths: input.paths,
           }),
         ).then(() => undefined),
+      // v1.7.1: the tasks of a room without its messages, and what the members spent (G5).
+      tasks: (channelId) => (this.channels.store.exists(channelId) ? this.channels.store.tasks(channelId) : []),
+      roomState: (channelId) =>
+        this.channels.store.exists(channelId)
+          ? { exists: true, archived: this.channels.store.get(channelId).archived }
+          : { exists: false, archived: false },
+      spend: (agentIds, since) =>
+        hxReadSpend({
+          rows: (ids, from) =>
+            this.#store.database.connection
+              .prepare(
+                `SELECT provider, model, tokens_json, estimated_cost_usd FROM agent_usage_records WHERE occurred_at >= ? AND agent_id IN (${ids.map(() => "?").join(",")})`,
+              )
+              .all(from, ...ids),
+          agents: (ids) => this.listAgents().filter((agent) => ids.includes(agent.id)),
+          quota: (provider, model) =>
+            Effect.runPromise(
+              this.#providers.usage({ provider, model }).pipe(Effect.catch(() => Effect.succeed(null))),
+            ),
+          agentIds,
+          since,
+        }),
       room: (channelId) => {
         const store = this.channels.store;
         if (!store.exists(channelId)) return { exists: false, archived: false, tasks: [], messages: [] };
@@ -3719,13 +3797,20 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           this.#emitError("model_switch_marker_failed", error, agentId);
         }
       },
-      judge: (_agentId, model, prompt, signal) => {
+      judge: (agentId, model, prompt, signal) => {
         // The judge waits for no one: when a background call holds the spare client, the rules decide.
         if (this.#profileClients.busy()) return Promise.reject(new Error("The spare client is busy."));
         const client = this.#providers.createProfileClient(model.provider, model.providerAccountId);
         return Effect.runPromise(
           this.#profileClients.run(client, (cancelled) =>
-            generateTextWithoutTools(client, withBackgroundEffort(model), prompt, () => cancelled() || signal.aborted),
+            // HXBot (v1.7.1): the judge's tokens are the agent's usage, as a memory review's are.
+            generateTextWithoutTools(
+              client,
+              withBackgroundEffort(model),
+              prompt,
+              () => cancelled() || signal.aborted,
+              sideSessionUsageObserver("auto-model", this.#store.database.usage, agentId, model.provider, model.id),
+            ),
           ),
           { signal },
         );

@@ -6,13 +6,13 @@
 // The starter is never a member: it stays with the user, who can ask it about the team, add words,
 // stop it or swap a member (`team`). In the room, the members hand work over with a handoff form,
 // keep the board (`team_board`), and the lead sends the result back (`team_done`). A watcher reads
-// each change of the room: it writes short lines in the starter's chat, stops the team at its limits,
-// and finishes it with the lead's last message when the lead did not call `team_done`.
+// each change of the room: it writes short lines in the starter's chat, watches the team's progress
+// (v1.7.1: no limits on members, time or handoffs; the guards of guards.ts), and finishes it with the
+// lead's last message when the lead did not call `team_done`.
 //
 // Nothing here imports the agent service: `HxTeamPort` is what the host gives (agent-service.ts).
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
-import { totalmem } from "node:os";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { HxAutoModelSettings, HxDifficulty, HxModelRef, HxNeed, HxWorkType } from "@hxbot/contracts/hx-auto-model";
 import type { HxProgressCard } from "@hxbot/contracts/hx-progress";
@@ -26,11 +26,27 @@ import {
 import { isDynamicRecord } from "@hxbot/contracts/runtime-values";
 import { sourceText } from "@hxbot/i18n";
 import { z } from "zod";
+import { type HxFlowTeamTask, hxFlow } from "../hx-flow/ledger";
+import { HX_FLOW_RELAXED_WEIGHT, HX_FLOW_URGENT_WEIGHT, HxFlowDifficultyTimes } from "../hx-flow/order";
 import type { HxProgressWriter } from "../hx-progress/progress";
-import { hxFormFiles, hxFormLabel, hxFormTemplate, hxMissingParts, hxReadForm } from "./form";
+import { hxFormFiles, hxFormLabel, hxFormTemplate, hxMissingParts, hxReadForm, hxSaysNothing } from "./form";
+import {
+  type HxGuardId,
+  type HxSpendReading,
+  type HxTeamGuardState,
+  hxDepth,
+  hxGuardState,
+  hxLoopMove,
+  hxLoopReceive,
+  hxProgress,
+  hxSpendDue,
+  hxSpread,
+  hxUnanswered,
+  hxWorkTick,
+} from "./guards";
 import { type HxMatchAgent, hxMatchRoles } from "./match";
 import {
-  hxClock,
+  hxCapacityLine,
   hxOneLine,
   hxResultMessage,
   hxRoomInstructions,
@@ -47,12 +63,15 @@ import {
   type HxStepState,
   type HxTeamMember,
   type HxTeamRecord,
+  type HxTeamStated,
   HxTeamStore,
 } from "./store";
 import {
   HX_START_TEAM_TOOL,
   HX_TEAM_BOARD_TOOL,
   HX_TEAM_DONE_TOOL,
+  HX_TEAM_OPEN_MINUTES,
+  HX_TEAM_OPEN_ROUNDS,
   HX_TEAM_TOOL,
   startTeamSchema,
   teamBoardSchema,
@@ -124,6 +143,10 @@ export interface HxTeamPort {
     paths: string[];
   }): Promise<void>;
   room(channelId: string): HxTeamRoomState;
+  /** v1.7.1: the tasks of a room alone, without its messages. */
+  tasks?(channelId: string): ChannelTask[];
+  /** v1.7.1: whether the room exists and is archived, without its tasks and messages. */
+  roomState?(channelId: string): { exists: boolean; archived: boolean };
   command(input: {
     channelId: string;
     operationId: string;
@@ -139,6 +162,11 @@ export interface HxTeamPort {
   /** The team's progress card in the starter's chat, written again in place (v1.6.7). */
   progress: HxProgressWriter;
   error(code: string, error: unknown): void;
+  /**
+   * v1.7.1 (G5): what the members of a team spent since it started, and how they pay: by use (API),
+   * by plan, a local model, or an unknown price. Absent in a host with no usage records.
+   */
+  spend?(agentIds: readonly string[], since: string): Promise<HxSpendReading>;
 }
 
 /** One tool call, as the router gives it. */
@@ -196,7 +224,7 @@ function makeFolder(path: string): boolean {
 }
 
 /** The key that tells two pieces of work apart: the first line of the instruction. */
-function workKey(task: ChannelTask): string {
+function workKey(task: Pick<ChannelTask, "instruction">): string {
   const form = hxReadForm(task.instruction);
   return hxOneLine(form.goal ?? task.instruction, 160).toLowerCase();
 }
@@ -209,11 +237,62 @@ const STOPPED_KEYS = {
   cancelled: "status.agent.hxTeam.stopped.cancelled",
 } as const;
 const ACTIVE = new Set(["queued", "running", "waiting"]);
+/** A dependency in one of these states lets the work that waits for it start. */
+const SETTLED = new Set(["completed", "failed", "cancelled"]);
+/** v1.7.1: how often the guards look at the running teams. */
+const HX_TEAM_TICK_MS = 15_000;
+
+/** v1.7.1 (TEAM-01): the limits the user named in `start_team`, or undefined when there are none. */
+function hxStated(
+  limits:
+    | {
+        members?: number | undefined;
+        minutes?: number | undefined;
+        rounds?: number | undefined;
+        spend?: number | undefined;
+        noAsk?: boolean | undefined;
+      }
+    | undefined,
+): HxTeamStated | undefined {
+  if (!limits) return undefined;
+  const stated: HxTeamStated = {};
+  if (limits.members !== undefined) stated.members = limits.members;
+  if (limits.minutes !== undefined) stated.minutes = limits.minutes;
+  if (limits.rounds !== undefined) stated.rounds = limits.rounds;
+  if (limits.spend !== undefined) stated.spendYuan = limits.spend;
+  if (limits.noAsk !== undefined) stated.noAsk = limits.noAsk;
+  return Object.keys(stated).length ? stated : undefined;
+}
+
+/** The open items of a form: its lines or parts, with none for "none". */
+function countOpen(open: string | undefined): number {
+  if (!open || hxSaysNothing(open)) return 0;
+  return open.split(/[\n;；、]+/u).filter((item) => item.trim() && !hxSaysNothing(item)).length;
+}
+
+/** How many open pieces of work wait for this one, directly or through others (the critical path). */
+function countDependents(taskId: string, tasks: readonly ChannelTask[]): number {
+  const waiting = new Set<string>();
+  const pending = [taskId];
+  for (let current = pending.pop(); current !== undefined; current = pending.pop()) {
+    for (const task of tasks)
+      if (!TERMINAL.has(task.state) && task.dependencies.includes(current) && !waiting.has(task.id)) {
+        waiting.add(task.id);
+        pending.push(task.id);
+      }
+  }
+  return waiting.size;
+}
 
 export class HxTeams {
   readonly store: HxTeamStore;
   #port: HxTeamPort | null = null;
-  readonly #timers = new Map<string, ReturnType<typeof setTimeout>>();
+  /** v1.7.1: the guards look at each running team at this interval (G1, G5, G7, G8, G9). */
+  #ticker: ReturnType<typeof setInterval> | null = null;
+  /** v1.7.1: the tasks of each room, read again after each change of the room. */
+  readonly #taskCache = new Map<string, ChannelTask[]>();
+  #timesFile: string | null = null;
+  #spendReading = false;
   readonly #chains = new Map<string, Promise<void>>();
   readonly #now: () => number;
 
@@ -225,12 +304,44 @@ export class HxTeams {
   /** The host; null takes it away (a test that sets the shared one). */
   setPort(port: HxTeamPort | null): void {
     this.#port = port;
+    // v1.7.1: the ledger reads the team rooms and their work (src/backend/hx-flow).
+    hxFlow.attachTeams(port ? this.#flowView() : null);
   }
 
-  /** Opens the records and arms the deadline of each running team. */
+  /**
+   * Opens the records, the times of each difficulty, and starts the guards. v1.7.1: a team has no
+   * deadline of the clock; the guards count real work.
+   */
   open(folder: string): void {
     this.store.open(folder);
-    for (const team of this.store.running()) this.#arm(team);
+    this.#timesFile = join(folder, "hx-flow-times.json");
+    try {
+      hxFlow.times = new HxFlowDifficultyTimes(JSON.parse(readFileSync(this.#timesFile, "utf8")));
+    } catch {
+      hxFlow.times = new HxFlowDifficultyTimes();
+    }
+    for (const team of this.store.running()) {
+      if (team.weight)
+        hxFlow.shares.setWeight(team.id, team.weight === "urgent" ? HX_FLOW_URGENT_WEIGHT : HX_FLOW_RELAXED_WEIGHT);
+      // A record from before v1.7.1 had the limits of the settings; they were not named by the user.
+      if (!team.guard) {
+        team.limits = {
+          ...team.limits,
+          members: team.members.length,
+          minutes: HX_TEAM_OPEN_MINUTES,
+          rounds: HX_TEAM_OPEN_ROUNDS,
+        };
+        team.guard = hxGuardState();
+        this.store.save(team);
+      }
+    }
+    this.#startTicker();
+  }
+
+  /** Stops the guards; for tests and shutdown. */
+  close(): void {
+    if (this.#ticker) clearInterval(this.#ticker);
+    this.#ticker = null;
   }
 
   isRoom(channelId: string): boolean {
@@ -286,17 +397,13 @@ export class HxTeams {
     if (existing) return answer({ status: "started", team: this.#summary(existing) });
 
     const saved = port.settings(call.agentId);
-    // v1.6.7: limits the user named for this team in the chat come before the agent's settings, so a
-    // person on the web or the phone changes them by saying so, with no settings page.
-    const settings = {
-      ...saved,
-      teamMembers: input.limits?.members ?? saved.teamMembers,
-      teamMinutes: input.limits?.minutes ?? saved.teamMinutes,
-      teamRounds: input.limits?.rounds ?? saved.teamRounds,
-    };
-    if (input.roles.length > settings.teamMembers)
+    // v1.7.1 (TEAM-01): a team has no limit on members, time or handoffs. Only the limits that the user
+    // named for this team in the chat count, for this team only; the saved settings stay readable but
+    // give no limit.
+    const stated = hxStated(input.limits);
+    if (stated?.members !== undefined && input.roles.length > stated.members)
       return refuse(
-        `The user allows at most ${settings.teamMembers} members in a team. Merge roles so there are at most ${settings.teamMembers}, and retry.`,
+        `The user allows at most ${stated.members} members in this team. Merge roles so there are at most ${stated.members}, and retry.`,
       );
     const names = new Set(input.roles.map((role) => role.name));
     if (names.size !== input.roles.length) return refuse("Each role needs a different name.");
@@ -338,6 +445,7 @@ export class HxTeams {
             kind: role.kind,
             temporary: false,
             model: agent.model,
+            difficulty: role.difficulty ?? "mid",
           });
           continue;
         }
@@ -365,6 +473,7 @@ export class HxTeams {
           kind: role.kind,
           temporary: true,
           model: model?.name ?? starter.model,
+          difficulty: role.difficulty ?? "mid",
         });
       }
 
@@ -375,7 +484,9 @@ export class HxTeams {
       const lead = members[leadIndex] ?? members[0];
       if (!lead) return refuse("A team needs at least one role.");
       const now = this.#now();
-      const deadline = now + settings.teamMinutes * 60_000;
+      // Written as before, for an older version that reads the record (TEAM-01).
+      const minutes = stated?.minutes ?? HX_TEAM_OPEN_MINUTES;
+      const deadline = now + minutes * 60_000;
       const folderPath = join(
         starter.workspacePath,
         words.folder,
@@ -415,11 +526,13 @@ export class HxTeams {
         createdAt: new Date(now).toISOString(),
         deadline: new Date(deadline).toISOString(),
         limits: {
-          members: settings.teamMembers,
-          minutes: settings.teamMinutes,
-          rounds: settings.teamRounds,
-          temporary: settings.teamTemporary,
+          members: stated?.members ?? input.roles.length,
+          minutes,
+          rounds: stated?.rounds ?? HX_TEAM_OPEN_ROUNDS,
+          temporary: saved.teamTemporary,
         },
+        ...(stated ? { stated } : {}),
+        guard: hxGuardState(),
         state: "running",
         endedAt: null,
         result: null,
@@ -440,8 +553,7 @@ export class HxTeams {
           leadName: lead.name,
           starterName: starter.name,
           folder,
-          rounds: settings.teamRounds,
-          minutes: settings.teamMinutes,
+          ...(stated ? { stated } : {}),
         }),
         memberIds: members.map((member) => member.agentId),
         leadAgentId: lead.agentId,
@@ -469,16 +581,13 @@ export class HxTeams {
           apps: input.apps ?? [],
           confirm: input.confirm ?? [],
           folder,
-          rounds: settings.teamRounds,
-          minutes: settings.teamMinutes,
-          deadline: hxClock(deadline),
+          ...(stated ? { stated } : {}),
           skills: hxTeamSkillLines(skills, language),
-          parallel: this.parallel(),
+          capacity: hxCapacityLine(language, hxFlow.capacity()),
         }),
         toAgentIds: [lead.agentId],
         paths: input.paths ?? [],
       });
-      this.#arm(team);
       port.note(
         starter.id,
         sourceText("status.agent.hxTeam.started", {
@@ -516,16 +625,24 @@ export class HxTeams {
     if (!team) return refuse("You have not started a team with that id. start_team makes one.");
     if (input.action === "status") return answer({ status: "ok", team: this.#board_(team) });
     if (!call.byPerson) return refuse("Only a person's message can change a team. Ask the user in your own chat.");
+    // v1.7.1 (G9): the user spoke about the team, so the spend reminders have an answer.
+    const guard = this.#guard(team);
+    guard.spend.unanswered = 0;
     if (input.action === "keep") return answer({ status: "kept", members: await this.#keep(port, team) });
     if (input.action === "limits") {
-      // v1.6.7: the user changes the time or the handoff limit of a running team by saying so.
-      if (input.minutes === undefined && input.rounds === undefined) return refuse("Give minutes or rounds.");
-      if (input.minutes !== undefined) {
-        team.limits.minutes = input.minutes;
-        team.deadline = new Date(Date.parse(team.createdAt) + input.minutes * 60_000).toISOString();
-        this.#arm(team);
-      }
-      if (input.rounds !== undefined) team.limits.rounds = input.rounds;
+      // v1.7.1 (TEAM-01, G7): only the user changes the limits of a team, by saying so; a model cannot.
+      const named =
+        input.minutes !== undefined ||
+        input.rounds !== undefined ||
+        input.spend !== undefined ||
+        input.noAsk !== undefined;
+      if (!named && !input.clear) return refuse("Give minutes, rounds, spend or noAsk, or clear.");
+      const stated: HxTeamStated = input.clear ? {} : { ...team.stated };
+      if (input.minutes !== undefined) stated.minutes = input.minutes;
+      if (input.rounds !== undefined) stated.rounds = input.rounds;
+      if (input.spend !== undefined) stated.spendYuan = input.spend;
+      if (input.noAsk !== undefined) stated.noAsk = input.noAsk;
+      this.#setStated(team, stated);
       this.#save(team);
       return answer({ status: "changed", team: this.#summary(team) });
     }
@@ -533,6 +650,60 @@ export class HxTeams {
     if (input.action === "stop") {
       await this.#stop(port, team, "user", false);
       return answer({ status: "stopped", team: this.#summary(team) });
+    }
+    if (input.action === "priority") {
+      // v1.7.1 (CONC-03): the weight of the team in the queue, until it ends.
+      const level = input.level ?? "normal";
+      if (level === "normal") delete team.weight;
+      else team.weight = level;
+      hxFlow.shares.setWeight(
+        team.id,
+        level === "urgent" ? HX_FLOW_URGENT_WEIGHT : level === "relaxed" ? HX_FLOW_RELAXED_WEIGHT : 1,
+      );
+      this.#save(team);
+      port.note(
+        team.starterAgentId,
+        sourceText(
+          level === "urgent"
+            ? "status.agent.hxTeam.priority.urgent"
+            : level === "relaxed"
+              ? "status.agent.hxTeam.priority.relaxed"
+              : "status.agent.hxTeam.priority.normal",
+        ),
+      );
+      return answer({ status: "changed", priority: level });
+    }
+    if (input.action === "continue" || input.action === "finish") {
+      // v1.7.1 (CONC-10): the user answered a pause. A pause only started no new work.
+      const paused = guard.paused;
+      guard.paused = null;
+      guard.sinceProgressMs = 0;
+      if (paused?.guard === "G9") guard.spend.unanswered = 0;
+      if (paused?.guard === "G2") guard.moves = {};
+      if (paused?.guard === "G3") guard.handoffs = [];
+      if (input.action === "finish") {
+        guard.wrapUp = true;
+        const lead = this.#lead(team);
+        if (lead)
+          await port.post({
+            channelId: team.channelId,
+            operationId: `${call.key}:finish`,
+            fromAgentId: team.starterAgentId,
+            text:
+              team.language === "zh"
+                ? "用户要求收尾：不再分派新的工作。等在做的做完，用已有的结果调用 hxbot.team_done，并写明还有什么没做。"
+                : "The user asks to wrap up: give out no new work. When the work that runs is done, call hxbot.team_done with what the team has, and say what is left.",
+            toAgentIds: [lead.agentId],
+            paths: [],
+          });
+      }
+      this.#save(team);
+      hxFlow.tick(undefined, true);
+      port.note(
+        team.starterAgentId,
+        sourceText(input.action === "finish" ? "status.agent.hxTeam.wrapUp" : "status.agent.hxTeam.continued"),
+      );
+      return answer({ status: input.action === "finish" ? "wrapping-up" : "continued", team: this.#summary(team) });
     }
     if (input.action === "message") {
       if (!input.text) return refuse("Give text: the user's words for the team.");
@@ -568,6 +739,9 @@ export class HxTeams {
     if (input.action === "step") {
       const step = team.steps.find((item) => item.n === input.step);
       if (!step || !input.state) return refuse(`Give step (1 to ${team.steps.length}) and state.`);
+      // v1.7.1 (G1): a step of the plan that moves is progress.
+      if (step.state !== input.state && input.state !== "blocked")
+        hxProgress(this.#guard(team), this.#folderHash(team));
       step.state = input.state;
       if (input.note !== undefined) step.note = input.note;
     } else if (input.action === "fact") {
@@ -576,6 +750,7 @@ export class HxTeams {
     } else {
       if (!input.path) return refuse("Give path: the file.");
       this.#addFiles(team, [input.path]);
+      hxProgress(this.#guard(team), this.#folderHash(team));
     }
     this.#save(team);
     return answer({ status: "saved", board: this.#board_(team) });
@@ -603,10 +778,12 @@ export class HxTeams {
 
   /**
    * The answer for a `channel_assign` or `channel_transfer` in a team room before the channel takes
-   * it: null to go on, or the reason to refuse. A form with a missing line, a team at its handoff
-   * limit or past its time is refused.
+   * it: null to go on, or the reason to refuse. v1.7.1 (CONC-04): only a form with a missing line is
+   * refused. A busy computer, the time and the number of handoffs never refuse work: the work waits on
+   * the board until the ledger gives it a place. Only a limit that the user named, or the user's
+   * request to wrap up, stops new work. `turnId` is the lead's turn, the batch of the work (CONC-03).
    */
-  checkHandoff(channelId: string, tool: string, args: unknown): string | null {
+  checkHandoff(channelId: string, tool: string, args: unknown, turnId?: string): string | null {
     if (tool !== "channel_assign" && tool !== "channel_transfer") return null;
     const team = this.store.byChannel(channelId);
     if (team?.state !== "running") return null;
@@ -618,31 +795,53 @@ export class HxTeams {
       return zh
         ? `task 必须是交接单。缺少：${missing.map((key) => hxFormLabel(key, "zh")).join("、")}。按下面的格式重写，没有的写“无”：\n${hxFormTemplate("zh")}`
         : `The task must be a handoff form. Missing: ${missing.map((key) => hxFormLabel(key, "en")).join(", ")}. Write it again in this form, with none where there is nothing:\n${hxFormTemplate("en")}`;
-    if (this.#now() > Date.parse(team.deadline))
+    if (tool === "channel_assign" && this.#guard(team).wrapUp)
       return zh
-        ? `团队已到 ${team.limits.minutes} 分钟的上限，不再交接。带头的用已有的结果调用 hxbot.team_done，并写明还有什么没做。`
-        : `The team reached its limit of ${team.limits.minutes} minutes. No more handoffs: the lead calls hxbot.team_done with what the team has and says what is left.`;
-    if (tool === "channel_assign") {
-      // v1.6.7: a team of up to 20; each member is a model program of its own, so only as many work
-      // at once as this computer's memory holds. The others wait for a free place.
-      const busy = (this.#port?.room(team.channelId).tasks ?? []).filter(
-        (item) => item.parentTaskId !== null && ACTIVE.has(item.state),
-      ).length;
-      const parallel = this.parallel();
-      if (busy >= parallel)
-        return zh
-          ? `现在已有 ${busy} 个成员在干活，这台电脑最多同时 ${parallel} 个。等其中一件做完，再分派这一件。`
-          : `${busy} members work now, and this computer holds at most ${parallel} at once. Give this out when one of them is done.`;
+        ? "用户要求收尾，不再分派新的工作。等在做的做完，用已有的结果调用 hxbot.team_done。"
+        : "The user asked to wrap up: no new work. When the work that runs is done, call hxbot.team_done with what the team has.";
+    const rounds = team.stated?.rounds;
+    if (rounds !== undefined && this.#handoffs(team) >= rounds) {
+      this.#port?.note(team.starterAgentId, sourceText("status.agent.hxTeam.rounds", { limit: rounds }));
+      return zh
+        ? `用户为这次定的 ${rounds} 次交接已经用完。带头的用已有的结果调用 hxbot.team_done，并写明还有什么没做。`
+        : `The ${rounds} handoffs that the user named for this team are used. The lead calls hxbot.team_done with what the team has and says what is left.`;
     }
-    if (this.#handoffs(team) >= team.limits.rounds) {
-      this.#port?.note(team.starterAgentId, sourceText("status.agent.hxTeam.rounds", { limit: team.limits.rounds }));
-      return zh
-        ? `团队已到 ${team.limits.rounds} 次交接的上限。带头的用已有的结果调用 hxbot.team_done，并写明还有什么没做。`
-        : `The team reached its limit of ${team.limits.rounds} handoffs. The lead calls hxbot.team_done with what the team has and says what is left.`;
+    if (tool === "channel_assign" && turnId) {
+      const batches = { ...team.batches };
+      batches[workKey({ instruction: task })] = turnId;
+      // Only the latest: a batch matters for the work that waits now.
+      team.batches = Object.fromEntries(Object.entries(batches).slice(-200));
     }
     this.#addFiles(team, hxFormFiles(hxReadForm(task)));
     this.#save(team);
     return null;
+  }
+
+  /**
+   * v1.7.1 (CONC-04, CONC-12): the reply to an assignment in a team room says its place in the queue
+   * and the state of this computer. Any other reply stays as it is.
+   */
+  withQueueLine(channelId: string, tool: string, result: unknown): unknown {
+    const team = this.store.byChannel(channelId);
+    if (team?.state !== "running" || tool !== "channel_assign" || !isDynamicRecord(result)) return result;
+    if (result.accepted !== true || typeof result.taskId !== "string") return result;
+    const zh = team.language === "zh";
+    const capacity = hxFlow.capacity();
+    const place = hxFlow.queuePlace(result.taskId);
+    const task = this.#port?.room(channelId).tasks.find((item) => item.id === result.taskId);
+    const running = capacity.running;
+    let queue: string;
+    if (place)
+      queue = zh
+        ? `已排队，第 ${place.place} 位：电脑同时在做 ${running} 件，约 ${place.minutes} 分钟。`
+        : `Queued, place ${place.place}: this computer runs ${running} at the same time, about ${place.minutes} min.`;
+    else if (task && task.state === "queued" && task.dependencies.length)
+      queue = zh
+        ? `已排队：等它依赖的工作做完再开始。电脑同时在做 ${running} 件。`
+        : `Queued: it starts when the work it depends on is done. This computer runs ${running} at the same time.`;
+    else
+      queue = zh ? `已开始：电脑同时在做 ${running} 件。` : `Started: this computer runs ${running} at the same time.`;
+    return { ...result, queue, capacity: hxCapacityLine(team.language, capacity) };
   }
 
   /** Saves the team and writes its progress card again (v1.6.7). It never throws. */
@@ -678,11 +877,9 @@ export class HxTeams {
 
   // ------------------------------------------------------------------ the watcher
 
-  /** How many members may work at once on this computer (v1.6.7); tests set it. */
-  parallel: () => number = () => hxTeamParallel(totalmem());
-
   /** Runs after each change of a channel. It never throws. */
   changed(channelId: string): void {
+    this.#taskCache.delete(channelId);
     const team = this.store.byChannel(channelId);
     const port = this.#port;
     if (team?.state !== "running" || !port) return;
@@ -694,11 +891,17 @@ export class HxTeams {
   }
 
   #observe(port: HxTeamPort, team: HxTeamRecord): void {
-    const room = port.room(team.channelId);
-    if (!room.exists || room.archived) {
+    // v1.7.1: the state and the tasks only; the messages are read when the team ends. The watcher runs
+    // at each change of the room, so a heavy read here slows the main process (BUG-CONC-01).
+    const state = port.roomState ? port.roomState(team.channelId) : port.room(team.channelId);
+    if (!state.exists || state.archived) {
       this.#later(team, () => this.#stop(port, team, "room", true));
       return;
     }
+    const room = { tasks: this.#tasks(port, team.channelId) };
+    const guard = this.#guard(team);
+    const at = this.#now();
+    const parents = new Map(room.tasks.map((task) => [task.id, task.parentTaskId]));
     const names = (agentId: string | null) =>
       (agentId && team.members.find((member) => member.agentId === agentId)?.name) ||
       port.agents().find((agent) => agent.id === agentId)?.name ||
@@ -712,23 +915,44 @@ export class HxTeams {
       changed = true;
       team.seen[task.id] = now;
       const [previousState, previousOwner] = previous ? previous.split("|") : [undefined, undefined];
+      // v1.7.1 (CONC-10): the guards see each new piece of work and each piece that is done.
+      if (previous === undefined && task.parentTaskId !== null) {
+        const goal = hxReadForm(task.instruction).goal ?? task.instruction;
+        if (hxSpread(guard, "open", hxDepth(task.id, parents))) this.#later(team, () => this.#spread(port, team));
+        if (owner && hxLoopReceive(guard, owner, goal))
+          this.#later(team, () => this.#pause(port, team, "G2", this.#reason(team, "G2same", names(owner))));
+      }
+      if (task.state === "running" && !team.timing?.[task.id]) team.timing = { ...team.timing, [task.id]: at };
       // v1.6.7: each handoff shows on the team's progress card, not as a line. A task that moves whole
       // to another member is rare and changes who answers, so it keeps its line.
       if (previousOwner && owner && previousOwner !== owner) {
         team.seen.__transfers = String(Number(team.seen.__transfers ?? "0") + 1);
         port.note(
           team.starterAgentId,
-          sourceText("status.agent.hxTeam.transferred", {
+          sourceText("status.agent.hxTeam.handedOver", {
             from: names(previousOwner || null),
             to: names(owner),
             count: this.#handoffs(team),
-            limit: team.limits.rounds,
           }),
         );
+        // G2: the same work changes hands again with no file change and no open item closed.
+        const folder = this.#folderHash(team);
+        const openItems = countOpen(hxReadForm(task.instruction).open);
+        if (hxLoopMove(guard, task.id, folder, openItems))
+          this.#later(team, () => this.#pause(port, team, "G2", this.#reason(team, "G2moves", "")));
       }
       if (task.state === "running") this.#stepOf(team, owner, "todo", "doing");
       if (task.state === "completed" && previousState !== "completed" && task.parentTaskId !== null) {
         this.#stepOf(team, owner, "doing", "done");
+        // Progress (G1), a finished piece (G3), and the time of its difficulty (CONC-03).
+        hxProgress(guard, this.#folderHash(team));
+        hxSpread(guard, "done", 0);
+        const started = team.timing?.[task.id];
+        const difficulty = team.members.find((member) => member.agentId === owner)?.difficulty;
+        if (started && difficulty) {
+          hxFlow.times.record(difficulty, at - started);
+          this.#saveTimes();
+        }
       }
       if (task.state === "failed" && previousState !== "failed") {
         const key = workKey(task);
@@ -760,10 +984,11 @@ export class HxTeams {
     if (tasks.length > 0 && open.length === 0) {
       const roots = tasks.filter((task) => task.parentTaskId === null);
       if (roots.some((task) => task.state === "completed")) {
-        const last = [...room.messages]
+        const messages = port.room(team.channelId).messages;
+        const last = [...messages]
           .reverse()
           .find((message) => message.author.kind === "agent" && message.author.id === team.leadAgentId);
-        const anyAgent = [...room.messages].reverse().find((message) => message.author.kind === "agent");
+        const anyAgent = [...messages].reverse().find((message) => message.author.kind === "agent");
         const result = (last ?? anyAgent)?.message.text?.trim() || "";
         this.#later(team, () => this.#finish(port, team, result));
       } else this.#later(team, () => this.#stop(port, team, "cancelled", true));
@@ -790,7 +1015,7 @@ export class HxTeams {
         : "(The lead wrote no result. Open the team room.)");
     team.endedAt = new Date(this.#now()).toISOString();
     this.#save(team);
-    this.#disarm(team.id);
+    hxFlow.forgetTeam(team.id);
     const minutes = Math.max(1, Math.round((this.#now() - Date.parse(team.createdAt)) / 60_000));
     port.note(team.starterAgentId, sourceText("status.agent.hxTeam.done", { minutes }));
     const lead = this.#lead(team);
@@ -815,14 +1040,14 @@ export class HxTeams {
     team.reason = {
       user: zh ? "用户叫停了。" : "the user stopped it.",
       minutes: zh
-        ? `到了 ${team.limits.minutes} 分钟的上限。`
-        : `it reached its limit of ${team.limits.minutes} minutes.`,
+        ? `到了你定的 ${team.stated?.minutes ?? team.limits.minutes} 分钟实际干活时间。`
+        : `it reached the ${team.stated?.minutes ?? team.limits.minutes} minutes of real work that you named.`,
       retry: zh ? "同一件工作失败了两次。" : "the same work failed twice.",
       room: zh ? "协作房间被归档或删除了。" : "its room was archived or deleted.",
       cancelled: zh ? "房间里的工作被取消了。" : "its work was cancelled in the room.",
     }[reason];
     this.#save(team);
-    this.#disarm(team.id);
+    hxFlow.forgetTeam(team.id);
     const room = port.room(team.channelId);
     if (room.exists && !room.archived) {
       const roots = room.tasks.filter((task) => task.parentTaskId === null && !TERMINAL.has(task.state));
@@ -853,7 +1078,7 @@ export class HxTeams {
     port.note(
       team.starterAgentId,
       reason === "minutes"
-        ? sourceText("status.agent.hxTeam.stopped.minutes", { minutes: team.limits.minutes })
+        ? sourceText("status.agent.hxTeam.stopped.minutes", { minutes: team.stated?.minutes ?? team.limits.minutes })
         : sourceText(STOPPED_KEYS[reason]),
     );
     if (tell) await this.#deliver(port, team, hxStoppedMessage(team, team.reason), "stopped");
@@ -1000,29 +1225,6 @@ export class HxTeams {
 
   // ------------------------------------------------------------------ deadlines
 
-  #arm(team: HxTeamRecord): void {
-    this.#disarm(team.id);
-    const delay = Math.max(0, Date.parse(team.deadline) - this.#now());
-    const timer = setTimeout(
-      () => {
-        this.#timers.delete(team.id);
-        const port = this.#port;
-        const current = this.store.get(team.id);
-        if (port && current?.state === "running")
-          this.#later(current, () => this.#stop(port, current, "minutes", true));
-      },
-      Math.min(delay, 2_147_000_000),
-    );
-    if (typeof timer === "object" && timer && "unref" in timer) timer.unref();
-    this.#timers.set(team.id, timer);
-  }
-
-  #disarm(teamId: string): void {
-    const timer = this.#timers.get(teamId);
-    if (timer) clearTimeout(timer);
-    this.#timers.delete(teamId);
-  }
-
   /** Runs `work` after the team's earlier work, outside the channel hook that called it. */
   #later(team: HxTeamRecord, work: () => Promise<void>): void {
     const before = this.#chains.get(team.id) ?? Promise.resolve();
@@ -1033,6 +1235,296 @@ export class HxTeams {
   /** Waits for the work `#later` started; for tests. */
   settled(): Promise<void> {
     return Promise.all([...this.#chains.values()]).then(() => undefined);
+  }
+
+  // ------------------------------------------------------------------ v1.7.1: guards and the ledger
+
+  /** The guards of a team; a record from before v1.7.1 gets them here. */
+  #guard(team: HxTeamRecord): HxTeamGuardState {
+    if (!team.guard) team.guard = hxGuardState();
+    return team.guard;
+  }
+
+  /** The limits the user named (TEAM-01, G7), and the fields that an older version reads. */
+  #setStated(team: HxTeamRecord, stated: HxTeamStated): void {
+    const named: HxTeamStated = {};
+    if (stated.members !== undefined) named.members = stated.members;
+    if (stated.minutes !== undefined) named.minutes = stated.minutes;
+    if (stated.rounds !== undefined) named.rounds = stated.rounds;
+    if (stated.spendYuan !== undefined) named.spendYuan = stated.spendYuan;
+    if (stated.noAsk !== undefined) named.noAsk = stated.noAsk;
+    if (Object.keys(named).length) team.stated = named;
+    else delete team.stated;
+    const minutes = named.minutes ?? HX_TEAM_OPEN_MINUTES;
+    team.limits = {
+      ...team.limits,
+      members: named.members ?? team.members.filter((member) => !member.left).length,
+      minutes,
+      rounds: named.rounds ?? HX_TEAM_OPEN_ROUNDS,
+    };
+    team.deadline = new Date(Date.parse(team.createdAt) + minutes * 60_000).toISOString();
+  }
+
+  /** The tasks of a room, read once after each change of the room. */
+  #tasks(port: HxTeamPort, channelId: string): ChannelTask[] {
+    const cached = this.#taskCache.get(channelId);
+    if (cached) return cached;
+    const tasks = port.tasks ? port.tasks(channelId) : port.room(channelId).tasks;
+    this.#taskCache.set(channelId, tasks);
+    return tasks;
+  }
+
+  /** The names, sizes and times of the files in the shared folder; null when there is none. */
+  #folderHash(team: HxTeamRecord): string | null {
+    if (!team.folder) return null;
+    try {
+      const hash = createHash("sha256");
+      const walk = (folder: string, depth: number) => {
+        for (const entry of readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+          const path = join(folder, entry.name);
+          if (entry.isDirectory()) {
+            if (depth < 3) walk(path, depth + 1);
+            continue;
+          }
+          const info = statSync(path);
+          hash.update(`${path}\0${info.size}\0${info.mtimeMs}\n`);
+        }
+      };
+      walk(team.folder, 0);
+      return hash.digest("hex");
+    } catch {
+      return null;
+    }
+  }
+
+  #saveTimes(): void {
+    if (!this.#timesFile) return;
+    try {
+      writeFileSync(this.#timesFile, JSON.stringify(hxFlow.times.toJSON()));
+    } catch (error) {
+      this.#port?.error("hx_flow_times_failed", error);
+    }
+  }
+
+  /** Why a guard paused the team, in the language of the team. */
+  #reason(team: HxTeamRecord, why: string, name: string): string {
+    const zh = team.language === "zh";
+    const text: Record<string, [string, string]> = {
+      G1: [
+        "实际干活累计 30 分钟没有进展（没有做完的工作、文件没有变化、计划步骤没有推进）。",
+        "30 minutes of real work with no progress (no work done, no file changed, no step of the plan moved).",
+      ],
+      G2moves: [
+        "同一件工作在成员之间转手了 3 次，两次之间文件没有变化，未解决的问题也没有减少。",
+        "The same work changed hands 3 times, with no file change and no open item closed in between.",
+      ],
+      G2same: [`${name} 收到了 3 次几乎相同的工作。`, `${name} got nearly the same work 3 times.`],
+      G3: [
+        "工作越分越散：最近 20 次交接里新开的工作是做完的 3 倍以上，或者工作分了 4 层以上。",
+        "The work spreads: in the last 20 handoffs, 3 times as much new work as finished work, or work more than 4 levels deep.",
+      ],
+      G7: [`花费到了你定的 ${name} 元。`, `The spend reached the ¥${name} that you named.`],
+      G8: ["这个团队实际干活累计 24 小时。", "This team did 24 hours of real work."],
+      G9: ["花费提醒连续 10 次没有回应。", "10 spend reminders got no answer."],
+    };
+    const entry = text[why] ?? [why, why];
+    return zh ? entry[0] : entry[1];
+  }
+
+  /**
+   * A guard pauses the team: no new work starts, the work that runs finishes, and the starter asks the
+   * user: continue, wrap up or stop. The referee of v1.7.4 comes before the user; until then the user.
+   */
+  async #pause(port: HxTeamPort, team: HxTeamRecord, guardId: HxGuardId, reason: string): Promise<void> {
+    const guard = this.#guard(team);
+    if (team.state !== "running" || guard.paused) return;
+    const at = new Date(this.#now()).toISOString();
+    guard.paused = { guard: guardId, at, reason };
+    this.#save(team);
+    port.note(team.starterAgentId, sourceText("status.agent.hxTeam.paused", { reason }));
+    const zh = team.language === "zh";
+    const text = zh
+      ? [
+          `【协作暂停】团队“${team.roomName}”暂停了：${reason}`,
+          "暂停只是不开新的工作，在做的会做完。",
+          "",
+          "请把情况告诉用户，问用户怎么办：继续（调用 team，action 为 continue）、收尾（action 为 finish，带头的用已有的结果交回）、停（action 为 stop）。",
+        ]
+      : [
+          `[Team paused] The team "${team.roomName}" paused: ${reason}`,
+          "A pause only starts no new work; the work that runs finishes.",
+          "",
+          "Tell the user what happened, and ask what to do: continue (call team with action continue), wrap up (action finish: the lead sends what the team has), or stop (action stop).",
+        ];
+    try {
+      await port.deliver({
+        fromAgentId: this.#lead(team)?.agentId ?? team.leadAgentId,
+        toAgentId: team.starterAgentId,
+        text: text.join("\n"),
+        key: `hx-team:${team.id}:pause:${guardId}:${at}`,
+      });
+    } catch (error) {
+      port.error("hx_team_pause_failed", error);
+    }
+  }
+
+  /** G3: the first time, one line to the lead; the next time, the user. */
+  async #spread(port: HxTeamPort, team: HxTeamRecord): Promise<void> {
+    const guard = this.#guard(team);
+    if (team.state !== "running" || guard.paused) return;
+    if (guard.spreadHinted) return this.#pause(port, team, "G3", this.#reason(team, "G3", ""));
+    guard.spreadHinted = true;
+    guard.handoffs = [];
+    this.#save(team);
+    const lead = this.#lead(team);
+    if (!lead) return;
+    try {
+      await port.post({
+        channelId: team.channelId,
+        operationId: `hx-team-spread:${team.id}`,
+        fromAgentId: team.starterAgentId,
+        text:
+          team.language === "zh"
+            ? "先收拢：新开的工作比做完的多得多。先把已分出去的做完、合起来，再决定还要不要分。"
+            : "Bring it together first: much more new work opens than gets done. Finish and join the work that is out, then decide whether to split more.",
+        toAgentIds: [lead.agentId],
+        paths: [],
+      });
+    } catch (error) {
+      port.error("hx_team_spread_failed", error);
+    }
+  }
+
+  #startTicker(): void {
+    if (this.#ticker) return;
+    this.#ticker = setInterval(() => void this.tick(), HX_TEAM_TICK_MS);
+    if (typeof this.#ticker === "object" && "unref" in this.#ticker) this.#ticker.unref();
+  }
+
+  /**
+   * One look at each running team: real work (G1, G8, the user's minutes), and the spend (G5, G7,
+   * G9). Tests call it.
+   */
+  async tick(): Promise<void> {
+    const port = this.#port;
+    if (!port) return;
+    const now = this.#now();
+    for (const team of this.store.running()) {
+      const guard = this.#guard(team);
+      // The first reading of the shared folder is where G1 compares from, not progress. With no
+      // reading, the first G1 check took any folder for a changed one, and G1 came 30 minutes late.
+      if (guard.folderHash === null) guard.folderHash = this.#folderHash(team);
+      const working = !guard.paused && hxFlow.teamRunning(team.id);
+      const due = hxWorkTick(guard, now, working);
+      const minutes = team.stated?.minutes;
+      if (minutes !== undefined && guard.activeMs >= minutes * 60_000) {
+        this.#later(team, () => this.#stop(port, team, "minutes", true));
+        continue;
+      }
+      if (due === "G8") this.#later(team, () => this.#pause(port, team, "G8", this.#reason(team, "G8", "")));
+      if (due === "G1") {
+        // The code check: a file that changed is progress too.
+        const folder = this.#folderHash(team);
+        if (folder !== null && folder !== guard.folderHash) hxProgress(guard, folder);
+        else this.#later(team, () => this.#pause(port, team, "G1", this.#reason(team, "G1", "")));
+      }
+      this.store.save(team);
+    }
+    await this.#spendTick(port, now);
+  }
+
+  async #spendTick(port: HxTeamPort, now: number): Promise<void> {
+    if (!port.spend || this.#spendReading) return;
+    this.#spendReading = true;
+    try {
+      for (const team of this.store.running()) {
+        const guard = this.#guard(team);
+        const reading = await port.spend(
+          team.members.filter((member) => !member.left).map((member) => member.agentId),
+          team.createdAt,
+        );
+        const cap = team.stated?.spendYuan;
+        if (cap !== undefined && reading.yuan !== null && reading.yuan >= cap) {
+          this.#later(team, () => this.#pause(port, team, "G7", this.#reason(team, "G7", String(cap))));
+          continue;
+        }
+        const reminder = hxSpendDue(guard, reading, now);
+        if (reminder) {
+          port.note(
+            team.starterAgentId,
+            reminder.kind === "api"
+              ? sourceText("status.agent.hxTeam.spend.api", { yuan: reminder.yuan })
+              : reminder.kind === "plan"
+                ? sourceText("status.agent.hxTeam.spend.plan", { percent: reminder.percent })
+                : sourceText("status.agent.hxTeam.spend.tokens", { millions: reminder.millions }),
+          );
+          if (hxUnanswered(guard, team.stated?.noAsk === true))
+            this.#later(team, () => this.#pause(port, team, "G9", this.#reason(team, "G9", "")));
+        }
+        this.store.save(team);
+      }
+    } catch (error) {
+      port.error("hx_team_spend_failed", error);
+    } finally {
+      this.#spendReading = false;
+    }
+  }
+
+  /** What the HX-Flow ledger reads of the teams (CONC-03, CONC-04). */
+  #flowView() {
+    const running = (channelId: string) => {
+      const team = this.store.byChannel(channelId);
+      return team?.state === "running" ? team : null;
+    };
+    const describe = (team: HxTeamRecord, tasks: readonly ChannelTask[], index: number): HxFlowTeamTask | null => {
+      const task = tasks[index];
+      if (!task) return null;
+      const dependents = countDependents(task.id, tasks);
+      const owner = task.ownerAgentId;
+      return {
+        channelId: team.channelId,
+        taskId: task.id,
+        teamId: team.id,
+        tier: task.parentTaskId === null || owner === team.leadAgentId || dependents > 0 ? 1 : 2,
+        order: index,
+        batch: team.batches?.[workKey(task)] ?? null,
+        difficulty: team.members.find((member) => member.agentId === owner)?.difficulty ?? null,
+        dependents,
+      };
+    };
+    return {
+      teamOf: (channelId: string) => running(channelId)?.id ?? null,
+      task: (channelId: string, taskId: string) => {
+        const team = running(channelId);
+        const port = this.#port;
+        if (!team || !port) return null;
+        const tasks = this.#tasks(port, channelId);
+        return describe(
+          team,
+          tasks,
+          tasks.findIndex((task) => task.id === taskId),
+        );
+      },
+      ready: () => {
+        const port = this.#port;
+        if (!port) return [];
+        const ready: HxFlowTeamTask[] = [];
+        for (const team of this.store.running()) {
+          const guard = this.#guard(team);
+          if (guard.paused) continue;
+          const tasks = this.#tasks(port, team.channelId);
+          const states = new Map(tasks.map((task) => [task.id, task.state]));
+          tasks.forEach((task, index) => {
+            if (task.state !== "queued" || !task.ownerAgentId) return;
+            if (guard.wrapUp && task.parentTaskId !== null && task.ownerAgentId !== team.leadAgentId) return;
+            if (!task.dependencies.every((id) => SETTLED.has(states.get(id) ?? ""))) return;
+            const described = describe(team, tasks, index);
+            if (described) ready.push(described);
+          });
+        }
+        return ready;
+      },
+    };
   }
 
   // ------------------------------------------------------------------ reading
@@ -1068,8 +1560,9 @@ export class HxTeams {
         .filter((member) => !member.left)
         .map((member) => ({ role: member.role, name: member.name, model: member.model, temporary: member.temporary })),
       folder: team.folder,
-      limits: team.limits,
-      deadline: team.deadline,
+      // v1.7.1: only the limits the user named; none by default.
+      limits: team.stated ?? null,
+      paused: team.guard?.paused ?? null,
     };
   }
 
@@ -1112,19 +1605,14 @@ export class HxTeams {
         file: skill.file,
       })),
       connectors: "Every agent on this computer has the same connectors.",
-      used: { handoffs: used, of: team.limits.rounds, minutes: elapsed, ofMinutes: team.limits.minutes },
+      used: { handoffs: used, minutes: elapsed, workMinutes: Math.round((team.guard?.activeMs ?? 0) / 60_000) },
+      limits: team.stated ?? "none: the computer decides how many work at once",
+      paused: team.guard?.paused?.reason ?? null,
+      computer: hxCapacityLine(team.language, hxFlow.capacity()),
       result: team.result,
       reason: team.reason,
     };
   }
-}
-
-/**
- * How many members may work at once: one for each 2 GB of this computer's memory, at least 2 and at
- * most 10. Each member is a model program of its own; the number is an estimate to measure.
- */
-export function hxTeamParallel(totalBytes: number): number {
-  return Math.min(10, Math.max(2, Math.floor(totalBytes / 2 ** 31)));
 }
 
 /** The id of a team's progress card in the starter's chat. */
@@ -1133,20 +1621,17 @@ export function hxTeamCardId(teamId: string): string {
 }
 
 /**
- * The progress card of a team: the handoffs and the time against their limits in the header, and
- * each step with the member that does it. A blocked step says that it waits; a finished team has
- * every step done.
+ * The progress card of a team: the handoffs and the time in the header (v1.7.1: no limits), and each
+ * step with the member that does it. A blocked step says that it waits; a finished team has every
+ * step done; a paused team says that it waits for the user.
  */
 export function hxTeamCard(team: HxTeamRecord, handoffs: number, minutes: number): HxProgressCard {
   const who = (role: string) => team.members.find((member) => member.role === role && !member.left)?.name ?? role;
   const stuck = team.language === "zh" ? "（等待中）" : " (waiting)";
   return {
-    title: sourceText("status.agent.hxTeam.progress", {
-      count: handoffs,
-      limit: team.limits.rounds,
-      minutes,
-      max: team.limits.minutes,
-    }),
+    title: team.guard?.paused
+      ? sourceText("status.agent.hxTeam.progressPaused", { count: handoffs, minutes })
+      : sourceText("status.agent.hxTeam.progressOpen", { count: handoffs, minutes }),
     steps: team.steps.map((step) => ({
       text: `${step.title} · ${who(step.role)}${step.state === "blocked" ? stuck : ""}`,
       state: team.state === "done" || step.state === "done" ? "done" : step.state === "doing" ? "active" : "pending",

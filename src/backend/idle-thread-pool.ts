@@ -1,4 +1,5 @@
 import { Deferred, Effect, type Scope } from "effect";
+import { hxIdleTake } from "./hx-flow/idle";
 import type { ProviderClientOperationError } from "./provider-client-effects";
 
 /** What a pool holds of a thread. The client owns the turn; the pool owns the timer and the time. */
@@ -231,7 +232,8 @@ export class IdleThreadPool<Thread extends IdleThread, Released> {
     const idle = [...this.#threads.values()]
       .filter((thread) => thread.idleRelease !== null && thread.idleSince > 0 && this.#isIdle(thread))
       .sort((left, right) => left.idleSince - right.idleSince);
-    for (const thread of idle.slice(0, Math.max(0, idle.length - limit))) {
+    // HXBot (v1.7.1, G6): during a release of the ledger, only the longest idle thread of 4 minutes or more.
+    for (const thread of hxIdleTake(idle.slice(0, Math.max(0, idle.length - limit)), (item) => item.idleSince)) {
       yield* this.#release(thread);
     }
   });

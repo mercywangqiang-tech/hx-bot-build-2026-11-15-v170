@@ -7,6 +7,8 @@
 import { HX_DIFFICULTIES, HX_NEEDS, HX_WORK_TYPES } from "@hxbot/contracts/hx-auto-model";
 import { normalizeUiBlockSpec, UI_BLOCK_LIMITS, type UiBlockSpec } from "@hxbot/contracts/ui-blocks";
 import { z } from "zod";
+import { hxFlow } from "../hx-flow/ledger";
+import { hxCapacityLine } from "../hx-team/protocol";
 import { hxTeams } from "../hx-team/service";
 import type { HxAutoRouter } from "./router";
 
@@ -166,6 +168,8 @@ export function hxProposalCard(router: HxAutoRouter, agentId: string, args: unkn
     );
   lines.push(...roleLines);
   lines.push("", `**${words.cost}**${words.colon}${words.costLine(free, other)}`);
+  // v1.7.1 (CONC-12): the state of this computer, so the split is made knowing it. Numbers only.
+  lines.push("", hxCapacityLine(words === WORDS.zh ? "zh" : "en", hxFlow.capacity()));
   const spec = normalizeUiBlockSpec({
     type: "confirm",
     title: input.summary,
@@ -194,7 +198,7 @@ export function hxProposalInstruction(router: HxAutoRouter, agentId: string): st
       : "When work has parts that can run at the same time, needs different skills, or needs a checker apart from the doer, or the user asks for several agents, call hxbot.propose_plan first and wait for the answer. The card is your first line; do not repeat it as prose.",
     // v1.6.6: the team that a card with two or more roles starts (hx-team).
     "After Start on a card with two or more roles, run hxbot.start_team with tool_call. For a team you started, hxbot.team gives its status, passes the user's words, stops it or swaps a member.",
-    // v1.6.7: limits by the user's words, from any device.
-    "When the user names a limit for a team (members, minutes, handoffs), pass it as limits to start_team, or to hxbot.team limits for a running team.",
+    // v1.6.7: limits by the user's words, from any device. v1.7.1: a team has no limits by default.
+    "A team has no limits by default. Only when the user names one for this team (members, minutes, handoffs, yuan, or no asking), pass it as limits to start_team, or to hxbot.team limits.",
   ];
 }

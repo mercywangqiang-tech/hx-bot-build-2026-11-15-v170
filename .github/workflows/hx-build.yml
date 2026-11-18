@@ -17,6 +17,9 @@ on:
       allow_unsigned_mac:
         description: "没有固定签名时也上传 Mac 测试包（yes / no）。这样的包不能发布：升级后用户的授权会作废"
         default: "no"
+      computer_check:
+        description: "同时在 Mac、Windows 机器上跑电脑操控的真系统检查（yes / no）。打包不等它；私有仓库里约扣 200 分钟额度"
+        default: "no"
 
 permissions:
   contents: read
@@ -165,3 +168,9 @@ jobs:
           name: hxbot-android
           path: dist-hx/HXBot-*-android.apk
           if-no-files-found: error
+
+  # 电脑操控的真系统检查（.github/workflows/hx-computer-check.yml）：只在选了 computer_check = yes 时跑，
+  # 和打包同时进行；三个打包任务不等它，它的结果不拦打包。
+  computer-check:
+    if: inputs.computer_check == 'yes'
+    uses: ./.github/workflows/hx-computer-check.yml

@@ -8,6 +8,7 @@ import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 
 import { join } from "node:path";
 import { isDynamicRecord } from "@hxbot/contracts/runtime-values";
 import { createHxBotLogger } from "@hxbot/logging";
+import type { HxTeamGuardState } from "./guards";
 import type { HxTeamSkill } from "./skills";
 
 const logger = createHxBotLogger("hx-team");
@@ -28,6 +29,20 @@ export interface HxTeamMember {
   model: string | null;
   /** Taken out of the team (swapped). */
   left?: boolean;
+  /** v1.7.1: the difficulty of its role, for the order of one batch (CONC-03). */
+  difficulty?: "low" | "mid" | "high";
+}
+
+/** v1.7.1: the limits that the user named for this team in the chat (TEAM-01); none by default. */
+export interface HxTeamStated {
+  members?: number;
+  /** Minutes of real work, not of the clock. */
+  minutes?: number;
+  rounds?: number;
+  /** The most yuan this team may spend. */
+  spendYuan?: number;
+  /** "Do not ask me this time, run to the end": G9 does not pause it. */
+  noAsk?: boolean;
 }
 
 interface HxTeamStep {
@@ -56,7 +71,21 @@ export interface HxTeamRecord {
   requests: string[];
   createdAt: string;
   deadline: string;
+  /**
+   * v1.7.1: written as before, so an older version reads a new record: the members are the roles,
+   * the minutes 1440 and the rounds 1,000,000 unless the user named a limit (`stated`).
+   */
   limits: { members: number; minutes: number; rounds: number; temporary: "collapse" | "keep" };
+  /** v1.7.1: the limits the user named; absent when there are none. */
+  stated?: HxTeamStated;
+  /** v1.7.1: the guards (guards.ts). */
+  guard?: HxTeamGuardState;
+  /** v1.7.1: the weight the user gave the team in the queue ("urgent" 3, "relaxed" 1/3). */
+  weight?: "urgent" | "relaxed";
+  /** v1.7.1: the turn of the lead that gave out each piece of work, by its goal. */
+  batches?: Record<string, string>;
+  /** v1.7.1: when each piece of work started to run, for the time of each difficulty. */
+  timing?: Record<string, number>;
   state: HxTeamState;
   endedAt: string | null;
   result: string | null;

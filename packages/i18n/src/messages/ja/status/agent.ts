@@ -97,8 +97,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "この作業はうまくいきませんでした。「redo」と返信すると {model} でやり直します。",
   "status.agent.hxTeam.started": "チームを開始しました：{members}。{lead} がリーダーです。進み具合はここに戻ります。",
   "status.agent.hxTeam.assigned": "チーム · {from} が「{task}」を {to} に渡しました（引き継ぎ {count}/{limit} 回目）。",
-  "status.agent.hxTeam.transferred":
-    "チーム · {from} がタスク全体を {to} に引き継ぎました（引き継ぎ {count}/{limit} 回目）。",
   "status.agent.hxTeam.returned": "チーム · {name} が結果を返しました（{steps} ステップ中 {done} 完了）。",
   "status.agent.hxTeam.failedOnce":
     "チーム · {name} が作業の一部を終えられませんでした。同じ作業がもう一度失敗すると、チームは止まってあなたに確認します。",
@@ -117,7 +115,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "チーム · このチームのために作ったメンバーを非表示にしました：{names}。",
   "status.agent.hxComputer.plan": "このコンピューターでの作業 · {app} · {keys} で停止",
   "status.agent.hxComputer.stopped": "このコンピューターでの作業を停止しました：停止キーが押されました。",
-  "status.agent.hxTeam.progress": "チーム · 引き継ぎ {count}/{limit} · {minutes}/{max} 分",
   "status.agent.hxComputer.needBoth":
     "Computer Use には「画面収録」と「アクセシビリティ」の 2 つの許可が必要です。システム設定で 1 つ目を開きました。HXBot をオンにして、2 つ目もオンにしてから、もう一度依頼してください。設定 → Computer Use でも確認できます。",
   "status.agent.hxComputer.needScreen":
@@ -126,4 +123,21 @@ export const messages = {
     "Computer Use には「アクセシビリティ」の許可が必要です。システム設定でそのページを開きました。HXBot をオンにして、もう一度依頼してください。設定 → Computer Use でも確認できます。",
   "status.agent.hxComputer.notRunning":
     "Computer Use が動いていません：{reason}。設定 → Computer Use で理由を確認できます。",
+  "status.agent.hxTeam.handedOver": "チーム · {from} がタスク全体を {to} に引き継ぎました（{count} 回目の引き継ぎ）。",
+  "status.agent.hxTeam.progressOpen": "チーム · 引き継ぎ {count} 回 · {minutes} 分",
+  "status.agent.hxTeam.progressPaused":
+    "チーム · 一時停止中、あなたの判断を待っています · 引き継ぎ {count} 回 · {minutes} 分",
+  "status.agent.hxTeam.paused":
+    "チームを一時停止しました：{reason}新しい作業は始めず、実行中の作業は最後まで行います。続ける、まとめる、止める、のどれにしますか？",
+  "status.agent.hxTeam.continued": "チーム · 続けます。",
+  "status.agent.hxTeam.wrapUp": "チーム · リーダーがここまでの結果でまとめます。",
+  "status.agent.hxTeam.priority.urgent": "チーム · より急ぎ：終わるまで他のチームより先に進めます。",
+  "status.agent.hxTeam.priority.normal": "チーム · 通常の順番に戻しました。",
+  "status.agent.hxTeam.priority.relaxed": "チーム · 急ぎではない：終わるまで他のチームを先にします。",
+  "status.agent.hxTeam.spend.api":
+    "チーム · これまでに約 ¥{yuan} 使いました。作業は続けます。上限を言えばそこで止めます。",
+  "status.agent.hxTeam.spend.plan":
+    "チーム · プランの期間の {percent}% を使いました。作業は続けます。上限を言えばそこで止めます。",
+  "status.agent.hxTeam.spend.tokens":
+    "チーム · これまでに約 {millions} 百万トークン使いました（価格は不明）。作業は続けます。",
 } as const satisfies PartialTranslation<typeof source>;

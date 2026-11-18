@@ -963,17 +963,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "اتصل بالخدمات",
   "settings.hxOpenCode.noWay": "اتصل بهذه الخدمة من الطرفية باستخدام opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "املأ: {field}",
-  "settings.hxAutoModel.team.members": "أقصى عدد لأعضاء الفريق",
-  "settings.hxAutoModel.team.minutes": "أطول مدة للفريق",
-  "settings.hxAutoModel.team.minuteValue": "{count} دقيقة",
-  "settings.hxAutoModel.team.rounds": "أقصى عدد لعمليات التسليم",
   "settings.hxAutoModel.team.temporary": "الأعضاء الذين يُنشأون للفريق",
   "settings.hxAutoModel.team.temporary.collapse": "إخفاؤهم عند انتهاء الفريق",
   "settings.hxAutoModel.team.temporary.keep": "إبقاؤهم",
-  "settings.hxAutoModel.team.description":
-    "الضغط على «ابدأ» في بطاقة فيها عدة أدوار يكوّن فريقًا: يختار HXBot الوكلاء حسب مهاراتهم، وينشئ أعضاء للأدوار الناقصة، ويفتح غرفة للفريق. يعود التقدّم والنتيجة إلى هذه المحادثة. عند بلوغ حدّ ما يتوقف الفريق ويسألك.",
-  "settings.hxAutoModel.team.summary": "الفرق: حتى {members} أعضاء · {minutes} دقيقة · {rounds} تسليمات",
-  "settings.hxAutoModel.team.summaryDescription":
-    "يحدد HXBot حجم كل فريق حسب العمل. لتغيير حدود فريق واحد، قل ذلك في المحادثة.",
-  "settings.hxAutoModel.team.change": "تغيير الحدود",
+  "settings.hxAutoModel.team.capacity":
+    "الفريق: عدد الأعضاء حسب العمل؛ يقرر هذا الحاسوب كم يعمل في الوقت نفسه (الآن {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "اضغط «ابدأ» على بطاقة فيها عدة أدوار لتكوين فريق: يختار HXBot الوكلاء حسب المهارة، وينشئ أعضاء للأدوار الناقصة، ويفتح غرفة للفريق. يعود التقدم والنتيجة إلى هذه المحادثة. لا حدود للفريق؛ وإذا لم يتقدم يتوقف مؤقتًا ويسألك. لوضع حد لفريق واحد، قل ذلك في المحادثة.",
 } as const satisfies PartialTranslation<typeof source>;

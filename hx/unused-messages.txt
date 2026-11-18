@@ -292,3 +292,14 @@ sitePage.teams.setups.managed.label
 sitePage.teams.setups.managed.title
 sitePage.teams.setups.question
 sitePage.teams.title
+# v1.7.1：团队不设上限（hx/flow.py）后不再用的文字
+settings.hxAutoModel.team.summary
+settings.hxAutoModel.team.summaryDescription
+settings.hxAutoModel.team.change
+settings.hxAutoModel.team.members
+settings.hxAutoModel.team.minutes
+settings.hxAutoModel.team.minuteValue
+settings.hxAutoModel.team.rounds
+settings.hxAutoModel.team.description
+status.agent.hxTeam.transferred
+status.agent.hxTeam.progress

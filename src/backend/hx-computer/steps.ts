@@ -339,7 +339,8 @@ export class HxStepRun {
       if (now !== null) this.#frontSeenAt = Date.now();
       return null;
     }
-    return `The user works in another app now, so HXBot did not send the keys there and did not take the front from the user. Ask the user to go back to ${window.app} or to say when, then run the steps again.`;
+    // v1.7.1 (CONC-12): the member learns that the screen is in use, and does other work first.
+    return `The user works in another app now, so HXBot did not send the keys there and did not take the front from the user. The screen is in use: first do the parts of the work that do not need the screen. Ask the user to go back to ${window.app} or to say when, then run the steps again.`;
   }
 
   async #runAll(steps: readonly HxStep[]): Promise<HxRunResult> {

@@ -929,17 +929,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Connecter des services",
   "settings.hxOpenCode.noWay": "Connectez ce service dans un terminal avec opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "À remplir : {field}",
-  "settings.hxAutoModel.team.members": "Membres d’équipe au plus",
-  "settings.hxAutoModel.team.minutes": "Durée maximale d’une équipe",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Passages au plus",
   "settings.hxAutoModel.team.temporary": "Membres créés pour une équipe",
   "settings.hxAutoModel.team.temporary.collapse": "Masquer à la fin de l’équipe",
   "settings.hxAutoModel.team.temporary.keep": "Garder",
-  "settings.hxAutoModel.team.description":
-    "Démarrer une carte à plusieurs rôles forme une équipe : HXBot choisit des agents selon leurs compétences, crée des membres pour les rôles manquants et ouvre une salle d’équipe. L’avancement et le résultat reviennent dans ce chat. À une limite, l’équipe s’arrête et te pose la question.",
-  "settings.hxAutoModel.team.summary": "Équipes : jusqu’à {members} membres · {minutes} min · {rounds} passations",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot dimensionne chaque équipe selon le travail. Pour changer les limites d’une équipe, dis-le dans le chat.",
-  "settings.hxAutoModel.team.change": "Changer les limites",
+  "settings.hxAutoModel.team.capacity":
+    "Équipe : des membres selon le travail ; cet ordinateur décide combien travaillent en même temps (maintenant {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Démarrer sur une carte à plusieurs rôles crée une équipe : HXBot choisit les agents selon leurs compétences, crée des membres pour les rôles manquants et ouvre une salle d’équipe. La progression et le résultat reviennent dans cette conversation. Une équipe n’a pas de limites ; si elle n’avance pas, elle se met en pause et vous demande. Pour fixer une limite à une équipe, dites-le dans la conversation.",
 } as const satisfies PartialTranslation<typeof source>;

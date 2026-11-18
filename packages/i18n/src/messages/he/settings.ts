@@ -908,17 +908,10 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "חיבור שירותים",
   "settings.hxOpenCode.noWay": "חברו את השירות הזה בטרמינל עם opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "יש למלא: {field}",
-  "settings.hxAutoModel.team.members": "מספר חברי צוות מרבי",
-  "settings.hxAutoModel.team.minutes": "זמן צוות מרבי",
-  "settings.hxAutoModel.team.minuteValue": "{count} דק׳",
-  "settings.hxAutoModel.team.rounds": "מספר העברות מרבי",
   "settings.hxAutoModel.team.temporary": "חברים שנוצרים לצוות",
   "settings.hxAutoModel.team.temporary.collapse": "להסתיר כשהצוות מסתיים",
   "settings.hxAutoModel.team.temporary.keep": "להשאיר",
-  "settings.hxAutoModel.team.description":
-    "לחיצה על „התחל” בכרטיס עם כמה תפקידים יוצרת צוות: HXBot בוחר סוכנים לפי מיומנות, יוצר חברים לתפקידים חסרים ופותח חדר צוות. ההתקדמות והתוצאה חוזרות לצ׳אט הזה. כשמגיעים למגבלה, הצוות נעצר ושואל אותך.",
-  "settings.hxAutoModel.team.summary": "צוותים: עד {members} חברים · {minutes} דק׳ · {rounds} העברות",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot קובע את גודל כל צוות לפי העבודה. כדי לשנות את המגבלות של צוות אחד, אמור זאת בצ׳אט.",
-  "settings.hxAutoModel.team.change": "שינוי המגבלות",
+  "settings.hxAutoModel.team.capacity": "צוות: חברים לפי העבודה; המחשב הזה מחליט כמה עובדים בבת אחת (עכשיו {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "התחלה בכרטיס עם כמה תפקידים יוצרת צוות: HXBot בוחר סוכנים לפי מומחיות, יוצר חברים לתפקידים חסרים ופותח חדר צוות. ההתקדמות והתוצאה חוזרות לשיחה הזו. לצוות אין מגבלות; כשאין התקדמות הוא מושהה ושואל אותך. כדי לקבוע מגבלה לצוות אחד, אמור זאת בשיחה.",
 } as const satisfies PartialTranslation<typeof source>;

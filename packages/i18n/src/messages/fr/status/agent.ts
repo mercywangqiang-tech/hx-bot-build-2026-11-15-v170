@@ -101,7 +101,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Ce travail ne s’est pas bien passé. Répondez « redo » pour le refaire avec {model}.",
   "status.agent.hxTeam.started": "Équipe lancée : {members} ; {lead} la dirige. L’avancement revient ici.",
   "status.agent.hxTeam.assigned": "Équipe · {from} a confié « {task} » à {to} (passage {count} sur {limit}).",
-  "status.agent.hxTeam.transferred": "Équipe · {from} a passé toute la tâche à {to} (passage {count} sur {limit}).",
   "status.agent.hxTeam.returned": "Équipe · {name} a rendu un résultat ({done} étapes sur {steps} faites).",
   "status.agent.hxTeam.failedOnce":
     "Équipe · {name} n’a pas pu finir une partie du travail ; si elle échoue encore, l’équipe s’arrête et te pose la question.",
@@ -121,7 +120,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Équipe · Les membres créés pour elle sont masqués : {names}.",
   "status.agent.hxComputer.plan": "Travail sur cet ordinateur · {app} · {keys} l’arrête",
   "status.agent.hxComputer.stopped": "Travail sur cet ordinateur arrêté : tu as appuyé sur les touches d’arrêt.",
-  "status.agent.hxTeam.progress": "Équipe · passations {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "Computer Use a besoin de deux autorisations : Enregistrement de l’écran et Accessibilité. Réglages Système est ouvert sur la première : activez HXBot, puis la seconde. Redemandez quand les deux sont actives. Réglages → Computer Use les affiche.",
   "status.agent.hxComputer.needScreen":
@@ -130,4 +128,20 @@ export const messages = {
     "Computer Use a besoin de l’autorisation Accessibilité. Réglages Système est ouvert sur cette page : activez HXBot, puis redemandez. Réglages → Computer Use l’affiche aussi.",
   "status.agent.hxComputer.notRunning":
     "Computer Use ne fonctionne pas : {reason}. Réglages → Computer Use en donne la raison.",
+  "status.agent.hxTeam.handedOver": "Équipe · {from} a confié toute la tâche à {to} (passage {count}).",
+  "status.agent.hxTeam.progressOpen": "Équipe · {count} passages · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Équipe · en pause, attend votre réponse · {count} passages · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "L’équipe est en pause : {reason} Elle ne lance aucun nouveau travail ; le travail en cours se termine. Continuer, conclure ou arrêter ?",
+  "status.agent.hxTeam.continued": "Équipe · Elle continue.",
+  "status.agent.hxTeam.wrapUp": "Équipe · Le responsable conclut avec ce que l’équipe a.",
+  "status.agent.hxTeam.priority.urgent": "Équipe · Plus urgent : elle passe avant les autres équipes jusqu’à la fin.",
+  "status.agent.hxTeam.priority.normal": "Équipe · Retour à l’ordre normal.",
+  "status.agent.hxTeam.priority.relaxed": "Équipe · Pas urgent : les autres équipes passent d’abord jusqu’à la fin.",
+  "status.agent.hxTeam.spend.api":
+    "Équipe · Environ ¥{yuan} dépensés jusqu’ici. Elle continue ; indiquez une limite pour l’arrêter là.",
+  "status.agent.hxTeam.spend.plan":
+    "Équipe · {percent} % de la période du forfait est utilisé. Elle continue ; indiquez une limite pour l’arrêter là.",
+  "status.agent.hxTeam.spend.tokens":
+    "Équipe · Environ {millions} millions de jetons utilisés (prix inconnu). Elle continue.",
 } as const satisfies PartialTranslation<typeof source>;

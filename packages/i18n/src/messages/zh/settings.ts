@@ -870,17 +870,10 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "连接服务商",
   "settings.hxOpenCode.noWay": "这家需要在终端里用 opencode auth login 连接。",
   "settings.hxOpenCode.requiredMissing": "请填写：{field}",
-  "settings.hxAutoModel.team.members": "团队成员最多",
-  "settings.hxAutoModel.team.minutes": "团队最长时间",
-  "settings.hxAutoModel.team.minuteValue": "{count} 分钟",
-  "settings.hxAutoModel.team.rounds": "交接最多",
   "settings.hxAutoModel.team.temporary": "为团队新建的成员",
   "settings.hxAutoModel.team.temporary.collapse": "团队结束后收起",
   "settings.hxAutoModel.team.temporary.keep": "留下",
-  "settings.hxAutoModel.team.description":
-    "在有几个角色的建议卡上点“开始”就组队：HXBot 按专长选智能体，缺的角色新建成员，开一个协作房间。进度和结果回到这个对话。到了上限，团队停下来问你。",
-  "settings.hxAutoModel.team.summary": "团队：最多 {members} 人 · {minutes} 分钟 · {rounds} 次交接",
-  "settings.hxAutoModel.team.summaryDescription":
-    "人数按工作自动定。想改某一次团队的上限，直接在对话里说，比如“这次最多 3 个人、1 小时”。",
-  "settings.hxAutoModel.team.change": "调整上限",
+  "settings.hxAutoModel.team.capacity": "团队：人数按工作定；同时干活由电脑安排（现在 {count} 个）",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "在有几个角色的建议卡上点“开始”就组队：HXBot 按专长选智能体，缺的角色新建成员，开一个协作房间。进度和结果回到这个对话。团队不设上限；没有进展时会停下来问你。想给某一次团队设上限，直接在对话里说。",
 } as const satisfies PartialTranslation<typeof source>;

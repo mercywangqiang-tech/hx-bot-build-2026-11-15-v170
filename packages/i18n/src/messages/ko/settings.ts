@@ -883,17 +883,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "서비스 연결",
   "settings.hxOpenCode.noWay": "이 서비스는 터미널에서 opencode auth login으로 연결하세요.",
   "settings.hxOpenCode.requiredMissing": "입력하세요: {field}",
-  "settings.hxAutoModel.team.members": "팀 멤버 최대",
-  "settings.hxAutoModel.team.minutes": "팀 최장 시간",
-  "settings.hxAutoModel.team.minuteValue": "{count}분",
-  "settings.hxAutoModel.team.rounds": "인계 최대",
   "settings.hxAutoModel.team.temporary": "팀용으로 만든 멤버",
   "settings.hxAutoModel.team.temporary.collapse": "팀이 끝나면 숨기기",
   "settings.hxAutoModel.team.temporary.keep": "남기기",
-  "settings.hxAutoModel.team.description":
-    "역할이 여러 개인 카드에서 「시작」을 누르면 팀을 만듭니다. HXBot이 기술에 맞는 에이전트를 고르고, 빠진 역할은 멤버를 만들어 팀 방을 엽니다. 진행 상황과 결과는 이 채팅으로 돌아옵니다. 한도에 도달하면 팀이 멈추고 물어봅니다.",
-  "settings.hxAutoModel.team.summary": "팀: 최대 {members}명 · {minutes}분 · 인계 {rounds}회",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot이 작업에 맞춰 팀 규모를 정합니다. 한 팀의 한도를 바꾸려면 채팅에서 말하세요.",
-  "settings.hxAutoModel.team.change": "한도 변경",
+  "settings.hxAutoModel.team.capacity":
+    "팀: 인원은 작업에 맞게 정하고, 동시에 일하는 수는 이 컴퓨터가 정합니다(현재 {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "역할이 여러 개인 카드에서 시작을 누르면 팀이 만들어집니다. HXBot이 전문성에 따라 에이전트를 고르고, 없는 역할의 멤버를 만들고, 팀 룸을 엽니다. 진행 상황과 결과는 이 대화로 돌아옵니다. 팀에는 한도가 없으며, 진전이 없으면 일시 중지하고 물어봅니다. 한 팀에만 한도를 두려면 대화에서 말하세요.",
 } as const satisfies PartialTranslation<typeof source>;

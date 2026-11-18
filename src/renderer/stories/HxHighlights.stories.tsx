@@ -551,7 +551,7 @@ export const TeamProgressCard: Story = {
       <main class="foundation-story hx-highlight-frame">
         <TaskList
           class="hx-highlight-wide"
-          title={t("status.agent.hxTeam.progress", { count: 3, limit: 80, minutes: 12, max: 240 })}
+          title={t("status.agent.hxTeam.progressOpen", { count: 3, minutes: 12 })}
           items={steps.map((label, index) => ({
             id: String(index),
             label,
@@ -563,10 +563,10 @@ export const TeamProgressCard: Story = {
   },
 };
 
-/** Agent settings › auto model on by default, and the limits of a team as one line. */
+/** Agent settings › auto model on by default; v1.7.1: a team has no limits, one read-only line. */
 export const TeamSummary: Story = {
   render: () => {
-    const view: HxAutoModelView = { ...AUTO_VIEW, settings: HX_AUTO_DEFAULTS };
+    const view: HxAutoModelView = { ...AUTO_VIEW, settings: HX_AUTO_DEFAULTS, parallel: 4 };
     return (
       <main class="foundation-story hx-highlight-frame">
         <div class="agent-settings-page hx-highlight-panel">
@@ -575,6 +575,44 @@ export const TeamSummary: Story = {
             calls={{ view: async () => view, update: async (_agent, settings) => ({ ...view, settings }) }}
           />
         </div>
+      </main>
+    );
+  },
+};
+
+// ---------------------------------------------------------------- v1.7.1: many agents, teams with no limits
+
+/** v1.7.1: the team line of the agent settings (no limits; this computer runs n at once) and the progress card. */
+export const TeamOpen: Story = {
+  render: () => {
+    const { t } = useI18n();
+    const chinese = zh();
+    const view: HxAutoModelView = { ...AUTO_VIEW, settings: HX_AUTO_DEFAULTS, parallel: 4 };
+    const steps = chinese
+      ? ["定方案 · 方案老李", "调研三家竞品 · 研究员 1～3", "整理成表 · 数据小陈", "写对比结论并检查 · 方案老李"]
+      : [
+          "Make the plan · Leo",
+          "Research three rivals · Researchers 1-3",
+          "Put it in a table · Chen",
+          "Write and check · Leo",
+        ];
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="agent-settings-page hx-highlight-panel">
+          <HxAutoModelSection
+            agentId="a1"
+            calls={{ view: async () => view, update: async (_agent, settings) => ({ ...view, settings }) }}
+          />
+        </div>
+        <TaskList
+          class="hx-highlight-wide"
+          title={t("status.agent.hxTeam.progressOpen", { count: 14, minutes: 26 })}
+          items={steps.map((label, index) => ({
+            id: String(index),
+            label,
+            state: index < 1 ? "done" : index === 1 ? "active" : "pending",
+          }))}
+        />
       </main>
     );
   },

@@ -1151,7 +1151,7 @@ export class HxBotToolRouter {
     const channelId = this.#channels.store.channelForThread(executionThreadId);
     // HXBot: teams (hx-team). In a team room, a handoff is a handoff form within the team's limits.
     if (channelId) {
-      const hxRefusal = hxTeams.checkHandoff(channelId, params.tool, params.arguments);
+      const hxRefusal = hxTeams.checkHandoff(channelId, params.tool, params.arguments, params.turnId);
       if (hxRefusal) return hxBotToolFailure(hxRefusal);
     }
     if (HX_TEAM_TOOL_NAMES.has(params.tool)) {
@@ -1168,13 +1168,18 @@ export class HxBotToolRouter {
     if (channelId && (params.tool.startsWith("channel_") || params.tool === "send_message")) {
       if (params.tool === "send_message") throw new Error("Use channel_assign or channel_transfer for channel work.");
       return hxBotToolResult(
-        yield* this.#channels.tool(
+        // HXBot (v1.7.1, CONC-04, CONC-12): in a team room, the reply to an assignment says its place.
+        hxTeams.withQueueLine(
           channelId,
-          senderAgentId,
-          params.turnId,
-          params.callId,
           params.tool,
-          params.arguments,
+          yield* this.#channels.tool(
+            channelId,
+            senderAgentId,
+            params.turnId,
+            params.callId,
+            params.tool,
+            params.arguments,
+          ),
         ),
       );
     }

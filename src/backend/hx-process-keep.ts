@@ -11,6 +11,7 @@
 import { constants, setPriority } from "node:os";
 import { type HxRunner, hxRun } from "./hx-computer/runner";
 import { HX_POWERSHELL } from "./hx-computer/tables-win";
+import { hxPowerShell } from "./hx-powershell";
 
 /** How long the list may take; after it, the whole tree stops as before. */
 const HX_TREE_LIST_MS = 4_000;
@@ -69,6 +70,12 @@ export function hxTreeAnswer(stdout: string, root: number): number[] | null {
  * last. Null when the list could not be read in time: then the caller stops the whole tree.
  */
 export async function hxTreeWithoutApps(root: number, run: HxRunner = hxRun): Promise<number[] | null> {
+  // v1.7.1: the PowerShell that stays answers without the start of a new one (22 s on Windows 11
+  // ARM, which never fit in the time). When it does not answer in time, the whole tree stops as before.
+  if (run === hxRun && hxPowerShell.ready) {
+    const answer = await hxPowerShell.ask(LIST_TREE, { HX_PID: String(root) }, HX_TREE_LIST_MS);
+    return answer === null ? null : hxTreeAnswer(answer, root);
+  }
   const result = await run(HX_POWERSHELL, powershell(LIST_TREE), {
     timeoutMs: HX_TREE_LIST_MS,
     env: { HX_PID: String(root) },
@@ -87,6 +94,8 @@ export function hxTaskkillArgs(pids: readonly number[]): string[] {
  * get the processor first. Nothing changes when the system refuses.
  */
 export function hxLowerAgentPriority(pid: number): void {
+  // v1.7.1 (Windows): agents run, so a stop can come; the PowerShell for its process list starts now.
+  hxPowerShell.warm();
   try {
     setPriority(pid, constants.priority.PRIORITY_BELOW_NORMAL);
   } catch {

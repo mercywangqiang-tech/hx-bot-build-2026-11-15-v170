@@ -942,17 +942,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Подключить сервисы",
   "settings.hxOpenCode.noWay": "Подключите этот сервис в терминале командой opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Заполните: {field}",
-  "settings.hxAutoModel.team.members": "Участников команды не больше",
-  "settings.hxAutoModel.team.minutes": "Наибольшее время команды",
-  "settings.hxAutoModel.team.minuteValue": "{count} мин",
-  "settings.hxAutoModel.team.rounds": "Передач не больше",
   "settings.hxAutoModel.team.temporary": "Участники, созданные для команды",
   "settings.hxAutoModel.team.temporary.collapse": "Скрывать после окончания команды",
   "settings.hxAutoModel.team.temporary.keep": "Оставлять",
-  "settings.hxAutoModel.team.description":
-    "«Начать» на карточке с несколькими ролями создаёт команду: HXBot подбирает агентов по навыкам, создаёт участников для недостающих ролей и открывает комнату команды. Ход работы и результат возвращаются в этот чат. Дойдя до предела, команда останавливается и спрашивает вас.",
-  "settings.hxAutoModel.team.summary": "Команды: до {members} участников · {minutes} мин · передач: {rounds}",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot подбирает размер команды по работе. Чтобы изменить пределы одной команды, скажите об этом в чате.",
-  "settings.hxAutoModel.team.change": "Изменить пределы",
+  "settings.hxAutoModel.team.capacity":
+    "Команда: участников столько, сколько нужно работе; сколько работают одновременно, решает этот компьютер (сейчас {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Кнопка «Начать» на карточке с несколькими ролями создаёт команду: HXBot подбирает агентов по навыкам, создаёт участников для недостающих ролей и открывает комнату команды. Ход работы и результат возвращаются в этот чат. У команды нет ограничений; если нет продвижения, она встаёт на паузу и спрашивает вас. Чтобы задать ограничение одной команде, скажите об этом в чате.",
 } as const satisfies PartialTranslation<typeof source>;

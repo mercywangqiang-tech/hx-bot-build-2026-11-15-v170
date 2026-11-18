@@ -227,12 +227,14 @@ def own_commit_check(r) -> None:
 # 建议卡最多 20 个角色、30 步。
 # v1.6.8：工具目录里多了 computer_install（安装应用，F6）；最大权限的说明和 request_access 的说明里去掉了
 # “用保存的密码登录”“删除保密箱条目”（不再要确认），每次对话发的内容变少了，上限跟着降。
+# v1.7.1：团队不设上限（TEAM-01）：start_team 的 limits 多了花费和“不用问”，team 多了 priority、continue、finish
+# 三个动作（CONC-03、CONC-10）；建议卡说明里团队上限的一句改成“默认不设上限，用户说了才传”，文字都压到最短。
 AGENT_CONTEXT_BYTES = {
-    "catalog.descriptions": 45033,  # 上游 40370；v1.6.9 加 computer_app、computer_run
-    "catalog.schemas": 81083,  # 上游 70274
+    "catalog.descriptions": 45041,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作
+    "catalog.schemas": 81536,  # 上游 70274；v1.7.1 limits 与 team 的新字段
     "guidance": 21879,  # 上游 22043
-    "instructions.claude": 17161,  # 上游 14897
-    "instructions.codex": 17231,  # 上游 14969
+    "instructions.claude": 17199,  # 上游 14897
+    "instructions.codex": 17269,  # 上游 14969
     "visible-tools": 21137,  # 上游 15681（tool_search 的说明里列出全部工具名）
 }
 
@@ -296,7 +298,9 @@ def unused_exports(r) -> None:
               '    // HXBot: the real check opens files in Notepad on Windows runners.\n'
               '    "notepad.exe",\n'
               '    // HXBot (v1.7.0): the quiet check moves the user to File Explorer.\n'
-              '    "explorer.exe",\n')
+              '    "explorer.exe",\n'
+              '    // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).\n'
+              '    "tasklist.exe",\n')
     entries = "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in LEFT_AS_UPSTREAM.items())
     r.replace(knip, '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n  },\n',
               '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n'

@@ -1,4 +1,5 @@
 import type { QueueDelivery } from "@hxbot/contracts/ipc";
+import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
 
 export interface TurnSlotsOptions {
   /** The most turns that run at the same time, or null for no limit. */
@@ -14,6 +15,8 @@ export interface TurnSlotsOptions {
   isWaiting(lane: string): boolean;
   /** The delivery at the head of the lane's queue. */
   head(lane: string): QueueDelivery | null;
+  /** HXBot (v1.7.1): the place of a lane's head in the HX-Flow order (src/backend/hx-flow). */
+  rank?(lane: string, head: QueueDelivery): HxFlowCandidate;
 }
 
 /**
@@ -36,13 +39,28 @@ export class TurnSlots {
     const limit = this.#options.limit();
     if (limit === null) return true;
     const lanes = this.#options.lanes();
-    const free = limit - lanes.filter((id) => this.#options.isRunning(id)).length;
+    // HXBot (v1.7.1, BUG-CONC-01): each lane is asked once whether it runs. A check of a waiting lane
+    // asked every lane two or three times; with 65 agents one pass held the main process 1.3 s.
+    const running = lanes.filter((id) => this.#options.isRunning(id));
+    const runs = new Set(running);
+    const free = limit - running.length;
     if (free <= 0) return false;
     const head = this.#options.head(lane);
     if (!head) return true;
+    // HXBot (v1.7.1, CONC-03): the HX-Flow order, and one place kept for a person.
+    const rank = this.#options.rank;
+    if (rank) {
+      const waiting: HxFlowCandidate[] = [];
+      for (const other of lanes) {
+        if (other === lane || runs.has(other) || !this.#options.isWaiting(other)) continue;
+        const otherHead = this.#options.head(other);
+        if (otherHead) waiting.push(rank(other, otherHead));
+      }
+      return hxFlow.mayStart(rank(lane, head), waiting, running, limit);
+    }
     let ahead = 0;
     for (const other of lanes) {
-      if (other === lane || this.#options.isRunning(other) || !this.#options.isWaiting(other)) continue;
+      if (other === lane || runs.has(other) || !this.#options.isWaiting(other)) continue;
       const otherHead = this.#options.head(other);
       if (otherHead && startsBefore(otherHead, other, head, lane)) ahead += 1;
     }

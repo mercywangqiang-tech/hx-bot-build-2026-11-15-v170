@@ -49,7 +49,9 @@ describe("the tool router", () => {
 
   it("checks a handoff in a team room before the channel tools take it", () => {
     const room = once("const channelId = this.#channels.store.channelForThread(executionThreadId);");
-    const check = once("const hxRefusal = hxTeams.checkHandoff(channelId, params.tool, params.arguments);");
+    const check = once(
+      "const hxRefusal = hxTeams.checkHandoff(channelId, params.tool, params.arguments, params.turnId);",
+    );
     const channelTools = once(
       'if (channelId && (params.tool.startsWith("channel_") || params.tool === "send_message")) {',
     );

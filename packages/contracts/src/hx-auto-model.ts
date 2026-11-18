@@ -710,6 +710,11 @@ export interface HxAutoModelView {
   freeQuota: { blockedUntil: number | null; usedToday: number };
   /** The latest decisions, newest first, at most 20. */
   decisions: HxRoutingDecision[];
+  /**
+   * v1.7.1 (TEAM-01, CONC-01): how many turns this computer runs at the same time now (B), for the
+   * one read-only line about teams. Absent from a main process before v1.7.1.
+   */
+  parallel?: number;
 }
 
 export interface HxAutoModelUpdate {
@@ -794,7 +799,14 @@ export function decodeHxAutoModelView(value: unknown): HxAutoModelView {
     !(quota.blockedUntil === null || typeof quota.blockedUntil === "number") ||
     typeof quota.usedToday !== "number" ||
     !Array.isArray(value.decisions) ||
-    !value.decisions.every(isDecision)
+    !value.decisions.every(isDecision) ||
+    !(
+      value.parallel === undefined ||
+      (typeof value.parallel === "number" &&
+        Number.isSafeInteger(value.parallel) &&
+        value.parallel >= 1 &&
+        value.parallel <= 64)
+    )
   )
     throw new Error("Invalid auto model view.");
   return {
@@ -804,5 +816,6 @@ export function decodeHxAutoModelView(value: unknown): HxAutoModelView {
     preview: value.preview,
     freeQuota: { blockedUntil: quota.blockedUntil, usedToday: quota.usedToday },
     decisions: value.decisions,
+    ...(typeof value.parallel === "number" ? { parallel: value.parallel } : {}),
   };
 }

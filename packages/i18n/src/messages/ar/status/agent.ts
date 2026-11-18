@@ -138,7 +138,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "لم ينجح هذا العمل كما يجب. ردّ بـ «redo» ليُعاد بالنموذج {model}.",
   "status.agent.hxTeam.started": "بدأ الفريق: {members}؛ يقوده {lead}. يعود التقدّم إلى هنا.",
   "status.agent.hxTeam.assigned": "الفريق · أعطى {from} «{task}» إلى {to} (التسليم {count} من {limit}).",
-  "status.agent.hxTeam.transferred": "الفريق · سلّم {from} المهمة كلها إلى {to} (التسليم {count} من {limit}).",
   "status.agent.hxTeam.returned": "الفريق · أعاد {name} نتيجة (اكتملت {done} من {steps} خطوات).",
   "status.agent.hxTeam.failedOnce":
     "الفريق · لم يتمكن {name} من إنهاء جزء من العمل؛ إذا فشل مرة أخرى يتوقف الفريق ويسألك.",
@@ -156,7 +155,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "الفريق · أُخفي الأعضاء الذين أُنشئوا له: {names}.",
   "status.agent.hxComputer.plan": "العمل على هذا الحاسوب · {app} · يوقفه {keys}",
   "status.agent.hxComputer.stopped": "توقف العمل على هذا الحاسوب: ضغطت مفاتيح الإيقاف.",
-  "status.agent.hxTeam.progress": "الفريق · التسليمات {count}/{limit} · {minutes}/{max} دقيقة",
   "status.agent.hxComputer.needBoth":
     "يحتاج التحكم في الحاسوب إلى إذنين: تسجيل الشاشة وإمكانية الوصول. إعدادات النظام مفتوحة على الأول: شغّل HXBot هناك، ثم الثاني. اطلب مرة أخرى عندما يعمل الاثنان. يعرضهما أيضًا: الإعدادات ← التحكم في الحاسوب.",
   "status.agent.hxComputer.needScreen":
@@ -165,4 +163,18 @@ export const messages = {
     "يحتاج التحكم في الحاسوب إلى إذن إمكانية الوصول. إعدادات النظام مفتوحة على هذه الصفحة: شغّل HXBot هناك، ثم اطلب مرة أخرى. يعرضه أيضًا: الإعدادات ← التحكم في الحاسوب.",
   "status.agent.hxComputer.notRunning":
     "التحكم في الحاسوب لا يعمل: {reason}. يعرض السبب: الإعدادات ← التحكم في الحاسوب.",
+  "status.agent.hxTeam.handedOver": "الفريق · سلّم {from} المهمة كلها إلى {to} (التسليم {count}).",
+  "status.agent.hxTeam.progressOpen": "الفريق · {count} تسليمات · {minutes} دقيقة",
+  "status.agent.hxTeam.progressPaused": "الفريق · متوقف مؤقتًا وينتظرك · {count} تسليمات · {minutes} دقيقة",
+  "status.agent.hxTeam.paused":
+    "توقف الفريق مؤقتًا: {reason} لا يبدأ عملًا جديدًا، والعمل الجاري يكتمل. هل نتابع أم ننهي بما لدينا أم نتوقف؟",
+  "status.agent.hxTeam.continued": "الفريق · يتابع العمل.",
+  "status.agent.hxTeam.wrapUp": "الفريق · ينهي القائد العمل بما لدى الفريق.",
+  "status.agent.hxTeam.priority.urgent": "الفريق · أكثر إلحاحًا: يسبق الفرق الأخرى حتى ينتهي.",
+  "status.agent.hxTeam.priority.normal": "الفريق · عاد إلى الترتيب العادي.",
+  "status.agent.hxTeam.priority.relaxed": "الفريق · غير عاجل: تسبقه الفرق الأخرى حتى ينتهي.",
+  "status.agent.hxTeam.spend.api": "الفريق · أُنفق حتى الآن نحو ¥{yuan}. يتابع العمل؛ قل حدًا لإيقافه عنده.",
+  "status.agent.hxTeam.spend.plan": "الفريق · استُخدم {percent}% من فترة الخطة. يتابع العمل؛ قل حدًا لإيقافه عنده.",
+  "status.agent.hxTeam.spend.tokens":
+    "الفريق · استُخدم حتى الآن نحو {millions} مليون رمز (السعر غير معروف). يتابع العمل.",
 } as const satisfies PartialTranslation<typeof source>;

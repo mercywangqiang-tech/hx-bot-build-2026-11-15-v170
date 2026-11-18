@@ -41,6 +41,11 @@ interface Shot {
   /** The client version that brought it. */
   version: string;
   tag?: "hot" | "new";
+  /**
+   * The client version that took away what the shot shows. Its image stays as it was taken, for its
+   * version's notes, and a full run does not take it again.
+   */
+  retired?: string;
   title: Words;
   lead: Words;
   /** The part of the page to take. */
@@ -58,10 +63,35 @@ interface Shot {
 /** Newest first. One HOT and one NEW in all. */
 export const SHOTS: Shot[] = [
   {
+    id: "team-open",
+    story: "hxbot-highlights--team-open",
+    version: "0.68.0",
+    tag: "new",
+    title: { zh: "多开智能体不卡、团队不设上限", en: "Many agents, no freezes; teams with no limits" },
+    lead: {
+      zh: "这台电脑同时做几件，HXBot 按可用内存、电池和温度自己算，其余排队；团队不设人数、时长、交接次数上限，分派一律接收。",
+      en: "HXBot sets how many turns this computer runs at once from its free memory, battery and temperature, and the rest wait; teams have no limit on members, time or handoffs, and every handoff is taken.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 720,
+    callouts: [
+      {
+        text: { zh: "团队：人数按工作定", en: "Team: members as the work needs" },
+        label: { zh: "不设上限", en: "No limits" },
+        note: { zh: "同时干活由电脑安排", en: "This computer decides how many at once" },
+      },
+      {
+        css: ".task-list-header",
+        badge: "end",
+        label: { zh: "交接和用时照常记", en: "Handoffs and time, no cap" },
+        note: { zh: "卡住时暂停并问你", en: "A stuck team pauses and asks you" },
+      },
+    ],
+  },
+  {
     id: "computer-quiet",
     story: "hxbot-highlights--computer-quiet",
     version: "0.67.9",
-    tag: "new",
     title: { zh: "HXBot 不打扰其他应用", en: "HXBot leaves your other apps alone" },
     lead: {
       zh: "助手操作电脑时，你切走了就不再往你的应用里打字，也不把窗口拉到前面；结束时松开修饰键。不拖慢别的应用、不抢焦点、不占满网络。",
@@ -287,7 +317,7 @@ export const SHOTS: Shot[] = [
         css: '.task-list-item[data-state="active"]',
         badge: "end",
         label: { zh: "每一步谁在做", en: "Who does each step" },
-        note: { zh: "最多 20 个成员，共用技能和连接器", en: "Up to 20 members, who share skills and connectors" },
+        note: { zh: "成员共用技能和连接器", en: "Members share skills and connectors" },
       },
     ],
   },
@@ -297,8 +327,8 @@ export const SHOTS: Shot[] = [
     version: "0.67.6",
     title: { zh: "默认最强，设置更少", en: "The strongest by default, fewer settings" },
     lead: {
-      zh: "自动选择模型默认打开、质量优先；团队上限收成一行，点“调整上限”才展开。",
-      en: "Auto model is on and puts quality first; the team limits are one line, and Change the limits opens them.",
+      zh: "自动选择模型默认打开、质量优先，设置更少。",
+      en: "Auto model is on and puts quality first, with fewer settings.",
     },
     crop: ".hx-highlight-frame",
     callouts: [
@@ -306,11 +336,6 @@ export const SHOTS: Shot[] = [
         text: { zh: "按工作内容自动选择模型", en: "Choose the model by the work" },
         label: { zh: "默认打开", en: "On by default" },
         note: { zh: "默认质量优先，可改成免费优先", en: "Quality first by default; Free first saves cost" },
-      },
-      {
-        text: { zh: "团队：最多 20 人", en: "Teams: up to 20 members" },
-        label: { zh: "一行摘要", en: "One line" },
-        note: { zh: "默认 20 人、240 分钟、80 次交接", en: "20 members, 240 min and 80 handoffs by default" },
       },
     ],
   },
@@ -382,6 +407,8 @@ export const SHOTS: Shot[] = [
     id: "team-settings",
     story: "hxbot-highlights--team-settings",
     version: "0.67.5",
+    // v1.7.1 (TEAM-01): a team has no limits in the settings any more.
+    retired: "0.68.0",
     title: { zh: "团队的上限", en: "The limits of a team" },
     lead: {
       zh: "在助手设置的“建议卡”下面：团队最多几个人、最长多久、最多交接几次。到了上限，团队停下来问你。",
@@ -507,6 +534,8 @@ export const SHOTS: Shot[] = [
     id: "auto-model",
     story: "hxbot-highlights--auto-model",
     version: "0.67.4",
+    // 0.67.6 puts quality first by default, so "free first" is no longer there to ring.
+    retired: "0.67.6",
     title: { zh: "按工作内容自动选模型", en: "Auto model: the model fits the work" },
     lead: {
       zh: "在助手设置里打开“自动选择模型”：每件工作先判断类型和难度，再选模型。",
@@ -806,7 +835,9 @@ async function main(): Promise<void> {
   try {
     // HX_SHOTS=id,id makes only those again (while working on them).
     const only = (process.env.HX_SHOTS ?? "").split(",").filter(Boolean);
-    for (const shot of SHOTS.filter((item) => only.length === 0 || only.includes(item.id))) {
+    for (const shot of SHOTS.filter((item) =>
+      only.length === 0 ? item.retired === undefined : only.includes(item.id),
+    )) {
       for (const lang of ["zh", "en"] as const) {
         const page = await browser.newPage({ deviceScaleFactor: 2 });
         const { png, rings } = await capture(page, base.replace(/\/$/, ""), shot, lang);

@@ -906,17 +906,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Collega servizi",
   "settings.hxOpenCode.noWay": "Collega questo servizio in un terminale con opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Compila: {field}",
-  "settings.hxAutoModel.team.members": "Membri della squadra al massimo",
-  "settings.hxAutoModel.team.minutes": "Durata massima della squadra",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Passaggi al massimo",
   "settings.hxAutoModel.team.temporary": "Membri creati per una squadra",
   "settings.hxAutoModel.team.temporary.collapse": "Nascondere quando la squadra finisce",
   "settings.hxAutoModel.team.temporary.keep": "Tenere",
-  "settings.hxAutoModel.team.description":
-    "Avviare una scheda con più ruoli forma una squadra: HXBot sceglie gli agenti in base alle competenze, crea membri per i ruoli mancanti e apre una stanza di squadra. Avanzamento e risultato tornano in questa chat. A un limite, la squadra si ferma e ti chiede.",
-  "settings.hxAutoModel.team.summary": "Team: fino a {members} membri · {minutes} min · {rounds} passaggi",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot dimensiona ogni team in base al lavoro. Per cambiare i limiti di un team, dillo nella chat.",
-  "settings.hxAutoModel.team.change": "Cambia i limiti",
+  "settings.hxAutoModel.team.capacity":
+    "Team: membri secondo il lavoro; questo computer decide quanti lavorano insieme (ora {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Avvia su una scheda con più ruoli crea un team: HXBot sceglie gli agenti per competenza, crea membri per i ruoli mancanti e apre una stanza del team. Avanzamento e risultato tornano in questa chat. Un team non ha limiti; se non avanza, si mette in pausa e ti chiede. Per un limite a un solo team, dillo nella chat.",
 } as const satisfies PartialTranslation<typeof source>;

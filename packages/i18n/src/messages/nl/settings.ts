@@ -902,17 +902,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Diensten verbinden",
   "settings.hxOpenCode.noWay": "Verbind deze dienst in een terminal met opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Vul in: {field}",
-  "settings.hxAutoModel.team.members": "Teamleden hoogstens",
-  "settings.hxAutoModel.team.minutes": "Langste teamtijd",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Overdrachten hoogstens",
   "settings.hxAutoModel.team.temporary": "Leden die voor een team worden gemaakt",
   "settings.hxAutoModel.team.temporary.collapse": "Verbergen als het team stopt",
   "settings.hxAutoModel.team.temporary.keep": "Houden",
-  "settings.hxAutoModel.team.description":
-    "Start op een kaart met meerdere rollen vormt een team: HXBot kiest agenten op hun vaardigheden, maakt leden voor ontbrekende rollen en opent een teamruimte. Voortgang en resultaat komen terug in deze chat. Bij een limiet stopt het team en vraagt het jou.",
-  "settings.hxAutoModel.team.summary": "Teams: tot {members} leden · {minutes} min · {rounds} overdrachten",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot bepaalt de grootte van elk team naar het werk. Zeg het in de chat om de grenzen van één team te wijzigen.",
-  "settings.hxAutoModel.team.change": "Grenzen wijzigen",
+  "settings.hxAutoModel.team.capacity":
+    "Team: leden naar het werk; deze computer bepaalt hoeveel er tegelijk werken (nu {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Start op een kaart met meerdere rollen maakt een team: HXBot kiest agents op vaardigheid, maakt leden voor ontbrekende rollen en opent een teamruimte. Voortgang en resultaat komen terug in deze chat. Een team heeft geen grenzen; als het niet opschiet, pauzeert het en vraagt het jou. Wil je een grens voor één team, zeg het in de chat.",
 } as const satisfies PartialTranslation<typeof source>;

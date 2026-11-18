@@ -965,17 +965,11 @@ export const messages = defineMessages("settings", {
   "settings.hxOpenCode.sectionOpen": "Connect services",
   "settings.hxOpenCode.noWay": "Connect this service in a terminal with opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Fill in: {field}",
-  "settings.hxAutoModel.team.members": "Team members at most",
-  "settings.hxAutoModel.team.minutes": "Longest team time",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Handoffs at most",
   "settings.hxAutoModel.team.temporary": "Members made for a team",
   "settings.hxAutoModel.team.temporary.collapse": "Hide when the team ends",
   "settings.hxAutoModel.team.temporary.keep": "Keep",
-  "settings.hxAutoModel.team.description":
-    "Start on a card with several roles makes a team: HXBot picks agents by skill, makes members for missing roles and opens a team room. Progress and the result come back to this chat. At a limit, the team stops and asks you.",
-  "settings.hxAutoModel.team.summary": "Teams: up to {members} members · {minutes} min · {rounds} handoffs",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot sizes each team by the work. To change the limits of one team, say so in the chat.",
-  "settings.hxAutoModel.team.change": "Change the limits",
+  "settings.hxAutoModel.team.capacity":
+    "Team: members as the work needs; this computer decides how many work at once (now {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Start on a card with several roles makes a team: HXBot picks agents by skill, makes members for missing roles and opens a team room. Progress and the result come back to this chat. A team has no limits; when it makes no progress, it pauses and asks you. To set a limit for one team, say so in the chat.",
 });

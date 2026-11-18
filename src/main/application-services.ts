@@ -15,6 +15,7 @@ import { diskRestoreEnded, diskRestoring } from "../backend/disk-restore";
 import { hxAutoModelStore } from "../backend/hx-auto-model/store";
 import { hxComputerWarmUp } from "../backend/hx-computer/computer";
 import { hxDataFolder } from "../backend/hx-data-folder";
+import { hxFlow } from "../backend/hx-flow/ledger";
 import { hxOpenCodeNames } from "../backend/hx-opencode/names";
 import { hxTeams } from "../backend/hx-team/service";
 import { DiscordConnectFailed, toDiscordConnectFailed } from "../backend/messaging/discord/discord-connect";
@@ -50,6 +51,7 @@ import {
 } from "./hosted-update-adapter";
 import { hxUserInHxbot } from "./hx-ask-first";
 import { hxAtMostEvery, hxClientFetch } from "./hx-client-header";
+import { HxDesktopMemory } from "./hx-flow-memory";
 import { HxMacUpdateAdapter, hxAuthorizedUpdater, hxReadUpdateFeedUrl } from "./hx-updates";
 import { LicenseDesktopService } from "./license-service";
 import { LocalSignInWindows } from "./local-sign-in-window";
@@ -1295,6 +1297,50 @@ export async function createApplicationServices({
   const serverEnvironment = hostMemory
     ? agentProcessEnvironment(existsSync(cpuLimitModule) ? cpuLimitModule : null)
     : { [AGENT_PROCESS_VARIABLE]: "1" };
+  // HXBot (v1.7.1, CONC-01): a desktop computer gets a turn budget too, from its memory, power and
+  // temperature (src/main/hx-flow-memory.ts). It only limits the turns that run at the same time.
+  const hxDesktopMemory = hostMemory
+    ? null
+    : new HxDesktopMemory({
+        power: {
+          onBattery: () => powerMonitor.isOnBatteryPower(),
+          on: (event, listener) => {
+            if (event === "suspend") {
+              powerMonitor.on("suspend", listener);
+              return () => powerMonitor.off("suspend", listener);
+            }
+            powerMonitor.on("resume", listener);
+            return () => powerMonitor.off("resume", listener);
+          },
+          onThermal: (listener) => {
+            const changed = (state: string) =>
+              listener(state === "fair" || state === "serious" || state === "critical" ? state : "nominal");
+            powerMonitor.on("thermal-state-change", (details) => changed(details.state));
+            return () => powerMonitor.removeAllListeners("thermal-state-change");
+          },
+          onSpeedLimit: (listener) => {
+            powerMonitor.on("speed-limit-change", (details) => listener(details.limit));
+            return () => powerMonitor.removeAllListeners("speed-limit-change");
+          },
+        },
+        active: () => {
+          const capacity = hxFlow.capacity();
+          return capacity.running > 0 || capacity.waiting > 0;
+        },
+        electronPath: process.execPath,
+        sampleFile: app.isPackaged ? null : (process.env.HXBOT_HX_FLOW_SAMPLE_FILE ?? null),
+        onError: (message, error) => logger.warn(message, toLogValue(error)),
+        onBudget: (budget, detail) => logger.info("HX-Flow changed the turn budget.", { budget, ...detail }),
+      });
+  if (hxDesktopMemory) {
+    hxDesktopMemory.setRunning(() => hxFlow.capacity().running);
+    hxFlow.attachMachine({
+      bound: () => hxDesktopMemory.bound(),
+      screenBusy: () => powerMonitor.getSystemIdleTime() < 5,
+    });
+    hxDesktopMemory.start();
+    teardown.push(TEARDOWN_ORDER.serverMemory, "the HX-Flow memory reading", () => hxDesktopMemory.stop());
+  }
   if (hostMemory) {
     hostMemory.start();
     teardown.push(TEARDOWN_ORDER.serverMemory, "the server memory reading", () => Effect.runPromise(hostMemory.stop()));
@@ -1994,6 +2040,7 @@ export async function createApplicationServices({
           getSources: (options) => desktopCapturer.getSources(options),
         }),
     hostMemory,
+    hxDesktopMemory,
     requestTimeoutMs: 30_000,
     offProviders: providerUse.off(),
     providerAccounts,

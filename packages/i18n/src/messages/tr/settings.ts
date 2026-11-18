@@ -913,17 +913,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Hizmetleri bağla",
   "settings.hxOpenCode.noWay": "Bu hizmeti bir terminalde opencode auth login ile bağlayın.",
   "settings.hxOpenCode.requiredMissing": "Doldurun: {field}",
-  "settings.hxAutoModel.team.members": "En fazla ekip üyesi",
-  "settings.hxAutoModel.team.minutes": "En uzun ekip süresi",
-  "settings.hxAutoModel.team.minuteValue": "{count} dk",
-  "settings.hxAutoModel.team.rounds": "En fazla devir",
   "settings.hxAutoModel.team.temporary": "Ekip için oluşturulan üyeler",
   "settings.hxAutoModel.team.temporary.collapse": "Ekip bitince gizle",
   "settings.hxAutoModel.team.temporary.keep": "Tut",
-  "settings.hxAutoModel.team.description":
-    "Birden çok rolü olan bir kartta Başlat’a basmak bir ekip kurar: HXBot becerilerine göre ajanları seçer, eksik roller için üye oluşturur ve bir ekip odası açar. İlerleme ve sonuç bu sohbete döner. Bir sınıra gelince ekip durur ve sana sorar.",
-  "settings.hxAutoModel.team.summary": "Ekipler: en çok {members} üye · {minutes} dk · {rounds} devir",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot her ekibi işe göre boyutlandırır. Bir ekibin sınırlarını değiştirmek için sohbette söyle.",
-  "settings.hxAutoModel.team.change": "Sınırları değiştir",
+  "settings.hxAutoModel.team.capacity":
+    "Ekip: üye sayısı işe göre; aynı anda kaçının çalışacağına bu bilgisayar karar verir (şu an {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Birden çok rolü olan bir kartta Başlat'a basmak bir ekip kurar: HXBot ajanları becerilerine göre seçer, eksik roller için üyeler oluşturur ve bir ekip odası açar. İlerleme ve sonuç bu sohbete döner. Ekibin sınırı yoktur; ilerleme olmazsa duraklar ve size sorar. Tek bir ekip için sınır koymak isterseniz sohbette söyleyin.",
 } as const satisfies PartialTranslation<typeof source>;

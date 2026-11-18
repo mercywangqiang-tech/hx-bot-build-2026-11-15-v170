@@ -932,17 +932,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Dienste verbinden",
   "settings.hxOpenCode.noWay": "Verbinde diesen Dienst im Terminal mit opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Bitte ausfüllen: {field}",
-  "settings.hxAutoModel.team.members": "Höchstens Teammitglieder",
-  "settings.hxAutoModel.team.minutes": "Längste Teamzeit",
-  "settings.hxAutoModel.team.minuteValue": "{count} Min.",
-  "settings.hxAutoModel.team.rounds": "Höchstens Übergaben",
   "settings.hxAutoModel.team.temporary": "Für ein Team erstellte Mitglieder",
   "settings.hxAutoModel.team.temporary.collapse": "Ausblenden, wenn das Team endet",
   "settings.hxAutoModel.team.temporary.keep": "Behalten",
-  "settings.hxAutoModel.team.description":
-    "Start auf einer Karte mit mehreren Rollen bildet ein Team: HXBot wählt Agenten nach ihren Fähigkeiten, erstellt Mitglieder für fehlende Rollen und öffnet einen Teamraum. Fortschritt und Ergebnis kommen in diesen Chat zurück. An einem Limit hält das Team an und fragt dich.",
-  "settings.hxAutoModel.team.summary": "Teams: bis {members} Mitglieder · {minutes} Min. · {rounds} Übergaben",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot bemisst jedes Team nach der Arbeit. Um die Grenzen eines Teams zu ändern, sag es im Chat.",
-  "settings.hxAutoModel.team.change": "Grenzen ändern",
+  "settings.hxAutoModel.team.capacity":
+    "Team: Mitglieder nach Bedarf der Arbeit; dieser Computer entscheidet, wie viele gleichzeitig arbeiten (jetzt {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Start auf einer Karte mit mehreren Rollen bildet ein Team: HXBot wählt Agenten nach Fähigkeiten, legt Mitglieder für fehlende Rollen an und öffnet einen Teamraum. Fortschritt und Ergebnis kommen in diesen Chat zurück. Ein Team hat keine Grenzen; kommt es nicht voran, pausiert es und fragt dich. Für eine Grenze für ein Team sag es im Chat.",
 } as const satisfies PartialTranslation<typeof source>;

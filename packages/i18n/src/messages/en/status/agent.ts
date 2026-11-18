@@ -134,7 +134,6 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxAuto.suggest": "This work did not go well. Reply “redo” to do it again with {model}.",
   "status.agent.hxTeam.started": "Team started: {members}; {lead} leads. Progress comes back here.",
   "status.agent.hxTeam.assigned": "Team · {from} gave “{task}” to {to} (handoff {count} of {limit}).",
-  "status.agent.hxTeam.transferred": "Team · {from} handed the whole task to {to} (handoff {count} of {limit}).",
   "status.agent.hxTeam.returned": "Team · {name} sent back a result ({done} of {steps} steps done).",
   "status.agent.hxTeam.failedOnce":
     "Team · {name} could not finish a piece of work; if it fails again, the team stops and asks you.",
@@ -153,7 +152,6 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxTeam.collapsed": "Team · The members made for it are hidden: {names}.",
   "status.agent.hxComputer.plan": "Work on this computer · {app} · {keys} stops it",
   "status.agent.hxComputer.stopped": "Work on this computer stopped: you pressed the stop keys.",
-  "status.agent.hxTeam.progress": "Team · handoffs {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "Computer Use needs two grants: Screen Recording and Accessibility. System Settings is open at the first one: turn on HXBot there, then the second. Ask again when both are on. Settings → Computer Use shows both.",
   "status.agent.hxComputer.needScreen":
@@ -161,4 +159,19 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxComputer.needAccessibility":
     "Computer Use needs the Accessibility grant. System Settings is open at that page: turn on HXBot there, then ask again. Settings → Computer Use shows it too.",
   "status.agent.hxComputer.notRunning": "Computer Use is not running: {reason}. Settings → Computer Use shows why.",
+  "status.agent.hxTeam.handedOver": "Team · {from} handed the whole task to {to} (handoff {count}).",
+  "status.agent.hxTeam.progressOpen": "Team · {count} handoffs · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Team · paused, waits for you · {count} handoffs · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "Team paused: {reason} It starts no new work; the work that runs finishes. Continue, wrap up or stop?",
+  "status.agent.hxTeam.continued": "Team · It goes on.",
+  "status.agent.hxTeam.wrapUp": "Team · The lead wraps up with what the team has.",
+  "status.agent.hxTeam.priority.urgent": "Team · More urgent: it goes before other teams until it ends.",
+  "status.agent.hxTeam.priority.normal": "Team · Normal order again.",
+  "status.agent.hxTeam.priority.relaxed": "Team · Not urgent: other teams go first until it ends.",
+  "status.agent.hxTeam.spend.api": "Team · About ¥{yuan} spent so far. It goes on; name a limit to stop it there.",
+  "status.agent.hxTeam.spend.plan":
+    "Team · {percent}% of the plan's period is used. It goes on; name a limit to stop it there.",
+  "status.agent.hxTeam.spend.tokens":
+    "Team · About {millions} million tokens used so far (the price is not known). It goes on.",
 });

@@ -103,8 +103,6 @@ export const messages = {
   "status.agent.hxTeam.started": "Команда собрана: {members}; ведёт {lead}. Ход работы вернётся сюда.",
   "status.agent.hxTeam.assigned":
     "Команда · {from} передал(а) «{task}» исполнителю {to} (передача {count} из {limit}).",
-  "status.agent.hxTeam.transferred":
-    "Команда · {from} передал(а) всю задачу исполнителю {to} (передача {count} из {limit}).",
   "status.agent.hxTeam.returned": "Команда · {name} вернул(а) результат (готово шагов: {done} из {steps}).",
   "status.agent.hxTeam.failedOnce":
     "Команда · {name} не смог(ла) закончить часть работы; если она снова не удастся, команда остановится и спросит вас.",
@@ -123,7 +121,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Команда · Участники, созданные для неё, скрыты: {names}.",
   "status.agent.hxComputer.plan": "Работа на этом компьютере · {app} · {keys} останавливает",
   "status.agent.hxComputer.stopped": "Работа на этом компьютере остановлена: вы нажали клавиши остановки.",
-  "status.agent.hxTeam.progress": "Команда · передачи {count}/{limit} · {minutes}/{max} мин",
   "status.agent.hxComputer.needBoth":
     "Управлению ПК нужны два разрешения: «Запись экрана» и «Универсальный доступ». Системные настройки открыты на первом: включите там HXBot, затем второе. Попросите снова, когда оба включены. Настройки → Управление ПК показывает оба.",
   "status.agent.hxComputer.needScreen":
@@ -132,4 +129,20 @@ export const messages = {
     "Управлению ПК нужно разрешение «Универсальный доступ». Системные настройки открыты на этой странице: включите там HXBot и попросите снова. Настройки → Управление ПК тоже его показывает.",
   "status.agent.hxComputer.notRunning":
     "Управление ПК не работает: {reason}. Причину показывает Настройки → Управление ПК.",
+  "status.agent.hxTeam.handedOver": "Команда · {from} передал всю задачу {to} (передача {count}).",
+  "status.agent.hxTeam.progressOpen": "Команда · передач: {count} · {minutes} мин",
+  "status.agent.hxTeam.progressPaused": "Команда · на паузе, ждёт вашего решения · передач: {count} · {minutes} мин",
+  "status.agent.hxTeam.paused":
+    "Команда на паузе: {reason} Новую работу она не начинает; текущая завершится. Продолжить, подвести итог или остановить?",
+  "status.agent.hxTeam.continued": "Команда · Работа продолжается.",
+  "status.agent.hxTeam.wrapUp": "Команда · Лидер подводит итог с тем, что есть у команды.",
+  "status.agent.hxTeam.priority.urgent": "Команда · Срочнее: идёт раньше других команд, пока не закончит.",
+  "status.agent.hxTeam.priority.normal": "Команда · Снова обычный порядок.",
+  "status.agent.hxTeam.priority.relaxed": "Команда · Не срочно: другие команды идут раньше, пока она не закончит.",
+  "status.agent.hxTeam.spend.api":
+    "Команда · Потрачено около ¥{yuan}. Работа продолжается; назовите предел, чтобы остановить её на нём.",
+  "status.agent.hxTeam.spend.plan":
+    "Команда · Использовано {percent}% периода тарифа. Работа продолжается; назовите предел, чтобы остановить её на нём.",
+  "status.agent.hxTeam.spend.tokens":
+    "Команда · Использовано около {millions} млн токенов (цена неизвестна). Работа продолжается.",
 } as const satisfies PartialTranslation<typeof source>;

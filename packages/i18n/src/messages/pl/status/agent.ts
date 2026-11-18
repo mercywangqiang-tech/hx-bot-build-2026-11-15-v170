@@ -102,8 +102,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Ta praca nie poszła dobrze. Odpowiedz „redo”, aby wykonać ją ponownie z {model}.",
   "status.agent.hxTeam.started": "Zespół rozpoczęty: {members}; prowadzi {lead}. Postęp wróci tutaj.",
   "status.agent.hxTeam.assigned": "Zespół · {from} przekazał(a) „{task}” do {to} (przekazanie {count} z {limit}).",
-  "status.agent.hxTeam.transferred":
-    "Zespół · {from} przekazał(a) całe zadanie do {to} (przekazanie {count} z {limit}).",
   "status.agent.hxTeam.returned": "Zespół · {name} odesłał(a) wynik (gotowe kroki: {done} z {steps}).",
   "status.agent.hxTeam.failedOnce":
     "Zespół · {name} nie zdołał(a) dokończyć części pracy; jeśli znów się nie uda, zespół się zatrzyma i zapyta cię.",
@@ -122,7 +120,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Zespół · Członkowie utworzeni dla niego są ukryci: {names}.",
   "status.agent.hxComputer.plan": "Praca na tym komputerze · {app} · {keys} ją zatrzymuje",
   "status.agent.hxComputer.stopped": "Praca na tym komputerze zatrzymana: naciśnięto klawisze zatrzymania.",
-  "status.agent.hxTeam.progress": "Zespół · przekazania {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "Sterowanie PC wymaga dwóch uprawnień: Nagrywanie ekranu i Dostępność. Ustawienia systemowe są otwarte na pierwszym: włącz tam HXBot, a potem drugie. Poproś ponownie, gdy oba będą włączone. Ustawienia → Sterowanie PC pokazuje oba.",
   "status.agent.hxComputer.needScreen":
@@ -131,4 +128,20 @@ export const messages = {
     "Sterowanie PC wymaga uprawnienia Dostępność. Ustawienia systemowe są otwarte na tej stronie: włącz tam HXBot i poproś ponownie. Ustawienia → Sterowanie PC też je pokazuje.",
   "status.agent.hxComputer.notRunning":
     "Sterowanie PC nie działa: {reason}. Ustawienia → Sterowanie PC pokazuje przyczynę.",
+  "status.agent.hxTeam.handedOver": "Zespół · {from} przekazał całe zadanie do {to} (przekazanie {count}).",
+  "status.agent.hxTeam.progressOpen": "Zespół · {count} przekazań · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Zespół · wstrzymany, czeka na Ciebie · {count} przekazań · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "Zespół jest wstrzymany: {reason} Nie zaczyna nowej pracy; praca w toku się kończy. Kontynuować, zakończyć czy zatrzymać?",
+  "status.agent.hxTeam.continued": "Zespół · Pracuje dalej.",
+  "status.agent.hxTeam.wrapUp": "Zespół · Lider kończy z tym, co zespół ma.",
+  "status.agent.hxTeam.priority.urgent": "Zespół · Pilniejsze: idzie przed innymi zespołami, aż skończy.",
+  "status.agent.hxTeam.priority.normal": "Zespół · Znów zwykła kolejność.",
+  "status.agent.hxTeam.priority.relaxed": "Zespół · Niepilne: inne zespoły idą pierwsze, aż skończy.",
+  "status.agent.hxTeam.spend.api":
+    "Zespół · Do tej pory wydano około ¥{yuan}. Pracuje dalej; podaj limit, aby go tam zatrzymać.",
+  "status.agent.hxTeam.spend.plan":
+    "Zespół · Zużyto {percent}% okresu planu. Pracuje dalej; podaj limit, aby go tam zatrzymać.",
+  "status.agent.hxTeam.spend.tokens":
+    "Zespół · Do tej pory zużyto około {millions} mln tokenów (cena nieznana). Pracuje dalej.",
 } as const satisfies PartialTranslation<typeof source>;

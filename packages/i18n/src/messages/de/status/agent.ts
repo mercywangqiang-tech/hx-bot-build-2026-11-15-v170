@@ -104,8 +104,6 @@ export const messages = {
     "Diese Arbeit lief nicht gut. Antworte „redo“, um sie mit {model} noch einmal zu machen.",
   "status.agent.hxTeam.started": "Team gestartet: {members}; {lead} leitet. Der Fortschritt kommt hierher zurück.",
   "status.agent.hxTeam.assigned": "Team · {from} hat „{task}“ an {to} gegeben (Übergabe {count} von {limit}).",
-  "status.agent.hxTeam.transferred":
-    "Team · {from} hat die ganze Aufgabe an {to} übergeben (Übergabe {count} von {limit}).",
   "status.agent.hxTeam.returned":
     "Team · {name} hat ein Ergebnis zurückgegeben ({done} von {steps} Schritten erledigt).",
   "status.agent.hxTeam.failedOnce":
@@ -126,7 +124,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Team · Die dafür erstellten Mitglieder sind ausgeblendet: {names}.",
   "status.agent.hxComputer.plan": "Arbeit auf diesem Computer · {app} · {keys} hält sie an",
   "status.agent.hxComputer.stopped": "Arbeit auf diesem Computer angehalten: Du hast die Stopptasten gedrückt.",
-  "status.agent.hxTeam.progress": "Team · Übergaben {count}/{limit} · {minutes}/{max} Min.",
   "status.agent.hxComputer.needBoth":
     "Die PC-Steuerung braucht zwei Freigaben: Bildschirmaufnahme und Bedienungshilfen. Die Systemeinstellungen zeigen die erste: Schalte dort HXBot ein, dann die zweite. Frag erneut, wenn beide an sind. Einstellungen → PC-Steuerung zeigt beide.",
   "status.agent.hxComputer.needScreen":
@@ -135,4 +132,20 @@ export const messages = {
     "Die PC-Steuerung braucht die Freigabe „Bedienungshilfen“. Die Systemeinstellungen zeigen diese Seite: Schalte dort HXBot ein und frag erneut. Einstellungen → PC-Steuerung zeigt sie auch.",
   "status.agent.hxComputer.notRunning":
     "Die PC-Steuerung läuft nicht: {reason}. Einstellungen → PC-Steuerung zeigt den Grund.",
+  "status.agent.hxTeam.handedOver": "Team · {from} hat die ganze Aufgabe an {to} übergeben (Übergabe {count}).",
+  "status.agent.hxTeam.progressOpen": "Team · {count} Übergaben · {minutes} Min.",
+  "status.agent.hxTeam.progressPaused": "Team · pausiert, wartet auf dich · {count} Übergaben · {minutes} Min.",
+  "status.agent.hxTeam.paused":
+    "Team pausiert: {reason} Es beginnt keine neue Arbeit; laufende Arbeit wird fertig. Weitermachen, abschließen oder stoppen?",
+  "status.agent.hxTeam.continued": "Team · Es geht weiter.",
+  "status.agent.hxTeam.wrapUp": "Team · Die Leitung schließt mit dem ab, was das Team hat.",
+  "status.agent.hxTeam.priority.urgent": "Team · Dringender: Es kommt vor anderen Teams dran, bis es fertig ist.",
+  "status.agent.hxTeam.priority.normal": "Team · Wieder normale Reihenfolge.",
+  "status.agent.hxTeam.priority.relaxed": "Team · Nicht dringend: Andere Teams kommen zuerst dran, bis es fertig ist.",
+  "status.agent.hxTeam.spend.api":
+    "Team · Bisher etwa ¥{yuan} ausgegeben. Es arbeitet weiter; nenne eine Grenze, um es dort zu stoppen.",
+  "status.agent.hxTeam.spend.plan":
+    "Team · {percent} % des Planzeitraums sind verbraucht. Es arbeitet weiter; nenne eine Grenze, um es dort zu stoppen.",
+  "status.agent.hxTeam.spend.tokens":
+    "Team · Bisher etwa {millions} Mio. Tokens verbraucht (Preis unbekannt). Es arbeitet weiter.",
 } as const satisfies PartialTranslation<typeof source>;

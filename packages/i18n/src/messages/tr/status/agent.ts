@@ -100,7 +100,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Bu iş iyi gitmedi. {model} ile yeniden yapmak için “redo” yanıtını verin.",
   "status.agent.hxTeam.started": "Ekip başladı: {members}; {lead} yönetiyor. İlerleme buraya döner.",
   "status.agent.hxTeam.assigned": "Ekip · {from}, “{task}” işini {to} üyesine verdi ({count}/{limit}. devir).",
-  "status.agent.hxTeam.transferred": "Ekip · {from}, görevin tamamını {to} üyesine devretti ({count}/{limit}. devir).",
   "status.agent.hxTeam.returned": "Ekip · {name} bir sonuç gönderdi ({steps} adımdan {done} tanesi bitti).",
   "status.agent.hxTeam.failedOnce":
     "Ekip · {name} işin bir kısmını bitiremedi; yine başarısız olursa ekip durur ve sana sorar.",
@@ -119,7 +118,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Ekip · Onun için oluşturulan üyeler gizlendi: {names}.",
   "status.agent.hxComputer.plan": "Bu bilgisayardaki iş · {app} · {keys} durdurur",
   "status.agent.hxComputer.stopped": "Bu bilgisayardaki iş durduruldu: durdurma tuşlarına bastın.",
-  "status.agent.hxTeam.progress": "Ekip · devirler {count}/{limit} · {minutes}/{max} dk",
   "status.agent.hxComputer.needBoth":
     "Bilgisayar Kullanımı iki izin istiyor: Ekran Kaydı ve Erişilebilirlik. Sistem Ayarları ilkinde açık: orada HXBot'u açın, sonra ikincisini. İkisi de açık olunca yeniden isteyin. Ayarlar → Bilgisayar Kullanımı ikisini de gösterir.",
   "status.agent.hxComputer.needScreen":
@@ -128,4 +126,20 @@ export const messages = {
     "Bilgisayar Kullanımı Erişilebilirlik iznini istiyor. Sistem Ayarları o sayfada açık: orada HXBot'u açın ve yeniden isteyin. Ayarlar → Bilgisayar Kullanımı da gösterir.",
   "status.agent.hxComputer.notRunning":
     "Bilgisayar Kullanımı çalışmıyor: {reason}. Ayarlar → Bilgisayar Kullanımı nedenini gösterir.",
+  "status.agent.hxTeam.handedOver": "Ekip · {from}, görevin tamamını {to} adlı üyeye verdi ({count}. devir).",
+  "status.agent.hxTeam.progressOpen": "Ekip · {count} devir · {minutes} dk",
+  "status.agent.hxTeam.progressPaused": "Ekip · duraklatıldı, kararını bekliyor · {count} devir · {minutes} dk",
+  "status.agent.hxTeam.paused":
+    "Ekip duraklatıldı: {reason} Yeni iş başlatmaz; süren iş biter. Devam mı, toparlama mı, durdurma mı?",
+  "status.agent.hxTeam.continued": "Ekip · Devam ediyor.",
+  "status.agent.hxTeam.wrapUp": "Ekip · Lider, ekibin elindekiyle toparlıyor.",
+  "status.agent.hxTeam.priority.urgent": "Ekip · Daha acil: bitene kadar diğer ekiplerden önce gelir.",
+  "status.agent.hxTeam.priority.normal": "Ekip · Yeniden normal sıra.",
+  "status.agent.hxTeam.priority.relaxed": "Ekip · Acil değil: bitene kadar diğer ekipler önce gelir.",
+  "status.agent.hxTeam.spend.api":
+    "Ekip · Şimdiye kadar yaklaşık ¥{yuan} harcandı. Devam ediyor; orada durdurmak için bir sınır söyleyin.",
+  "status.agent.hxTeam.spend.plan":
+    "Ekip · Plan döneminin %{percent} kadarı kullanıldı. Devam ediyor; orada durdurmak için bir sınır söyleyin.",
+  "status.agent.hxTeam.spend.tokens":
+    "Ekip · Şimdiye kadar yaklaşık {millions} milyon token kullanıldı (fiyat bilinmiyor). Devam ediyor.",
 } as const satisfies PartialTranslation<typeof source>;

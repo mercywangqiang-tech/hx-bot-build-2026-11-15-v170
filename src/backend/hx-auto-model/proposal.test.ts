@@ -5,6 +5,8 @@ import { HX_AUTO_DEFAULTS } from "@hxbot/contracts/hx-auto-model";
 import type { AgentModelOption, AgentProviderId } from "@hxbot/contracts/ipc";
 import type { UiConfirmBlock } from "@hxbot/contracts/ui-blocks";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { hxFlow } from "../hx-flow/ledger";
+import { hxCapacityLine } from "../hx-team/protocol";
 import { type HxTeamPort, hxTeams } from "../hx-team/service";
 import { HX_PROPOSAL_ACTIONS, HX_PROPOSAL_TOOL_DEFINITION, hxProposalCard, hxProposalInstruction } from "./proposal";
 import { HxAutoRouter } from "./router";
@@ -100,6 +102,10 @@ describe("the proposal card", () => {
       HX_PROPOSAL_ACTIONS.cancel,
     ]);
     expect(spec.actions.map((action) => action.label)).toEqual(["开始", "改一改", "就用一个智能体", "取消"]);
+  });
+
+  it("ends with the capacity line of this computer, the same as the brief and the reply (CONC-12-A1)", () => {
+    expect(card(zh).preview).toContain(hxCapacityLine("zh", hxFlow.capacity()));
   });
 
   it("writes its own words in English for an English summary, and has no 'one agent' button for one role", () => {

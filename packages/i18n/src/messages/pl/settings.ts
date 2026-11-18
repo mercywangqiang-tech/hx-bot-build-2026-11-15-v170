@@ -943,17 +943,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "Połącz usługi",
   "settings.hxOpenCode.noWay": "Połącz tę usługę w terminalu poleceniem opencode auth login.",
   "settings.hxOpenCode.requiredMissing": "Uzupełnij: {field}",
-  "settings.hxAutoModel.team.members": "Członków zespołu najwyżej",
-  "settings.hxAutoModel.team.minutes": "Najdłuższy czas zespołu",
-  "settings.hxAutoModel.team.minuteValue": "{count} min",
-  "settings.hxAutoModel.team.rounds": "Przekazań najwyżej",
   "settings.hxAutoModel.team.temporary": "Członkowie tworzeni dla zespołu",
   "settings.hxAutoModel.team.temporary.collapse": "Ukryj po zakończeniu zespołu",
   "settings.hxAutoModel.team.temporary.keep": "Zostaw",
-  "settings.hxAutoModel.team.description":
-    "Start na karcie z kilkoma rolami tworzy zespół: HXBot wybiera agentów według umiejętności, tworzy członków dla brakujących ról i otwiera pokój zespołu. Postęp i wynik wracają do tego czatu. Po osiągnięciu limitu zespół się zatrzymuje i pyta cię.",
-  "settings.hxAutoModel.team.summary": "Zespoły: do {members} członków · {minutes} min · przekazania: {rounds}",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot dobiera wielkość zespołu do pracy. Aby zmienić limity jednego zespołu, powiedz to na czacie.",
-  "settings.hxAutoModel.team.change": "Zmień limity",
+  "settings.hxAutoModel.team.capacity":
+    "Zespół: członkowie według pracy; ten komputer decyduje, ilu pracuje naraz (teraz {count})",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "Start na karcie z kilkoma rolami tworzy zespół: HXBot wybiera agentów według umiejętności, tworzy członków dla brakujących ról i otwiera pokój zespołu. Postęp i wynik wracają do tej rozmowy. Zespół nie ma limitów; gdy nie robi postępów, wstrzymuje się i pyta Ciebie. Aby ustawić limit dla jednego zespołu, powiedz o tym w rozmowie.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -900,17 +900,11 @@ export const messages = {
   "settings.hxOpenCode.sectionOpen": "サービスを接続",
   "settings.hxOpenCode.noWay": "このサービスはターミナルで opencode auth login を使って接続してください。",
   "settings.hxOpenCode.requiredMissing": "入力してください：{field}",
-  "settings.hxAutoModel.team.members": "チームメンバーの上限",
-  "settings.hxAutoModel.team.minutes": "チームの最長時間",
-  "settings.hxAutoModel.team.minuteValue": "{count} 分",
-  "settings.hxAutoModel.team.rounds": "引き継ぎの上限",
   "settings.hxAutoModel.team.temporary": "チーム用に作ったメンバー",
   "settings.hxAutoModel.team.temporary.collapse": "チーム終了時に非表示にする",
   "settings.hxAutoModel.team.temporary.keep": "残す",
-  "settings.hxAutoModel.team.description":
-    "複数の役割があるカードで「開始」を押すとチームを作ります。HXBot がスキルに合うエージェントを選び、足りない役割はメンバーを作って、チームルームを開きます。進み具合と結果はこのチャットに戻ります。上限に達するとチームは止まってあなたに確認します。",
-  "settings.hxAutoModel.team.summary": "チーム：最大 {members} 人 · {minutes} 分 · 引き継ぎ {rounds} 回",
-  "settings.hxAutoModel.team.summaryDescription":
-    "HXBot は作業に合わせて人数を決めます。あるチームの上限を変えるときは、チャットでそう伝えてください。",
-  "settings.hxAutoModel.team.change": "上限を変更",
+  "settings.hxAutoModel.team.capacity":
+    "チーム：人数は作業に合わせて決まり、同時に動く数はこのコンピューターが決めます（現在 {count}）",
+  "settings.hxAutoModel.team.descriptionOpen":
+    "複数の役割があるカードで「開始」を押すとチームができます。HXBot が得意分野でエージェントを選び、足りない役割のメンバーを作り、チームルームを開きます。進み具合と結果はこの会話に戻ります。チームに上限はありません。進展がないときは一時停止してあなたに確認します。あるチームだけ上限を決めたいときは、会話でそう伝えてください。",
 } as const satisfies PartialTranslation<typeof source>;

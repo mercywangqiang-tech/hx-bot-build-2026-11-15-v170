@@ -8,6 +8,7 @@ import type { AgentStore } from "../agent-store";
 import type { ChannelService } from "../channel-service";
 import { causeHelpers } from "../effect-boundary";
 import { hxApprovalPolicy } from "../hx-access/hub";
+import { hxFlow, hxTickMemo } from "../hx-flow/ledger";
 import type { DeliveryContext, MailboxStore } from "../mailbox-store";
 import type { MessagingThreads } from "../messaging/messaging-threads";
 import { decodeTurnResponse } from "../protocol";
@@ -233,13 +234,17 @@ export class DrainScheduler {
     this.#hooks = options.hooks;
     this.#channels = options.channels;
     this.#messaging = options.messaging;
+    // HXBot (v1.7.1, BUG-CONC-01): the lanes of every agent read once per pass. Each read asks SQLite
+    // for the open tasks of each agent, and with a turn budget on the desktop every check asks.
+    const lanes = hxTickMemo(() =>
+      this.#store
+        .list()
+        .flatMap((agent) => this.#lanesOf(agent.id))
+        .map(laneKey),
+    );
     this.#slots = new TurnSlots({
       limit: () => this.#memory.turnLimit(),
-      lanes: () =>
-        this.#store
-          .list()
-          .flatMap((agent) => this.#lanesOf(agent.id))
-          .map(laneKey),
+      lanes,
       isRunning: (key) => {
         const lane = laneOf(key);
         // A compaction is a provider turn of the lane whose thread it compacts, so it uses that slot.
@@ -257,6 +262,18 @@ export class DrainScheduler {
         const lane = laneOf(key);
         return this.#mailbox.nextQueued(lane.agentId, lane.taskId)?.delivery ?? null;
       },
+      // HXBot (v1.7.1, CONC-03): the tier of the head, and its team (src/backend/hx-flow).
+      rank: (key, head) => hxFlow.rank(key, head, this.#channels?.store.assignmentForDelivery(head.id) ?? null),
+    });
+    // HXBot (v1.7.1): the ledger reads B and the lanes that run a turn.
+    hxFlow.attachScheduler({
+      limit: () => this.#memory.turnLimit(),
+      running: hxTickMemo(() =>
+        lanes().filter((key) => {
+          const lane = laneOf(key);
+          return this.#laneRunning(lane) || this.#compactionHolds(lane);
+        }),
+      ),
     });
   }
 
@@ -588,6 +605,9 @@ export class DrainScheduler {
       }
       // One message from the user lets one turn try a limit, so the other lanes stay held.
       this.#usageLimits.tryStarted(agentId);
+      // HXBot (v1.7.1): the ledger counts the turn of this lane for its team (src/backend/hx-flow).
+      const hxAssignment = this.#channels?.store.assignmentForDelivery(context.delivery.id) ?? null;
+      hxFlow.started(key, hxFlow.rank(key, context.delivery, hxAssignment), hxAssignment?.taskId ?? null);
       yield* this.startDelivery(context, planNote ?? undefined);
     }).pipe(
       Effect.ensuring(

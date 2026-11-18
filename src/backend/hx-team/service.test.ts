@@ -1,10 +1,12 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HX_AUTO_DEFAULTS, type HxAutoModelSettings } from "@hxbot/contracts/hx-auto-model";
 import type { HxProgressCard } from "@hxbot/contracts/hx-progress";
 import type { ChannelMessage, ChannelTask } from "@hxbot/contracts/ipc";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
+import { hxCapacityLine } from "./protocol";
 import {
   type HxTeamAgent,
   type HxTeamAnswer,
@@ -14,9 +16,17 @@ import {
   hxTeamCard,
   hxTeamCardId,
   hxTeamLine,
-  hxTeamParallel,
 } from "./service";
 import { HxTeamStore } from "./store";
+
+/** A candidate of the ledger with no team; a test sets what it needs. */
+function candidate(): HxFlowCandidate {
+  return { lane: "w", tier: 2, readyAt: 0, teamId: null, order: 0, batch: null, difficulty: null, dependents: 0 };
+}
+
+function fail(): never {
+  throw new Error("missing");
+}
 
 interface Room {
   name: string;
@@ -242,6 +252,15 @@ function call(tool: string, args: unknown, extra: Partial<HxTeamCall> = {}): Pro
   });
 }
 
+/** Real work of the team: a tick each 30 seconds. */
+async function work(minutes: number): Promise<void> {
+  for (let tick = 0; tick < minutes * 2; tick += 1) {
+    now += 30_000;
+    await teams.tick();
+  }
+  await teams.settled();
+}
+
 async function started(
   extra: { limits?: { members?: number; minutes?: number; rounds?: number } } = {},
 ): Promise<{ id: string; room: Room }> {
@@ -268,6 +287,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  teams.close();
+  hxFlow.attachScheduler(null);
+  hxFlow.tick([]);
   vi.useRealTimers();
   rmSync(folder, { recursive: true, force: true });
 });
@@ -307,11 +329,14 @@ describe("start_team", () => {
     expect(port.posts).toHaveLength(1);
   });
 
-  it("refuses in a room, without a person, over the member limit, and with a step of no role", async () => {
+  it("refuses in a room, without a person, over a member limit the user named, and with a step of no role", async () => {
     expect(read(await call("start_team", CARD, { roomId: "room" })).status).toBe("refused");
     expect(read(await call("start_team", CARD, { byPerson: false })).status).toBe("refused");
+    // v1.7.1 (TEAM-01): a saved setting is no limit; only the user's words for this team are.
     port.settingsOf = { ...HX_AUTO_DEFAULTS, teamMembers: 2 };
-    expect(String(read(await call("start_team", CARD)).reason)).toContain("at most 2 members");
+    expect(String(read(await call("start_team", { ...CARD, limits: { members: 2 } })).reason)).toContain(
+      "at most 2 members",
+    );
     port.settingsOf = HX_AUTO_DEFAULTS;
     const wrong = { ...CARD, steps: [{ title: "x", role: "Nobody" }] };
     expect(String(read(await call("start_team", wrong)).reason)).toContain("Nobody");
@@ -349,17 +374,24 @@ describe("the handoff form and the limits", () => {
     expect(teams.checkHandoff("another-channel", "channel_assign", { task: "x" })).toBeNull();
   });
 
-  it("refuses handoffs past the handoff limit and past the time limit", async () => {
+  it("takes every full form however many handoffs and however long the team runs (v1.7.1, CONC-04)", async () => {
     port.settingsOf = { ...HX_AUTO_DEFAULTS, teamRounds: 10, teamMinutes: 30 };
     const { id, room } = await started();
+    for (let index = 0; index < 120; index += 1) room.tasks.push(task(`sub-${index}`, "root-1", "w", "running"));
+    teams.changed(id);
+    now += 3 * 60 * 60_000;
+    expect(teams.checkHandoff(id, "channel_assign", { task: FORM })).toBeNull();
+    expect(teams.checkHandoff(id, "channel_transfer", { task: FORM })).toBeNull();
+    expect(teams.store.get(id)?.state).toBe("running");
+  });
+
+  it("refuses handoffs only past a handoff limit that the user named", async () => {
+    const { id, room } = await started({ limits: { rounds: 10 } });
     for (let index = 0; index < 10; index += 1) room.tasks.push(task(`sub-${index}`, "root-1", "w", "completed"));
-    expect(teams.checkHandoff(id, "channel_transfer", { task: FORM })).toContain("10 次交接的上限");
+    expect(teams.checkHandoff(id, "channel_transfer", { task: FORM })).toContain("10 次交接已经用完");
     expect(port.notes.at(-1)?.text).toBe(
       "Team · It reached its limit of 10 handoffs; the lead finishes with what it has.",
     );
-    room.tasks.length = 1;
-    now += 31 * 60_000;
-    expect(teams.checkHandoff(id, "channel_assign", { task: FORM })).toContain("30 分钟的上限");
   });
 });
 
@@ -373,8 +405,8 @@ describe("the watcher", () => {
     const running = port.cards.at(-1);
     expect(running?.agentId).toBe("me");
     expect(running?.id).toBe(hxTeamCardId(id));
-    // The defaults of v1.6.7: 80 handoffs and 240 minutes.
-    expect(running?.card.title).toBe("Team · handoffs 1/80 · 0/240 min");
+    // v1.7.1: no limits on the card.
+    expect(running?.card.title).toBe("Team · 1 handoffs · 0 min");
     expect(running?.card.steps.map((step) => step.state)).toContain("active");
     // The lead's step and the writer's step both run now; each names its member.
     expect(running?.card.steps.filter((step) => step.state === "active").map((step) => step.text)).toEqual([
@@ -448,15 +480,53 @@ describe("the watcher", () => {
     expect(port.notes.at(-2)?.text).toBe("Team stopped: its room was archived or deleted.");
   });
 
-  it("stops the team at its deadline", async () => {
-    vi.useFakeTimers();
-    port.settingsOf = { ...HX_AUTO_DEFAULTS, teamMinutes: 30 };
-    const { id } = await started();
-    await vi.advanceTimersByTimeAsync(30 * 60_000 + 10);
+  it("has no deadline of the clock, and stops at the minutes of real work that the user named", async () => {
+    const { id: open } = await started();
+    now += 3 * 60 * 60_000;
+    await teams.tick();
+    await teams.settled();
+    expect(teams.store.get(open)?.state).toBe("running");
+    teams.store.save({ ...(teams.store.get(open) ?? fail()), state: "done" });
+    const id =
+      read(await call("start_team", { ...CARD, limits: { minutes: 30 } }, { key: "turn-2:call-1" })).team?.id ?? "";
+    // Real work: a turn of the team runs. Waiting in the queue does not count.
+    await teams.tick();
+    now += 20 * 60_000;
+    await teams.tick();
+    expect(teams.store.get(id)?.state).toBe("running");
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: id }, null);
+    for (let minute = 0; minute < 61; minute += 1) {
+      now += 30_000;
+      await teams.tick();
+    }
     await teams.settled();
     expect(teams.store.get(id)?.state).toBe("stopped");
     expect(port.notes.map((note) => note.text)).toContain("Team stopped: it reached its limit of 30 minutes.");
-    expect(port.delivered[0]?.text).toContain("30 分钟的上限");
+    expect(port.delivered.at(-1)?.text).toContain("30 分钟实际干活时间");
+  });
+
+  it("pauses with G1 after 30 minutes of real work with no progress (v1.7.1, CONC-10-A2)", async () => {
+    const { id } = await started();
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: id }, null);
+    await work(29);
+    expect(teams.store.get(id)?.guard?.paused).toBeNull();
+    await work(1.5);
+    expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+  });
+
+  it("takes a new file in the shared folder for progress at the G1 check", async () => {
+    const { id } = await started();
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: id }, null);
+    await work(10);
+    writeFileSync(join(teams.store.get(id)?.folder ?? fail(), "draft.md"), "a draft");
+    // At 30 minutes the folder changed: the count starts again, and G1 comes 30 minutes later.
+    await work(25);
+    expect(teams.store.get(id)?.guard?.paused).toBeNull();
+    await work(26);
+    expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
   });
 });
 
@@ -580,42 +650,99 @@ describe("preview and lines", () => {
   });
 });
 
-describe("members at once (v1.6.7)", () => {
-  it("counts one member for each 2 GB of memory, from 2 to 10", () => {
-    expect(hxTeamParallel(1)).toBe(2);
-    expect(hxTeamParallel(4 * 2 ** 30)).toBe(2);
-    expect(hxTeamParallel(16 * 2 ** 30)).toBe(8);
-    expect(hxTeamParallel(256 * 2 ** 30)).toBe(10);
+describe("the capacity of this computer (v1.7.1, CONC-12)", () => {
+  it("tells the lead to give all the work out and says the state of the computer, with no limits", async () => {
+    hxFlow.attachScheduler({ limit: () => 3, running: () => [] });
+    const { id, room } = await started();
+    const brief = port.posts[0]?.text ?? "";
+    expect(brief).toContain("把能分的都分出去，写清依赖。电脑会按容量安排同时做几件；不要等，也不要重派。");
+    expect(brief).toContain("电脑现在：同时能做 3 件");
+    expect(brief).not.toContain("上限");
+    expect(port.rooms.get(id)?.instructions).toContain("不要等，也不要重派");
+    expect(port.rooms.get(id)?.instructions).not.toContain("次交接，");
+    // The reply to an assignment says its place in the queue.
+    room.tasks.push(task("sub-1", "root-1", "w", "queued"));
+    teams.changed(id);
+    const reply = teams.withQueueLine(id, "channel_assign", { accepted: true, taskId: "sub-1" });
+    expect(JSON.stringify(reply)).toMatch(/已排队，第 \d+ 位：电脑同时在做 0 件，约 \d+ 分钟。/u);
+    expect(JSON.stringify(reply)).toContain("电脑现在：同时能做 3 件");
+    expect(teams.withQueueLine(id, "channel_result", { accepted: true })).toEqual({ accepted: true });
   });
 
-  it("gives out no more work at once than this computer holds, and says so in the brief", async () => {
-    teams.parallel = () => 1;
+  it("puts one capacity line, of numbers and model names only, in the brief, the reply and the board (CONC-12-A1)", async () => {
+    const line = hxCapacityLine("zh", {
+      budget: 3,
+      running: 1,
+      waiting: 4,
+      bound: null,
+      limitedModels: ["GLM-5.3-Flash Free"],
+      screenBusy: false,
+    });
+    // B, the running and the waiting work, and the models that wait for a usage limit: nothing else.
+    expect(line).toBe("电脑现在：同时能做 3 件，在做 1 件，排队 4 件；在等用量的模型：GLM-5.3-Flash Free。");
+    hxFlow.attachScheduler({ limit: () => 3, running: () => [] });
     const { id, room } = await started();
-    expect(port.posts[0]?.text).toContain("同时干活：最多 1 个成员");
-    expect(port.posts[0]?.text).toContain("连接器：这台电脑上的所有助手共用同一份连接器");
-    room.tasks.push(task("sub-1", "root-1", "w", "running"));
-    expect(teams.checkHandoff(id, "channel_assign", { task: FORM })).toContain("这台电脑最多同时 1 个");
-    // A transfer gives no more work: it moves work that runs already.
-    expect(teams.checkHandoff(id, "channel_transfer", { task: FORM })).toBeNull();
-    room.tasks[1] = task("sub-1", "root-1", "w", "completed");
-    expect(teams.checkHandoff(id, "channel_assign", { task: FORM })).toBeNull();
+    const now = hxCapacityLine("zh", hxFlow.capacity());
+    expect(port.posts[0]?.text).toContain(now);
+    room.tasks.push(task("sub-1", "root-1", "w", "queued"));
+    teams.changed(id);
+    expect(JSON.stringify(teams.withQueueLine(id, "channel_assign", { accepted: true, taskId: "sub-1" }))).toContain(
+      hxCapacityLine("zh", hxFlow.capacity()),
+    );
+    const board = read(
+      await teams.call({
+        tool: "team_board",
+        arguments: { action: "read" },
+        agentId: "w",
+        key: "k-board",
+        roomId: id,
+        byPerson: false,
+      }),
+    );
+    expect(JSON.stringify(board)).toContain("电脑现在：同时能做 3 件");
+  });
+
+  it("starts a team of 25 roles with no refusal (CONC-04)", async () => {
+    const roles = Array.from({ length: 25 }, (_, index) => ({
+      name: `角色${index + 1}`,
+      kind: index === 0 ? "plan" : "do",
+      does: `做第 ${index + 1} 部分`,
+      work: "writing",
+    }));
+    const result = read(
+      await call("start_team", { goal: "写一份 25 部分的报告", roles, steps: [{ title: "写", role: "角色1" }] }),
+    );
+    expect(result.status).toBe("started");
+    expect(teams.store.get(result.team?.id ?? "")?.limits).toMatchObject({
+      members: 25,
+      minutes: 1440,
+      rounds: 1_000_000,
+    });
   });
 });
 
-describe("limits the user names in the chat (v1.6.7)", () => {
-  it("come before the agent's settings at the start, and change a running team", async () => {
+describe("limits the user names in the chat (v1.7.1, TEAM-01)", () => {
+  it("count only for this team, change a running team, and only the user changes them", async () => {
     const { id } = await started({ limits: { minutes: 30, rounds: 6 } });
-    expect(teams.store.get(id)?.limits).toMatchObject({ minutes: 30, rounds: 6, members: 20 });
-    const changed = read(await call("team", { action: "limits", minutes: 90, rounds: 12 }));
+    expect(teams.store.get(id)?.limits).toMatchObject({ minutes: 30, rounds: 6, members: 3 });
+    expect(teams.store.get(id)?.stated).toEqual({ minutes: 30, rounds: 6 });
+    const changed = read(await call("team", { action: "limits", minutes: 90, rounds: 12, spend: 20 }));
     expect(changed.status).toBe("changed");
     expect(teams.store.get(id)?.limits).toMatchObject({ minutes: 90, rounds: 12 });
+    expect(teams.store.get(id)?.stated).toEqual({ minutes: 90, rounds: 12, spendYuan: 20 });
     expect(Date.parse(teams.store.get(id)?.deadline ?? "") - Date.parse(teams.store.get(id)?.createdAt ?? "")).toBe(
       90 * 60_000,
     );
-    // The card shows the new limits.
-    expect(port.cards.at(-1)?.card.title).toBe("Team · handoffs 0/12 · 0/90 min");
+    // A model in the room cannot change them, nor a turn that no person started.
+    expect(read(await call("team", { action: "limits", rounds: 1000 }, { roomId: id })).status).toBe("refused");
+    expect(read(await call("team", { action: "limits", rounds: 1000 }, { byPerson: false })).status).toBe("refused");
+    expect(teams.store.get(id)?.limits.rounds).toBe(12);
     const empty = read(await call("team", { action: "limits" }));
     expect(empty.status).toBe("refused");
+    const cleared = read(await call("team", { action: "limits", clear: true }));
+    expect(cleared.status).toBe("changed");
+    expect(teams.store.get(id)?.stated).toBeUndefined();
+    expect(teams.store.get(id)?.limits).toMatchObject({ minutes: 1440, rounds: 1_000_000 });
   });
 });
 
@@ -629,7 +756,7 @@ describe("the progress card of a team (v1.6.7)", () => {
       state: index === 0 ? ("blocked" as const) : step.state,
     }));
     const waiting = hxTeamCard({ ...team, steps }, 3, 12);
-    expect(waiting.title).toBe("Team · handoffs 3/80 · 12/240 min");
+    expect(waiting.title).toBe("Team · 3 handoffs · 12 min");
     expect(waiting.steps[0]?.text.endsWith("（等待中）")).toBe(true);
     expect(waiting.steps[0]?.state).toBe("pending");
     const done = hxTeamCard({ ...team, state: "done" }, 3, 12);

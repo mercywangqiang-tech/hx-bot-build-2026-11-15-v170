@@ -1,5 +1,6 @@
 import { Effect, type Scope } from "effect";
 import type { AgentClient } from "../agent-client";
+import { hxIdleTake } from "../hx-flow/idle";
 
 /** What a release found. `held`: something still needs the session. `gone`: no client holds it to release. */
 type IdleSessionRelease = "released" | "held" | "gone";
@@ -109,7 +110,11 @@ export class CodexIdleSessions {
     const idle = [...this.#sessions]
       .filter(([, session]) => session.client === client && session.idleSince > 0 && !session.releasing)
       .sort(([, left], [, right]) => left.idleSince - right.idleSince);
-    for (const [externalThreadId, session] of idle.slice(0, Math.max(0, idle.length - limit))) {
+    // HXBot (v1.7.1, G6): during a release of the ledger, only the longest idle session of 4 minutes or more.
+    for (const [externalThreadId, session] of hxIdleTake(
+      idle.slice(0, Math.max(0, idle.length - limit)),
+      ([, item]) => item.idleSince,
+    )) {
       this.#release(externalThreadId, session);
     }
   }

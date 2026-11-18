@@ -8,14 +8,7 @@ import type {
   HxProposalMode,
   HxWorkType,
 } from "@hxbot/contracts/hx-auto-model";
-import {
-  HX_TEAM_MEMBER_LIMITS,
-  HX_TEAM_MINUTES,
-  HX_TEAM_ROUNDS,
-  HX_TEAM_TEMPORARY,
-  HX_WORK_TYPES,
-  type HxTeamTemporary,
-} from "@hxbot/contracts/hx-auto-model";
+import { HX_TEAM_TEMPORARY, HX_WORK_TYPES, type HxTeamTemporary } from "@hxbot/contracts/hx-auto-model";
 import type { AppTextKey } from "@hxbot/i18n";
 import { Checkbox, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Text } from "@hxbot/ui";
 import { SettingsLinkGroup } from "@hxbot/ui/components/SettingsPanel";
@@ -59,9 +52,6 @@ const TEMPORARY_LABEL: Record<HxTeamTemporary, AppTextKey> = {
   collapse: "settings.hxAutoModel.team.temporary.collapse",
   keep: "settings.hxAutoModel.team.temporary.keep",
 };
-type TeamMembers = HxAutoModelSettings["teamMembers"];
-type TeamMinutes = HxAutoModelSettings["teamMinutes"];
-type TeamRounds = HxAutoModelSettings["teamRounds"];
 const WORK_LABEL: Record<HxWorkType, AppTextKey> = {
   chat: "settings.hxAutoModel.work.chat",
   writing: "settings.hxAutoModel.work.writing",
@@ -100,7 +90,6 @@ export function HxAutoModelSection(props: { agentId: string; calls?: HxAutoModel
   const [failed, setFailed] = createSignal(false);
   const [more, setMore] = createSignal(false);
   // v1.6.7: the team limits are one line; the four choices show only when the user opens them.
-  const [teamOpen, setTeamOpen] = createSignal(false);
 
   createEffect(
     () => props.agentId,
@@ -229,82 +218,15 @@ export function HxAutoModelSection(props: { agentId: string; calls?: HxAutoModel
           <Text as="p" class="agent-settings-runtime-note" variant="caption" tone="muted">
             {t("settings.hxAutoModel.proposal.description")}
           </Text>
-          {/* v1.6.6: the limits of a team that this agent starts from a card (hx-team). v1.6.7: one line
-              with the limits, at their strongest by default; the choices show when the user opens them. */}
+          {/* v1.7.1 (TEAM-01): a team has no limit on members, time or handoffs. One read-only line says
+              that this computer decides how many members work at once; the choice that stays is what
+              happens to the members made for a team. A limit for one team is said in the chat. */}
           <Show when={current().settings.proposal !== "off"}>
             <div class="agent-settings-notifications">
               <div>
-                <strong>
-                  {t("settings.hxAutoModel.team.summary", {
-                    members: current().settings.teamMembers,
-                    minutes: current().settings.teamMinutes,
-                    rounds: current().settings.teamRounds,
-                  })}
-                </strong>
-                <span>{t("settings.hxAutoModel.team.summaryDescription")}</span>
+                <strong>{t("settings.hxAutoModel.team.capacity", { count: current().parallel ?? 2 })}</strong>
               </div>
-              <Switch
-                size="sm"
-                aria-label={t("settings.hxAutoModel.team.change")}
-                checked={teamOpen()}
-                onChange={(next) => setTeamOpen(next)}
-              />
             </div>
-          </Show>
-          <Show when={current().settings.proposal !== "off" && teamOpen()}>
-            <Select<TeamMembers>
-              class="agent-settings-runtime-select"
-              options={[...HX_TEAM_MEMBER_LIMITS]}
-              value={current().settings.teamMembers}
-              onChange={(teamMembers) => teamMembers && void save({ teamMembers })}
-              itemComponent={(item) => <SelectItem item={item.item}>{String(item.item.rawValue)}</SelectItem>}
-            >
-              <SelectTrigger class="agent-settings-runtime-row" aria-label={t("settings.hxAutoModel.team.members")}>
-                <span class="agent-settings-runtime-label">{t("settings.hxAutoModel.team.members")}</span>
-                <SelectValue<TeamMembers>>
-                  {(state) => String(state.selectedOption() ?? current().settings.teamMembers)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
-            <Select<TeamMinutes>
-              class="agent-settings-runtime-select"
-              options={[...HX_TEAM_MINUTES]}
-              value={current().settings.teamMinutes}
-              onChange={(teamMinutes) => teamMinutes && void save({ teamMinutes })}
-              itemComponent={(item) => (
-                <SelectItem item={item.item}>
-                  {t("settings.hxAutoModel.team.minuteValue", { count: item.item.rawValue })}
-                </SelectItem>
-              )}
-            >
-              <SelectTrigger class="agent-settings-runtime-row" aria-label={t("settings.hxAutoModel.team.minutes")}>
-                <span class="agent-settings-runtime-label">{t("settings.hxAutoModel.team.minutes")}</span>
-                <SelectValue<TeamMinutes>>
-                  {(state) =>
-                    t("settings.hxAutoModel.team.minuteValue", {
-                      count: state.selectedOption() ?? current().settings.teamMinutes,
-                    })
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
-            <Select<TeamRounds>
-              class="agent-settings-runtime-select"
-              options={[...HX_TEAM_ROUNDS]}
-              value={current().settings.teamRounds}
-              onChange={(teamRounds) => teamRounds && void save({ teamRounds })}
-              itemComponent={(item) => <SelectItem item={item.item}>{String(item.item.rawValue)}</SelectItem>}
-            >
-              <SelectTrigger class="agent-settings-runtime-row" aria-label={t("settings.hxAutoModel.team.rounds")}>
-                <span class="agent-settings-runtime-label">{t("settings.hxAutoModel.team.rounds")}</span>
-                <SelectValue<TeamRounds>>
-                  {(state) => String(state.selectedOption() ?? current().settings.teamRounds)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
             <Select<HxTeamTemporary>
               class="agent-settings-runtime-select"
               options={[...HX_TEAM_TEMPORARY]}
@@ -323,7 +245,7 @@ export function HxAutoModelSection(props: { agentId: string; calls?: HxAutoModel
               <SelectContent />
             </Select>
             <Text as="p" class="agent-settings-runtime-note" variant="caption" tone="muted">
-              {t("settings.hxAutoModel.team.description")}
+              {t("settings.hxAutoModel.team.descriptionOpen")}
             </Text>
           </Show>
           <Show when={current().settings.enabled}>

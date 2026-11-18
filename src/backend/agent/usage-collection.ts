@@ -209,7 +209,9 @@ export function workflowUsageObserver(
  * the agent's turns.
  */
 export function sideSessionUsageObserver(
-  kind: "memory-review" | "web-search",
+  // HXBot (v1.7.1): "auto-model" is the judge of the automatic model choice; "channel" a channel
+  // summary or routing turn; "side-question" a side question about the chat.
+  kind: "memory-review" | "web-search" | "auto-model" | "channel" | "side-question",
   usage: AgentUsage,
   agentId: string,
   provider: ProviderSession["provider"],

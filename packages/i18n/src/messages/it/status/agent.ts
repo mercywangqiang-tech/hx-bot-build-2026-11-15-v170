@@ -104,8 +104,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Questo lavoro non è andato bene. Rispondi «redo» per rifarlo con {model}.",
   "status.agent.hxTeam.started": "Squadra avviata: {members}; la guida {lead}. L’avanzamento torna qui.",
   "status.agent.hxTeam.assigned": "Squadra · {from} ha dato «{task}» a {to} (passaggio {count} di {limit}).",
-  "status.agent.hxTeam.transferred":
-    "Squadra · {from} ha passato tutto il compito a {to} (passaggio {count} di {limit}).",
   "status.agent.hxTeam.returned": "Squadra · {name} ha restituito un risultato ({done} di {steps} passi fatti).",
   "status.agent.hxTeam.failedOnce":
     "Squadra · {name} non è riuscito a finire una parte del lavoro; se fallisce di nuovo, la squadra si ferma e ti chiede.",
@@ -125,7 +123,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Squadra · I membri creati per lei sono nascosti: {names}.",
   "status.agent.hxComputer.plan": "Lavoro su questo computer · {app} · {keys} lo ferma",
   "status.agent.hxComputer.stopped": "Lavoro su questo computer fermato: hai premuto i tasti di arresto.",
-  "status.agent.hxTeam.progress": "Team · passaggi {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "Il controllo PC richiede due autorizzazioni: Registrazione schermo e Accessibilità. Impostazioni di Sistema è aperto sulla prima: attiva HXBot lì, poi la seconda. Chiedi di nuovo quando sono attive entrambe. Impostazioni → Controllo PC le mostra.",
   "status.agent.hxComputer.needScreen":
@@ -134,4 +131,19 @@ export const messages = {
     "Il controllo PC richiede l’autorizzazione Accessibilità. Impostazioni di Sistema è aperto su quella pagina: attiva HXBot lì e chiedi di nuovo. Impostazioni → Controllo PC la mostra anche.",
   "status.agent.hxComputer.notRunning":
     "Il controllo PC non è attivo: {reason}. Impostazioni → Controllo PC mostra il motivo.",
+  "status.agent.hxTeam.handedOver": "Team · {from} ha passato l’intera attività a {to} (passaggio {count}).",
+  "status.agent.hxTeam.progressOpen": "Team · {count} passaggi · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Team · in pausa, aspetta te · {count} passaggi · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "Il team è in pausa: {reason} Non avvia nuovo lavoro; quello in corso finisce. Continuare, chiudere o fermare?",
+  "status.agent.hxTeam.continued": "Team · Continua.",
+  "status.agent.hxTeam.wrapUp": "Team · Il responsabile chiude con quello che il team ha.",
+  "status.agent.hxTeam.priority.urgent": "Team · Più urgente: passa prima degli altri team finché non finisce.",
+  "status.agent.hxTeam.priority.normal": "Team · Torna all’ordine normale.",
+  "status.agent.hxTeam.priority.relaxed": "Team · Non urgente: gli altri team passano prima finché non finisce.",
+  "status.agent.hxTeam.spend.api": "Team · Spesi finora circa ¥{yuan}. Continua; indica un limite per fermarlo lì.",
+  "status.agent.hxTeam.spend.plan":
+    "Team · Usato il {percent}% del periodo del piano. Continua; indica un limite per fermarlo lì.",
+  "status.agent.hxTeam.spend.tokens":
+    "Team · Usati finora circa {millions} milioni di token (prezzo sconosciuto). Continua.",
 } as const satisfies PartialTranslation<typeof source>;

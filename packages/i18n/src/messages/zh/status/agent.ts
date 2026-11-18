@@ -127,7 +127,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "这件工作做得不顺利。回复“重做”，就换用 {model} 再做一遍。",
   "status.agent.hxTeam.started": "已组队：{members}，{lead} 带头。进度会回到这里。",
   "status.agent.hxTeam.assigned": "协作 · {from} 把“{task}”交给 {to}（第 {count}/{limit} 次交接）。",
-  "status.agent.hxTeam.transferred": "协作 · {from} 把整件事转交给 {to}（第 {count}/{limit} 次交接）。",
   "status.agent.hxTeam.returned": "协作 · {name} 交回了结果（{done}/{steps} 步完成）。",
   "status.agent.hxTeam.failedOnce": "协作 · {name} 有一件工作没做成；同一件工作再失败一次，团队就停下来问你。",
   "status.agent.hxTeam.stuck": "协作 · 工作停住了：有任务被停止或失败。可以在协作房间里继续，或者告诉我怎么办。",
@@ -144,7 +143,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "协作 · 为它新建的成员已收起：{names}（可在隐藏的智能体里恢复）。",
   "status.agent.hxComputer.plan": "电脑操作 · {app} · 按 {keys} 停止",
   "status.agent.hxComputer.stopped": "电脑操作已停止：你按了停止键。",
-  "status.agent.hxTeam.progress": "协作 · 交接 {count}/{limit} · 用时 {minutes}/{max} 分钟",
   "status.agent.hxComputer.needBoth":
     "电脑操控还缺两项授权：屏幕录制和辅助功能。已打开系统设置里的第一项，请打开 HXBot 旁边的开关，再打开第二项；两项都打开后再说一次，就能接着做。也可以在“设置 → 电脑操控”里点“授权”。",
   "status.agent.hxComputer.needScreen":
@@ -152,4 +150,16 @@ export const messages = {
   "status.agent.hxComputer.needAccessibility":
     "电脑操控还缺“辅助功能”授权。已打开系统设置里的这一页，请打开 HXBot 旁边的开关，然后再说一次。也可以在“设置 → 电脑操控”里点“授权”。",
   "status.agent.hxComputer.notRunning": "电脑操控没有运行：{reason}。在“设置 → 电脑操控”里可以看到原因。",
+  "status.agent.hxTeam.handedOver": "协作 · {from} 把整件事转交给 {to}（第 {count} 次交接）。",
+  "status.agent.hxTeam.progressOpen": "协作 · {count} 次交接 · {minutes} 分钟",
+  "status.agent.hxTeam.progressPaused": "协作 · 已暂停，等你决定 · {count} 次交接 · {minutes} 分钟",
+  "status.agent.hxTeam.paused": "协作暂停了：{reason}不开新的工作，在做的会做完。继续、收尾还是停？",
+  "status.agent.hxTeam.continued": "协作 · 继续。",
+  "status.agent.hxTeam.wrapUp": "协作 · 由带头的用已有的结果收尾。",
+  "status.agent.hxTeam.priority.urgent": "协作 · 这件更急：做完之前排在别的团队前面。",
+  "status.agent.hxTeam.priority.normal": "协作 · 恢复普通顺序。",
+  "status.agent.hxTeam.priority.relaxed": "协作 · 这件不急：做完之前让别的团队先做。",
+  "status.agent.hxTeam.spend.api": "协作 · 到现在约花了 {yuan} 元。团队照常工作；要设上限请直接说。",
+  "status.agent.hxTeam.spend.plan": "协作 · 套餐本期额度已用 {percent}%。团队照常工作；要设上限请直接说。",
+  "status.agent.hxTeam.spend.tokens": "协作 · 到现在约用了 {millions} 百万 token（价格未知）。团队照常工作。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -139,7 +139,6 @@ export const messages = {
   "status.agent.hxAuto.suggest": "Dit werk ging niet goed. Antwoord „redo” om het opnieuw te doen met {model}.",
   "status.agent.hxTeam.started": "Team gestart: {members}; {lead} leidt. De voortgang komt hier terug.",
   "status.agent.hxTeam.assigned": "Team · {from} gaf ‘{task}’ aan {to} (overdracht {count} van {limit}).",
-  "status.agent.hxTeam.transferred": "Team · {from} gaf de hele taak door aan {to} (overdracht {count} van {limit}).",
   "status.agent.hxTeam.returned": "Team · {name} stuurde een resultaat terug ({done} van {steps} stappen klaar).",
   "status.agent.hxTeam.failedOnce":
     "Team · {name} kon een deel van het werk niet afmaken; mislukt het weer, dan stopt het team en vraagt het jou.",
@@ -159,7 +158,6 @@ export const messages = {
   "status.agent.hxTeam.collapsed": "Team · De leden die ervoor zijn gemaakt zijn verborgen: {names}.",
   "status.agent.hxComputer.plan": "Werk op deze computer · {app} · {keys} stopt het",
   "status.agent.hxComputer.stopped": "Werk op deze computer gestopt: je drukte op de stoptoetsen.",
-  "status.agent.hxTeam.progress": "Team · overdrachten {count}/{limit} · {minutes}/{max} min",
   "status.agent.hxComputer.needBoth":
     "PC-besturing heeft twee toestemmingen nodig: Schermopname en Toegankelijkheid. Systeeminstellingen staat open bij de eerste: zet HXBot daar aan, en daarna de tweede. Vraag het opnieuw als beide aan staan. Instellingen → PC-besturing toont ze allebei.",
   "status.agent.hxComputer.needScreen":
@@ -168,4 +166,20 @@ export const messages = {
     "PC-besturing heeft de toestemming Toegankelijkheid nodig. Systeeminstellingen staat open op die pagina: zet HXBot daar aan en vraag het opnieuw. Instellingen → PC-besturing toont hem ook.",
   "status.agent.hxComputer.notRunning":
     "PC-besturing draait niet: {reason}. Instellingen → PC-besturing toont de reden.",
+  "status.agent.hxTeam.handedOver": "Team · {from} heeft de hele taak aan {to} gegeven (overdracht {count}).",
+  "status.agent.hxTeam.progressOpen": "Team · {count} overdrachten · {minutes} min",
+  "status.agent.hxTeam.progressPaused": "Team · gepauzeerd, wacht op jou · {count} overdrachten · {minutes} min",
+  "status.agent.hxTeam.paused":
+    "Het team is gepauzeerd: {reason} Het begint geen nieuw werk; lopend werk wordt afgemaakt. Doorgaan, afronden of stoppen?",
+  "status.agent.hxTeam.continued": "Team · Het gaat door.",
+  "status.agent.hxTeam.wrapUp": "Team · De leider rondt af met wat het team heeft.",
+  "status.agent.hxTeam.priority.urgent": "Team · Dringender: het gaat voor andere teams tot het klaar is.",
+  "status.agent.hxTeam.priority.normal": "Team · Weer de normale volgorde.",
+  "status.agent.hxTeam.priority.relaxed": "Team · Niet dringend: andere teams gaan voor tot het klaar is.",
+  "status.agent.hxTeam.spend.api":
+    "Team · Tot nu toe ongeveer ¥{yuan} uitgegeven. Het gaat door; noem een grens om het daar te stoppen.",
+  "status.agent.hxTeam.spend.plan":
+    "Team · {percent}% van de abonnementsperiode is gebruikt. Het gaat door; noem een grens om het daar te stoppen.",
+  "status.agent.hxTeam.spend.tokens":
+    "Team · Tot nu toe ongeveer {millions} miljoen tokens gebruikt (prijs onbekend). Het gaat door.",
 } as const satisfies PartialTranslation<typeof source>;
