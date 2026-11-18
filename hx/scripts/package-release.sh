@@ -30,7 +30,8 @@ bash hx/scripts/check-gates.sh
 
 # 不写上一版本时，取 dist-hx/ 里版本最新的旧全量包
 if [ -z "$PREVIOUS" ]; then
-  PREVIOUS="$(ls "$OUT"/hxbot-server-v*.zip 2>/dev/null | sed -n 's/.*hxbot-server-v\([0-9][0-9.]*[0-9]\)\.zip$/\1/p' |
+  # ls 找不到旧包时返回 2；在 pipefail 下这会让整个脚本退出，所以先把它的失败吞掉：没有旧包就只打全量包
+  PREVIOUS="$({ ls "$OUT"/hxbot-server-v*.zip 2>/dev/null || true; } | sed -n 's/.*hxbot-server-v\([0-9][0-9.]*[0-9]\)\.zip$/\1/p' |
     python3 -c 'import sys
 def key(v): return tuple(int(p) for p in v.split("."))
 tag = key(sys.argv[1])
