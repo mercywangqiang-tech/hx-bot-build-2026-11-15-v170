@@ -516,6 +516,28 @@ describe("the watcher", () => {
     expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
   });
 
+  it("goes on after the user answers a G1 pause: continue counts again from 0, finish wraps up", async () => {
+    const { id } = await started();
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: id }, null);
+    await work(30.5);
+    expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+    expect(read(await call("team", { action: "continue" }, { key: "k2" })).status).toBe("continued");
+    expect(teams.store.get(id)?.guard?.paused).toBeNull();
+    await work(29);
+    expect(teams.store.get(id)?.guard?.paused).toBeNull();
+    await work(1.5);
+    expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+    expect(read(await call("team", { action: "finish" }, { key: "k3" })).status).toBe("wrapping-up");
+    const team = teams.store.get(id);
+    expect(team?.guard?.paused).toBeNull();
+    expect(team?.guard?.wrapUp).toBe(true);
+    expect(team?.state).toBe("running");
+    // The lead hears it in the room: no new work, hand back what the team has.
+    expect(port.posts.at(-1)?.text).toContain("hxbot.team_done");
+    expect(port.posts.at(-1)?.toAgentIds).toEqual([team?.leadAgentId]);
+  });
+
   it("takes a new file in the shared folder for progress at the G1 check", async () => {
     const { id } = await started();
     hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });

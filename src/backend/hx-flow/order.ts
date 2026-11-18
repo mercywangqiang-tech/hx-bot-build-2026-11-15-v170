@@ -91,8 +91,14 @@ export class HxFlowDifficultyTimes {
   readonly #times: Record<HxFlowDifficulty, number[]> = { low: [], mid: [], high: [] };
 
   constructor(initial?: Partial<Record<HxFlowDifficulty, number[]>>) {
-    for (const key of ["low", "mid", "high"] as const)
-      this.#times[key] = [...(initial?.[key] ?? [])].slice(-DIFFICULTY_KEEP);
+    // The times come from hx-flow-times.json in the user's folder: keep only real durations, so an
+    // edited or damaged file cannot put text or a negative number into the comparison.
+    for (const key of ["low", "mid", "high"] as const) {
+      const times = initial?.[key];
+      this.#times[key] = (Array.isArray(times) ? times : [])
+        .filter((ms) => Number.isFinite(ms) && ms > 0)
+        .slice(-DIFFICULTY_KEEP);
+    }
   }
 
   record(difficulty: HxFlowDifficulty, ms: number): void {
