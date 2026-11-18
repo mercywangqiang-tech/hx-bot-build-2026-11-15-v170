@@ -913,7 +913,7 @@ function AppSettings(props: AccountProps) {
   } = useSettings();
   return (
     <Loading>
-      {/* HXBot: a new version must be installed before HXBot can be used. */}
+      {/* HXBot: the window for an update that the account service requires (hx-update-policy.ts). */}
       <HxForcedUpdate />
       <SettingsModal
         // The settings show only as a page of the window, so they wait for the page.

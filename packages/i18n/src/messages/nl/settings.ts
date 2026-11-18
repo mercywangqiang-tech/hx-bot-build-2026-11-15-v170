@@ -755,7 +755,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "Je weigerde",
   "settings.updates.hxForced.title": "Automatische updates",
   "settings.updates.hxForced.description":
-    "HXBot downloadt elke nieuwe versie zelf. Kies Nu bijwerken in het venster dat opent om hem te installeren; doet niemand dat binnen 10 minuten, dan installeert HXBot hem zodra hij niets te doen heeft. Tot een nieuwe versie is geïnstalleerd, kun je HXBot niet gebruiken.",
+    "Als HXBot bij het openen een nieuwe versie vindt, downloadt en installeert hij die zelf en start hij opnieuw op in de nieuwe versie zodra de agents niets te doen hebben; je hoeft nergens op te klikken. Lopend werk wordt eerst afgerond. Een later gevonden versie wordt geïnstalleerd de volgende keer dat je HXBot opent.",
   "settings.nav.group.settings": "Instellingen",
   "settings.nav.group.features": "Functies",
   "settings.nav.group.data": "Gegevens en beveiliging",

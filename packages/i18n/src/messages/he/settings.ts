@@ -766,7 +766,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "סירבת",
   "settings.updates.hxForced.title": "עדכונים אוטומטיים",
   "settings.updates.hxForced.description":
-    "HXBot מוריד כל גרסה חדשה בעצמו. יש לבחור ״עדכון עכשיו״ בחלון שנפתח כדי להתקין אותה; אם איש לא יבחר בכך בתוך 10 דקות, HXBot יתקין אותה כשהוא לא עסוק. עד שהגרסה החדשה מותקנת, אי אפשר להשתמש ב-HXBot.",
+    "כאשר HXBot מוצא גרסה חדשה בעת הפתיחה, הוא מוריד ומתקין אותה בעצמו ומופעל מחדש בגרסה החדשה כשהסוכנים אינם עסוקים, בלי צורך ללחוץ על דבר. עבודה שרצה מסתיימת קודם. גרסה שנמצאת מאוחר יותר מותקנת בפעם הבאה ש־HXBot נפתח.",
   "settings.nav.group.settings": "הגדרות",
   "settings.nav.group.features": "תכונות",
   "settings.nav.group.data": "נתונים ואבטחה",

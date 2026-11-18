@@ -1,6 +1,6 @@
 /**
- * HXBot：桌面端“有新版本”的窗口（HxForcedUpdate）。平时的版本下载好后弹出，列出新功能，可以“以后再说”；
- * 大版本（主.次 变了）或账号服务拒绝了这个版本时必须装，窗口不能关。
+ * HXBot：桌面端“更新 HXBot”的窗口（HxForcedUpdate）。v1.7.1 起只在账号服务拒绝了这个版本（426）时出现，
+ * 挡住窗口、不能关；别的版本打开时自动装，不弹这个窗口（hx-update-policy.ts）。
  */
 
 import type { UpdateStatus } from "@hxbot/contracts/ipc";
@@ -47,13 +47,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A new version that can wait: what is new, Update now and Later. */
-export const CanWait: Story = { render: window_({}) };
-
-/** A new major version: it must be installed, so there is no Later. */
-export const MajorVersion: Story = {
-  render: window_({ phase: "downloading", availableVersion: "0.68.0", progress: 45 }),
+/** The account service refused this version and the new one is still downloading. */
+export const RefusedDownloading: Story = {
+  render: window_({ phase: "downloading", availableVersion: "0.67.10", progress: 45, hxRequired: true }),
 };
 
 /** The account service refused this version: the update must be installed. */
-export const Refused: Story = { render: window_({ phase: "ready", availableVersion: "0.67.4", hxRequired: true }) };
+export const Refused: Story = { render: window_({ phase: "ready", availableVersion: "0.67.10", hxRequired: true }) };

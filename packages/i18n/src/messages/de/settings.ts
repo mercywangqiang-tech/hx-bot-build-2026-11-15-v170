@@ -783,7 +783,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "Du hast abgelehnt",
   "settings.updates.hxForced.title": "Automatische Updates",
   "settings.updates.hxForced.description":
-    "HXBot lädt jede neue Version von selbst herunter. Wähle im Fenster, das sich öffnet, „Jetzt aktualisieren“, um sie zu installieren; tut das innerhalb von 10 Minuten niemand, installiert HXBot sie, sobald es nichts zu tun hat. Bis eine neue Version installiert ist, kann HXBot nicht genutzt werden.",
+    "Wenn HXBot beim Öffnen eine neue Version findet, lädt und installiert es sie selbst und startet in der neuen Version neu, sobald die Agenten nichts zu tun haben; du musst nichts anklicken. Laufende Arbeit wird zuerst beendet. Eine später gefundene Version wird beim nächsten Öffnen von HXBot installiert.",
   "settings.nav.group.settings": "Einstellungen",
   "settings.nav.group.features": "Funktionen",
   "settings.nav.group.data": "Daten & Sicherheit",

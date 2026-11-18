@@ -1,5 +1,5 @@
-// HXBot：桌面端“有新版本”窗口（HxForcedUpdate.tsx，规则见 @hxbot/contracts/hx-update-policy）。
-// 小版本可以不装：下载好后弹出，列出新功能，“立即更新”或“以后再说”。大版本或账号服务拒绝的版本必须装：
+// HXBot：桌面端“更新 HXBot”窗口（HxForcedUpdate.tsx，规则见 @hxbot/contracts/hx-update-policy）。
+// v1.7.1 起不按版本拦：新版本（大版本也一样）由主进程自动安装，窗口不弹出。只有账号服务拒绝了这个版本时
 // 窗口挡住，只有“立即更新”；还在下载时点了，下载完自动安装。
 import type { UpdateStatus } from "@hxbot/contracts/ipc";
 import { fireEvent, render, screen } from "@solidjs/testing-library";
@@ -45,54 +45,41 @@ const later = () => screen.queryByRole("button", { name: "Later" });
 
 afterEach(() => vi.useRealTimers());
 
-describe("an update that can wait", () => {
-  it("opens once it is downloaded, with what is new, Update now and Later", () => {
+describe("an update that installs by itself", () => {
+  it("does not open the window, a new major version included", () => {
     const { setCurrent, runAction } = show(status("downloading", { progress: 30 }));
-    expect(shown("HXBot 0.67.3 is ready")).toBe(false);
     setCurrent(status("ready"));
     flush();
-    expect(screen.getByText("HXBot 0.67.3 is ready")).toBeTruthy();
-    expect(screen.getByText("Settings come in three groups.")).toBeTruthy();
-    expect(screen.getByText("Get help opens the guide.")).toBeTruthy();
-    fireEvent.click(updateNow());
-    expect(runAction).toHaveBeenCalledTimes(1);
+    expect(shown("HXBot 0.67.3 is ready")).toBe(false);
+    setCurrent(status("ready", { availableVersion: "0.68.0" }));
+    flush();
+    expect(shown("Update HXBot")).toBe(false);
+    expect(shown("HXBot 0.68.0 is ready")).toBe(false);
+    expect(runAction).not.toHaveBeenCalled();
   });
 
-  it("closes with Later and does not install by itself", () => {
+  it("starts a download that did not start by itself", () => {
     vi.useFakeTimers();
-    const { setCurrent, runAction } = show(status("ready", { availableVersion: "0.67.4" }));
-    const button = later();
-    expect(button).toBeTruthy();
-    if (button) fireEvent.click(button);
-    vi.advanceTimersByTime(15 * 60_000);
-    flush();
-    expect(shown("HXBot 0.67.4 is ready")).toBe(false);
-    expect(runAction).not.toHaveBeenCalled();
-    // The same version stays quiet until HXBot starts again; a newer one asks again.
-    setCurrent(status("ready", { availableVersion: "0.67.4", checkedAt: "later" }));
-    vi.advanceTimersByTime(1000);
-    flush();
-    expect(shown("HXBot 0.67.4 is ready")).toBe(false);
-    setCurrent(status("ready", { availableVersion: "0.67.5" }));
-    flush();
-    expect(shown("HXBot 0.67.5 is ready")).toBe(true);
+    const { runAction } = show(status("available", { availableVersion: "0.68.0" }));
+    vi.advanceTimersByTime(15_000);
+    expect(runAction).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("an update that must be installed", () => {
-  it("covers the window for a new major version, without Later, and installs after the download", () => {
-    const { setCurrent, runAction } = show(status("available", { availableVersion: "0.68.0" }));
+describe("an update that the account service requires", () => {
+  it("covers the window, without Later, and installs after the download", () => {
+    const { setCurrent, runAction } = show(status("available", { availableVersion: "0.67.11", hxRequired: true }));
     expect(screen.getByText("Update HXBot")).toBeTruthy();
     expect(later()).toBeNull();
     expect(updateNow().hasAttribute("disabled")).toBe(false);
     fireEvent.click(updateNow());
     expect(runAction).toHaveBeenCalledTimes(1);
 
-    setCurrent(status("downloading", { availableVersion: "0.68.0", progress: 40 }));
+    setCurrent(status("downloading", { availableVersion: "0.67.11", progress: 40, hxRequired: true }));
     flush();
     expect(screen.getByText(/40%.*restarts to install it when the download is done/)).toBeTruthy();
 
-    setCurrent(status("ready", { availableVersion: "0.68.0" }));
+    setCurrent(status("ready", { availableVersion: "0.67.11", hxRequired: true }));
     flush();
     // The user already chose Update now: the install starts without a second click.
     expect(runAction).toHaveBeenCalledTimes(2);
@@ -102,13 +89,6 @@ describe("an update that must be installed", () => {
     show(status("downloading", { availableVersion: "0.67.5", hxRequired: true }));
     expect(screen.getByText("Update HXBot")).toBeTruthy();
     expect(later()).toBeNull();
-  });
-
-  it("starts a download that did not start by itself", () => {
-    vi.useFakeTimers();
-    const { runAction } = show(status("available", { availableVersion: "0.68.0" }));
-    vi.advanceTimersByTime(15_000);
-    expect(runAction).toHaveBeenCalledTimes(1);
   });
 
   it("knows when an update is pending and what the button does", () => {

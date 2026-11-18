@@ -65,7 +65,7 @@ export const SHOTS: Shot[] = [
   {
     id: "team-open",
     story: "hxbot-highlights--team-open",
-    version: "0.68.0",
+    version: "0.67.10",
     tag: "new",
     title: { zh: "多开智能体不卡、团队不设上限", en: "Many agents, no freezes; teams with no limits" },
     lead: {
@@ -408,7 +408,7 @@ export const SHOTS: Shot[] = [
     story: "hxbot-highlights--team-settings",
     version: "0.67.5",
     // v1.7.1 (TEAM-01): a team has no limits in the settings any more.
-    retired: "0.68.0",
+    retired: "0.67.10",
     title: { zh: "团队的上限", en: "The limits of a team" },
     lead: {
       zh: "在助手设置的“建议卡”下面：团队最多几个人、最长多久、最多交接几次。到了上限，团队停下来问你。",

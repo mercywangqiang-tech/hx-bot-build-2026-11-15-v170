@@ -1,6 +1,8 @@
 // HXBot：桌面端更新的规则（@hxbot/contracts/hx-update-policy）。
 import {
-  hxMajorMinor,
+  HX_OPENING_MS,
+  hxAutomaticGraceMs,
+  hxInstallsByItself,
   hxReleaseNoteLines,
   hxReleaseNotesText,
   hxUpdateIsRequired,
@@ -8,21 +10,59 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("which updates must be installed", () => {
-  it("lets a new patch version wait and requires a new major version", () => {
+  it("never requires an update because of its version, a new major version included (v1.7.1)", () => {
     expect(hxUpdateIsRequired({ currentVersion: "0.67.2", availableVersion: "0.67.3" })).toBe(false);
-    expect(hxUpdateIsRequired({ currentVersion: "0.67.2", availableVersion: "0.67.9" })).toBe(false);
-    expect(hxUpdateIsRequired({ currentVersion: "0.67.9", availableVersion: "0.68.0" })).toBe(true);
-    expect(hxUpdateIsRequired({ currentVersion: "1.5.0", availableVersion: "2.0.0" })).toBe(true);
+    expect(hxUpdateIsRequired({ currentVersion: "0.67.9", availableVersion: "0.68.0" })).toBe(false);
+    expect(hxUpdateIsRequired({ currentVersion: "0.67.10", availableVersion: "1.0.0" })).toBe(false);
     expect(hxUpdateIsRequired({ currentVersion: "0.67.2", availableVersion: null })).toBe(false);
   });
 
-  it("requires any update once the account service refused this version", () => {
+  it("requires an update only once the account service refused this version", () => {
     expect(hxUpdateIsRequired({ currentVersion: "0.67.2", availableVersion: "0.67.3", hxRequired: true })).toBe(true);
   });
+});
 
-  it("reads major and minor", () => {
-    expect(hxMajorMinor("0.67.10")).toBe("0.67");
-    expect(hxMajorMinor("garbage")).toBeNull();
+describe("which updates install by themselves", () => {
+  const facts = (availableVersion: string | null, hxRequired = false) => ({
+    currentVersion: "0.67.10",
+    availableVersion,
+    hxRequired,
+  });
+
+  it("installs a version that HXBot found as it opened, and keeps that answer for the version", () => {
+    let now = 1_000;
+    let current = facts("0.67.11");
+    const installs = hxInstallsByItself(
+      1_000,
+      () => current,
+      () => now,
+    );
+    expect(installs()).toBe(true);
+    now += HX_OPENING_MS + 60_000;
+    expect(installs()).toBe(true);
+    current = facts(null);
+    expect(installs()).toBe(false);
+  });
+
+  it("leaves a version found later for the next opening, and installs a required one at once", () => {
+    let now = 1_000 + HX_OPENING_MS + 1;
+    let current = facts("0.68.0");
+    const installs = hxInstallsByItself(
+      1_000,
+      () => current,
+      () => now,
+    );
+    expect(installs()).toBe(false);
+    current = facts("0.68.0", true);
+    expect(installs()).toBe(true);
+    now += 1;
+    current = facts("0.68.1");
+    expect(installs()).toBe(false);
+  });
+
+  it("waits a few seconds before the restart, and 10 minutes for a required update", () => {
+    expect(hxAutomaticGraceMs(facts("0.67.11"))).toBe(5_000);
+    expect(hxAutomaticGraceMs(facts("0.67.11", true))).toBe(10 * 60_000);
   });
 });
 

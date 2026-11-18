@@ -1,10 +1,12 @@
 /**
- * HXBot：桌面端更新的规则（v1.6.3 起，用户 2026-11-13：“可以更新，可以不更新……到某个大版本，要求必须更新”）。
+ * HXBot：桌面端更新的规则。
  *
- * - 平时的新版本可以不装：窗口里列出新功能，“立即更新”或“以后再说”。
- * - 版本号第二段变了（0.67.x → 0.68.0）就必须装：窗口挡住，不能关；没人点时 10 分钟后在空闲时自动安装。
- * - 账号服务拒绝了这个版本（426，最低版本见 apps/auth-api/src/server/hx-client-version.ts）时也必须装：
- *   发版时可以把某个小版本单独设成必须更新（hx/brand.json 的 minimumVersions）。
+ * v1.7.1 起（用户 2026-11-18：“以后大版本都不做强制更新，只需要在打开 hxbot 客户端后直接更新即可”）：
+ * - 不再按版本号强制：大版本（第二段变了，如 0.67.x → 0.68.0）和小版本一样，不挡住窗口，账号服务也不拒绝。
+ * - 打开 HXBot 时找到的新版本自动下载、装好，在助手都空闲时重启进入新版，不弹窗、不用点
+ *   （右下角提示“HXBot 正在安装更新”，可以取消这一次）。用着用着才找到的新版本，下次打开时再装。
+ * - 只有账号服务拒绝了这个版本（426；只在 hx/brand.json 的 minimumVersions 明确写了最低版本时）才必须装：
+ *   窗口挡住，点“立即更新”；没人点时 10 分钟后在空闲时自动安装。
  *
  * 新功能写在 hx/release-notes.json，打包时写进 latest.yml 的 releaseNotes（中文和英文，JSON）。
  */
@@ -17,19 +19,46 @@ export interface HxUpdateFacts {
   hxRequired?: boolean;
 }
 
-/** `major.minor` of a version such as 0.67.2, or null when it is not one. */
-export function hxMajorMinor(version: string): string | null {
-  const match = /^(\d+)\.(\d+)\.\d+/u.exec(version.trim());
-  return match ? `${Number(match[1])}.${Number(match[2])}` : null;
+/**
+ * True when the new version must be installed before HXBot can be used: only when the account service refused
+ * this version (426). A new major version alone no longer requires it (v1.7.1).
+ */
+export function hxUpdateIsRequired(facts: HxUpdateFacts): boolean {
+  return facts.hxRequired === true;
 }
 
-/** True when the new version must be installed before HXBot can be used. */
-export function hxUpdateIsRequired(facts: HxUpdateFacts): boolean {
-  if (facts.hxRequired) return true;
-  if (!facts.availableVersion) return false;
-  const current = hxMajorMinor(facts.currentVersion);
-  const available = hxMajorMinor(facts.availableVersion);
-  return current !== null && available !== null && current !== available;
+/** How long after HXBot opens a new version that it finds counts as found at the opening. */
+export const HX_OPENING_MS = 10 * 60_000;
+
+/**
+ * The test for an automatic install: true for an update that the account service requires, and for one that HXBot
+ * found as it opened (within HX_OPENING_MS of `startedAt`). A version first seen later waits for the next opening.
+ */
+export function hxInstallsByItself(
+  startedAt: number,
+  status: () => HxUpdateFacts,
+  now: () => number = Date.now,
+): () => boolean {
+  let seen: string | null = null;
+  let atOpening = false;
+  return () => {
+    const facts = status();
+    if (hxUpdateIsRequired(facts)) return true;
+    if (!facts.availableVersion) return false;
+    if (facts.availableVersion !== seen) {
+      seen = facts.availableVersion;
+      atOpening = now() - startedAt <= HX_OPENING_MS;
+    }
+    return atOpening;
+  };
+}
+
+/**
+ * The wait before the automatic restart: 10 minutes for a required update, so the user can choose Update now first,
+ * and a few seconds for one found at the opening.
+ */
+export function hxAutomaticGraceMs(facts: HxUpdateFacts): number {
+  return hxUpdateIsRequired(facts) ? 10 * 60_000 : 5_000;
 }
 
 /**

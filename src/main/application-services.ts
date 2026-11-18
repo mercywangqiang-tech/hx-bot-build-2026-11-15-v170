@@ -1,5 +1,5 @@
 import { isManagedRuntimeProvider, type ManagedProviderId } from "@hxbot/contracts/agent-providers";
-import { hxUpdateIsRequired } from "@hxbot/contracts/hx-update-policy";
+import { hxAutomaticGraceMs, hxInstallsByItself } from "@hxbot/contracts/hx-update-policy";
 import { ANALYTICS_GENERATIONS, openPanelTransport, ReportQueue } from "@hxbot/telemetry";
 import { fileReportStorage } from "@hxbot/telemetry/node";
 import { makeWASocket } from "@hxbot/whatsapp/baileys";
@@ -3843,10 +3843,11 @@ export async function createApplicationServices({
     updater,
     describeReadiness: describeRestartReadiness,
     preference: updatePreference,
-    // HXBot: the window asks the user to choose Update now; without that, the install waits 10 minutes,
-    // and only an update that must be installed installs by itself (hx-update-policy.ts).
-    automaticGraceMs: 10 * 60_000,
-    hxAutomaticOnlyIf: () => hxUpdateIsRequired(updater.getStatus()),
+    // HXBot (v1.7.1): an update that HXBot finds as it opens downloads, installs and restarts by itself when the
+    // agents are idle, with nothing to click; one found later waits for the next opening. Only an update that the
+    // account service requires waits 10 minutes for Update now first (hx-update-policy.ts).
+    automaticGraceMs: () => hxAutomaticGraceMs(updater.getStatus()),
+    hxAutomaticOnlyIf: hxInstallsByItself(startedAt, () => updater.getStatus()),
     savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),
     log: (message) => logger.info(message),
     announce: (state, version) => host.announceRestart(state, version),

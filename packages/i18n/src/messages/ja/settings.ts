@@ -754,7 +754,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "拒否しました",
   "settings.updates.hxForced.title": "自動アップデート",
   "settings.updates.hxForced.description":
-    "HXBot は新しいバージョンを自動でダウンロードします。表示されるウインドウで「今すぐ更新」を選ぶとインストールされます。10 分以内にだれも選ばなかった場合は、HXBot が待機中のときにインストールします。新しいバージョンがインストールされるまで HXBot は使えません。",
+    "HXBot を開いたときに新しいバージョンが見つかると、HXBot が自動でダウンロードしてインストールし、エージェントが待機中になったら新しいバージョンで再起動します。クリックは不要です。実行中の作業は先に完了します。使っている途中で見つかった新しいバージョンは、次に HXBot を開いたときにインストールされます。",
   "settings.nav.group.settings": "設定",
   "settings.nav.group.features": "機能",
   "settings.nav.group.data": "データとセキュリティ",

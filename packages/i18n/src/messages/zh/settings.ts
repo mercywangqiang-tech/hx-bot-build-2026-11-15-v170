@@ -735,7 +735,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "你拒绝了",
   "settings.updates.hxForced.title": "自动更新",
   "settings.updates.hxForced.description":
-    "HXBot 自动下载每个新版本，在弹出的窗口里点“立即更新”安装；10 分钟内没人点，会在空闲时自动安装。新版本装好之前不能使用。",
+    "打开 HXBot 时找到的新版本，HXBot 自动下载、装好，在助手都空闲时重启进入新版，不用点；正在进行的工作先做完。用着用着才找到的新版本，下次打开时再装。",
   "settings.nav.group.settings": "设置",
   "settings.nav.group.features": "功能",
   "settings.nav.group.data": "数据与安全",

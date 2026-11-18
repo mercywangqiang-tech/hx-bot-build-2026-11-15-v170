@@ -740,7 +740,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "거부함",
   "settings.updates.hxForced.title": "자동 업데이트",
   "settings.updates.hxForced.description":
-    "HXBot은 새 버전을 직접 다운로드합니다. 열리는 창에서 '지금 업데이트'를 선택하면 설치되고, 10분 안에 아무도 선택하지 않으면 HXBot이 쉬고 있을 때 설치합니다. 새 버전이 설치될 때까지 HXBot을 사용할 수 없습니다.",
+    "HXBot을 열 때 새 버전을 찾으면 HXBot이 직접 다운로드하고 설치한 뒤, 에이전트가 쉬고 있을 때 새 버전으로 다시 시작합니다. 아무것도 누를 필요가 없습니다. 진행 중인 작업이 먼저 끝납니다. 사용하는 도중에 찾은 새 버전은 다음에 HXBot을 열 때 설치됩니다.",
   "settings.nav.group.settings": "설정",
   "settings.nav.group.features": "기능",
   "settings.nav.group.data": "데이터 및 보안",

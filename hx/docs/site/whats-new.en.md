@@ -2,22 +2,23 @@
 title: What's new
 kicker: HXBot Research Edition
 updated: November 18, 2026
-version: Desktop 0.68.0 · Mobile 1.5.0
+version: Desktop 0.67.10 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
-This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: when a new desktop version is out, the app shows a window with what is new; click Update now. The data in the screenshots is demo data.
+This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.10 on, when HXBot finds a new version as it opens, it downloads and installs it by itself and restarts into it once the assistants are idle; there is nothing to click. The data in the screenshots is demo data.
 
-## Desktop 0.68.0: many agents at once without freezes, teams with no limits {#desktop-0-68-0}
+## Desktop 0.67.10: many agents at once without freezes, teams with no limits {#desktop-0-67-10}
 
-November 18, 2026 · Desktop and web 0.68.0 · Mobile 1.5.0 (no change this time)
+November 18, 2026 · Desktop and web 0.67.10 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
 > 1. {NEW} Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
 > 2. Teams have no limit on members, time or handoffs: each handoff is accepted and waits in the queue, and none is sent back because "too many are busy". When a team makes no progress, goes in a loop or nobody answers the spend reminders, it pauses and asks you. {on:Desktop}
 > 3. No slowdown after long use: the channel list counts only the new messages, and the queue and the scheduler look only at work that is not done. {on:Desktop}
+> 4. Updates are no longer forced: when HXBot finds a new version as it opens, it downloads and installs it and restarts into it once the assistants are idle; there is nothing to click. Later major versions work the same way. {on:Desktop}
 
-### This computer sets how many turns run at the same time {#desktop-0-68-0-capacity}
+### This computer sets how many turns run at the same time {#desktop-0-67-10-capacity}
 
 ![Many agents at once: the team line in the settings says this computer decides how many work at once, and the progress card keeps the handoffs and the time](/hx-portal/whats-new/team-open.en.jpg)
 
@@ -35,7 +36,7 @@ November 18, 2026 · Desktop and web 0.68.0 · Mobile 1.5.0 (no change this time
 - **Idle processes close:** when a team member's process was idle for 4 minutes or more, HXBot closes the one that was idle longest, one at a time, and the memory goes back to your apps.
 - **Where to see it:** in the assistant settings, below "Proposal card", one line says "Team: members as the work needs; this computer decides how many work at once (now n)".
 
-### Teams with no limits pause and ask you when they are stuck {#desktop-0-68-0-team}
+### Teams with no limits pause and ask you when they are stuck {#desktop-0-67-10-team}
 
 - **No handoff is sent back:** every handoff from the lead is accepted, goes on the board and waits, and starts when this computer has room. The limit "at most 20 members · 240 minutes · 80 handoffs" is gone. A handoff form must still have all six parts; a form with a part missing is still sent back.
 - **Only your limits count:** say in the chat "at most 3 members this time", "spend at most ¥50" or "do not ask me this time, run to the end". It is for this one team only. A "limit" that the lead writes in a handoff form changes nothing.
@@ -49,12 +50,19 @@ November 18, 2026 · Desktop and web 0.68.0 · Mobile 1.5.0 (no change this time
 - **Spend reminders:** pay as you go: about each ¥20. A plan: when 25%, 50% and 80% of this period are used. An unknown price: each 5 million tokens that are not cached. At most one in 15 minutes.
 - **The lead knows:** the team notes, the reply to each handoff and the proposal card say how many turns this computer runs at the same time, how many run and how many wait. A handoff reply says "Queued, place n: … about m min".
 
-### No slowdown after long use {#desktop-0-68-0-faster}
+### No slowdown after long use {#desktop-0-67-10-faster}
 
 - **Unread counts in the channel list:** before, each refresh of the sidebar counted all the messages of each channel that you never opened (such as team rooms) again, and a reply refreshes it while it is written, so HXBot got slower the longer you used it. Now only the new messages are counted. With 89 MB of messages, one refresh went from about 210 ms to 5 to 12 ms, with the same unread counts.
 - **Queue checks:** before, each check read all the handoffs ever made. Now one read serves until a handoff changes.
 - **Scheduling:** before, each pass read all the tasks of all channels, also of team rooms that were done long ago. Now it reads only the channels with work that is not done.
 - **Tested:** 3 teams with 24 members in all, 3 chats and 6 scheduled tasks at full load for 30 minutes: 0 handoffs sent back (before: 58%); main process event loop p99 about 31 ms for the whole run, the longest delay 0.5 s; the window never stopped answering for more than 2 seconds; after the stop button, no new member started within 2 seconds.
+
+### Updates install as HXBot opens, never forced {#desktop-0-67-10-update}
+
+- **Updates as it opens:** a new version that HXBot finds after it opens is downloaded and installed in the background, and HXBot restarts into it once the assistants are idle; you do not click Update now. Before the restart, a note says HXBot is installing an update; click Cancel update if you want to wait. Work in progress finishes first.
+- **A version found later:** if HXBot finds a new version while you are working, it does not interrupt you; it installs the next time HXBot opens.
+- **Major versions too:** no major version blocks the window with a required update any more, and the server no longer turns clients away by version number.
+- **This version is 0.67.10:** it was to be 0.68.0. Versions 0.67.2 to 0.67.9, already installed, follow their own old rule and block the window when the second part of the version number changes, so this version stays at 0.67.x. Coming from 0.67.9, you see the usual "new version" window once; Update now and Later both work. Once 0.67.10 is installed, every later version installs as HXBot opens.
 
 ## Desktop 0.67.9: HXBot leaves your other apps alone {#desktop-0-67-9}
 

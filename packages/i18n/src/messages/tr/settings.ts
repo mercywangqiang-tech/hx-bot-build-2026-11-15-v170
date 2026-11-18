@@ -767,7 +767,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "Reddettiniz",
   "settings.updates.hxForced.title": "Otomatik güncellemeler",
   "settings.updates.hxForced.description":
-    "HXBot her yeni sürümü kendisi indirir. Yüklemek için açılan pencerede Şimdi güncelle'yi seçin; 10 dakika içinde kimse seçmezse HXBot boştayken yükler. Yeni sürüm yüklenene kadar HXBot kullanılamaz.",
+    "HXBot açılırken yeni bir sürüm bulursa onu kendisi indirip kurar ve ajanlar boştayken yeni sürümle yeniden başlar; hiçbir şeye tıklamanız gerekmez. Süren işler önce tamamlanır. Daha sonra bulunan bir sürüm, HXBot bir sonraki açılışta kurulur.",
   "settings.nav.group.settings": "Ayarlar",
   "settings.nav.group.features": "Özellikler",
   "settings.nav.group.data": "Veri ve güvenlik",

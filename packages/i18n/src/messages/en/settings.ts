@@ -821,7 +821,7 @@ export const messages = defineMessages("settings", {
   "settings.hxAccess.outcome.refused": "You refused",
   "settings.updates.hxForced.title": "Automatic updates",
   "settings.updates.hxForced.description":
-    "HXBot downloads each new version by itself. Choose Update now in the window that opens to install it; if no one does within 10 minutes, HXBot installs it when it is idle. Until a new version is installed, HXBot cannot be used.",
+    "When HXBot opens and finds a new version, it downloads and installs it by itself and restarts into it when the agents are idle; there is nothing to click. Work that runs finishes first. A new version found later installs the next time HXBot opens.",
   "settings.nav.group.settings": "Settings",
   "settings.nav.group.features": "Features",
   "settings.nav.group.data": "Data & security",

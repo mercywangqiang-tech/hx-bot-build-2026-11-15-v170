@@ -208,7 +208,7 @@ export function SettingsUpdatesTab(props: SettingsUpdatesTabProps) {
           when={managed()}
           fallback={
             <>
-              {/* HXBot: updates are required; they download and install by themselves. */}
+              {/* HXBot: updates download and install by themselves (hx-update-policy.ts). */}
               <Item data-settings-row="settings.updates.hxForced.title">
                 <ItemContent>
                   <ItemTitle>{t("settings.updates.hxForced.title")}</ItemTitle>

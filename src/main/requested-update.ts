@@ -73,9 +73,9 @@ export interface RequestedUpdateOptions {
    * to the request that asked for it must have left first.
    */
   graceMs?: number;
-  /** HXBot: the wait before the automatic install, which no one asked for. The user can choose Update now first. */
-  automaticGraceMs?: number;
-  /** HXBot: the automatic install is only for an update that must be installed (hx-update-policy.ts). */
+  /** HXBot: the wait before the automatic install, which no one asked for, read when it is scheduled. */
+  automaticGraceMs?: () => number;
+  /** HXBot: which updates install by themselves: found as HXBot opened, or required (hx-update-policy.ts). */
   hxAutomaticOnlyIf?: () => boolean;
   /**
    * Set on a hosted server. It installs each release by itself, as its start applied the staged one
@@ -105,7 +105,7 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
   #announced: { state: HostRestartState; version: string | null } = { state: "none", version: null };
   readonly #pollMs: number;
   readonly #graceMs: number;
-  readonly #automaticGraceMs: number;
+  readonly #automaticGraceMs: () => number;
   readonly #hxAutomaticOnlyIf: () => boolean;
   #allowed: boolean;
   #autoInstall: boolean;
@@ -138,7 +138,7 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
     this.#clientInUse = options.clientInUse ?? null;
     this.#pollMs = options.pollMs ?? DEFAULT_POLL_MS;
     this.#graceMs = options.graceMs ?? DEFAULT_GRACE_MS;
-    this.#automaticGraceMs = options.automaticGraceMs ?? this.#graceMs;
+    this.#automaticGraceMs = options.automaticGraceMs ?? (() => this.#graceMs);
     this.#hxAutomaticOnlyIf = options.hxAutomaticOnlyIf ?? (() => true);
     this.#updater.on("status", this.#onStatus);
     this.#onStatus(this.#updater.getStatus());
@@ -296,7 +296,7 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
       this.#schedule = { memberId: null, requestedBy: null, mode: "when-idle", waitingFor: [] };
       this.#log(`Scheduled the automatic restart into ${status.availableVersion}.`);
       this.#publish();
-      this.#scheduleAttempt(this.#automaticGraceMs);
+      this.#scheduleAttempt(this.#automaticGraceMs());
     }
   });
 

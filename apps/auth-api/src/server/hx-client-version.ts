@@ -11,7 +11,7 @@
 export const HX_CLIENT_HEADER = "x-hxbot-client";
 
 /** The oldest client versions this server accepts: the versions it was built with. */
-export const HX_MINIMUM_CLIENT_VERSIONS = { desktop: "0.68.0", mobile: "1.5.0" } as const;
+export const HX_MINIMUM_CLIENT_VERSIONS = { desktop: "0.67.0", mobile: "1.5.0" } as const;
 
 /** The sign-in requests of the desktop and phone apps; a browser signs in elsewhere (/api/browser). */
 const APP_SIGN_IN_PATHS: ReadonlySet<string> = new Set([

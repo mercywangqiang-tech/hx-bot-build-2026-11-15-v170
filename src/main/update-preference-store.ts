@@ -17,7 +17,7 @@ export const readUpdatePreference = Effect.fn("readUpdatePreference")((path: str
       return { ...DEFAULT_PREFERENCE };
     }
     return {
-      // HXBot: updates are required, so they always download and install by themselves.
+      // HXBot: updates always download and install by themselves (hx-update-policy.ts).
       autoDownload: true,
       allowRemoteUpdates: isBoolean(parsed.allowRemoteUpdates)
         ? parsed.allowRemoteUpdates

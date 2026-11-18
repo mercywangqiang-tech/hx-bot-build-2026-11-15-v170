@@ -32,16 +32,13 @@ export function hxUpdateButton(status: UpdateStatus): "install" | "download" | "
   }
 }
 
-// “以后再说”的版本：这次打开 HXBot 期间不再提醒，下次打开时再提醒（不存盘）。
-const [laterVersion, setLaterVersion] = createSignal<string | null>(null);
-
 /**
- * HXBot：桌面端的“有新版本”窗口（规则见 @hxbot/contracts/hx-update-policy）。
+ * HXBot：桌面端的“更新 HXBot”窗口（规则见 @hxbot/contracts/hx-update-policy）。
  *
- * - 可以不装的版本：后台下载好后弹出，列出新功能，“立即更新”或“以后再说”（这次打开期间不再提醒）。
- * - 必须装的版本（大版本，或账号服务拒绝了这个版本）：窗口挡住，不能关，只有“立即更新”；
- *   没人点时，下载好 10 分钟后 HXBot 在空闲时自动重启安装（主进程的 RequestedUpdate，见 hx/forced_updates.py）。
- * - “立即更新”：已经下载好时马上重启安装；还在下载时，下载完自动重启安装。
+ * - v1.7.1 起大版本不再强制：打开 HXBot 时找到的新版本由主进程自动下载、装好，在空闲时重启进入新版
+ *   （RequestedUpdate，提示见 scheduled-update-toast.ts），这个窗口不弹出。
+ * - 只有账号服务拒绝了这个版本（426）时窗口挡住，不能关，只有“立即更新”；没人点时，下载好 10 分钟后
+ *   HXBot 在空闲时自动重启安装。“立即更新”：已经下载好时马上重启安装；还在下载时，下载完自动重启安装。
  * 下载或安装失败时可以重试，或者去下载页手动下载。
  */
 /** What the window reads and does; the app passes nothing and uses the updates of this window. */
@@ -63,12 +60,8 @@ export function HxForcedUpdate(props: { updates?: HxUpdateCalls }) {
   const required = () => hxUpdateIsRequired(status());
   const notes = () => hxReleaseNoteLines(status().hxReleaseNotes, i18n.language());
 
-  const open = () => {
-    const current = status();
-    if (!hxUpdatePending(current)) return false;
-    if (required() || installWhenReady() || current.phase === "installing") return true;
-    return current.phase === "ready" && laterVersion() !== current.availableVersion;
-  };
+  // Only an update that the account service requires opens the window; any other installs by itself (v1.7.1).
+  const open = () => hxUpdatePending(status()) && required();
 
   let startTimer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(startTimer));
@@ -111,7 +104,6 @@ export function HxForcedUpdate(props: { updates?: HxUpdateCalls }) {
   const later = () => {
     if (required()) return;
     setInstallWhenReady(false);
-    setLaterVersion(status().availableVersion);
   };
 
   const message = () => {

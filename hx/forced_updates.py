@@ -1,6 +1,15 @@
-"""HXBot：强制更新（v1.6.2）。
+"""HXBot：客户端更新（v1.6.2 起；v1.7.1 起大版本不再强制）。
 
-新版本发布后，客户端不更新就不能用，而且是自动更新：
+v1.7.1 起（用户 2026-11-18：“以后大版本都不做强制更新，只需要在打开 hxbot 客户端后直接更新即可”）：
+- 桌面端：打开 HXBot 时找到的新版本自动下载、装好，在助手都空闲时几秒后重启进入新版，不弹窗、不用点（右下角提示
+  “HXBot 正在安装更新”，可以取消这一次）；用着用着才找到的，下次打开时再装（hx-update-policy.ts 的 hxInstallsByItself）。
+  “更新 HXBot”窗口只在账号服务拒绝了这个版本（426）时挡住界面；账号服务不再按版本拒绝，所以平时不会出现。
+- 以后的版本都不拦（用户 2026-11-18：“以后版本都不拦，需要自动更新即可”）：账号服务不按版本拒绝带版本请求头的客户端，
+  最低版本固定在带这个请求头的最早版本（minimum_versions：桌面端 0.67.0、手机端 1.5.0），不跟着当前版本升高，
+  也不再有单独设成必须更新的版本（原来的 hx/brand.json minimumVersions 已去掉）。
+- 手机端的“更新 HXBot”整屏提示（hx-forced-update.tsx）随下一次手机端发版改成不挡住；1.5.0 这一版没有变。
+
+v1.6.2～v1.7.0 的做法（留作记录）：新版本发布后，客户端不更新就不能用，而且是自动更新：
 - 桌面端：新版本自动下载（不能关闭）；有新版本时整个窗口被“更新 HXBot”对话框挡住，“立即更新”一出现就能点，点了就（下载完）
   重启安装；没人点时下载好 10 分钟后在空闲时自动重启安装（v1.6.3 起，原来是下载完 10 秒后自动重启）；失败可以重试或去下载页
   （src/renderer/src/features/updates/HxForcedUpdate.tsx）。账号服务回答 426 时马上检查新版本（hx-client-header.ts）。
@@ -20,7 +29,6 @@ import brand_rename
 
 BRAND = json.loads((Path(__file__).resolve().parent / "brand.json").read_text(encoding="utf-8"))
 VERSIONS = BRAND["versions"]
-MINIMUM = BRAND.get("minimumVersions", {})
 # 每个桌面端版本的新功能（更新窗口里列出来；打包时写进 latest.yml 的 releaseNotes）
 RELEASE_NOTES = json.loads((Path(__file__).resolve().parent / "release-notes.json").read_text(encoding="utf-8"))
 
@@ -68,13 +76,15 @@ TEXT_ZH = {
 SETTINGS_EN = {
     "settings.updates.hxForced.title": "Automatic updates",
     "settings.updates.hxForced.description":
-        "HXBot downloads each new version by itself. Choose Update now in the window that opens to install it; "
-        "if no one does within 10 minutes, HXBot installs it when it is idle. Until a new version is installed, HXBot cannot be used.",
+        "When HXBot opens and finds a new version, it downloads and installs it by itself and restarts into it when the "
+        "agents are idle; there is nothing to click. Work that runs finishes first. A new version found later installs "
+        "the next time HXBot opens.",
 }
 SETTINGS_ZH = {
     "settings.updates.hxForced.title": "自动更新",
     "settings.updates.hxForced.description":
-        "HXBot 自动下载每个新版本，在弹出的窗口里点“立即更新”安装；10 分钟内没人点，会在空闲时自动安装。新版本装好之前不能使用。",
+        "打开 HXBot 时找到的新版本，HXBot 自动下载、装好，在助手都空闲时重启进入新版，不用点；正在进行的工作先做完。"
+        "用着用着才找到的新版本，下次打开时再装。",
 }
 MOBILE_EN = {
     "mobile.app.hxForced.title": "Update HXBot",
@@ -109,19 +119,21 @@ def server(r) -> None:
               "      // HXBot: an outdated desktop or phone app is told to update (hx-client-version.ts).\n"
               "      const outdatedClient = hxClientGate(request);\n"
               "      if (outdatedClient) return outdatedClient;\n")
-    # 最低版本（v1.6.3 起）：桌面端是这一版的 主.次.0（0.67.x 都能用，0.68.0 起旧的大版本必须更新），手机端是这一版；
-    # brand.json 的 minimumVersions 写了就以它为准（某个小版本必须马上装时）
+    # 最低版本（v1.7.1 起固定，以后的版本都不拦）：桌面端 0.67.0、手机端 1.5.0（都是带版本请求头的最早版本）
     minimum = minimum_versions()
     r.regex("apps/auth-api/src/server/hx-client-version.ts",
             r'HX_MINIMUM_CLIENT_VERSIONS = \{ desktop: "[0-9.]+", mobile: "[0-9.]+" \}',
             f'HX_MINIMUM_CLIENT_VERSIONS = {{ desktop: "{minimum["desktop"]}", mobile: "{minimum["mobile"]}" }}')
 
 
+# v1.7.1 起（用户 2026-11-18：以后版本都不拦，自动更新即可）：最低版本固定在带版本请求头的最早版本，
+# 不跟着当前版本升高，也不能单独把某个版本设成必须更新
+FLOOR = {"desktop": "0.67.0", "mobile": "1.5.0"}
+
+
 def minimum_versions() -> dict:
     """账号服务接受的最低客户端版本（hx-update-policy.ts 的规则）。"""
-    major, minor = VERSIONS["desktop"].split(".")[:2]
-    rule = {"desktop": f"{major}.{minor}.0", "mobile": VERSIONS["mobile"]}
-    return {**rule, **{key: value for key, value in MINIMUM.items() if key in rule and value}}
+    return dict(FLOOR)
 
 
 def desktop(r) -> None:
@@ -144,33 +156,35 @@ def desktop(r) -> None:
               "    updater.hxSetRequired();\n"
               "    Effect.runFork(updater.checkForUpdates());\n"
               "  });\n")
-    # 下载好的新版本先等用户点“立即更新”：没人点时 10 分钟后才在空闲时自动重启安装（没人看着的电脑也会更新）
+    # v1.7.1 起（用户 2026-11-18）：打开 HXBot 时找到的新版本自动下载、装好，在空闲时几秒后重启进入新版，不用点；
+    # 用着用着才找到的，下次打开时再装。只有账号服务要求必须装的（426），先等 10 分钟让用户点“立即更新”。
     requested = "src/main/requested-update.ts"
     r.replace(requested,
               "  graceMs?: number;\n",
               "  graceMs?: number;\n"
-              "  /** HXBot: the wait before the automatic install, which no one asked for. The user can choose Update now first. */\n"
-              "  automaticGraceMs?: number;\n")
-    r.replace(requested, "  readonly #graceMs: number;\n", "  readonly #graceMs: number;\n  readonly #automaticGraceMs: number;\n")
+              "  /** HXBot: the wait before the automatic install, which no one asked for, read when it is scheduled. */\n"
+              "  automaticGraceMs?: () => number;\n")
+    r.replace(requested, "  readonly #graceMs: number;\n", "  readonly #graceMs: number;\n  readonly #automaticGraceMs: () => number;\n")
     r.replace(requested,
               "    this.#graceMs = options.graceMs ?? DEFAULT_GRACE_MS;\n",
               "    this.#graceMs = options.graceMs ?? DEFAULT_GRACE_MS;\n"
-              "    this.#automaticGraceMs = options.automaticGraceMs ?? this.#graceMs;\n")
+              "    this.#automaticGraceMs = options.automaticGraceMs ?? (() => this.#graceMs);\n")
     r.replace(requested,
               "      this.#log(`Scheduled the automatic restart into ${status.availableVersion}.`);\n"
               "      this.#publish();\n"
               "      this.#scheduleAttempt(this.#graceMs);\n",
               "      this.#log(`Scheduled the automatic restart into ${status.availableVersion}.`);\n"
               "      this.#publish();\n"
-              "      this.#scheduleAttempt(this.#automaticGraceMs);\n")
+              "      this.#scheduleAttempt(this.#automaticGraceMs());\n")
     r.replace(services,
               "    preference: updatePreference,\n"
               "    savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),\n",
               "    preference: updatePreference,\n"
-              "    // HXBot: the window asks the user to choose Update now; without that, the install waits 10 minutes,\n"
-              "    // and only an update that must be installed installs by itself (hx-update-policy.ts).\n"
-              "    automaticGraceMs: 10 * 60_000,\n"
-              "    hxAutomaticOnlyIf: () => hxUpdateIsRequired(updater.getStatus()),\n"
+              "    // HXBot (v1.7.1): an update that HXBot finds as it opens downloads, installs and restarts by itself when the\n"
+              "    // agents are idle, with nothing to click; one found later waits for the next opening. Only an update that the\n"
+              "    // account service requires waits 10 minutes for Update now first (hx-update-policy.ts).\n"
+              "    automaticGraceMs: () => hxAutomaticGraceMs(updater.getStatus()),\n"
+              "    hxAutomaticOnlyIf: hxInstallsByItself(startedAt, () => updater.getStatus()),\n"
               "    savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),\n")
     # 自动下载、自动安装，不能关闭
     store = "src/main/update-preference-store.ts"
@@ -178,7 +192,7 @@ def desktop(r) -> None:
               "    return {\n"
               "      autoDownload: parsed.autoDownload,\n",
               "    return {\n"
-              "      // HXBot: updates are required, so they always download and install by themselves.\n"
+              "      // HXBot: updates always download and install by themselves (hx-update-policy.ts).\n"
               "      autoDownload: true,\n")
     r.replace(store,
               "      autoInstall: isBoolean(parsed.autoInstall) ? parsed.autoInstall : DEFAULT_PREFERENCE.autoInstall,\n",
@@ -202,7 +216,7 @@ def desktop(r) -> None:
               '                label={t("settings.updates.autoInstall.title")}\n'
               '                description={t("settings.updates.autoInstall.description")}\n'
               "              />\n",
-              "              {/* HXBot: updates are required; they download and install by themselves. */}\n"
+              "              {/* HXBot: updates download and install by themselves (hx-update-policy.ts). */}\n"
               '              <Item data-settings-row="settings.updates.hxForced.title">\n'
               "                <ItemContent>\n"
               '                  <ItemTitle>{t("settings.updates.hxForced.title")}</ItemTitle>\n'
@@ -215,7 +229,7 @@ def desktop(r) -> None:
               "    <Loading>\n"
               "      <SettingsModal\n",
               "    <Loading>\n"
-              "      {/* HXBot: a new version must be installed before HXBot can be used. */}\n"
+              "      {/* HXBot: the window for an update that the account service requires (hx-update-policy.ts). */}\n"
               "      <HxForcedUpdate />\n"
               "      <SettingsModal\n")
 
@@ -297,24 +311,24 @@ def update_policy(r) -> None:
               "\n"
               "  /** Host-managed sessions display host state and never invoke the tenant updater. */\n"
               "  setManagedByHost(managed: boolean): void {\n")
-    # 自动安装只给必须更新的版本；可以不装的版本由用户在窗口里决定
+    # 哪些更新自动安装：打开时找到的和账号服务要求的（v1.7.1 起；v1.6.3～v1.7.0 只有必须更新的版本）
     requested = "src/main/requested-update.ts"
     r.replace(requested,
-              "  automaticGraceMs?: number;\n",
-              "  automaticGraceMs?: number;\n"
-              "  /** HXBot: the automatic install is only for an update that must be installed (hx-update-policy.ts). */\n"
+              "  automaticGraceMs?: () => number;\n",
+              "  automaticGraceMs?: () => number;\n"
+              "  /** HXBot: which updates install by themselves: found as HXBot opened, or required (hx-update-policy.ts). */\n"
               "  hxAutomaticOnlyIf?: () => boolean;\n")
-    r.replace(requested, "  readonly #automaticGraceMs: number;\n",
-              "  readonly #automaticGraceMs: number;\n  readonly #hxAutomaticOnlyIf: () => boolean;\n")
+    r.replace(requested, "  readonly #automaticGraceMs: () => number;\n",
+              "  readonly #automaticGraceMs: () => number;\n  readonly #hxAutomaticOnlyIf: () => boolean;\n")
     r.replace(requested,
-              "    this.#automaticGraceMs = options.automaticGraceMs ?? this.#graceMs;\n",
-              "    this.#automaticGraceMs = options.automaticGraceMs ?? this.#graceMs;\n"
+              "    this.#automaticGraceMs = options.automaticGraceMs ?? (() => this.#graceMs);\n",
+              "    this.#automaticGraceMs = options.automaticGraceMs ?? (() => this.#graceMs);\n"
               "    this.#hxAutomaticOnlyIf = options.hxAutomaticOnlyIf ?? (() => true);\n")
     r.replace(requested,
               "    return this.#autoInstall || this.#clientInUse !== null;\n",
               "    return (this.#autoInstall && this.#hxAutomaticOnlyIf()) || this.#clientInUse !== null;\n")
     services = "src/main/application-services.ts"
-    brand_rename.add_import(r, services, 'import { hxUpdateIsRequired } from "@hxbot/contracts/hx-update-policy";')
+    brand_rename.add_import(r, services, 'import { hxAutomaticGraceMs, hxInstallsByItself } from "@hxbot/contracts/hx-update-policy";')
     # 这一版的新功能写进 latest.yml（electron-builder 的 releaseInfo）
     notes = RELEASE_NOTES.get(VERSIONS["desktop"])
     if not notes:
