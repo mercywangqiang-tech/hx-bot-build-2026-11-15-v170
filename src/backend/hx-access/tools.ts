@@ -160,6 +160,14 @@ export function hxAccessAnswer(
       note: "The user did not allow it. Do not try another way to reach it; continue without it or ask the user what to do.",
     });
   }
+  // v1.7.2 (AUD-07): a permission goes ahead only when the record of it is written.
+  const outcome = choice === "always" ? "allowed-always" : "allowed-once";
+  if (!hxAccessStore.record({ agent: agentName, kind: "request", detail: summary, outcome }))
+    return result({
+      status: "denied",
+      ...withNote,
+      note: "The user allowed it, but HXBot could not write the record of this permission (the disk may be full, or HXBot's data folder cannot be written), so the step stays blocked. Tell the user why, and ask them to free disk space or fix the folder, then ask again. Do not try another way.",
+    });
   if (choice === "always") {
     hxAccessStore.addRule({
       targets: accessRuleTargets(access.request.targets, dirname),
@@ -167,7 +175,6 @@ export function hxAccessAnswer(
       agentName,
       reason: access.request.reason,
     });
-    hxAccessStore.record({ agent: agentName, kind: "request", detail: summary, outcome: "allowed-always" });
     return result({
       status: "granted",
       scope: "always",
@@ -187,7 +194,6 @@ export function hxAccessAnswer(
     purpose: access.request.purpose,
     once: true,
   });
-  hxAccessStore.record({ agent: agentName, kind: "request", detail: summary, outcome: "allowed-once" });
   return result({
     status: "granted",
     scope: "once",

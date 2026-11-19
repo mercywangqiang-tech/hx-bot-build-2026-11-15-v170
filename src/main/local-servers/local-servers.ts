@@ -1,3 +1,4 @@
+import { hxBackgroundPriority } from "../hx-local-servers";
 // The servers on this computer: each one is HXBot itself, started as a child process with its own
 // user data directory and agent root (`local-server-child.ts`). The desktop app reaches each one
 // over the loopback Team API, as it reaches a joined server, and logs in as its owner at each start.
@@ -364,7 +365,23 @@ export class LocalServers {
           .detachLocalServer(entry.serverId, false)
           .pipe(Effect.catch(() => Effect.void));
     }
-    for (const entry of this.#registry.servers) this.#background(this.#start(entry, false));
+    // HXBot (v1.7.2): one after another, each after the one before is ready or failed. All at once,
+    // each opened its database, recovered its channels and started its agents together, and the
+    // other apps of the computer stalled on the processor and the disk (hx-local-servers.ts).
+    const entries = [...this.#registry.servers];
+    this.#background(
+      Effect.forEach(
+        entries,
+        (entry) =>
+          this.#start(entry, false).pipe(
+            Effect.asVoid,
+            Effect.catch(({ cause }) =>
+              Effect.sync(() => this.#options.log.warn("A server on this computer did not start.", cause)),
+            ),
+          ),
+        { discard: true },
+      ),
+    );
   });
 
   /**
@@ -689,6 +706,8 @@ export class LocalServers {
         },
       ),
     );
+    // HXBot (v1.7.2): a server works in the background; its agents inherit the priority.
+    hxBackgroundPriority(child.pid);
     const running: RunningChild = { child, stopping: false };
     this.#running.set(entry.id, running);
     const ready = Deferred.makeUnsafe<LocalServerReady, LocalServerFailure>();

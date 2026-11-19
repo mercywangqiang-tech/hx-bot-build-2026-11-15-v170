@@ -152,17 +152,24 @@ export class HxAccessStore {
     return true;
   }
 
-  record(entry: Omit<HxAccessLogEntry, "at">): void {
-    if (!this.#folder) return;
+  /**
+   * Adds a line to the activity record. False when the line could not be written (v1.7.2, AUD-07): a
+   * step that needs the user's permission then does not go ahead, so nothing allowed goes unrecorded.
+   */
+  record(entry: Omit<HxAccessLogEntry, "at">): boolean {
+    if (!this.#folder) return true;
     const line = `${JSON.stringify({ at: Date.now(), ...entry, detail: entry.detail.slice(0, 500) })}\n`;
+    let written = false;
     try {
       appendFileSync(join(this.#folder, LOG_FILE), line, { mode: 0o600 });
+      written = true;
       this.#logLines += 1;
       if (this.#logLines > LOG_TRIM_AT) this.#trimLog();
     } catch (error) {
       logger.warn("HXBot could not write the activity record.", { error: String(error) });
     }
     this.#changed();
+    return written;
   }
 
   /** The newest entries first. */

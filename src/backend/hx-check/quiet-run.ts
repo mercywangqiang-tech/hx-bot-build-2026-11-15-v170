@@ -127,7 +127,7 @@ export async function hxQuietRealCheck(input: {
     }
   } else {
     const before = new Set(await winPids("notepad"));
-    spawn("notepad.exe", [file], { detached: true, stdio: "ignore" }).unref();
+    spawn("notepad.exe", [file], { detached: true, stdio: "ignore", windowsHide: false }).unref();
     for (let i = 0; i < 30 && target === null; i++) {
       await sleep(500);
       target = (await winPids("notepad")).find((pid) => !before.has(pid)) ?? null;
@@ -140,7 +140,7 @@ export async function hxQuietRealCheck(input: {
     // The user moves to another app. HXBot sees it, and does not pull the target back: the step
     // tools then send no key (unit tests) and ask the user.
     if (mac) await run("/usr/bin/open", ["-a", "Finder"]).catch(() => undefined);
-    else spawn("explorer.exe", [work], { detached: true, stdio: "ignore" }).unref();
+    else spawn("explorer.exe", [work], { detached: true, stdio: "ignore", windowsHide: false }).unref();
     await sleep(2_500);
     const away = (await front.front())?.pid ?? null;
     await sleep(1_000);

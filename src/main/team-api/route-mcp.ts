@@ -11,6 +11,7 @@ import {
 import { type McpToolRuntimePreparation, prepareToolRuntimeForTest } from "../ipc/mcp-server-handlers";
 import type { TeamApiMcpServerOwners, TeamApiMcpServers } from "./dependencies";
 import { HttpError } from "./http-error";
+import { hxRequireAdminForCommandServer } from "./hx-mcp-command-servers";
 import { requireMcpAccess, requireOwnMcpServer } from "./mcp-member-access";
 import type { RouteOutcome, TeamApiRequestContext } from "./request-context";
 import { readJson } from "./request-helpers";
@@ -49,6 +50,8 @@ export async function routeMcpServers(
   const body = mcpRequest(url.pathname, await readJson(request));
   if (save) {
     const input = parseSaveMcpServer(body);
+    // HXBot (v1.7.2, MKT-04): a stdio server runs a command on this computer; owners and admins only.
+    hxRequireAdminForCommandServer(member, input.config.transport);
     const before = new Set(mcpServers.listMcpServers().map((server) => server.id));
     if (before.has(input.config.id)) requireOwnMcpServer(access, input.config.id);
     // The local save starts the runtime download; the host route shares it, or a first server
@@ -71,6 +74,7 @@ export async function routeMcpServers(
   }
   if (test) {
     const parsed = parseTestMcpServer(body);
+    hxRequireAdminForCommandServer(member, parsed.config.transport);
     if (toolRuntimes) await runCauseEffect(prepareToolRuntimeForTest(parsed.config, toolRuntimes));
     // The administrator tests the host's servers, so the host's stored sign-ins are spent - but no
     // browser opens on a machine nobody is sitting at. Only the tool count and the error travel back;
@@ -82,6 +86,11 @@ export async function routeMcpServers(
   }
   const toggled = parseSetMcpServerEnabled(body);
   requireOwnMcpServer(access, toggled.mcpServerId);
+  if (toggled.enabled)
+    hxRequireAdminForCommandServer(
+      member,
+      mcpServers.listMcpServers().find((server) => server.id === toggled.mcpServerId)?.transport,
+    );
   if (toggled.enabled) toolRuntimes?.startToolRuntimes();
   return json(200, await runCauseEffect(mcpServers.setMcpServerEnabled(toggled)));
 }

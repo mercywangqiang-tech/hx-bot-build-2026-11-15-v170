@@ -122,7 +122,13 @@ function launchApp(platform: NodeJS.Platform, path: string, page: string): Effec
           })
         : new Promise<void>((resolve, reject) => {
             const [program = path, ...options] = commandWords(path);
-            const child = spawn(program, [...options, page], { shell: false, detached: true, stdio: "ignore" });
+            const child = spawn(program, [...options, page], {
+              shell: false,
+              detached: true,
+              stdio: "ignore",
+              // HXBot (v1.7.2): a browser shows its window; HXBot hides the others (hx-child-windows.ts).
+              windowsHide: false,
+            });
             child.once("error", reject);
             child.once("spawn", () => {
               child.unref();

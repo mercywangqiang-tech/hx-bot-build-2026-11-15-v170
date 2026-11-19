@@ -111,8 +111,16 @@ export function hxAccessDecide(
     protectedRoots: protectedRoots(),
   };
   const decision = decideAccess(context, operations);
+  const unrecorded = recordDecision(agent, context, operations, decision);
+  // v1.7.2 (AUD-07): a step that a confirmation or a rule allows goes ahead only when its line is in the
+  // record. Otherwise it is held as if nobody had allowed it, and the confirmation is not used up.
+  if (decision.allowed && unrecorded.length > 0)
+    return {
+      allowed: false,
+      missing: unrecorded.map((index) => operations[index]).filter((operation) => operation !== undefined),
+      covers: decision.covers.map((cover, index) => (unrecorded.includes(index) ? null : cover)),
+    };
   if (decision.allowed) hxAccessGrants.consume(decision.used);
-  recordDecision(agent, context, operations, decision);
   return decision;
 }
 
@@ -149,17 +157,22 @@ function outcomeOf(cover: AccessCover, allowed: boolean): HxAccessLogEntry["outc
   return cover.grantId.startsWith("rule-") ? "always" : "once";
 }
 
+/** Writes the decision to the record; the indexes of the allowed-by-permission lines that did not go in. */
 function recordDecision(
   agent: HxAccessAgent,
   context: AccessContext,
   operations: readonly AccessOperation[],
   decision: AccessDecision,
-): void {
+): number[] {
+  const unrecorded: number[] = [];
   operations.forEach((operation, index) => {
     const outcome = outcomeOf(decision.covers[index] ?? null, decision.allowed);
     const line = outcome ? recordLine(context, operation) : null;
-    if (outcome && line) hxAccessStore.record({ agent: agent.name, outcome, ...line });
+    if (!outcome || !line) return;
+    const written = hxAccessStore.record({ agent: agent.name, outcome, ...line });
+    if (!written && (outcome === "once" || outcome === "always")) unrecorded.push(index);
   });
+  return unrecorded;
 }
 
 /** An operation in words, for the agent. */

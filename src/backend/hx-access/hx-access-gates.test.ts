@@ -433,6 +433,31 @@ describe("request_access and release_access", () => {
     expect(hxAccessStore.rules()).toEqual([]);
   });
 
+  it("lets a step through only when the record of its permission is written (v1.7.2, AUD-07)", () => {
+    const log = join(data, "hx-access-log.jsonl");
+    const call = hxAccessToolCall(REQUEST_ACCESS_TOOL, request(), "on", "on:t", "turn-1");
+    if (!("question" in call)) throw new Error("no card");
+    expect(JSON.parse(text(hxAccessAnswer(call.access, answer(["允许一次"]))))).toMatchObject({ status: "granted" });
+    // The record cannot be written: a folder stands where the file was.
+    rmSync(log, { force: true });
+    mkdirSync(log);
+    try {
+      expect(hxAccessDecide("on", "on:t", [deleteOutside()])).toMatchObject({
+        allowed: false,
+        missing: [deleteOutside()],
+      });
+      const refused = JSON.parse(text(hxAccessAnswer(call.access, answer(["始终允许"]))));
+      expect(refused).toMatchObject({ status: "denied" });
+      expect(refused.note).toContain("could not write the record");
+      expect(hxAccessStore.rules()).toEqual([]);
+    } finally {
+      rmSync(log, { recursive: true, force: true });
+    }
+    // The confirmation was not used up: with the record back, the step goes ahead once.
+    expect(hxAccessDecide("on", "on:t", [deleteOutside()])?.allowed).toBe(true);
+    expect(hxAccessDecide("on", "on:t", [deleteOutside()])?.allowed).toBe(false);
+  });
+
   it("refuse a request that is not complete, and say that a full access agent needs none", () => {
     const missing = hxAccessToolCall(REQUEST_ACCESS_TOOL, { ...request(), reason: "" }, "on", "on:t", "u");
     expect("result" in missing && missing.result.success).toBe(false);

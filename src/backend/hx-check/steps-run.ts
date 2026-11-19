@@ -48,7 +48,7 @@ function editor(platform: NodeJS.Platform): HxEditor | null {
       app: "Notepad",
       choice: { title: "hxbot-check" },
       saveKeys: ["ctrl", "s"],
-      open: (file) => spawn("notepad.exe", [file], { stdio: "ignore", detached: true }),
+      open: (file) => spawn("notepad.exe", [file], { stdio: "ignore", detached: true, windowsHide: false }),
     };
   return null;
 }

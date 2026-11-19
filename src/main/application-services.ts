@@ -52,6 +52,8 @@ import {
 import { hxUserInHxbot } from "./hx-ask-first";
 import { hxAtMostEvery, hxClientFetch } from "./hx-client-header";
 import { HxDesktopMemory } from "./hx-flow-memory";
+import { HxFlowShare } from "./hx-flow-share";
+import { hxStopOrphanedLocalServers } from "./hx-local-servers";
 import { HxMacUpdateAdapter, hxAuthorizedUpdater, hxReadUpdateFeedUrl } from "./hx-updates";
 import { LicenseDesktopService } from "./license-service";
 import { LocalSignInWindows } from "./local-sign-in-window";
@@ -1328,6 +1330,8 @@ export async function createApplicationServices({
           return capacity.running > 0 || capacity.waiting > 0;
         },
         electronPath: process.execPath,
+        // HXBot (v1.7.2): one B for every HXBot process of this computer (hx-flow-share.ts).
+        share: new HxFlowShare({ folder: join(app.getPath("appData"), "HXBot", "hx-flow") }),
         sampleFile: app.isPackaged ? null : (process.env.HXBOT_HX_FLOW_SAMPLE_FILE ?? null),
         onError: (message, error) => logger.warn(message, toLogValue(error)),
         onBudget: (budget, detail) => logger.info("HX-Flow changed the turn budget.", { budget, ...detail }),
@@ -3519,6 +3523,13 @@ export async function createApplicationServices({
     );
   }
   if (localServers) {
+    // HXBot (v1.7.2): the servers that an earlier run left running end; each was one more HXBot in the
+    // Dock and kept its memory. In the background: the servers that start now have this process as parent.
+    void hxStopOrphanedLocalServers({
+      executable: app.getPath("exe"),
+      localServersRoot: join(app.getPath("userData"), "local-servers"),
+      log: (message, detail) => logger.info(message, detail),
+    }).catch((error) => logger.warn("Unable to look for servers that an earlier run left.", toLogValue(error)));
     await Effect.runPromise(localServers.initialize());
     // Removes the servers deleted while signed out. Each start registers its own server.
     Effect.runFork(localServers.accountChanged());

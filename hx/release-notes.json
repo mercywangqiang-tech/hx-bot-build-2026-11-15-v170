@@ -123,5 +123,19 @@
       "No slowdown after long use: the channel list counts only new messages, and the queue and the scheduler look only at work that is not done. In Settings, the team line says how many turns this computer runs at once now.",
       "Updates are no longer forced: when HXBot opens and finds a new version, it downloads and installs it by itself and restarts into it when the agents are idle, with nothing to click; later major versions work the same way."
     ]
+  },
+  "0.67.11": {
+    "zh": [
+      "程序坞和任务栏里只有一个 HXBot：“这台电脑上的服务器”不再各占一个图标，HXBot 在后台运行的命令也不再弹出黑色的命令行窗口；上次没正常退出时留下的服务器，这次打开时自动结束。",
+      "别的应用打开、保存文件不再卡：这台电脑上的服务器一个接一个启动，用较低的优先级运行；所有 HXBot 进程合用一个“同时做几件”的上限，不再把内存占满。",
+      "授权记录写不进去时（比如磁盘满了），要你允许的操作不再放行，助手会告诉你原因。",
+      "团队服务器上，只有所有者和管理员能添加“在这台电脑上运行命令”的 MCP 服务。"
+    ],
+    "en": [
+      "One HXBot in the Dock and the taskbar: the servers on this computer no longer each add an icon, and the commands that HXBot runs in the background no longer open black console windows. Servers that an earlier run left behind end when HXBot opens.",
+      "Other apps no longer freeze when they open or save files: the servers on this computer start one after another and run at a lower priority, and all HXBot processes share one limit of work at the same time, so they do not fill the memory.",
+      "When HXBot cannot write the record of a permission (for example, when the disk is full), a step that needs your permission does not go ahead, and the agent tells you why.",
+      "On a team server, only owners and admins can add an MCP server that runs a command on this computer."
+    ]
   }
 }

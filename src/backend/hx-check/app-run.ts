@@ -53,7 +53,7 @@ export async function hxAppRealCheck(input: {
   const open = async () => {
     if (mac) await run("/usr/bin/open", ["-a", "TextEdit", file]);
     // Started on its own, with no output to hold open: through `cmd /c start` the check waited for Notepad to end.
-    else spawn("notepad.exe", [file], { detached: true, stdio: "ignore" }).unref();
+    else spawn("notepad.exe", [file], { detached: true, stdio: "ignore", windowsHide: false }).unref();
     for (let i = 0; i < 40; i++) {
       await sleep(500);
       const listed = await hxAppControl(deps, { action: "list" });

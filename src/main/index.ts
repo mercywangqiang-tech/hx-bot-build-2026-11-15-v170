@@ -1,5 +1,6 @@
 import { hxConnectComputerDriver } from "./hx-computer-driver";
 import { hxRegisterComputerStop } from "./hx-computer-stop";
+import { hxKeepChildWindowsHidden, hxKeepOutOfDock } from "./hx-dock";
 import { hxOfferMoveToApplications } from "./hx-move-to-applications";
 import "./hx-defaults";
 import { uptime } from "node:os";
@@ -261,8 +262,12 @@ if (serverMode || hostedServer || localServerChild) hideExceptionErrorBox();
 // A local server keeps a main window that never loads. A second launch on its profile, a deep link or
 // an MCP sign-in showed it as an empty window next to the desktop app.
 if (serverMode || hostedServer || localServerChild) keepWindowsHidden();
+// HXBot (v1.7.2): and a window of a local server child that something shows is hidden again (hx-dock.ts).
+if (localServerChild) hxKeepChildWindowsHidden(app);
 // A local server has no window, so it has no Dock tile either.
-if (localServerChild && process.platform === "darwin") app.dock?.hide();
+// HXBot (v1.7.2): a hide this early can be lost while macOS activates the app; hx-dock.ts repeats it
+// after `ready` until it holds. Each local server left one more HXBot icon in the Dock.
+if (localServerChild && process.platform === "darwin") hxKeepOutOfDock(app);
 const inviteLinkOptions = {
   allowLocalDevelopmentApiUrl: developmentRemoteRole !== null,
   selfHostedApiOrigin: selfHostedApiOrigin(process.env.HXBOT_AUTH_API_URL),

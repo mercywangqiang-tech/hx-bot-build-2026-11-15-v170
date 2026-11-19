@@ -245,6 +245,9 @@ def application_services(r) -> None:
               "          return capacity.running > 0 || capacity.waiting > 0;\n"
               "        },\n"
               "        electronPath: process.execPath,\n"
+              # v1.7.2（hx/fixes_172.py 的 flow_share）：所有 HXBot 进程共用一个 B。写在这一步里，重跑时这一段才认得出已经改过。
+              "        // HXBot (v1.7.2): one B for every HXBot process of this computer (hx-flow-share.ts).\n"
+              "        share: new HxFlowShare({ folder: join(app.getPath(\"appData\"), \"HXBot\", \"hx-flow\") }),\n"
               "        sampleFile: app.isPackaged ? null : (process.env.HXBOT_HX_FLOW_SAMPLE_FILE ?? null),\n"
               "        onError: (message, error) => logger.warn(message, toLogValue(error)),\n"
               "        onBudget: (budget, detail) => logger.info(\"HX-Flow changed the turn budget.\", { budget, ...detail }),\n"

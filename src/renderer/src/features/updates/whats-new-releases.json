@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.67.11",
+    "date": "2026-11-18",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "One HXBot in the Dock and the taskbar: the servers on this computer no longer each add an icon, and the commands that HXBot runs in the background no longer open black console windows. Servers that an earlier run left behind end when HXBot opens.",
+          "Other apps no longer freeze when they open or save files: the servers on this computer start one after another and run at a lower priority, and all HXBot processes share one limit of work at the same time, so they do not fill the memory.",
+          "When HXBot cannot write the record of a permission (for example, when the disk is full), a step that needs your permission does not go ahead, and the agent tells you why.",
+          "On a team server, only owners and admins can add an MCP server that runs a command on this computer."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.67.10",
     "date": "2026-11-18",
     "notices": [],

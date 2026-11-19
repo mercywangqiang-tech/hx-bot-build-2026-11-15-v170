@@ -28,6 +28,7 @@ import {
 } from "../backend/hx-flow/budget";
 import { providerProcessIds } from "../backend/provider-processes";
 import { linuxDescendantBytes, psDescendantBytes, readMacMemory, windowsAgentBytes } from "./hx-flow-readings";
+import { type HxFlowShare, hxSharedTurnLimit } from "./hx-flow-share";
 import { readLinuxMemory } from "./server-memory";
 
 /** Windows reads the processes with tasklist, which costs more: at most once in this time. */
@@ -53,6 +54,11 @@ export interface HxDesktopMemoryOptions {
   /** Called when B changes, with the reading that changed it, for the log. */
   onBudget?(budget: number, detail: Readonly<Record<string, number | string | boolean | null>>): void;
   platform?: NodeJS.Platform;
+  /**
+   * v1.7.2: the turns of the other HXBot processes of this computer (the servers on this computer). Their
+   * turns count against the same B (hx-flow-share.ts). Absent: this process counts only its own turns.
+   */
+  share?: HxFlowShare;
 }
 
 interface FileSample extends Partial<Omit<HxFlowSample, "running" | "turnBytes">> {
@@ -75,6 +81,8 @@ export class HxDesktopMemory implements HostMemory {
   #errorLogged = false;
   #windowsProcesses: { at: number; bytes: HxFlowAgentMemory | null } = { at: 0, bytes: null };
   #running = () => 0;
+  /** The turns that the other HXBot processes of this computer ran at the last sample (v1.7.2). */
+  #others = 0;
 
   constructor(options: HxDesktopMemoryOptions) {
     this.#options = options;
@@ -116,6 +124,7 @@ export class HxDesktopMemory implements HostMemory {
     this.#timer = null;
     this.#loop.disable();
     for (const unsubscribe of this.#unsubscribe.splice(0)) unsubscribe();
+    this.#options.share?.close();
   }
 
   level() {
@@ -123,7 +132,8 @@ export class HxDesktopMemory implements HostMemory {
   }
 
   turnLimit(): number {
-    return this.#budget.budget;
+    // v1.7.2: one B for the whole computer: the turns of the other HXBot processes count too.
+    return this.#options.share ? hxSharedTurnLimit(this.#budget.budget, this.#others) : this.#budget.budget;
   }
 
   /** What holds B where it is, for the capacity notice. */
@@ -142,7 +152,13 @@ export class HxDesktopMemory implements HostMemory {
 
   /** One sample; skipped while the computer sleeps, while no turn runs or waits, or while one runs. */
   async tick(): Promise<void> {
-    if (this.#sampling || this.#sleeping || !this.#options.active()) return;
+    if (this.#sampling || this.#sleeping) return;
+    if (!this.#options.active()) {
+      // v1.7.2: an idle process says so at once, so the others do not count its last turns for 20 s.
+      const share = this.#options.share;
+      if (share && (share.written() ?? 0) > 0) share.write(0);
+      return;
+    }
     this.#sampling = true;
     try {
       const file = await this.#readFile();
@@ -168,6 +184,10 @@ export class HxDesktopMemory implements HostMemory {
         running,
       };
       const after = this.#budget.sample(sample, agents);
+      if (this.#options.share) {
+        this.#options.share.write(running);
+        this.#others = this.#options.share.others();
+      }
       if (after !== before) {
         const state = this.#budget.state();
         this.#options.onBudget?.(after, {

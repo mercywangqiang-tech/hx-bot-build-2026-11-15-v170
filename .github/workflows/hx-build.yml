@@ -23,6 +23,12 @@ on:
       draft_release:
         description: "打好后把安装包放进本仓库的一个草稿 Release（填名字，例如 v1.7.1；空着不放）。草稿不公开、不打标签"
         default: ""
+      desktop_check:
+        description: "v1.7.2：在打好的 Mac、Windows 包上查程序坞/任务栏图标和打开、保存对话框（yes / no）。不拦打包"
+        default: "no"
+      desktop_check_baseline:
+        description: "对比用的上一版：本仓库里草稿 Release 的名字（空着不比）"
+        default: "v1.7.1-0.67.10"
 
 permissions:
   contents: read
@@ -177,6 +183,99 @@ jobs:
   computer-check:
     if: inputs.computer_check == 'yes'
     uses: ./.github/workflows/hx-computer-check.yml
+
+  # v1.7.2: 选了 desktop_check = yes 时，在打好的包上跑 scripts/hx-desktop-check.mjs：本机服务器在不在程序坞/任务栏里、
+  # 桌面端开没开出控制台窗口、别的应用的“保存”对话框出来要多久；同样的检查也在上一版上跑一次作对比。
+  # 新版的本机服务器出现在程序坞/任务栏里，或开出了控制台窗口，这一格标红；它不拦打包，也不拦草稿 Release。
+  desktop-check-mac:
+    if: inputs.desktop_check == 'yes' && needs.mac.result == 'success'
+    needs: [mac]
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: { node-version: 24 }
+      - uses: actions/download-artifact@v8
+        with:
+          name: hxbot-mac-arm64
+          path: new
+      - name: Get the earlier version
+        if: inputs.desktop_check_baseline != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE: ${{ inputs.desktop_check_baseline }}
+        run: bash hx/scripts/desktop-check-baseline.sh mac old
+      - name: Check
+        shell: bash
+        run: |
+          mkdir -p out
+          ditto -x -k new/HXBot-*-arm64.zip new-app
+          if [ -d old ]; then
+            ditto -x -k old/HXBot-*-arm64.zip old-app
+            node scripts/hx-desktop-check.mjs --exe old-app/HXBot.app/Contents/MacOS/HXBot --label earlier --out out/earlier.json || true
+          fi
+          node scripts/hx-desktop-check.mjs --exe new-app/HXBot.app/Contents/MacOS/HXBot --label new --out out/new.json --expect-clean
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: node hx/scripts/desktop-check-summary.mjs out >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hxbot-desktop-check-mac
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
+
+  desktop-check-windows:
+    if: inputs.desktop_check == 'yes' && needs.windows.result == 'success'
+    needs: [windows]
+    runs-on: windows-2025
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: { node-version: 24 }
+      - uses: actions/download-artifact@v8
+        with:
+          name: hxbot-windows-x64
+          path: new
+      - name: Get the earlier version
+        if: inputs.desktop_check_baseline != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE: ${{ inputs.desktop_check_baseline }}
+        run: bash hx/scripts/desktop-check-baseline.sh windows old
+      - name: Check
+        shell: bash
+        run: |
+          mkdir -p out
+          # The installer holds the app as app-64.7z: unpack it, so nothing is installed on the runner.
+          unpack() { 7z x -y "-o$2-setup" "$1" > /dev/null && 7z x -y "-o$2" "$2-setup/\$PLUGINSDIR/app-64.7z" > /dev/null; }
+          unpack "$(ls new/HXBot-*-x64.exe)" new-app
+          if [ -d old ]; then
+            unpack "$(ls old/HXBot-*-x64.exe)" old-app
+            node scripts/hx-desktop-check.mjs --exe old-app/HXBot.exe --label earlier --out out/earlier.json || true
+          fi
+          node scripts/hx-desktop-check.mjs --exe new-app/HXBot.exe --label new --out out/new.json --expect-clean
+      - name: Show the summary
+        if: always()
+        shell: bash
+        run: node hx/scripts/desktop-check-summary.mjs out >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hxbot-desktop-check-windows
+          path: out
+          if-no-files-found: warn
+          retention-days: 14
 
   # v1.7.1: 选了 draft_release 时，把打好的包放进本仓库的一个草稿 Release，供下载（运行页面的 Artifacts 只保留 1 天）。
   # 草稿不发布、不建标签，所以不会触发 release.yml。

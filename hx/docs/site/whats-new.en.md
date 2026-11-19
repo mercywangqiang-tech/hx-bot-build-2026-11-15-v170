@@ -2,18 +2,57 @@
 title: What's new
 kicker: HXBot Research Edition
 updated: November 18, 2026
-version: Desktop 0.67.10 · Mobile 1.5.0
+version: Desktop 0.67.11 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
 This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.10 on, when HXBot finds a new version as it opens, it downloads and installs it by itself and restarts into it once the assistants are idle; there is nothing to click. The data in the screenshots is demo data.
+
+## Desktop 0.67.11: one HXBot in the Dock, and other apps open and save files without freezes {#desktop-0-67-11}
+
+November 18, 2026 · Desktop and web 0.67.11 · Mobile 1.5.0 (no change this time)
+
+This version only fixes problems. It adds no new features.
+
+> **Highlights**
+> 1. {NEW} One HXBot in the Dock and the taskbar: the servers on this computer no longer each add an icon, and the commands that HXBot runs in the background no longer open black console windows. {on:Desktop}
+> 2. Other apps no longer freeze when they open or save files: the servers on this computer start one after another and run at a lower priority, and all HXBot processes share one limit of work at the same time. {on:Desktop}
+> 3. When HXBot cannot write the record of a permission (for example, when the disk is full), a step that needs your permission does not go ahead, and the agent tells you why. {on:Desktop}
+> 4. On a team server, only owners and admins can add an MCP server that runs a command on this computer. {on:Desktop}
+
+### More HXBot icons in the Dock and the taskbar {#desktop-0-67-11-dock}
+
+- **Cause:** each server on this computer is a separate HXBot process.
+  - Mac: the server hid itself from the Dock very early in its start. At that time macOS was still starting it, and sometimes the hide did not hold, so the icon stayed. Each server added an icon, and each new or restarted server added one more.
+  - Windows: each command that HXBot ran in the background (for example, to read the processes or to start a tool) opened a console window, and each one added an icon to the taskbar.
+  - After a run that did not quit correctly, the servers that it left kept running, and their icons stayed.
+- **Now:**
+  - Mac: a server first becomes an app that is not in the Dock, then hides. For 30 seconds after it starts, it looks again from time to time and hides again when it is visible.
+  - Windows: background commands open no window. Only the windows that you want to see show: links that open in the browser you chose, and the apps that an agent opens for you. The windows of a server are not on the taskbar, and a server window that shows is hidden at once.
+  - When HXBot opens, it finds the server processes of an earlier run that have no main app. It asks them to quit, and ends them when they still run after 5 seconds.
+
+### Other apps freeze when they open or save files {#desktop-0-67-11-dialogs}
+
+- **Causes that we found:**
+  - When HXBot opened, all servers on this computer started at the same time, and the computer was very busy for some seconds.
+  - In 0.67.10, each HXBot process set its own limit of work at the same time. The desktop app and each server started work for the same free memory, so together they could run several times the limit. The memory filled, the computer started to swap, and the open and save windows of other apps were very slow.
+  - On Windows, the console windows of background commands took the focus, so the open or save window that you used looked frozen.
+- **Now:**
+  - The servers start one after another, at a "below normal" priority, so the app that you use gets the processor first.
+  - The desktop app and each server write how much work they run into one small shared folder. Each process can start the limit minus the work that the other processes run, and at least 1.
+  - Background commands open no windows and do not take the focus.
+
+### Other fixes {#desktop-0-67-11-fixes}
+
+- **Record of permissions:** "Allow once" and "Always allow" take effect only after they are written to the record of permissions. When the record cannot be written (the disk is full, or the folder cannot be written), the step does not run, and your permission is not used up. The agent tells you why and asks you to free disk space or fix the folder, then try again. The stop button works as before.
+- **MCP servers on a team server:** an MCP server that runs a command on this computer (stdio) is the same as a command that runs on this computer. Now only owners and admins can add, change, test and turn on such a server. Members can still add a server with a web address, and change or remove the ones they added. The server does this check.
 
 ## Desktop 0.67.10: many agents at once without freezes, teams with no limits {#desktop-0-67-10}
 
 November 18, 2026 · Desktop and web 0.67.10 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. {NEW} Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
+> 1. Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
 > 2. Teams have no limit on members, time or handoffs: each handoff is accepted and waits in the queue, and none is sent back because "too many are busy". When a team makes no progress, goes in a loop or nobody answers the spend reminders, it pauses and asks you. {on:Desktop}
 > 3. No slowdown after long use: the channel list counts only the new messages, and the queue and the scheduler look only at work that is not done. {on:Desktop}
 > 4. Updates are no longer forced: when HXBot finds a new version as it opens, it downloads and installs it and restarts into it once the assistants are idle; there is nothing to click. Later major versions work the same way. {on:Desktop}

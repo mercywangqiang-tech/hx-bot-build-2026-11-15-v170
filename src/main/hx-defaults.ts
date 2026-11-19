@@ -4,7 +4,9 @@
 // the self-hosting variables that HXBot already reads (docs/self-hosting.md). This module must be the
 // first import of `src/main/index.ts`: ES modules run in import order, so every other module of the
 // main process reads these values. A person can still name another service with the same variables.
+import { syncBuiltinESMExports } from "node:module";
 import { app } from "electron";
+import { hxHideChildWindows } from "./hx-child-windows";
 
 const HX_ACCOUNT_API_URL = "https://api.bot.hxallai.com";
 const HX_SIGNAL_URL = "wss://signal.bot.hxallai.com/v1/signal";
@@ -20,3 +22,7 @@ if (app.isPackaged && !process.env.HXBOT_AUTH_API_URL && !process.env.HXBOT_REMO
   process.env.HXBOT_AUTH_API_URL = HX_ACCOUNT_API_URL;
   process.env.HXBOT_REMOTE_SIGNAL_URL = HX_SIGNAL_URL;
 }
+
+// HXBot (v1.7.2): on Windows a child process gets no console window unless the caller asks for one
+// (hx-child-windows.ts). Before any other module of the main process starts a process.
+if (hxHideChildWindows(process.getBuiltinModule("node:child_process"))) syncBuiltinESMExports();
