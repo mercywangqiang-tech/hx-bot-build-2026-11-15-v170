@@ -140,37 +140,139 @@ async function macAppInstalled(host: HxAppRouteHost, app: string): Promise<boole
 }
 
 /**
- * AppleScript lines that open HXBot's copy (HX_IN) and set `theDoc` to it among the app's open
- * `collection`, by the copy's unique name (HX_STEM). They wait up to 60 s while the app still opens or
- * imports it: Keynote answers “missing value” while it imports a .ppt, and Word's and PowerPoint's
- * `open` answer nothing (found on a real Mac). Never “the front document”: that may be the user's,
- * and HXBot closes `theDoc` without saving.
+ * Commands of AppleScript's Standard Additions. Inside a `tell application` block AppleScript sends such
+ * a command to that app (found on a real Mac): `system attribute` then reads the app's environment, not
+ * HXBot's, and the copy's name came back empty, and an empty name matches every document, the user's
+ * too; Numbers and Pages, still starting, answered -600; `delay` makes the app itself wait. So the Mac
+ * scripts use them only at the top level or in a handler; hxMacOsaxInsideTell checks every script.
  */
-export function hxMacOpenOwn(collection: string, open: readonly string[]): string[] {
+const MAC_OSAX =
+  /\bsystem attribute\b|\bdelay\b|\bread \(|\bopen for access\b|\bclose access\b|\bset eof\b|\bwrite\b.+\bto\b|\bdo shell script\b|\bdisplay (dialog|alert|notification)\b|\bpath to\b|\bcurrent date\b|\brandom number\b/u;
+
+/** The lines of an AppleScript that use a Standard Additions command inside a `tell application` block. */
+export function hxMacOsaxInsideTell(script: string): string[] {
+  const found: string[] = [];
+  let depth = 0;
+  for (const raw of script.split("\n")) {
+    const line = raw.trim();
+    // `tell application "X" to …` is one line and leaves no block open.
+    const tell = /^tell application "[^"]*"(.*)$/u.exec(line);
+    if (tell) {
+      if (/^\s+to\s/u.test(tell[1] ?? "")) {
+        if (MAC_OSAX.test(tell[1] ?? "")) found.push(line);
+      } else depth += 1;
+      continue;
+    }
+    if (line === "end tell") {
+      depth = Math.max(0, depth - 1);
+      continue;
+    }
+    if (depth > 0 && MAC_OSAX.test(line)) found.push(line);
+  }
+  return found;
+}
+
+export interface HxMacOwnScript {
+  /** The app, as AppleScript names it: "Numbers", "Microsoft Excel". */
+  app: string;
+  /** The app's open documents: documents, workbooks, presentations. */
+  collection: string;
+  /** Handlers, at the top of the script (they run in the script, not in the app). */
+  handlers?: readonly string[];
+  /** More inputs from the environment, read before anything else (top level). */
+  inputs?: readonly string[];
+  /** Lines in the app before it opens the copy (Excel: its alerts). */
+  prepare?: readonly string[];
+  /** Lines in the app that open HXBot's copy, `inPath`. */
+  open: readonly string[];
+  /** Lines in the app once `theDoc` is HXBot's copy: the work, saved to `outPath`. */
+  work: readonly string[];
+  /** Lines in the app at the end, also after an error (Excel: its alerts back). */
+  restore?: readonly string[];
+}
+
+/**
+ * An AppleScript that opens HXBot's copy (HX_IN) in a Mac app, finds it among the app's open documents
+ * by the copy's unique name (HX_STEM, hxCopyStem), does `work` on it, closes it without saving and
+ * quits the app only when HXBot started it. Never “the front document”: that may be the user's, and
+ * HXBot closes `theDoc` without saving. The search waits up to 60 s while the app still opens or
+ * imports: Keynote answers “missing value” while it imports a .ppt, and Word's and PowerPoint's `open`
+ * answer nothing (found on a real Mac). The inputs are read and the waits made outside the app (see
+ * MAC_OSAX). After quitting, it waits until the app is gone, so that the next script does not hand its
+ * file to an app that is quitting.
+ */
+export function hxMacOwnScript(s: HxMacOwnScript): string {
+  const tell = `tell application "${s.app}"`;
+  const at = (by: number, lines: readonly string[]) => lines.map((line) => `${" ".repeat(by)}${line}`);
+  const quitIfOurs = (by: number) =>
+    at(by, [
+      `if (not wasRunning) and (application "${s.app}" is running) then`,
+      `  ${tell}`,
+      `    if (count of ${s.collection}) is 0 then quit saving no`,
+      "  end tell",
+      "  repeat 50 times",
+      `    if not (application "${s.app}" is running) then exit repeat`,
+      "    delay 0.2",
+      "  end repeat",
+      "end if",
+    ]);
   return [
+    ...(s.handlers ?? []),
+    'set inPath to system attribute "HX_IN"',
+    'set outPath to system attribute "HX_OUT"',
     'set stem to system attribute "HX_STEM"',
+    ...(s.inputs ?? []),
+    // Only HXBot's own name: an empty or another name would match the user's documents.
+    'if stem does not start with "hxbot-" or (length of stem) < 18 then error "HXBot gave its copy no name." number -1700',
+    `set wasRunning to application "${s.app}" is running`,
+    "set theDoc to missing value",
     'set openError to ""',
     "try",
-    ...open.map((line) => `  ${line}`),
-    "on error errText",
-    "  set openError to errText",
-    "end try",
-    "set theDoc to missing value",
-    "repeat 300 times",
-    `  repeat with d in ${collection}`,
-    "    try",
-    "      if (name of d) starts with stem then",
-    "        set theDoc to contents of d",
-    "        exit repeat",
-    "      end if",
-    "    end try",
+    ...at(2, [
+      tell,
+      ...at(2, s.prepare ?? []),
+      "  try",
+      ...at(4, s.open),
+      "  on error errText",
+      "    set openError to errText",
+      "  end try",
+      "end tell",
+    ]),
+    "  repeat 300 times",
+    `    ${tell}`,
+    `      repeat with d in ${s.collection}`,
+    "        try",
+    "          if (name of d) starts with stem then",
+    "            set theDoc to contents of d",
+    "            exit repeat",
+    "          end if",
+    "        end try",
+    "      end repeat",
+    "    end tell",
+    "    if theDoc is not missing value then exit repeat",
+    '    if openError is not "" then exit repeat',
+    "    delay 0.2",
     "  end repeat",
-    "  if theDoc is not missing value then exit repeat",
-    '  if openError is not "" then exit repeat',
-    "  delay 0.2",
-    "end repeat",
-    'if theDoc is missing value then error ("The file did not open. " & openError) number -43',
-  ];
+    '  if theDoc is missing value then error ("The file did not open. " & openError) number -43',
+    `  ${tell}`,
+    ...at(4, s.work),
+    "    close theDoc saving no",
+    ...at(4, s.restore ?? []),
+    "  end tell",
+    "on error errMsg number errNum",
+    `  if application "${s.app}" is running then`,
+    `    ${tell}`,
+    "      try",
+    "        if theDoc is not missing value then close theDoc saving no",
+    "      end try",
+    ...(s.restore?.length ? at(6, ["try", ...at(2, s.restore), "end try"]) : []),
+    "    end tell",
+    "  end if",
+    ...quitIfOurs(2),
+    "  error errMsg number errNum",
+    "end try",
+    ...quitIfOurs(0),
+  ].join("\n");
 }
 
 /** A unique name for HXBot's copy: the scripts find the copy by it among the user's own documents. */
@@ -193,108 +295,56 @@ export async function hxOsascript(
   return host.run("osascript", ["-e", script], { timeoutMs: TIMEOUT_MS, env });
 }
 
-/**
- * The lines after the work of a Mac app: an app that HXBot started is quit again when no document is
- * left in it; an app that the user had open keeps running, with only HXBot's own document closed.
- */
-function macQuitIfOurs(documents: string): string {
-  return `  if not wasRunning and (count of ${documents}) is 0 then quit saving no`;
-}
-
 function iworkScript(app: string, as: string): string {
-  return [
-    'set inPath to system attribute "HX_IN"',
-    'set outPath to system attribute "HX_OUT"',
-    `set wasRunning to application "${app}" is running`,
-    `tell application "${app}"`,
-    "  try",
-    ...hxMacOpenOwn("documents", ["open (POSIX file inPath as alias)"]).map((line) => `    ${line}`),
-    `    export theDoc to (POSIX file outPath) as ${as}`,
-    "    close theDoc saving no",
-    "  on error errMsg number errNum",
-    "    try",
-    "      close theDoc saving no",
-    "    end try",
-    `  ${macQuitIfOurs("documents")}`,
-    "    error errMsg number errNum",
-    "  end try",
-    macQuitIfOurs("documents"),
-    "end tell",
-  ].join("\n");
+  return hxMacOwnScript({
+    app,
+    collection: "documents",
+    open: ["open (POSIX file inPath as alias)"],
+    work: [`export theDoc to (POSIX file outPath) as ${as}`],
+  });
 }
 
 /**
  * Microsoft Office for Mac, through its AppleScript dictionaries. AppleScript reaches the instance the
  * user may have open: HXBot opens its copy read-only, closes only that document, puts back the alerts
- * setting it changed, and quits only an app that it started itself. The copy is found by its unique
- * name (hxMacOpenOwn). Excel tries its own `open workbook` first, then the plain `open`.
+ * setting it changed, and quits only an app that it started itself (hxMacOwnScript). Excel tries its
+ * own `open workbook` first, then the plain `open`.
  */
-function macOfficeScript(app: string, documents: string, work: readonly string[], close: string): string {
-  return [
-    'set inPath to system attribute "HX_IN"',
-    'set outPath to system attribute "HX_OUT"',
-    `set wasRunning to application "${app}" is running`,
-    `tell application "${app}"`,
-    ...(app === "Microsoft Excel" ? ["  set oldAlerts to display alerts", "  set display alerts to false"] : []),
-    "  try",
-    ...work.map((line) => `    ${line}`),
-    `    ${close}`,
-    "  on error errMsg number errNum",
-    "    try",
-    `      ${close}`,
-    "    end try",
-    ...(app === "Microsoft Excel" ? ["    set display alerts to oldAlerts"] : []),
-    `  ${macQuitIfOurs(documents)}`,
-    "    error errMsg number errNum",
-    "  end try",
-    ...(app === "Microsoft Excel" ? ["  set display alerts to oldAlerts"] : []),
-    macQuitIfOurs(documents),
-    "end tell",
-  ].join("\n");
-}
-
 const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
   xlsx: {
     app: "Microsoft Excel",
-    script: macOfficeScript(
-      "Microsoft Excel",
-      "workbooks",
-      [
-        ...hxMacOpenOwn("workbooks", [
-          "try",
-          "  open workbook workbook file name (POSIX file inPath as text) read only true",
-          "on error",
-          "  open (POSIX file inPath as alias)",
-          "end try",
-        ]),
-        "save workbook as theDoc filename (POSIX file outPath as text) file format Excel XML file format",
+    script: hxMacOwnScript({
+      app: "Microsoft Excel",
+      collection: "workbooks",
+      prepare: ["set oldAlerts to display alerts", "set display alerts to false"],
+      open: [
+        "try",
+        "  open workbook workbook file name (POSIX file inPath as text) read only true",
+        "on error",
+        "  open (POSIX file inPath as alias)",
+        "end try",
       ],
-      "close theDoc saving no",
-    ),
+      work: ["save workbook as theDoc filename (POSIX file outPath as text) file format Excel XML file format"],
+      restore: ["set display alerts to oldAlerts"],
+    }),
   },
   docx: {
     app: "Microsoft Word",
-    script: macOfficeScript(
-      "Microsoft Word",
-      "documents",
-      [
-        ...hxMacOpenOwn("documents", ["open file name (POSIX file inPath as text) with read only"]),
-        "save as theDoc file name (POSIX file outPath as text) file format format document",
-      ],
-      "close theDoc saving no",
-    ),
+    script: hxMacOwnScript({
+      app: "Microsoft Word",
+      collection: "documents",
+      open: ["open file name (POSIX file inPath as text) with read only"],
+      work: ["save as theDoc file name (POSIX file outPath as text) file format format document"],
+    }),
   },
   pptx: {
     app: "Microsoft PowerPoint",
-    script: macOfficeScript(
-      "Microsoft PowerPoint",
-      "presentations",
-      [
-        ...hxMacOpenOwn("presentations", ["open (POSIX file inPath as alias)"]),
-        "save theDoc in (POSIX file outPath as text) as save as Open XML presentation",
-      ],
-      "close theDoc saving no",
-    ),
+    script: hxMacOwnScript({
+      app: "Microsoft PowerPoint",
+      collection: "presentations",
+      open: ["open (POSIX file inPath as alias)"],
+      work: ["save theDoc in (POSIX file outPath as text) as save as Open XML presentation"],
+    }),
   },
 };
 

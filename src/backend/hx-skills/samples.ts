@@ -19,7 +19,7 @@ import { HxFileVersions } from "../hx-files/versions";
 import { HxWorkbook } from "../hx-files/xlsx";
 import { crc32, HxZip } from "../hx-files/zip";
 import { hxMacMetadata } from "../hx-files/zip-stream";
-import { type HxAppRouteHost, hxCopyStem, hxMacOpenOwn, hxOsascript } from "./app-route";
+import { type HxAppRouteHost, hxCopyStem, hxMacOwnScript, hxOsascript } from "./app-route";
 import type { HxSkillName } from "./declarations";
 import type { HxJson, HxSkillArgs } from "./operations";
 import { type HxSkillAnswer, HxSkillRequests, HxSkillRunner } from "./run";
@@ -1825,17 +1825,12 @@ async function appAsBefore(c: Context, app: string | null): Promise<Check> {
 async function iworkCopy(c: Context, app: string, from: string, to: string): Promise<void> {
   const run = c.apps?.run;
   if (!run) throw new Error("没有可以用的应用。");
-  const script = [
-    'set inPath to system attribute "HX_IN"',
-    'set outPath to system attribute "HX_OUT"',
-    `set wasRunning to application "${app}" is running`,
-    `tell application "${app}"`,
-    ...hxMacOpenOwn("documents", ["open (POSIX file inPath as alias)"]).map((line) => `  ${line}`),
-    "  save theDoc in (POSIX file outPath)",
-    "  close theDoc saving no",
-    "  if not wasRunning and (count of documents) is 0 then quit saving no",
-    "end tell",
-  ].join("\n");
+  const script = hxMacOwnScript({
+    app,
+    collection: "documents",
+    open: ["open (POSIX file inPath as alias)"],
+    work: ["save theDoc in (POSIX file outPath)"],
+  });
   const temp = await mkdtemp(join(tmpdir(), "hxbot-iwork-"));
   try {
     const stem = hxCopyStem();

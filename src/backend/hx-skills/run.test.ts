@@ -11,6 +11,7 @@ import { HxPdf, hxPdfFields } from "../hx-files/pdf";
 import { HxPresentation } from "../hx-files/pptx";
 import { HxFileVersions } from "../hx-files/versions";
 import { HxWorkbook } from "../hx-files/xlsx";
+import { hxConvertWithApp, hxMacOsaxInsideTell, hxMacOwnScript } from "./app-route";
 import { hxSkillOperations } from "./operations";
 import {
   type HxFileChangeEvent,
@@ -785,6 +786,77 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
           : call.command,
       ),
     ).toEqual(["Pages", "/usr/bin/textutil", "Microsoft Word"]);
+    expect(await leftWork()).toEqual([]);
+  });
+
+  it("every Mac script reads its inputs and waits outside the app, and takes only HXBot's own copy (found on a real Mac)", async () => {
+    // The check itself finds what it is for: a command of Standard Additions inside a `tell` block.
+    expect(
+      hxMacOsaxInsideTell('tell application "Numbers"\n  set stem to system attribute "HX_STEM"\nend tell'),
+    ).toEqual(['set stem to system attribute "HX_STEM"']);
+    expect(
+      hxMacOsaxInsideTell(
+        'tell application "Keynote"\n  tell application "Keynote"\n  end tell\n  delay 0.2\nend tell',
+      ),
+    ).toEqual(["delay 0.2"]);
+    expect(hxMacOsaxInsideTell('tell application "Pages" to delay 1')).toEqual(['tell application "Pages" to delay 1']);
+    expect(hxMacOsaxInsideTell('set x to system attribute "A"\ndelay 0.2\ntell application "Pages" to quit')).toEqual(
+      [],
+    );
+    // Every app of the Mac route, with every app installed and none converting: each script is tried once.
+    const scripts = new Map<string, string>();
+    const host = {
+      platform: "darwin" as const,
+      exists: async (path: string) => !/soffice|libreoffice/iu.test(path) && /\.app$/u.test(path),
+      run: async (command: string, args: readonly string[]) => {
+        if (command === "osascript") {
+          const script = args.join("\n");
+          scripts.set(/tell application "([^"]+)"/u.exec(script)?.[1] ?? "?", script);
+        }
+        return { code: 1, stdout: "", stderr: "failed", timedOut: false, missing: false };
+      },
+    };
+    const base = await mkdtemp(join(tmpdir(), "hx-skill-run-"));
+    bases.push(base);
+    for (const [name, to] of [
+      ["a.xls", "xlsx"],
+      ["a.doc", "docx"],
+      ["a.ppt", "pptx"],
+    ] as const) {
+      await writeFile(join(base, name), "legacy");
+      const folder = await mkdtemp(join(base, "convert-"));
+      expect((await hxConvertWithApp(join(base, name), to, folder, host)).ok).toBe(false);
+    }
+    const keynoteRoute = fakeKeynote();
+    const k = await setup({ host: { app: keynoteRoute.app } });
+    await put(join(k.work, "汇报.key"), new TextEncoder().encode(JSON.stringify(keySlides())));
+    await k.run({ skill: "slides", action: "delete", files: [join(k.work, "汇报.key")], params: { slide: 3 } });
+    const keynoteScript = keynoteRoute.calls.find((call) => call.env.HX_ACTION !== undefined)?.args.join("\n") ?? "";
+    expect([...scripts.keys()].sort()).toEqual(
+      ["Keynote", "Microsoft Excel", "Microsoft PowerPoint", "Microsoft Word", "Numbers", "Pages"].sort(),
+    );
+    const sampleScript = hxMacOwnScript({
+      app: "Numbers",
+      collection: "documents",
+      open: ["open (POSIX file inPath as alias)"],
+      work: ["save theDoc in (POSIX file outPath)"],
+    });
+    for (const [app, script] of [...scripts, ["Keynote route", keynoteScript], ["sample", sampleScript]] as const) {
+      expect(hxMacOsaxInsideTell(script), app).toEqual([]);
+      // The copy is found by HXBot's own name, checked before anything else; never the front document.
+      expect(script, app).toContain('if stem does not start with "hxbot-" or (length of stem) < 18 then error');
+      expect(script.indexOf("starts with stem"), app).toBeGreaterThan(
+        script.indexOf('stem does not start with "hxbot-"'),
+      );
+      expect(script, app).not.toMatch(/front document|active (workbook|document|presentation)|document 1\b/u);
+      // An app is quit only when HXBot started it and it is still running, and only with no document left.
+      const quits = script.split("\n").filter((line) => /\bquit\b/u.test(line));
+      expect(quits.length, app).toBeGreaterThan(0);
+      for (const quit of quits) expect(quit.trim(), app).toMatch(/^if \(count of \w+\) is 0 then quit saving no$/u);
+      expect(script.match(/if \(not wasRunning\) and \(application "[^"]+" is running\) then/gu)?.length, app).toBe(2);
+      // The wait for the copy and the wait for the app to quit happen in osascript, not in the app.
+      expect(script, app).toContain("repeat 300 times");
+    }
     expect(await leftWork()).toEqual([]);
   });
 
