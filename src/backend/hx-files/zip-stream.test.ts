@@ -157,6 +157,46 @@ print(json.dumps({"bad":z.testzip(),"items":[[i.filename,i.compress_type,hashlib
     expect((await stat(join(into, "项目/a.txt"))).mtime.toISOString()).toBe("2021-03-04T05:06:08.000Z");
   });
 
+  it("leaves a Mac's metadata files out of a folder it packs and of what it unpacks (found on exFAT)", async () => {
+    // A Mac on exFAT writes “._name” beside each file; Finder writes .DS_Store; “Compress” adds __MACOSX/.
+    const folder = join(base, "资料");
+    await mkdir(join(folder, "子目录"), { recursive: true });
+    await writeFile(join(folder, "a.txt"), "a");
+    await writeFile(join(folder, "._a.txt"), "metadata");
+    await writeFile(join(folder, ".DS_Store"), "view");
+    await writeFile(join(folder, "._子目录"), "metadata");
+    await writeFile(join(folder, "子目录", "b.txt"), "b");
+    await writeFile(join(folder, ".gitignore"), "kept");
+    // A file given by its own name is packed, whatever its name.
+    await writeFile(join(base, "._given"), "given");
+    const { sources, metadata } = await hxZipSources([folder, join(base, "._given")]);
+    expect(metadata).toBe(3);
+    expect(sources.map((source) => source.name)).toEqual([
+      "资料/",
+      "资料/.gitignore",
+      "资料/a.txt",
+      "资料/子目录/",
+      "资料/子目录/b.txt",
+      "._given",
+    ]);
+    const archive = join(base, "mac.zip");
+    await writeFile(
+      archive,
+      rawZip([
+        { name: "资料/a.txt", content: text("a") },
+        { name: "__MACOSX/资料/._a.txt", content: text("metadata") },
+        { name: "资料/._b.txt", content: text("metadata") },
+        { name: "资料/.DS_Store", content: text("view") },
+        { name: "资料/.gitignore", content: text("kept") },
+      ]),
+    );
+    const into = join(base, "into");
+    await mkdir(into);
+    const unpacked = await hxUnzipTo(archive, into);
+    expect(unpacked.metadata).toBe(3);
+    expect(await tree(into)).toEqual(["资料/", "资料/.gitignore", "资料/a.txt"]);
+  });
+
   it("stores names in NFC, the form Windows and Linux expect from a Mac", async () => {
     const decomposed = "Cafe\u0301.txt";
     await writeFile(join(base, decomposed), "x");

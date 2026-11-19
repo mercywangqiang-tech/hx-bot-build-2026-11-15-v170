@@ -28,6 +28,7 @@ import { crc32, hxZipSafePath } from "../hx-files/zip";
 import {
   hxCheckEntries,
   hxEntriesSize,
+  hxMacMetadata,
   hxUnzipTo,
   hxZipEntries,
   hxZipSources,
@@ -587,7 +588,7 @@ export async function hxFilesZip(
   if (!(await exists(dirname(output)))?.isDirectory())
     throw new SkillInputError(`The folder ${dirname(output)} is not there.`);
   for (const source of sources) if (!(await exists(source))) throw new SkillInputError(`${source} is not there.`);
-  const { sources: entries, skipped } = await hxZipSources(sources, host.signal);
+  const { sources: entries, skipped, metadata } = await hxZipSources(sources, host.signal);
   if (entries.length === 0)
     throw new SkillInputError("There is nothing to pack: links and special files are left out.");
   const bytes = entries.reduce((sum, entry) => sum + entry.size + 200, 0);
@@ -614,6 +615,7 @@ export async function hxFilesZip(
       entries: written.entries,
       bytes: written.bytes,
       ...(skipped.length ? { leftOut: skipped.slice(0, 20) } : {}),
+      ...(metadata ? { macMetadataLeftOut: metadata } : {}),
     },
   };
 }
@@ -642,7 +644,9 @@ export async function hxFilesUnzip(
     const directory = await hxZipEntries(handle);
     hxCheckEntries(directory);
     size = hxEntriesSize(directory);
-    expectedFiles = directory.entries.filter((entry) => !entry.directory && !entry.link).length;
+    expectedFiles = directory.entries.filter(
+      (entry) => !entry.directory && !entry.link && !(entry.path && hxMacMetadata(entry.path)),
+    ).length;
   } finally {
     await handle.close();
   }
@@ -701,6 +705,7 @@ export async function hxFilesUnzip(
       files: result.files.length,
       folders: result.folders,
       ...(result.skippedLinks ? { linksLeftOut: result.skippedLinks } : {}),
+      ...(result.metadata ? { macMetadataLeftOut: result.metadata } : {}),
       ...(target ? {} : { madeFolder: output }),
     },
   };

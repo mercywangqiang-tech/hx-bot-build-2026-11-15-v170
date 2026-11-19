@@ -97,6 +97,19 @@ function timeExtra(when: Date): Buffer | null {
   return extra;
 }
 
+/**
+ * Files that macOS writes beside the real ones and that are no part of a user's work: “._name” (the
+ * extended attributes of “name” on a disk that cannot keep them, such as exFAT or a network drive),
+ * “.DS_Store” (Finder's view settings), and what a Mac's “Compress” puts under “__MACOSX/”. Finder hides
+ * them and its Archive Utility does not unpack them; HXBot leaves them out of a folder it packs and out of
+ * what it unpacks. A file given by name is always packed, whatever its name.
+ */
+export function hxMacMetadata(path: string): boolean {
+  const parts = path.split("/").filter(Boolean);
+  const name = parts.at(-1) ?? "";
+  return parts.includes("__MACOSX") || name.startsWith("._") || name === ".DS_Store";
+}
+
 /** What goes into the archive: files and folders under their names in it. */
 export interface HxZipSource {
   path: string;
@@ -114,9 +127,10 @@ export interface HxZipSource {
 export async function hxZipSources(
   paths: readonly string[],
   signal?: AbortSignal,
-): Promise<{ sources: HxZipSource[]; skipped: string[] }> {
+): Promise<{ sources: HxZipSource[]; skipped: string[]; metadata: number }> {
   const sources: HxZipSource[] = [];
   const skipped: string[] = [];
+  let metadata = 0;
   const names = new Set<string>();
   const add = (source: HxZipSource) => {
     const safe = hxZipSafePath(source.name);
@@ -171,6 +185,10 @@ export async function hxZipSources(
       const files: HxZipSource[] = [];
       for (const child of children) {
         const full = join(folder, child.name);
+        if (hxMacMetadata(child.name)) {
+          metadata += 1;
+          continue;
+        }
         if (child.isDirectory()) stack.push(full);
         else if (child.isFile()) {
           const childInfo = await lstat(full);
@@ -187,7 +205,7 @@ export async function hxZipSources(
       for (const file of files.reverse()) add(file);
     }
   }
-  return { sources, skipped };
+  return { sources, skipped, metadata };
 }
 
 interface Written {
@@ -684,12 +702,20 @@ export async function hxUnzipTo(
   archive: string,
   root: string,
   options: { signal?: AbortSignal } = {},
-): Promise<{ files: { path: string; size: number; crc: number }[]; folders: number; skippedLinks: number }> {
+): Promise<{
+  files: { path: string; size: number; crc: number }[];
+  folders: number;
+  skippedLinks: number;
+  metadata: number;
+}> {
   const signal = options.signal;
   const handle = await open(archive, "r");
   try {
-    const directory = await hxZipEntries(handle);
-    hxCheckEntries(directory);
+    const all = await hxZipEntries(handle);
+    hxCheckEntries(all);
+    // A Mac's metadata files are not unpacked (hxMacMetadata); the rest of the archive is.
+    const directory = { ...all, entries: all.entries.filter((entry) => !entry.path || !hxMacMetadata(entry.path)) };
+    const metadata = all.entries.length - directory.entries.length;
     const realRoot = await realpath(root);
     const targetOf = (path: string) => join(realRoot, ...path.split("/"));
     const needed = new Set<string>();
@@ -759,7 +785,7 @@ export async function hxUnzipTo(
       for (const folder of made.reverse()) await rmdir(folder).catch(() => undefined);
       throw error;
     }
-    return { files, folders, skippedLinks };
+    return { files, folders, skippedLinks, metadata };
   } finally {
     await handle.close();
   }

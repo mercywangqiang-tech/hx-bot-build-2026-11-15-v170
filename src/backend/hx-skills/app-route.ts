@@ -6,7 +6,7 @@
 // 不拼进脚本文字，路径里有引号或特殊字符也不会变成命令。
 import { randomBytes } from "node:crypto";
 import { copyFile, mkdtemp, rm, stat } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { basename, extname, join } from "node:path";
 import { type HxRunner, hxRunFailure, hxRunOk } from "../hx-computer/runner";
 import { HX_POWERSHELL } from "../hx-computer/tables-win";
@@ -145,7 +145,10 @@ function iworkScript(app: string, as: string): string {
 /**
  * Microsoft Office for Mac, through its AppleScript dictionaries. AppleScript reaches the instance the
  * user may have open: HXBot opens its copy read-only, closes only that document, puts back the alerts
- * setting it changed, and quits only an app that it started itself.
+ * setting it changed, and quits only an app that it started itself. Word's and PowerPoint's `open`
+ * return nothing and may finish a moment later, so the script waits for the new document (at most 20 s)
+ * and takes it as the front one. Excel tries its own `open workbook` first, then the plain `open`.
+ * (Found on a real Mac, v1.7.4: Word answered “theDoc is not defined”, PowerPoint “no result”.)
  */
 function macOfficeScript(app: string, documents: string, work: readonly string[], close: string): string {
   return [
@@ -154,6 +157,7 @@ function macOfficeScript(app: string, documents: string, work: readonly string[]
     `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
     ...(app === "Microsoft Excel" ? ["  set oldAlerts to display alerts", "  set display alerts to false"] : []),
+    `  set countBefore to count of ${documents}`,
     "  try",
     ...work.map((line) => `    ${line}`),
     `    ${close}`,
@@ -171,6 +175,15 @@ function macOfficeScript(app: string, documents: string, work: readonly string[]
   ].join("\n");
 }
 
+/** Lines that wait (at most 20 s) until `documents` has one more than `before`. */
+const waitForOne = (documents: string) => [
+  "repeat 100 times",
+  `  if (count of ${documents}) > countBefore then exit repeat`,
+  "  delay 0.2",
+  "end repeat",
+  `if (count of ${documents}) is not greater than countBefore then error "The file did not open." number -43`,
+];
+
 const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
   xlsx: {
     app: "Microsoft Excel",
@@ -178,7 +191,13 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "Microsoft Excel",
       "workbooks",
       [
-        "set wb to open workbook workbook file name (POSIX file inPath as text) read only true",
+        "try",
+        "  set wb to open workbook workbook file name (POSIX file inPath as text) read only true",
+        "on error",
+        "  open (POSIX file inPath as alias)",
+        ...waitForOne("workbooks").map((line) => `  ${line}`),
+        "  set wb to active workbook",
+        "end try",
         "save workbook as wb filename (POSIX file outPath as text) file format Excel XML file format",
       ],
       "close wb saving no",
@@ -190,7 +209,9 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "Microsoft Word",
       "documents",
       [
-        "set theDoc to open file name (POSIX file inPath as text) with read only",
+        "open file name (POSIX file inPath as text) with read only",
+        ...waitForOne("documents"),
+        "set theDoc to active document",
         "save as theDoc file name (POSIX file outPath as text) file format format document",
       ],
       "close theDoc saving no",
@@ -203,6 +224,7 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "presentations",
       [
         "open (POSIX file inPath as alias)",
+        ...waitForOne("presentations"),
         "set thePres to active presentation",
         "save thePres in (POSIX file outPath as text) as save as Open XML presentation",
       ],
@@ -210,6 +232,19 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
     ),
   },
 };
+
+/**
+ * Office for Mac is sandboxed: it opens and saves only what it may reach, and a script cannot grant it
+ * more (a copy in the temporary folder fails: Excel answers “parameter error”, the others open nothing).
+ * Every Office app may use the Office group container, so the copy goes there, into a folder of its own.
+ */
+async function officeFolder(host: HxAppRouteHost): Promise<string | null> {
+  const home = host.env?.HOME ?? homedir();
+  const group = join(home, "Library", "Group Containers", "UBF8T346G9.Office");
+  const info = await stat(group).catch(() => null);
+  if (!info?.isDirectory()) return null;
+  return mkdtemp(join(group, "HXBot-")).catch(() => null);
+}
 
 /** The ProgIDs on Windows: Microsoft Office first, then WPS Office. */
 const WINDOWS_APPS: Record<HxModernType, string[]> = {
@@ -323,9 +358,19 @@ export async function hxConvertWithApp(
     const attempts = extension === iwork.from ? [{ app: iwork.app, script: iworkScript(iwork.app, iwork.as) }] : [];
     attempts.push(MAC_OFFICE[to]);
     for (const attempt of attempts) {
-      const result = await osascript(host, attempt.script, env);
-      if (hxRunOk(result) && (await fileThere(host, output))) return { ok: true, app: attempt.app, path: output };
-      reasons.push(hxRunFailure(attempt.app, result));
+      const office = attempt.app.startsWith("Microsoft ") ? await officeFolder(host) : null;
+      try {
+        const here = office ? { HX_IN: join(office, basename(input)), HX_OUT: join(office, basename(output)) } : env;
+        if (office) await copyFile(input, here.HX_IN);
+        const result = await osascript(host, attempt.script, here);
+        if (hxRunOk(result) && (await fileThere(host, here.HX_OUT))) {
+          if (office) await copyFile(here.HX_OUT, output);
+          return { ok: true, app: attempt.app, path: output };
+        }
+        reasons.push(hxRunFailure(attempt.app, result));
+      } finally {
+        if (office) await rm(office, { recursive: true, force: true });
+      }
     }
   } else if (host.platform === "win32") {
     for (const app of WINDOWS_APPS[to]) {

@@ -5,8 +5,9 @@
 // 读回和期望一致才算“一致”；技能说做了但读回对不上的，标“待核实”。
 // 系统设置的改动只在 settingsChanges 为真时做（GitHub 用完即毁的机器、或本机的假电脑），用户的电脑上只读和打开。
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, readdir, readFile, stat, utimes, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { copyFile, cp, mkdir, mkdtemp, readdir, readFile, rm, stat, utimes, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { extname, join } from "node:path";
 import { deflateSync } from "node:zlib";
 import type { HxSettingValues } from "@hxbot/contracts/hx-computer";
 import { HxDocument } from "../hx-files/docx";
@@ -17,6 +18,7 @@ import { HxPresentation } from "../hx-files/pptx";
 import { HxFileVersions } from "../hx-files/versions";
 import { HxWorkbook } from "../hx-files/xlsx";
 import { crc32, HxZip } from "../hx-files/zip";
+import { hxMacMetadata } from "../hx-files/zip-stream";
 import type { HxAppRouteHost } from "./app-route";
 import type { HxSkillName } from "./declarations";
 import type { HxJson, HxSkillArgs } from "./operations";
@@ -1234,7 +1236,9 @@ const PDF: Sample[] = [
     setup: async (c) => writeFile(c.file("发票.pdf"), invoice()),
     args: (c) => ({ action: "split", files: [c.relFile("发票.pdf")], output: c.relFile("拆开"), params: { every: 1 } }),
     check: async (c) => {
-      const names = (await readdir(c.file("拆开"))).filter((name) => name.endsWith(".pdf")).sort();
+      const names = (await readdir(c.file("拆开")))
+        .filter((name) => name.endsWith(".pdf") && !hxMacMetadata(name))
+        .sort();
       const counts = await Promise.all(names.map(async (name) => (await pdfPages(join(c.file("拆开"), name))).length));
       c.note.parts = names;
       return all(is("文件数", names.length, 3), is("每份页数", counts, [1, 1, 1]));
@@ -1259,7 +1263,9 @@ const PDF: Sample[] = [
       params: { ranges: ["1", "2-3"] },
     }),
     check: async (c) => {
-      const names = (await readdir(c.file("两份"))).filter((name) => name.endsWith(".pdf")).sort();
+      const names = (await readdir(c.file("两份")))
+        .filter((name) => name.endsWith(".pdf") && !hxMacMetadata(name))
+        .sort();
       const counts = await Promise.all(names.map(async (name) => (await pdfPages(join(c.file("两份"), name))).length));
       return all(is("文件数", names.length, 2), is("每份页数（按名字排）", [...counts].sort(), [1, 2]));
     },
@@ -1353,6 +1359,8 @@ const PDF: Sample[] = [
 async function tree(dir: string, base = ""): Promise<string[]> {
   const out: string[] = [];
   for (const entry of await readdir(join(dir, base), { withFileTypes: true })) {
+    // A Mac on exFAT writes “._name” beside each file; that is the disk's, not the task's.
+    if (hxMacMetadata(entry.name)) continue;
     const rel = base ? `${base}/${entry.name}` : entry.name;
     if (entry.isDirectory()) out.push(`${rel}/`, ...(await tree(dir, rel)));
     else out.push(rel);
@@ -1809,7 +1817,11 @@ async function appAsBefore(c: Context, app: string | null): Promise<Check> {
   return is(`${app} 运行着`, now, c.note.appBefore);
 }
 
-/** Saves a modern file as Keynote, Numbers or Pages does (a Mac with the app): the fixture of an iWork task. */
+/**
+ * Saves a modern file as Keynote, Numbers or Pages does (a Mac with the app): the fixture of an iWork
+ * task. AppleScript reads the environment in the system's old encoding, so the paths it gets are ASCII:
+ * the copy is made in a temporary folder and moved into the task's folder afterwards.
+ */
 async function iworkCopy(c: Context, app: string, from: string, to: string): Promise<void> {
   const run = c.apps?.run;
   if (!run) throw new Error("没有可以用的应用。");
@@ -1824,13 +1836,22 @@ async function iworkCopy(c: Context, app: string, from: string, to: string): Pro
     "  if not wasRunning and (count of documents) is 0 then quit saving no",
     "end tell",
   ].join("\n");
-  await copyFile(join(c.fixtures, from), c.file(from));
-  const result = await run("osascript", ["-e", script], {
-    timeoutMs: 180_000,
-    env: { HX_IN: c.file(from), HX_OUT: c.file(to) },
-  });
-  if (result.code !== 0 || !(await exists(c.file(to))))
-    throw new Error(`${app} 没能存出 ${to}：${result.stderr.slice(0, 200)}`);
+  const temp = await mkdtemp(join(tmpdir(), "hxbot-iwork-"));
+  try {
+    const input = join(temp, `in${extname(from)}`);
+    const output = join(temp, `out${extname(to)}`);
+    await copyFile(join(c.fixtures, from), input);
+    const result = await run("osascript", ["-e", script], {
+      timeoutMs: 180_000,
+      env: { HX_IN: input, HX_OUT: output },
+    });
+    if (result.code !== 0 || !(await exists(output)))
+      throw new Error(`${app} 没能存出 ${to}：${result.stderr.slice(0, 200)}`);
+    // An iWork file may be a folder (a package) or a single file.
+    await cp(output, c.file(to), { recursive: true });
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
 }
 
 const APPS: Sample[] = [
