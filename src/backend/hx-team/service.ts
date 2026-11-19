@@ -15,7 +15,16 @@ import { createHash, randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { HxAutoModelSettings, HxDifficulty, HxModelRef, HxNeed, HxWorkType } from "@hxbot/contracts/hx-auto-model";
-import { type HxProgressCard, type HxProgressStep, hxProgressText } from "@hxbot/contracts/hx-progress";
+import {
+  HX_TEAM_CARD_ID_PREFIX,
+  type HxProgressCard,
+  type HxProgressStep,
+  type HxSetTeamPriorityInput,
+  type HxSetTeamPriorityResult,
+  type HxTeamPriority,
+  hxProgressText,
+  hxTeamCardTeamId,
+} from "@hxbot/contracts/hx-progress";
 import {
   AVATAR_HUES,
   CHANNEL_CHANGE_ITEM_TYPE,
@@ -366,6 +375,44 @@ export class HxTeams {
   }
 
   /** v1.7.4 (CONC-09): writes the card of each running team whose text changed. It never throws. */
+  /** v1.7.1 (CONC-03): the weight of the team in the queue, until it ends; the starter's chat says so. */
+  #setPriority(port: HxTeamPort, team: HxTeamRecord, level: HxTeamPriority): void {
+    if (level === "normal") delete team.weight;
+    else team.weight = level;
+    hxFlow.shares.setWeight(
+      team.id,
+      level === "urgent" ? HX_FLOW_URGENT_WEIGHT : level === "relaxed" ? HX_FLOW_RELAXED_WEIGHT : 1,
+    );
+    this.#save(team);
+    port.note(
+      team.starterAgentId,
+      sourceText(
+        level === "urgent"
+          ? "status.agent.hxTeam.priority.urgent"
+          : level === "relaxed"
+            ? "status.agent.hxTeam.priority.relaxed"
+            : "status.agent.hxTeam.priority.normal",
+      ),
+    );
+    this.#writeCard(team, true);
+  }
+
+  /**
+   * v1.7.4 (CONC-09): the switch “这件更急 / 普通 / 不急” on a team's progress card. Only the chat that
+   * shows the card (the starter's) changes it, and only while the team runs; the same level again
+   * changes nothing and writes no line.
+   */
+  setPriorityFromCard(input: HxSetTeamPriorityInput): HxSetTeamPriorityResult {
+    const port = this.#port;
+    const teamId = hxTeamCardTeamId(input.messageId);
+    const team = teamId ? this.store.get(teamId) : null;
+    if (!port || !team || team.starterAgentId !== input.agentId) return { status: "missing" };
+    if (team.state !== "running") return { status: "ended" };
+    if ((team.weight ?? "normal") === input.priority) return { status: "unchanged", priority: input.priority };
+    this.#setPriority(port, team, input.priority);
+    return { status: "changed", priority: input.priority };
+  }
+
   refreshCards(): void {
     for (const team of this.store.running()) {
       this.#overloadMembers(team);
@@ -750,25 +797,8 @@ export class HxTeams {
       return answer({ status: "stopped", team: this.#summary(team) });
     }
     if (input.action === "priority") {
-      // v1.7.1 (CONC-03): the weight of the team in the queue, until it ends.
       const level = input.level ?? "normal";
-      if (level === "normal") delete team.weight;
-      else team.weight = level;
-      hxFlow.shares.setWeight(
-        team.id,
-        level === "urgent" ? HX_FLOW_URGENT_WEIGHT : level === "relaxed" ? HX_FLOW_RELAXED_WEIGHT : 1,
-      );
-      this.#save(team);
-      port.note(
-        team.starterAgentId,
-        sourceText(
-          level === "urgent"
-            ? "status.agent.hxTeam.priority.urgent"
-            : level === "relaxed"
-              ? "status.agent.hxTeam.priority.relaxed"
-              : "status.agent.hxTeam.priority.normal",
-        ),
-      );
+      this.#setPriority(port, team, level);
       return answer({ status: "changed", priority: level });
     }
     if (input.action === "continue" || input.action === "finish") {
@@ -1892,7 +1922,7 @@ export class HxTeams {
 
 /** The id of a team's progress card in the starter's chat. */
 export function hxTeamCardId(teamId: string): string {
-  return `hx-team-card-${teamId}`;
+  return `${HX_TEAM_CARD_ID_PREFIX}${teamId}`;
 }
 
 /**

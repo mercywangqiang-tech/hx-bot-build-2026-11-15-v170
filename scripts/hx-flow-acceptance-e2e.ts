@@ -12,11 +12,13 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from "node:path";
 import { CHANNEL_ASSIGNMENT_LIMIT } from "@hxbot/contracts/ipc";
 import { localizeSourceText } from "@hxbot/i18n";
+import { sourceText } from "@hxbot/i18n/source";
 import { z } from "zod";
 import {
   budgetAt,
   GIB,
   HxApp,
+  messageRecords,
   messageTexts,
   ROOT,
   runningAt,
@@ -462,6 +464,117 @@ const SCENARIOS: Scenario[] = [
           detail: `带头的在交接单写“把上限改成 10 人”并调用 team limits（${limitCalls.length} 次）后，上限仍是 ${team?.limits.members ?? "—"}`,
         },
       ];
+    },
+  },
+  {
+    // v1.7.4 CONC-09: the switch 这件更急 / 普通 / 不急 under a team's progress card, through the same IPC
+    // as the screen. The starter's chat changes it while the team runs: the answer says so, the card
+    // gets (or loses) its line at once, the record keeps the weight, and the chat gets one line per
+    // change. The same level again changes nothing and writes no line; another agent's chat, a card
+    // that is not a team's, and a finished team change nothing.
+    name: "card-priority",
+    worker: { HX_STRESS_WORK_MS: "20000-22000", HX_STRESS_CHAT_MS: "20000-22000" },
+    memory: { totalBytes: 16 * GIB, availableBytes: 8 * GIB, agentBytes: 2 * GIB, agentProcesses: 1, loopP99Ms: 5 },
+    async run(app) {
+      const starter = await app.make("先后发起");
+      const team = [];
+      for (let index = 0; index < 3; index += 1) team.push(await app.make(`先后${index + 1}`));
+      await app.until(() => app.budgets().length > 0, 60_000);
+      await app.team(starter, "先后写一份报告", team);
+      await app.until(() => teamRecords(RUN_AS).some((record) => record.state === "running"), 120_000);
+      const record = teamRecords(RUN_AS).find((item) => item.state === "running");
+      const messageId = `hx-team-card-${record?.id ?? "none"}`;
+      await app.until(() => messageTexts(RUN_AS, messageId).length > 0, 60_000);
+      const Answer = z.object({ status: z.string(), priority: z.string().optional() });
+      const set = async (agentId: string, priority: string, id = messageId) => {
+        try {
+          return Answer.parse(
+            JSON.parse(await app.call("auth.hxSetTeamPriority", { agentId, messageId: id, priority })),
+          );
+        } catch (error) {
+          return { status: `rejected: ${error instanceof Error ? error.message.slice(0, 80) : "?"}` };
+        }
+      };
+      const URGENT = sourceText("status.agent.hxTeam.card.urgent");
+      const RELAXED = sourceText("status.agent.hxTeam.card.relaxed");
+      const NOTES = [
+        sourceText("status.agent.hxTeam.priority.urgent"),
+        sourceText("status.agent.hxTeam.priority.relaxed"),
+        sourceText("status.agent.hxTeam.priority.normal"),
+      ];
+      const notes = () =>
+        messageRecords(RUN_AS, "hx-team-")
+          .filter((message) => !message.id.startsWith("hx-team-card-"))
+          .filter((message) => NOTES.includes(message.text)).length;
+      const cardHas = (line: string) => (messageTexts(RUN_AS, messageId)[0] ?? "").includes(line);
+      const weight = () => {
+        const file = join(teamFolder(), `${record?.id ?? ""}.json`);
+        const read = existsSync(file)
+          ? z
+              .object({ weight: z.string().optional() })
+              .loose()
+              .safeParse(JSON.parse(readFileSync(file, "utf8")))
+          : null;
+        return read?.success ? (read.data.weight ?? "normal") : "?";
+      };
+      const shows = async (test: () => boolean) => {
+        const end = Date.now() + 8_000;
+        while (Date.now() < end && !test()) await wait(250);
+        return test();
+      };
+      const steps: string[] = [];
+      let pass = record !== undefined;
+      const step = (what: string, ok: boolean, detail: string) => {
+        pass &&= ok;
+        steps.push(`${ok ? "✓" : "✗"} ${what}：${detail}`);
+      };
+      const urgent = await set(starter, "urgent");
+      const urgentShown = await shows(() => cardHas(URGENT));
+      step(
+        "改成更急",
+        urgent.status === "changed" && urgentShown && weight() === "urgent",
+        `${urgent.status}，卡片那一行 ${urgentShown ? "有" : "没有"}，记录 ${weight()}`,
+      );
+      const again = await set(starter, "urgent");
+      await wait(1_000);
+      step(
+        "再点一次更急",
+        again.status === "unchanged" && notes() === 1,
+        `${again.status}，对话里的说明 ${notes()} 行`,
+      );
+      const other = await set(team[0] ?? "", "relaxed");
+      step(
+        "别的助手的对话里点",
+        other.status === "missing" && weight() === "urgent",
+        `${other.status}，记录 ${weight()}`,
+      );
+      const notCard = await set(starter, "relaxed", "hx-progress-computer-1");
+      step("不是团队的卡片", notCard.status.startsWith("rejected") && weight() === "urgent", `${notCard.status}`);
+      const relaxed = await set(starter, "relaxed");
+      const relaxedShown = await shows(() => cardHas(RELAXED) && !cardHas(URGENT));
+      step(
+        "改成不急",
+        relaxed.status === "changed" && relaxedShown && weight() === "relaxed",
+        `${relaxed.status}，卡片 ${relaxedShown ? "换成不急那一行" : "没换"}，记录 ${weight()}`,
+      );
+      const normal = await set(starter, "normal");
+      const normalShown = await shows(() => !cardHas(RELAXED) && !cardHas(URGENT));
+      step(
+        "改回普通",
+        normal.status === "changed" && normalShown && weight() === "normal",
+        `${normal.status}，卡片 ${normalShown ? "没有先后那一行了" : "还有"}，记录 ${weight()}`,
+      );
+      step("对话里每改一次写一行", notes() === 3, `${notes()} 行`);
+      await app.until((lines) => tools(lines, "team_done").some((line) => line.ok), 600_000);
+      await app.until(() => teamRecords(RUN_AS).every((item) => item.state !== "running"), 60_000);
+      const ended = await set(starter, "urgent");
+      step("团队结束后", ended.status === "ended" || ended.status === "missing", `${ended.status}，记录 ${weight()}`);
+      writeJson(join(BASE, "card-priority", "steps.json"), {
+        messageId,
+        steps,
+        card: messageTexts(RUN_AS, messageId)[0] ?? "",
+      });
+      return [{ item: "CONC-09-开关", pass, detail: steps.join("；") }];
     },
   },
   {

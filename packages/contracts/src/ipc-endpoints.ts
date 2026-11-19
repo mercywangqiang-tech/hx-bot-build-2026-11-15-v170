@@ -12,6 +12,7 @@ import type {
   HxOcKeyInput,
   HxOcMethodInput,
 } from "./hx-opencode";
+import type { HxSetTeamPriorityInput, HxSetTeamPriorityResult } from "./hx-progress";
 import type {
   AcpRegistryEntry,
   AcpRegistryInstallation,
@@ -1595,6 +1596,8 @@ export const IPC_ENDPOINTS = {
     hxRestoreFileChange: request<HxRestoreFileChangeInput, HxRestoreFileChangeResult>()("auth:hx-restore-file-change"),
     hxFileVersionsView: request<undefined, HxFileVersionsView>()("auth:hx-file-versions-view"),
     hxFileVersionsSetCap: request<number | null, HxFileVersionsView>()("auth:hx-file-versions-set-cap"),
+    // HXBot (v1.7.4, CONC-09): 这件更急 / 普通 / 不急 on a team's progress card (hx-team).
+    hxSetTeamPriority: request<HxSetTeamPriorityInput, HxSetTeamPriorityResult>()("auth:hx-set-team-priority"),
     revokeMobileConnectedDevice: request<string, void>()("auth:revoke-mobile-connected-device"),
     logout: request<undefined, CentralAuthState>()("auth:logout"),
     // Company sign-in. `openCompanySignIn` opens the provider page again for the email in the state.

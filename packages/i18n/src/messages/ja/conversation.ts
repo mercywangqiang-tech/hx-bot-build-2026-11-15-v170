@@ -217,4 +217,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "変更を表示（{count}）",
   "conversation.hx.fileChange.hide": "変更を隠す",
   "conversation.hx.fileChange.remote": "このエージェントを動かしているコンピューターで戻せます。",
+  "conversation.hx.teamPriority.label": "優先度",
+  "conversation.hx.teamPriority.urgent": "急ぐ",
+  "conversation.hx.teamPriority.normal": "普通",
+  "conversation.hx.teamPriority.relaxed": "急がない",
+  "conversation.hx.teamPriority.ended": "チームは終了しました。",
+  "conversation.hx.teamPriority.remote": "このチームを実行しているコンピューターで変更できます。",
+  "conversation.hx.teamPriority.failed": "変更できませんでした: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

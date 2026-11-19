@@ -219,4 +219,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "Wijzigingen tonen ({count})",
   "conversation.hx.fileChange.hide": "Wijzigingen verbergen",
   "conversation.hx.fileChange.remote": "Je kunt het terugzetten op de computer waarop deze agent draait.",
+  "conversation.hx.teamPriority.label": "Hoe dringend",
+  "conversation.hx.teamPriority.urgent": "Dringender",
+  "conversation.hx.teamPriority.normal": "Normaal",
+  "conversation.hx.teamPriority.relaxed": "Niet dringend",
+  "conversation.hx.teamPriority.ended": "Het team is klaar.",
+  "conversation.hx.teamPriority.remote": "Je kunt het wijzigen op de computer waarop dit team draait.",
+  "conversation.hx.teamPriority.failed": "Kon het niet wijzigen: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

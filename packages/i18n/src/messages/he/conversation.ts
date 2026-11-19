@@ -222,4 +222,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "להציג את השינויים ({count})",
   "conversation.hx.fileChange.hide": "להסתיר את השינויים",
   "conversation.hx.fileChange.remote": "אפשר לשחזר במחשב שמריץ את הסוכן הזה.",
+  "conversation.hx.teamPriority.label": "דחיפות",
+  "conversation.hx.teamPriority.urgent": "דחוף יותר",
+  "conversation.hx.teamPriority.normal": "רגיל",
+  "conversation.hx.teamPriority.relaxed": "לא דחוף",
+  "conversation.hx.teamPriority.ended": "הצוות סיים.",
+  "conversation.hx.teamPriority.remote": "אפשר לשנות זאת במחשב שמריץ את הצוות הזה.",
+  "conversation.hx.teamPriority.failed": "לא ניתן לשנות: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

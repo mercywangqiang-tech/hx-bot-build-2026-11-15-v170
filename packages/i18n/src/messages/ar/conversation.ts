@@ -228,4 +228,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "عرض التغييرات ({count})",
   "conversation.hx.fileChange.hide": "إخفاء التغييرات",
   "conversation.hx.fileChange.remote": "يمكنك الاستعادة على الحاسوب الذي يشغّل هذا الوكيل.",
+  "conversation.hx.teamPriority.label": "الأولوية",
+  "conversation.hx.teamPriority.urgent": "أكثر إلحاحًا",
+  "conversation.hx.teamPriority.normal": "عادي",
+  "conversation.hx.teamPriority.relaxed": "غير عاجل",
+  "conversation.hx.teamPriority.ended": "انتهى الفريق.",
+  "conversation.hx.teamPriority.remote": "يمكنك تغييرها على الحاسوب الذي يشغّل هذا الفريق.",
+  "conversation.hx.teamPriority.failed": "تعذّر التغيير: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

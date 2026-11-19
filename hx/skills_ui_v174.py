@@ -433,6 +433,13 @@ CONVERSATION_EN = {
     "conversation.hx.fileChange.show": "Show the changes ({count})",
     "conversation.hx.fileChange.hide": "Hide the changes",
     "conversation.hx.fileChange.remote": "You can restore it on the computer that runs this agent.",
+    "conversation.hx.teamPriority.label": "How soon",
+    "conversation.hx.teamPriority.urgent": "More urgent",
+    "conversation.hx.teamPriority.normal": "Normal",
+    "conversation.hx.teamPriority.relaxed": "Not urgent",
+    "conversation.hx.teamPriority.ended": "The team has ended.",
+    "conversation.hx.teamPriority.remote": "You can change it on the computer that runs this team.",
+    "conversation.hx.teamPriority.failed": "Could not change it: {reason}",
 }
 
 CONVERSATION_ZH = {
@@ -444,6 +451,13 @@ CONVERSATION_ZH = {
     "conversation.hx.fileChange.show": "展开改动（{count}）",
     "conversation.hx.fileChange.hide": "收起改动",
     "conversation.hx.fileChange.remote": "在运行这个助手的电脑上可以恢复。",
+    "conversation.hx.teamPriority.label": "先后",
+    "conversation.hx.teamPriority.urgent": "更急",
+    "conversation.hx.teamPriority.normal": "普通",
+    "conversation.hx.teamPriority.relaxed": "不急",
+    "conversation.hx.teamPriority.ended": "这个团队已经结束了。",
+    "conversation.hx.teamPriority.remote": "在运行这个团队的电脑上可以改。",
+    "conversation.hx.teamPriority.failed": "没能改：{reason}",
 }
 
 SETTINGS_EN = {
@@ -539,8 +553,95 @@ def plumbing(r) -> None:
               '    "./hx-file-change": "./src/hx-file-change.ts",\n    "./hx-progress": "./src/hx-progress.ts",\n')
 
 
+# 7. v1.7.4（CONC-09）：团队进度卡下面的“这件更急 / 普通 / 不急”开关（接在上面恢复的那几行后面）
+TEAM_IPC_IMPORT = 'import type { HxSetTeamPriorityInput, HxSetTeamPriorityResult } from "./hx-progress";'
+TEAM_IPC_PAIRS = [
+    ('    hxFileVersionsSetCap: request<number | null, HxFileVersionsView>()("auth:hx-file-versions-set-cap"),\n',
+     '    hxFileVersionsSetCap: request<number | null, HxFileVersionsView>()("auth:hx-file-versions-set-cap"),\n'
+     "    // HXBot (v1.7.4, CONC-09): 这件更急 / 普通 / 不急 on a team's progress card (hx-team).\n"
+     '    hxSetTeamPriority: request<HxSetTeamPriorityInput, HxSetTeamPriorityResult>()("auth:hx-set-team-priority"),\n'),
+]
+TEAM_HANDLER_IMPORTS = [
+    'import { decodeHxSetTeamPriorityInput } from "@hxbot/contracts/hx-progress";',
+    'import { hxTeams } from "../../backend/hx-team/service";',
+]
+TEAM_HANDLER_PAIRS = [
+    ("      hxFileVersionsSetCap: payloadHandler(decodeHxFileVersionCap, (bytes) => hxFileVersionsSetCap(bytes)),\n",
+     "      hxFileVersionsSetCap: payloadHandler(decodeHxFileVersionCap, (bytes) => hxFileVersionsSetCap(bytes)),\n"
+     "      hxSetTeamPriority: payloadHandler(decodeHxSetTeamPriorityInput, (input) => hxTeams.setPriorityFromCard(input)),\n"),
+]
+TEAM_PRELOAD_IMPORT = 'import { decodeHxSetTeamPriorityResult } from "@hxbot/contracts/hx-progress";'
+TEAM_PRELOAD_PAIRS = [
+    ("    hxFileVersionsSetCap: decodeHxFileVersionsView,\n",
+     "    hxFileVersionsSetCap: decodeHxFileVersionsView,\n    hxSetTeamPriority: decodeHxSetTeamPriorityResult,\n"),
+]
+TEAM_PORT_PAIRS = [
+    ('    | "hxFileVersionsSetCap"\n', '    | "hxFileVersionsSetCap"\n    | "hxSetTeamPriority"\n'),
+]
+# 放在上面恢复那一段的第一行前面，不拆开那一段
+TEAM_MOCK_PAIRS = [
+    ('    hxRestoreFileChange: async () => ({ status: "restored" as const }),\n',
+     '    hxSetTeamPriority: async (input: { priority: "urgent" | "normal" | "relaxed" }) => ({\n'
+     '      status: "changed" as const,\n'
+     "      priority: input.priority,\n"
+     "    }),\n"
+     '    hxRestoreFileChange: async () => ({ status: "restored" as const }),\n'),
+]
+TEAM_TIMELINE_IMPORT = 'import { HxTeamPriorityRow } from "./HxTeamPriority";'
+TEAM_TIMELINE_PAIRS = [
+    ("                              <TaskList\n"
+     "                                items={planItems(current(), message()?.streaming === true)}\n"
+     "                                title={planTitle(current())}\n"
+     "                                defaultOpen={untrack(() => initialMessage.streaming === true)}\n"
+     "                              />\n"
+     "                            )}\n"
+     "                          </Show>\n",
+     "                              <TaskList\n"
+     "                                items={planItems(current(), message()?.streaming === true)}\n"
+     "                                title={planTitle(current())}\n"
+     "                                defaultOpen={untrack(() => initialMessage.streaming === true)}\n"
+     "                              />\n"
+     "                            )}\n"
+     "                          </Show>\n"
+     "                          {/* HXBot (v1.7.4, CONC-09): 这件更急 / 普通 / 不急 under a team's progress card. */}\n"
+     "                          <HxTeamPriorityRow\n"
+     "                            message={message() ?? initialMessage}\n"
+     "                            agentId={props.agent?.id}\n"
+     "                            local={!props.runtime}\n"
+     "                          />\n"),
+]
+TEAM_UI_PACKAGE_PAIRS = [
+    ('    "./features/conversation/HxFileChangeCard": "./src/features/conversation/HxFileChangeCard.tsx",\n',
+     '    "./features/conversation/HxTeamPriorityBar": "./src/features/conversation/HxTeamPriorityBar.tsx",\n'
+     '    "./features/conversation/HxFileChangeCard": "./src/features/conversation/HxFileChangeCard.tsx",\n'),
+]
+
+
+def team_priority(r) -> None:
+    brand_rename.add_import(r, IPC_ENDPOINTS, TEAM_IPC_IMPORT)
+    for old, new in TEAM_IPC_PAIRS:
+        r.replace(IPC_ENDPOINTS, old, new)
+    for line in TEAM_HANDLER_IMPORTS:
+        brand_rename.add_import(r, HANDLERS, line)
+    for old, new in TEAM_HANDLER_PAIRS:
+        r.replace(HANDLERS, old, new)
+    brand_rename.add_import(r, PRELOAD, TEAM_PRELOAD_IMPORT)
+    for old, new in TEAM_PRELOAD_PAIRS:
+        r.replace(PRELOAD, old, new)
+    for old, new in TEAM_PORT_PAIRS:
+        r.replace("src/renderer/src/features/account/account-port.ts", old, new)
+    for old, new in TEAM_MOCK_PAIRS:
+        r.replace("src/renderer/src/preview/mock-auth.ts", old, new)
+    brand_rename.add_import(r, TIMELINE, TEAM_TIMELINE_IMPORT)
+    for old, new in TEAM_TIMELINE_PAIRS:
+        r.replace(TIMELINE, old, new)
+    for old, new in TEAM_UI_PACKAGE_PAIRS:
+        r.replace("packages/ui/package.json", old, new)
+
+
 def apply(r) -> None:
     registry(r)
     service(r)
     plumbing(r)
+    team_priority(r)
     text(r)

@@ -222,6 +222,10 @@ export function createMockAuth(options: MockAuthOptions, { emit }: MockRuntime) 
       freeQuota: { blockedUntil: null, usedToday: 0 },
       decisions: [],
     }),
+    hxSetTeamPriority: async (input: { priority: "urgent" | "normal" | "relaxed" }) => ({
+      status: "changed" as const,
+      priority: input.priority,
+    }),
     hxRestoreFileChange: async () => ({ status: "restored" as const }),
     hxFileVersionsView: async () => ({ ...mockFileVersions }),
     hxFileVersionsSetCap: async (bytes: number | null) => {

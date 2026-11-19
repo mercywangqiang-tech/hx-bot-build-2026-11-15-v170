@@ -216,4 +216,11 @@ export const messages = defineMessages("conversation", {
   "conversation.hx.fileChange.show": "Show the changes ({count})",
   "conversation.hx.fileChange.hide": "Hide the changes",
   "conversation.hx.fileChange.remote": "You can restore it on the computer that runs this agent.",
+  "conversation.hx.teamPriority.label": "How soon",
+  "conversation.hx.teamPriority.urgent": "More urgent",
+  "conversation.hx.teamPriority.normal": "Normal",
+  "conversation.hx.teamPriority.relaxed": "Not urgent",
+  "conversation.hx.teamPriority.ended": "The team has ended.",
+  "conversation.hx.teamPriority.remote": "You can change it on the computer that runs this team.",
+  "conversation.hx.teamPriority.failed": "Could not change it: {reason}",
 });

@@ -3,6 +3,7 @@ import { decodeHxAutoModelView } from "@hxbot/contracts/hx-auto-model";
 import { decodeHxComputerStatus, decodeHxSelfTestReport } from "@hxbot/contracts/hx-computer";
 import { decodeHxFileVersionsView, decodeHxRestoreFileChangeResult } from "@hxbot/contracts/hx-file-change";
 import { decodeHxOcAttempt, decodeHxOcAttemptStatus, decodeHxOcCatalog } from "@hxbot/contracts/hx-opencode";
+import { decodeHxSetTeamPriorityResult } from "@hxbot/contracts/hx-progress";
 import { ATTACHMENT_LIMITS, INPUT_LIMITS } from "@hxbot/contracts/input-limits";
 import {
   type AgentIpcRequest,
@@ -982,6 +983,7 @@ const hxbotApi: HxBotDesktopApi = {
     hxRestoreFileChange: decodeHxRestoreFileChangeResult,
     hxFileVersionsView: decodeHxFileVersionsView,
     hxFileVersionsSetCap: decodeHxFileVersionsView,
+    hxSetTeamPriority: decodeHxSetTeamPriorityResult,
     revokeMobileConnectedDevice: decodeVoid,
     logout: decodeCentralAuthState,
     openCompanySignIn: decodeCentralAuthState,

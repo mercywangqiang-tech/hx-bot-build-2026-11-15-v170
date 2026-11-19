@@ -119,3 +119,74 @@
 .hx-file-change[data-restored] .hx-file-change-title {
   color: var(--hxbot-text-secondary);
 }
+
+/* HXBot v1.7.4 (CONC-09): 这件更急 / 普通 / 不急 under a team's progress card, as the sliding tabs look. */
+.hx-team-priority {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  margin-top: var(--hxbot-space-2);
+}
+
+.hx-team-priority-label {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-team-priority-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hxbot-space-0-5);
+  border-radius: var(--hxbot-radius-md);
+  background: var(--hxbot-tabs-bar-bg);
+  box-shadow: inset 0 0 0 1px var(--hxbot-border);
+  padding: var(--hxbot-space-0-5);
+}
+
+.hx-team-priority-option {
+  display: grid;
+}
+
+.hx-team-priority-option-label {
+  display: inline-flex;
+  height: var(--hxbot-control-sm);
+  align-items: center;
+  border-radius: var(--hxbot-radius-sm);
+  padding: 0 var(--hxbot-space-3);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  font-weight: var(--hxbot-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--hxbot-duration-fast) ease,
+    color var(--hxbot-duration-fast) ease;
+}
+
+.hx-team-priority-option-label:hover,
+.hx-team-priority-option[data-checked] .hx-team-priority-option-label {
+  color: var(--hxbot-text-primary);
+}
+
+.hx-team-priority-option[data-checked] .hx-team-priority-option-label {
+  background: var(--hxbot-tabs-pill-bg);
+}
+
+.hx-team-priority-option[data-disabled] .hx-team-priority-option-label {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.hx-team-priority-option:has(input:focus-visible) .hx-team-priority-option-label {
+  box-shadow: var(--hxbot-focus-ring);
+}
+
+.hx-team-priority-message {
+  color: var(--hxbot-text-dim);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-team-priority-message[data-failed] {
+  color: var(--hxbot-danger-text);
+}

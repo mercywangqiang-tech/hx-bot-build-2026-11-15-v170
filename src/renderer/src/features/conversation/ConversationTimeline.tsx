@@ -66,6 +66,7 @@ import { isIncomingAgentMessage } from "./conversation-read-state";
 import { conversationRuntime } from "./conversation-runtime";
 import { useConversationViewScope } from "./conversation-scope";
 import { HxFileChangeRow, isHxFileChangeRow } from "./HxFileChangeRow";
+import { HxTeamPriorityRow } from "./HxTeamPriority";
 import { agentSkillsMode } from "./installed-skills-source";
 import { MarketplaceSuggestionChatCard, marketplaceSuggestionKnown } from "./MarketplaceSuggestionChatCard";
 import { McpSignInChatCard } from "./McpSignInChatCard";
@@ -1163,6 +1164,12 @@ export function ConversationTimeline() {
                               />
                             )}
                           </Show>
+                          {/* HXBot (v1.7.4, CONC-09): 这件更急 / 普通 / 不急 under a team's progress card. */}
+                          <HxTeamPriorityRow
+                            message={message() ?? initialMessage}
+                            agentId={props.agent?.id}
+                            local={!props.runtime}
+                          />
                         </article>
                       </ChatRowBoundary>
                     </div>

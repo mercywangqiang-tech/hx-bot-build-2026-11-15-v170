@@ -217,4 +217,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "변경 내용 보기({count})",
   "conversation.hx.fileChange.hide": "변경 내용 숨기기",
   "conversation.hx.fileChange.remote": "이 에이전트를 실행하는 컴퓨터에서 되돌릴 수 있습니다.",
+  "conversation.hx.teamPriority.label": "우선순위",
+  "conversation.hx.teamPriority.urgent": "더 급함",
+  "conversation.hx.teamPriority.normal": "보통",
+  "conversation.hx.teamPriority.relaxed": "급하지 않음",
+  "conversation.hx.teamPriority.ended": "팀 작업이 끝났습니다.",
+  "conversation.hx.teamPriority.remote": "이 팀을 실행하는 컴퓨터에서 바꿀 수 있습니다.",
+  "conversation.hx.teamPriority.failed": "바꾸지 못했습니다: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

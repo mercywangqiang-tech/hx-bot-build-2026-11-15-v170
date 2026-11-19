@@ -35,6 +35,7 @@ export interface AccountPort {
     | "hxRestoreFileChange"
     | "hxFileVersionsView"
     | "hxFileVersionsSetCap"
+    | "hxSetTeamPriority"
     | "revokeMobileConnectedDevice"
     | "revokeMobileConnectLink"
     | "updateAvatar"

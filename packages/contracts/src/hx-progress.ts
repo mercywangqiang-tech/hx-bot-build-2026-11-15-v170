@@ -56,3 +56,56 @@ export function isHxProgressMessage(
 ): message is { itemType: typeof HX_PROGRESS_ITEM_TYPE; text: string } {
   return isDynamicRecord(message) && message.itemType === HX_PROGRESS_ITEM_TYPE && typeof message.text === "string";
 }
+
+// ------------------------------------------------------------------ v1.7.4 (CONC-09): 这件更急 / 不急
+
+/** The progress card of a team is the message `hx-team-card-<team id>` in the starter's chat. */
+export const HX_TEAM_CARD_ID_PREFIX = "hx-team-card-";
+
+export const HX_TEAM_PRIORITIES = ["urgent", "normal", "relaxed"] as const;
+export type HxTeamPriority = (typeof HX_TEAM_PRIORITIES)[number];
+
+/** The team of a progress card, from the id of its message; null for any other message. */
+export function hxTeamCardTeamId(messageId: string): string | null {
+  if (!messageId.startsWith(HX_TEAM_CARD_ID_PREFIX)) return null;
+  const id = messageId.slice(HX_TEAM_CARD_ID_PREFIX.length);
+  return id.length > 0 && id.length <= 200 ? id : null;
+}
+
+/** The switch on a team's progress card: the agent whose chat shows the card, and the card. */
+export interface HxSetTeamPriorityInput {
+  agentId: string;
+  messageId: string;
+  priority: HxTeamPriority;
+}
+
+export type HxSetTeamPriorityResult =
+  | { status: "changed" | "unchanged"; priority: HxTeamPriority }
+  /** No running team of this agent has this card (another computer's team, or it ended). */
+  | { status: "missing" | "ended" };
+
+const isPriority = (value: unknown): value is HxTeamPriority =>
+  value === "urgent" || value === "normal" || value === "relaxed";
+
+export function decodeHxSetTeamPriorityInput(value: unknown): HxSetTeamPriorityInput {
+  if (
+    !isDynamicRecord(value) ||
+    typeof value.agentId !== "string" ||
+    value.agentId.length === 0 ||
+    value.agentId.length > 200 ||
+    typeof value.messageId !== "string" ||
+    hxTeamCardTeamId(value.messageId) === null ||
+    !isPriority(value.priority)
+  )
+    throw new Error("A team card and a priority are required.");
+  return { agentId: value.agentId, messageId: value.messageId, priority: value.priority };
+}
+
+export function decodeHxSetTeamPriorityResult(value: unknown): HxSetTeamPriorityResult {
+  if (isDynamicRecord(value)) {
+    if ((value.status === "changed" || value.status === "unchanged") && isPriority(value.priority))
+      return { status: value.status, priority: value.priority };
+    if (value.status === "missing" || value.status === "ended") return { status: value.status };
+  }
+  throw new Error("The answer of the team priority is not valid.");
+}

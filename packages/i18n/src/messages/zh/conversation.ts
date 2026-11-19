@@ -214,4 +214,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "展开改动（{count}）",
   "conversation.hx.fileChange.hide": "收起改动",
   "conversation.hx.fileChange.remote": "在运行这个助手的电脑上可以恢复。",
+  "conversation.hx.teamPriority.label": "先后",
+  "conversation.hx.teamPriority.urgent": "更急",
+  "conversation.hx.teamPriority.normal": "普通",
+  "conversation.hx.teamPriority.relaxed": "不急",
+  "conversation.hx.teamPriority.ended": "这个团队已经结束了。",
+  "conversation.hx.teamPriority.remote": "在运行这个团队的电脑上可以改。",
+  "conversation.hx.teamPriority.failed": "没能改：{reason}",
 } as const satisfies PartialTranslation<typeof source>;

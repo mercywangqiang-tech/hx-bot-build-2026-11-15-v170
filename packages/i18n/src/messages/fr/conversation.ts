@@ -220,4 +220,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "Afficher les modifications ({count})",
   "conversation.hx.fileChange.hide": "Masquer les modifications",
   "conversation.hx.fileChange.remote": "Vous pouvez le rétablir sur l'ordinateur qui exécute cet agent.",
+  "conversation.hx.teamPriority.label": "Priorité",
+  "conversation.hx.teamPriority.urgent": "Plus urgent",
+  "conversation.hx.teamPriority.normal": "Normal",
+  "conversation.hx.teamPriority.relaxed": "Pas urgent",
+  "conversation.hx.teamPriority.ended": "L’équipe a terminé.",
+  "conversation.hx.teamPriority.remote": "Vous pouvez le changer sur l’ordinateur qui exécute cette équipe.",
+  "conversation.hx.teamPriority.failed": "Impossible de le changer : {reason}",
 } as const satisfies PartialTranslation<typeof source>;

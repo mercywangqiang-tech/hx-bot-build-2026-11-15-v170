@@ -221,4 +221,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "Показать изменения ({count})",
   "conversation.hx.fileChange.hide": "Скрыть изменения",
   "conversation.hx.fileChange.remote": "Восстановить можно на компьютере, где работает этот агент.",
+  "conversation.hx.teamPriority.label": "Срочность",
+  "conversation.hx.teamPriority.urgent": "Срочнее",
+  "conversation.hx.teamPriority.normal": "Обычно",
+  "conversation.hx.teamPriority.relaxed": "Не срочно",
+  "conversation.hx.teamPriority.ended": "Команда закончила работу.",
+  "conversation.hx.teamPriority.remote": "Изменить это можно на компьютере, на котором работает эта команда.",
+  "conversation.hx.teamPriority.failed": "Не удалось изменить: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

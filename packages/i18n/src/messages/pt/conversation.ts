@@ -218,4 +218,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "Mostrar as alterações ({count})",
   "conversation.hx.fileChange.hide": "Ocultar as alterações",
   "conversation.hx.fileChange.remote": "Você pode restaurar no computador que executa este agente.",
+  "conversation.hx.teamPriority.label": "Prioridade",
+  "conversation.hx.teamPriority.urgent": "Mais urgente",
+  "conversation.hx.teamPriority.normal": "Normal",
+  "conversation.hx.teamPriority.relaxed": "Não urgente",
+  "conversation.hx.teamPriority.ended": "A equipe terminou.",
+  "conversation.hx.teamPriority.remote": "Você pode mudar isso no computador que executa esta equipe.",
+  "conversation.hx.teamPriority.failed": "Não foi possível mudar: {reason}",
 } as const satisfies PartialTranslation<typeof source>;

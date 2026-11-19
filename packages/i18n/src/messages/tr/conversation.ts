@@ -220,4 +220,11 @@ export const messages = {
   "conversation.hx.fileChange.show": "Değişiklikleri göster ({count})",
   "conversation.hx.fileChange.hide": "Değişiklikleri gizle",
   "conversation.hx.fileChange.remote": "Bu ajanı çalıştıran bilgisayarda geri getirebilirsiniz.",
+  "conversation.hx.teamPriority.label": "Öncelik",
+  "conversation.hx.teamPriority.urgent": "Daha acil",
+  "conversation.hx.teamPriority.normal": "Normal",
+  "conversation.hx.teamPriority.relaxed": "Acil değil",
+  "conversation.hx.teamPriority.ended": "Ekip işini bitirdi.",
+  "conversation.hx.teamPriority.remote": "Bunu bu ekibi çalıştıran bilgisayarda değiştirebilirsiniz.",
+  "conversation.hx.teamPriority.failed": "Değiştirilemedi: {reason}",
 } as const satisfies PartialTranslation<typeof source>;
