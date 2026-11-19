@@ -1977,7 +1977,9 @@ const APPS: Sample[] = [
     needsApp: { platform: "mac", app: "Keynote" },
     setup: async (c) => {
       c.note.appBefore = await c.appRunning("Keynote");
-      await iworkCopy(c, "Keynote", "汇报.pptx", "汇报.key");
+      // From the .ppt that LibreOffice made: the generated .pptx has no theme, and Keynote on a real Mac
+      // did not open it (no document for 60 s). A .pptx of PowerPoint has one.
+      await iworkCopy(c, "Keynote", "汇报.ppt", "汇报.key");
     },
     args: (c) => ({
       action: "text",

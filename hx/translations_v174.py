@@ -1121,6 +1121,7 @@ PLACEHOLDERS: dict[str, set[str]] = {
     "status.agent.hxSkill.change.more": {"count"},
     "conversation.hx.fileChange.failed": {"reason"},
     "conversation.hx.fileChange.show": {"count"},
+    "conversation.hx.teamPriority.failed": {"reason"},
     "settings.hxComputer.versions.usage": {"count", "used"},
     "settings.hxComputer.versions.default": {"size"},
 }

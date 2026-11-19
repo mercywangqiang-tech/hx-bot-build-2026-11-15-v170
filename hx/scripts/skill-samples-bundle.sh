@@ -33,4 +33,4 @@ done
 cp "$ROOT/hx/computer-check/skills_crosscheck.py" "$OUT/"
 rm -rf "$OUT/fixtures"
 cp -R "$ROOT/hx/computer-check/fixtures" "$OUT/fixtures"
-echo "$OUT（$(du -sh "$OUT" | cut -f1)）"
+echo "${OUT}（$(du -sh "${OUT}" | cut -f1)）"
