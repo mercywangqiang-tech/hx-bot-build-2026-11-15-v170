@@ -63,10 +63,62 @@ interface Shot {
 /** Newest first. One HOT and one NEW in all. */
 export const SHOTS: Shot[] = [
   {
+    id: "computer-lanes",
+    story: "hxbot-highlights--computer-lanes",
+    version: "0.67.12",
+    tag: "new",
+    title: { zh: "几个助手同时用电脑，你在用时让开", en: "Agents share the computer and step aside for you" },
+    lead: {
+      zh: "每个应用一次一个助手，最多三个应用同时在后台做；你在打字、动鼠标时，要用键盘、鼠标的那一步先停放，你停手 5 秒后自动接着做。每一步都核对，核对过的才算完成。",
+      en: "One agent per app, up to three apps at once in the background. While you type or move the mouse, a step that needs the keyboard or the mouse parks, and goes on when you have stopped for 5 seconds. Every step is checked; only checked steps count as done.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 720,
+    prepare: () => {
+      for (const row of document.querySelectorAll<HTMLElement>(".hx-highlight-frame .agent-step"))
+        row.style.margin = "14px 0";
+      // The chat line wraps as it does in a narrow chat, so all of it shows in the picture.
+      for (const line of document.querySelectorAll<HTMLElement>(".hx-highlight-frame .chat-action-marker-label")) {
+        line.style.whiteSpace = "normal";
+        line.style.flex = "1 1 auto";
+        line.style.minWidth = "0";
+      }
+    },
+    callouts: [
+      {
+        text: {
+          zh: "拿到“文本编辑”这一道：计算器那边同时在做",
+          en: "Took the TextEdit lane; Calculator works at the same time",
+        },
+        closest: ".agent-step",
+        badge: "end",
+        label: { zh: "每个应用一条道", en: "One lane per app" },
+        note: { zh: "等满 30 秒还轮不到就说是谁在用", en: "After 30 s it says who uses the app" },
+      },
+      {
+        text: {
+          zh: "你正在打字：这一步先停放，一个键也没发",
+          en: "You were typing: the step parked, no key sent",
+        },
+        closest: ".agent-step",
+        badge: "end",
+        label: { zh: "你在用时让开", en: "Steps aside for you" },
+        note: { zh: "回复“现在做”马上做，“放弃”就不做", en: "Reply “now” to do it now, “drop” to drop it" },
+      },
+      {
+        text: { zh: "停放后自动续做", en: "Continue parked steps by themselves" },
+        exact: true,
+        closest: ".ui-switch-field",
+        badge: "end",
+        label: { zh: "可以关掉", en: "You can turn it off" },
+        note: { zh: "设置 → Computer Use", en: "Settings › Computer Use" },
+      },
+    ],
+  },
+  {
     id: "team-open",
     story: "hxbot-highlights--team-open",
     version: "0.67.10",
-    tag: "new",
     title: { zh: "多开智能体不卡、团队不设上限", en: "Many agents, no freezes; teams with no limits" },
     lead: {
       zh: "这台电脑同时做几件，HXBot 按可用内存、电池和温度自己算，其余排队；团队不设人数、时长、交接次数上限，分派一律接收。",

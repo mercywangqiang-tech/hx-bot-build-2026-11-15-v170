@@ -1588,6 +1588,8 @@ export const IPC_ENDPOINTS = {
     // HXBot: Agent settings → Auto model (hx-auto-model).
     hxAutoModelView: request<string, HxAutoModelView>()("auth:hx-auto-model-view"),
     hxAutoModelUpdate: request<HxAutoModelUpdate, HxAutoModelView>()("auth:hx-auto-model-update"),
+    // HXBot (v1.7.3): Settings → Computer Use, “停放后自动续做” (hx-computer).
+    hxComputerSetAutoResume: request<boolean, HxComputerStatus>()("auth:hx-computer-set-auto-resume"),
     revokeMobileConnectedDevice: request<string, void>()("auth:revoke-mobile-connected-device"),
     logout: request<undefined, CentralAuthState>()("auth:logout"),
     // Company sign-in. `openCompanySignIn` opens the provider page again for the email in the state.

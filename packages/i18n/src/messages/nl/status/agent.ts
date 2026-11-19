@@ -182,4 +182,12 @@ export const messages = {
     "Team · {percent}% van de abonnementsperiode is gebruikt. Het gaat door; noem een grens om het daar te stoppen.",
   "status.agent.hxTeam.spend.tokens":
     "Team · Tot nu toe ongeveer {millions} miljoen tokens gebruikt (prijs onbekend). Het gaat door.",
+  "status.agent.hxComputer.parked":
+    "Wacht op je: de stap in {app} gaat verder als je {seconds} seconden geen toetsenbord of muis hebt gebruikt en het venster vooraan staat. Antwoord „nu” om het meteen te doen, of „overslaan” om het te laten.",
+  "status.agent.hxComputer.parkedLocked":
+    "Wacht op je: het scherm is vergrendeld. De stap in {app} gaat verder als je ontgrendelt en het venster vooraan staat. Antwoord „nu” om het meteen te doen, of „overslaan” om het te laten.",
+  "status.agent.hxComputer.parkedLong":
+    "De stap in {app} wacht al 30 minuten. Antwoord „nu” om het meteen te doen, of „overslaan” om het te laten.",
+  "status.agent.hxComputer.resume":
+    "(Verzonden door HXBot) De gebruiker is gestopt en {app} staat vooraan: ga verder met de geparkeerde stap. Kijk eerst naar het venster en doe dan de {count} resterende stappen. Vraag het de gebruiker zoals altijd vóór verzenden, betalen of verwijderen.",
 } as const satisfies PartialTranslation<typeof source>;

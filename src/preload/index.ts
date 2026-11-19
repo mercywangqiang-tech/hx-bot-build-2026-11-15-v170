@@ -977,6 +977,7 @@ const hxbotApi: HxBotDesktopApi = {
     hxComputerSelfTest: decodeHxSelfTestReport,
     hxAutoModelView: decodeHxAutoModelView,
     hxAutoModelUpdate: decodeHxAutoModelView,
+    hxComputerSetAutoResume: decodeHxComputerStatus,
     revokeMobileConnectedDevice: decodeVoid,
     logout: decodeCentralAuthState,
     openCompanySignIn: decodeCentralAuthState,

@@ -907,4 +907,7 @@ export const messages = {
     "チーム：人数は作業に合わせて決まり、同時に動く数はこのコンピューターが決めます（現在 {count}）",
   "settings.hxAutoModel.team.descriptionOpen":
     "複数の役割があるカードで「開始」を押すとチームができます。HXBot が得意分野でエージェントを選び、足りない役割のメンバーを作り、チームルームを開きます。進み具合と結果はこの会話に戻ります。チームに上限はありません。進展がないときは一時停止してあなたに確認します。あるチームだけ上限を決めたいときは、会話でそう伝えてください。",
+  "settings.hxComputer.autoResume.title": "保留した手順を自動で続ける",
+  "settings.hxComputer.autoResume.description":
+    "あなたがコンピュータを使っている間、エージェントはキーボードやマウスが必要な手順を保留します。オンのときは、あなたが 5 秒（定期実行は 60 秒）手を止めると自動で続けます。オフのときは「今すぐ」と返信したときだけ続けます。",
 } as const satisfies PartialTranslation<typeof source>;

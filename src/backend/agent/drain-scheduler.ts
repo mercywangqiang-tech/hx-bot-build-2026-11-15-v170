@@ -191,6 +191,12 @@ export class DrainScheduler {
   readonly #channels: ChannelService | undefined;
   readonly #messaging: MessagingThreads | undefined;
   readonly #drainingLanes = new Set<string>();
+  /** HXBot (v1.7.3): reads kept for one pass over the waiting lanes (src/backend/hx-flow/slot-pass.ts). */
+  #hxLanes: ((key: string, read: () => Lane[]) => Lane[]) | null = null;
+  #hxAgents: ((key: string, read: () => AgentSummary[]) => AgentSummary[]) | null = null;
+  #hxRunning: ((key: string, read: () => boolean) => boolean) | null = null;
+  #hxHeld: ((key: string, read: () => string | null) => string | null) | null = null;
+  #hxRetry: ReturnType<typeof setImmediate> | null = null;
   /**
    * Agents whose channel task a spent plan refused and gave back to its channel. Their queue can be
    * empty, so the end of the drain schedules them once: the schedule moves to a backup model.
@@ -284,7 +290,12 @@ export class DrainScheduler {
 
   /** The agent's own chat and its open tasks. */
   #lanesOf(agentId: string): Lane[] {
-    return [mainLane(agentId), ...this.#tasks.openTaskIds(agentId).map((taskId) => ({ agentId, taskId }))];
+    // HXBot (v1.7.3): each read asks SQLite; in a pass over the waiting lanes it is read once per agent.
+    this.#hxLanes ??= this.#slots.memo<Lane[]>();
+    return this.#hxLanes(agentId, () => [
+      mainLane(agentId),
+      ...this.#tasks.openTaskIds(agentId).map((taskId) => ({ agentId, taskId })),
+    ]);
   }
 
   /**
@@ -292,10 +303,14 @@ export class DrainScheduler {
    * with no turn ID, and its turn can still run.
    */
   #laneRunning(lane: Lane): boolean {
-    return (
-      this.#drainingLanes.has(laneKey(lane)) ||
-      this.#laneTurnActive(lane) ||
-      this.#mailbox.laneActive(lane.agentId, lane.taskId)
+    // HXBot (v1.7.3): asked for each lane of an agent by each of its lanes; once per pass.
+    this.#hxRunning ??= this.#slots.memo<boolean>();
+    return this.#hxRunning(
+      laneKey(lane),
+      () =>
+        this.#drainingLanes.has(laneKey(lane)) ||
+        this.#laneTurnActive(lane) ||
+        this.#mailbox.laneActive(lane.agentId, lane.taskId),
     );
   }
 
@@ -321,8 +336,17 @@ export class DrainScheduler {
     });
   }
 
-  /** The first clause of `mayDrain` that holds this lane, or null when none does. */
+  /**
+   * The first clause of `mayDrain` that holds this lane, or null when none does.
+   * HXBot (v1.7.3): a pass over the waiting lanes asks it for each lane two or three times (the
+   * schedule, the slot check, the drain of the agent's chat); in a pass it is read once.
+   */
   #heldBy(lane: Lane): string | null {
+    this.#hxHeld ??= this.#slots.memo<string | null>();
+    return this.#hxHeld(laneKey(lane), () => this.#hxHeldNow(lane));
+  }
+
+  #hxHeldNow(lane: Lane): string | null {
     const { agentId, taskId } = lane;
     if (this.#hooks.isDeleting(agentId)) return "deleting";
     if (this.#settingsHolds.has(agentId)) return "session-settings";
@@ -342,7 +366,9 @@ export class DrainScheduler {
     }
     // The agent's own process restarts when its access or account changed. A turn of another lane
     // runs on it, so this lane waits for that turn to end.
-    const agent = this.#store.list().find((candidate) => candidate.id === agentId);
+    // HXBot (v1.7.3): the list copies every agent; in a pass it is read once.
+    this.#hxAgents ??= this.#slots.memo<AgentSummary[]>();
+    const agent = this.#hxAgents("agents", () => this.#store.list()).find((candidate) => candidate.id === agentId);
     if (
       agent &&
       !this.#providers.agentClientCurrent(agent) &&
@@ -401,16 +427,41 @@ export class DrainScheduler {
   }
 
   /**
+   * HXBot (v1.7.3): `scheduleDrain` for many agents in one pass over the lanes: each schedule reads
+   * every lane, so a loop over 100 agents read them ten thousand times.
+   */
+  scheduleDrains(agentIds: readonly string[]): void {
+    this.#slots.batch(() => {
+      for (const agentId of agentIds) this.#scheduleDrain(agentId);
+    });
+    this.retrySlotWaiters();
+  }
+
+  /**
    * Tries the agents that wait for a turn slot again. Each drain that ends can free a slot, and the
    * memory sample calls this too, for a turn that ended on a path that schedules no drain.
    */
   retrySlotWaiters(): void {
     if (this.#wakingSlotWaiters || this.#slotWaiters.size === 0) return;
+    // HXBot (v1.7.3): the ends and schedules of one burst try the waiting lanes once, on the next turn
+    // of the event loop. Each try reads every lane, and twenty tries in a row held the main process
+    // for 1.7 s in the stress test with an aged profile.
+    this.#hxRetry ??= setImmediate(() => {
+      this.#hxRetry = null;
+      this.#hxRetrySlotWaiters();
+    });
+  }
+
+  #hxRetrySlotWaiters(): void {
+    if (this.#wakingSlotWaiters || this.#slotWaiters.size === 0) return;
     this.#wakingSlotWaiters = true;
     try {
       const waiters = [...this.#slotWaiters];
       this.#slotWaiters.clear();
-      for (const key of waiters) this.#scheduleLane(laneOf(key));
+      // HXBot (v1.7.3): one pass reads each lane once (src/backend/hx-flow/slot-pass.ts).
+      this.#slots.batch(() => {
+        for (const key of waiters) this.#scheduleLane(laneOf(key));
+      });
     } finally {
       this.#wakingSlotWaiters = false;
     }
@@ -501,6 +552,8 @@ export class DrainScheduler {
   }
 
   dispose(): void {
+    if (this.#hxRetry) clearImmediate(this.#hxRetry);
+    this.#hxRetry = null;
     this.#drainingLanes.clear();
     this.#scheduledDrains.clear();
     this.#slotWaiters.clear();

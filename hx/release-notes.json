@@ -137,5 +137,19 @@
       "When HXBot cannot write the record of a permission (for example, when the disk is full), a step that needs your permission does not go ahead, and the agent tells you why.",
       "On a team server, only owners and admins can add an MCP server that runs a command on this computer."
     ]
+  },
+  "0.67.12": {
+    "zh": [
+      "几个助手可以同时用这台电脑，不再互相抢：每个应用一次一个助手，最多三个应用同时在后台做；往最前面打字、点击，整台电脑一次一个。等了 30 秒还轮不到，助手会说是谁在用、大约还要多久，先去做别的。",
+      "你在用电脑时，助手让开：你在打字、动鼠标，或者最前面不是要操作的那个窗口、屏幕锁着，助手先停下这一步，在对话里告诉你；你停手 5 秒、那个窗口在最前面，它自己接着做。回复“现在做”马上做，回复“放弃”就不做了；“设置 → Computer Use”里可以关掉自动续做。",
+      "每一步都核对：输入框能直接填的直接填，填完读回来看；等某个按钮或文字出现最多等 10 秒，没等到就照实说；读不回来的标“待核实”，只有核对过的步骤才算完成。你在这期间复制的内容不会被盖掉。",
+      "修好了几个团队同时排队时可能谁也不开工、你发的消息被久等的定时任务挡住、用久了打开 HXBot 或排队时主程序卡一下的问题；同一个办公网络下多人注册、登录不再被限流。"
+    ],
+    "en": [
+      "Several agents can use this computer at the same time without getting in each other's way: one agent per app, up to three apps at once in the background, and one agent at a time types or clicks in the window in front. When a turn does not come within 30 seconds, the agent says who uses the app and about how long it takes, and does other work first.",
+      "Agents step aside while you use the computer: when you type or move the mouse, or the window to work on is not in front, or the screen is locked, the agent stops that step and tells you in the chat. When you have stopped for 5 seconds and that window is in front, it goes on by itself. Reply “now” to have it done now or “drop” to drop it; turn the automatic resume off in Settings › Computer Use.",
+      "Every step is checked: fields that take text directly get it directly and are read back; a wait for a button or a text lasts at most 10 seconds and says so when it did not show; a step that cannot be read back is marked to check, and only checked steps count as done. What you copy meanwhile stays on the clipboard.",
+      "Fixed: with several teams in the queue, sometimes no work started; a routine that waited long could keep your own message out of its place; after long use, opening the app or the queue could make it stop for seconds. Many people on one office network can register and sign in again without hitting a limit."
+    ]
   }
 }

@@ -142,4 +142,12 @@ export const messages = {
     "Ekip · Plan döneminin %{percent} kadarı kullanıldı. Devam ediyor; orada durdurmak için bir sınır söyleyin.",
   "status.agent.hxTeam.spend.tokens":
     "Ekip · Şimdiye kadar yaklaşık {millions} milyon token kullanıldı (fiyat bilinmiyor). Devam ediyor.",
+  "status.agent.hxComputer.parked":
+    "Sizi bekliyor: {seconds} saniye boyunca klavye ve fare kullanmadığınızda ve penceresi öndeyken {app} içindeki adım devam eder. Hemen yapılması için «şimdi», bırakmak için «bırak» yanıtını verin.",
+  "status.agent.hxComputer.parkedLocked":
+    "Sizi bekliyor: ekran kilitli. Kilidi açtığınızda ve penceresi öndeyken {app} içindeki adım devam eder. Hemen yapılması için «şimdi», bırakmak için «bırak» yanıtını verin.",
+  "status.agent.hxComputer.parkedLong":
+    "{app} içindeki adım 30 dakikadır bekliyor. Hemen yapılması için «şimdi», bırakmak için «bırak» yanıtını verin.",
+  "status.agent.hxComputer.resume":
+    "(HXBot tarafından gönderildi) Kullanıcı durdu ve {app} önde: bekletilen adıma devam et. Önce pencereye bak, sonra kalan {count} adımı yap. Göndermeden, ödemeden veya silmeden önce her zamanki gibi kullanıcıya sor.",
 } as const satisfies PartialTranslation<typeof source>;

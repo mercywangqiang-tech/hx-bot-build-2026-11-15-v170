@@ -63,6 +63,8 @@ const config: KnipConfig = {
     "explorer.exe",
     // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).
     "tasklist.exe",
+    // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.
+    "charmap.exe",
     // Opens the interactive provider sign-in CLI on Linux.
     "xterm",
     // Builds the remote desktop runtime.

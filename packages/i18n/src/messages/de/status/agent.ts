@@ -148,4 +148,12 @@ export const messages = {
     "Team · {percent} % des Planzeitraums sind verbraucht. Es arbeitet weiter; nenne eine Grenze, um es dort zu stoppen.",
   "status.agent.hxTeam.spend.tokens":
     "Team · Bisher etwa {millions} Mio. Tokens verbraucht (Preis unbekannt). Es arbeitet weiter.",
+  "status.agent.hxComputer.parked":
+    "Wartet auf dich: Der Schritt in {app} geht weiter, wenn du {seconds} Sekunden lang weder Tastatur noch Maus benutzt hast und sein Fenster vorne ist. Antworte „jetzt“, damit er sofort erledigt wird, oder „verwerfen“, um ihn zu lassen.",
+  "status.agent.hxComputer.parkedLocked":
+    "Wartet auf dich: Der Bildschirm ist gesperrt. Der Schritt in {app} geht weiter, wenn du entsperrst und sein Fenster vorne ist. Antworte „jetzt“, damit er sofort erledigt wird, oder „verwerfen“, um ihn zu lassen.",
+  "status.agent.hxComputer.parkedLong":
+    "Der Schritt in {app} wartet seit 30 Minuten. Antworte „jetzt“, damit er sofort erledigt wird, oder „verwerfen“, um ihn zu lassen.",
+  "status.agent.hxComputer.resume":
+    "(Von HXBot gesendet) Der Benutzer hat aufgehört, und {app} ist vorne: Setze den geparkten Schritt fort. Sieh dir zuerst das Fenster an, dann erledige die {count} restlichen Schritte. Frage den Benutzer wie immer vor einem Senden, einer Zahlung oder einem Löschen.",
 } as const satisfies PartialTranslation<typeof source>;

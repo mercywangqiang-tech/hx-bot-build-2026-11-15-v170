@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HX_AUTO_DEFAULTS, type HxAutoModelSettings } from "@hxbot/contracts/hx-auto-model";
@@ -549,6 +549,25 @@ describe("the watcher", () => {
     expect(teams.store.get(id)?.guard?.paused).toBeNull();
     await work(26);
     expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+  });
+
+  // v1.7.3: the walk runs in the main process; a folder of packages must not hold the app up.
+  it("reads a team folder with 20,000 package files quickly, and still sees the team's own new file", async () => {
+    const { id } = await started();
+    const shared = teams.store.get(id)?.folder ?? fail();
+    for (let a = 0; a < 20; a += 1) {
+      const deep = join(shared, "node_modules", `pkg${a}`, "lib");
+      mkdirSync(deep, { recursive: true });
+      for (let b = 0; b < 1000; b += 1) writeFileSync(join(deep, `f${b}.js`), "");
+    }
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: id }, null);
+    const started_ = performance.now();
+    await work(10);
+    writeFileSync(join(shared, "report.md"), "the team's own work");
+    await work(25);
+    expect(performance.now() - started_).toBeLessThan(5_000);
+    expect(teams.store.get(id)?.guard?.paused).toBeNull();
   });
 });
 

@@ -510,14 +510,33 @@ export class ConversationRuntime {
    * runs beside these, so its turns are not here: see `anyWorkingSnapshot` and `workingTaskSnapshots`.
    */
   workingSnapshot(agentId: string): ConversationSnapshot | undefined {
-    return [...this.activeSnapshots()].find(
-      ([id, snapshot]) => id === agentId && snapshot.activeTurnId && !this.isTaskThread(snapshot.threadId),
-    )?.[1];
+    // HXBot (v1.7.3): the same answer as a search of `activeSnapshots()`, with no copy of them.
+    return this.#hxFirstSnapshot(
+      agentId,
+      (snapshot) => Boolean(snapshot.activeTurnId) && !this.isTaskThread(snapshot.threadId),
+    );
+  }
+
+  /**
+   * HXBot (v1.7.3): the first snapshot of the agent that `fits`, in the order of `activeSnapshots()`:
+   * the agent's own chat, then the other threads that it serves. The turn slots ask this for each lane
+   * many times a second, and each copy of every snapshot took a third of the main process.
+   */
+  #hxFirstSnapshot(
+    agentId: string,
+    fits: (snapshot: ConversationSnapshot) => boolean,
+  ): ConversationSnapshot | undefined {
+    const own = this.#snapshots.get(agentId);
+    if (own && fits(own)) return own;
+    for (const snapshot of this.#executionSnapshots.values())
+      if (snapshot.agentId === agentId && fits(snapshot)) return snapshot;
+    return undefined;
   }
 
   /** Any running turn of this agent, a task turn included. */
   anyWorkingSnapshot(agentId: string): ConversationSnapshot | undefined {
-    return [...this.activeSnapshots()].find(([id, snapshot]) => id === agentId && snapshot.activeTurnId)?.[1];
+    // HXBot (v1.7.3): no copy of every snapshot for each ask.
+    return this.#hxFirstSnapshot(agentId, (snapshot) => Boolean(snapshot.activeTurnId));
   }
 
   /** The tasks of this agent that run a turn now. */
@@ -529,9 +548,8 @@ export class ConversationRuntime {
 
   /** The snapshot whose running turn this is, in any thread of the agent. */
   snapshotWithTurn(agentId: string, turnId: string): ConversationSnapshot | undefined {
-    return [...this.activeSnapshots()].find(
-      ([id, snapshot]) => id === agentId && snapshot.activeTurnId === turnId,
-    )?.[1];
+    // HXBot (v1.7.3): no copy of every snapshot for each ask.
+    return this.#hxFirstSnapshot(agentId, (snapshot) => snapshot.activeTurnId === turnId);
   }
 
   registerTaskThread(agentId: string, threadId: string): void {

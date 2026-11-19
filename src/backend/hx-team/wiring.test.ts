@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { BUILTIN_TOOL_CATALOG, visibleDynamicTools } from "../agent/tool-catalog";
-import { hxComputerInTurn } from "../hx-computer/computer";
+import { HxComputerLanes, hxAppLane } from "../hx-computer/lanes";
 import { HX_TEAM_TOOL_DEFINITIONS, HX_TEAM_TOOL_NAMES } from "./tools";
 
 // HXBot：协作（二）接进上游的那几处（hx/team.py 写的）：工具目录、工具路由、智能体服务、启动。
@@ -98,30 +98,25 @@ describe("the agent service and the start of the app", () => {
 });
 
 describe("the computer, shared by a team", () => {
-  it("runs one action at a time, in order, also after one that failed", async () => {
-    const order: string[] = [];
-    let release = () => {};
-    const first = hxComputerInTurn(
-      () =>
-        new Promise<string>((done) => {
-          order.push("first starts");
-          release = () => done("first");
-        }),
-    );
-    const second = hxComputerInTurn(async () => {
-      order.push("second starts");
-      throw new Error("no");
-    });
-    const third = hxComputerInTurn(async () => {
-      order.push("third starts");
-      return "third";
+  // v1.7.3 (CONC-05): no longer one line for the whole computer: two apps at once, one app one at a time.
+  it("lets two members work in two apps at once, and one app take one member at a time", async () => {
+    const lanes = new HxComputerLanes();
+    const deadline = Date.now() + 5_000;
+    const a = await lanes.acquire(hxAppLane("TextEdit"), { agentId: "a", tier: 2 }, deadline);
+    const b = await lanes.acquire(hxAppLane("Notes"), { agentId: "b", tier: 2 }, deadline);
+    expect(a.ok && b.ok).toBe(true);
+    let third = false;
+    const c = lanes.acquire(hxAppLane("textedit"), { agentId: "c", tier: 2 }, deadline).then((answer) => {
+      third = answer.ok;
+      return answer;
     });
     await Promise.resolve();
-    expect(order).toEqual(["first starts"]);
-    release();
-    await expect(first).resolves.toBe("first");
-    await expect(second).rejects.toThrow("no");
-    await expect(third).resolves.toBe("third");
-    expect(order).toEqual(["first starts", "second starts", "third starts"]);
+    expect(third).toBe(false);
+    if (a.ok) a.lease.release();
+    const answer = await c;
+    expect(answer.ok).toBe(true);
+    if (answer.ok) answer.lease.release();
+    if (b.ok) b.lease.release();
+    expect(lanes.holders().size).toBe(0);
   });
 });

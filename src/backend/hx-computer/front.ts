@@ -37,6 +37,11 @@ export interface HxClipboardKeep {
 interface HxClipboardSaved {
   /** True when something else is on the clipboard now. */
   changed(): Promise<boolean>;
+  /**
+   * HXBot (v1.7.3, CU-01): true when the clipboard holds this text now, the sign that the driver typed
+   * it through the clipboard. Another text is the user's own copy, made meanwhile, and stays.
+   */
+  holds?(text: string): Promise<boolean>;
   /** Puts the saved copy back. */
   putBack(): Promise<void>;
 }

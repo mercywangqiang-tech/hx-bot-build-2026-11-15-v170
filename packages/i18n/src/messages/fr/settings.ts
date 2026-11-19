@@ -936,4 +936,7 @@ export const messages = {
     "Équipe : des membres selon le travail ; cet ordinateur décide combien travaillent en même temps (maintenant {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Démarrer sur une carte à plusieurs rôles crée une équipe : HXBot choisit les agents selon leurs compétences, crée des membres pour les rôles manquants et ouvre une salle d’équipe. La progression et le résultat reviennent dans cette conversation. Une équipe n’a pas de limites ; si elle n’avance pas, elle se met en pause et vous demande. Pour fixer une limite à une équipe, dites-le dans la conversation.",
+  "settings.hxComputer.autoResume.title": "Reprendre seules les étapes en attente",
+  "settings.hxComputer.autoResume.description":
+    "Quand vous utilisez l’ordinateur, un agent met en attente l’étape qui a besoin du clavier ou de la souris. Activé, l’étape reprend seule après 5 secondes d’arrêt (60 pour les routines). Désactivé, seulement quand vous répondez « maintenant ».",
 } as const satisfies PartialTranslation<typeof source>;

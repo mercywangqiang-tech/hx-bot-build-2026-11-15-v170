@@ -950,4 +950,7 @@ export const messages = {
     "Zespół: członkowie według pracy; ten komputer decyduje, ilu pracuje naraz (teraz {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Start na karcie z kilkoma rolami tworzy zespół: HXBot wybiera agentów według umiejętności, tworzy członków dla brakujących ról i otwiera pokój zespołu. Postęp i wynik wracają do tej rozmowy. Zespół nie ma limitów; gdy nie robi postępów, wstrzymuje się i pyta Ciebie. Aby ustawić limit dla jednego zespołu, powiedz o tym w rozmowie.",
+  "settings.hxComputer.autoResume.title": "Kontynuuj wstrzymane kroki samoczynnie",
+  "settings.hxComputer.autoResume.description":
+    "Gdy używasz komputera, agent wstrzymuje krok, który potrzebuje klawiatury lub myszy. Gdy to jest włączone, krok jest kontynuowany sam po 5 s przerwy (60 s dla rutyn). Gdy wyłączone, tylko gdy odpowiesz „teraz”.",
 } as const satisfies PartialTranslation<typeof source>;

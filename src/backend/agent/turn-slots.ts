@@ -1,5 +1,6 @@
 import type { QueueDelivery } from "@hxbot/contracts/ipc";
 import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
+import { HxSlotPass } from "../hx-flow/slot-pass";
 
 export interface TurnSlotsOptions {
   /** The most turns that run at the same time, or null for no limit. */
@@ -30,9 +31,21 @@ export interface TurnSlotsOptions {
  */
 export class TurnSlots {
   readonly #options: TurnSlotsOptions;
+  /** HXBot (v1.7.3): the reads of one pass over the waiting lanes (src/backend/hx-flow/slot-pass.ts). */
+  readonly #pass = new HxSlotPass();
 
   constructor(options: TurnSlotsOptions) {
-    this.#options = options;
+    this.#options = this.#pass.wrap(options);
+  }
+
+  /** HXBot (v1.7.3): checks several lanes in one pass, and reads each lane once in it. */
+  batch<T>(body: () => T): T {
+    return this.#pass.run(body);
+  }
+
+  /** HXBot (v1.7.3): a read of the scheduler kept for the length of a pass (`batch`). */
+  memo<V>(): (key: string, read: () => V) => V {
+    return this.#pass.memo<V>();
   }
 
   mayStart(lane: string): boolean {

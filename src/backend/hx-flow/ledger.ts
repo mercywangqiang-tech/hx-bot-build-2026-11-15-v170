@@ -15,7 +15,6 @@ import {
   type HxFlowOrderContext,
   HxFlowShares,
   type HxFlowTier,
-  hxFlowCompare,
   hxFlowSort,
 } from "./order";
 
@@ -197,13 +196,18 @@ export class HxFlowLedger {
     this.#waitingLanes = waiting.length + 1;
     const free = limit - running.length - this.#heldForRooms(now);
     if (free <= 0) return false;
-    if (candidate.tier !== 0 && limit >= 3 && this.#otherRunning(running) + this.#heldForRooms(now) >= limit - 1)
-      return false;
-    const context = this.#context(now);
-    const ahead = waiting.filter(
-      (other) => other.lane !== candidate.lane && hxFlowCompare(other, candidate, context) < 0,
+    // A person keeps one place: when it is the last place, only a person's turn may take it.
+    const personOnly = limit >= 3 && this.#otherRunning(running) + this.#heldForRooms(now) >= limit - 1;
+    if (personOnly && candidate.tier !== 0) return false;
+    // HXBot (v1.7.3, stress test): the place of the lane in one order of all the lanes that may start
+    // now. Counting the lanes that go before it, pair by pair, let a cycle of three teams with near
+    // shares (A before B, B before C, C before A) refuse every lane while places stayed free; and a
+    // routine lifted by its age, which cannot take the person's place, kept the person out of it.
+    const lanes = waiting.filter((other) => other.lane !== candidate.lane && (!personOnly || other.tier === 0));
+    const place = hxFlowSort([...lanes, candidate], this.#context(now)).findIndex(
+      (other) => other.lane === candidate.lane,
     );
-    return ahead.length < free;
+    return place >= 0 && place < free;
   }
 
   /** A lane started a delivery. */
@@ -261,6 +265,14 @@ export class HxFlowLedger {
     if (!memoryBound || !waiting || running.length < limit) return;
     this.#idleReleasedAt = now;
     this.#releaseIdle();
+  }
+
+  /**
+   * HXBot (v1.7.3, CONC-05): the tier of an agent's running turn in its own chat, or null when none
+   * runs there. Computer control orders its lanes by it and asks routines for a longer pause of the user.
+   */
+  tierOf(agentId: string): number | null {
+    return this.#running.get(agentId)?.tier ?? null;
   }
 
   /** Whether a turn of the team runs now (its real work, for the guards). */

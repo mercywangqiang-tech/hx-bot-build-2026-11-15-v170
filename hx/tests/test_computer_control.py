@@ -48,17 +48,23 @@ class ComputerControl(unittest.TestCase):
 
     def test_the_instruction_names_the_tools_and_the_page_answer(self):
         text = computer_control.INSTRUCTION
-        self.assertTrue(text.startswith(" "))
         for word in ("hxbot.computer_open", "hxbot.computer_set", "status page", "security page"):
             self.assertIn(word, text)
-        self.assertIn("${COMPUTER_USE_MCP_SERVER_NAME}", text)
         self.assertNotIn("`", text)
-        self.assertNotIn("HXBot", text)
         # 每次对话都发给模型，越短越好；加长之前先看 upstream_checks.py 里登记的字节数。
         # v1.6.7 加了一步步操作应用的一段（computer_plan、computer_do、computer_look）。
-        self.assertLess(len(text), 800)
         for word in ("hxbot.computer_plan", "hxbot.computer_do", "hxbot.computer_look", "sends, pays, buys, deletes"):
             self.assertIn(word, text)
+        # v1.7.3（CONC-05）：只留一个入口。整段换掉上游那一段，不再提原生驱动和它的技能说明。
+        self.assertNotIn("${COMPUTER_USE_MCP_SERVER_NAME}", text)
+        self.assertNotIn("skill://cua-driver", text)
+        self.assertIn("Only a verified step is done.", text)
+        self.assertIn("waiting_user", text)
+        # 比上游那一段（约 1020 个字节）加上 v1.7.2 的那句（约 780 个字节）短
+        self.assertLess(len(text), 1200)
+        upstream = computer_control.UPSTREAM_COMPUTER_USE
+        self.assertTrue(upstream.startswith("Use ${COMPUTER_USE_MCP_SERVER_NAME} for every GUI task"))
+        self.assertTrue(upstream.endswith("before the first GUI action of a conversation."))
 
     def test_the_step_runs_after_the_settings_groups_and_before_the_rename(self):
         source = (HX / "rebrand.py").read_text(encoding="utf-8")

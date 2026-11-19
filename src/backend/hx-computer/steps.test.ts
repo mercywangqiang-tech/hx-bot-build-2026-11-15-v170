@@ -152,7 +152,9 @@ describe("clicking", () => {
     const driver = new FakeDriver();
     const result = await runOn(driver, [{ act: "click", target: { name: "Export", role: "button" } }]);
     expect(result.status).toBe("done");
-    expect(result.steps).toEqual([{ n: 1, act: "click", what: "Export", route: "background", checked: true }]);
+    expect(result.steps).toEqual([
+      { n: 1, act: "click", what: "Export", route: "background", check: "verified", checked: true },
+    ]);
     expect(result.borrowedScreen).toBe(false);
     const click = driver.calls.find((call) => call.tool === "click");
     expect(click?.args).toEqual({
@@ -370,7 +372,8 @@ describe("typing, keys and menus", () => {
     expect(board).toBe("the user's copy");
   });
 
-  it("fails the step when the text does not show in the field", async () => {
+  // v1.7.3 (CU-02): the text may have gone in partly, so the step is pending (待核实), and it is not typed again.
+  it("marks the step pending when the text does not show in the field, and stops there", async () => {
     const driver = new FakeDriver({
       get_window_state: () =>
         ok({
@@ -379,9 +382,16 @@ describe("typing, keys and menus", () => {
         }),
       type_text: () => effect("unverifiable"),
     });
-    const result = await runOn(driver, [{ act: "type", target: { name: "Title" }, text: "季度报告" }]);
-    expect(result.status).toBe("failed");
-    expect(result.stoppedAt?.reason).toContain("did not reach the field");
+    const result = await runOn(driver, [
+      { act: "type", target: { name: "Title" }, text: "季度报告" },
+      { act: "key", key: "return" },
+    ]);
+    expect(result.status).toBe("unsure");
+    expect(result.stoppedAt?.reason).toContain("the field does not show it");
+    expect(result.steps.map((step) => step.check)).toEqual(["pending"]);
+    expect(result.summary).toEqual({ verified: 0, unchecked: 0, pending: 1 });
+    expect(driver.calls.filter((call) => call.tool === "type_text")).toHaveLength(1);
+    expect(driver.calls.some((call) => call.tool === "press_key")).toBe(false);
   });
 
   it("presses keys and chords on the window", async () => {

@@ -53,10 +53,43 @@ function editor(platform: NodeJS.Platform): HxEditor | null {
   return null;
 }
 
-/** Starts `cua-driver serve` as HXBot does, and waits until it answers. */
-async function startDriver(executable: string, platform: NodeJS.Platform) {
+/**
+ * HXBot (v1.7.3): why S5 left the file without the text. Says whether the window shows the text,
+ * which window was in front, and whether a save with the window brought to the front writes it.
+ */
+async function hxCheckWhyUnsaved(
+  run: HxStepRun,
+  driver: HxDriverSocket,
+  file: string,
+  token: string,
+  saveKeys: string[],
+  platform: NodeJS.Platform,
+): Promise<string> {
+  const front = await hxFrontWatch(hxRun, platform)
+    ?.front()
+    .catch(() => null);
+  const window = run.window();
+  const seen = await run.look(token, 4000);
+  const shows = "outline" in seen ? seen.outline.includes(token) : `look: ${seen.error.slice(0, 120)}`;
+  let again = "no window";
+  if (window) {
+    const fronted = await driver.call("bring_to_front", { pid: window.pid, window_id: window.windowId }, 10_000);
+    await wait(1_000);
+    const saved = await run.run([{ act: "hotkey", keys: saveKeys }]);
+    await wait(2_000);
+    const text = await readFile(file, "utf8").catch(() => "");
+    again = `front ${fronted.ok && !fronted.refused ? "ok" : (fronted.error ?? fronted.text).slice(0, 120)}, save ${saved.status}, file has it ${text.includes(token)}`;
+  }
+  return `；原因排查：窗口里有这段文字 ${shows}；当时在最前面 ${JSON.stringify(front)}（目标 ${window ? `${window.pid}/${window.windowId}` : "无"}）；再拉到前面保存一次：${again}`;
+}
+
+/** Starts `cua-driver serve` as HXBot does, and waits until it answers (the lanes check uses it too). */
+export async function hxCheckStartDriver(executable: string, platform: NodeJS.Platform) {
   const address =
-    platform === "win32" ? `\\\\.\\pipe\\hxbot-check-${randomUUID()}` : join(tmpdir(), `hxc-${process.pid}.sock`);
+    platform === "win32"
+      ? `\\\\.\\pipe\\hxbot-check-${randomUUID()}`
+      : // Each start has its own socket: a second start in one run found the first one's file (v1.7.3).
+        join(tmpdir(), `hxc-${process.pid}-${randomUUID().slice(0, 6)}.sock`);
   const child = spawn(executable, ["serve", "--socket", address, "--no-overlay"], {
     env: {
       ...process.env,
@@ -79,10 +112,10 @@ async function startDriver(executable: string, platform: NodeJS.Platform) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     if (child.exitCode !== null) break;
     const answer = await socket.call("list_windows", {}, 5_000);
-    if (answer.ok) return { child, socket, output: () => output, ready: true };
+    if (answer.ok) return { child, socket, address, output: () => output, ready: true };
     await wait(750);
   }
-  return { child, socket, output: () => output, ready: false };
+  return { child, socket, address, output: () => output, ready: false };
 }
 
 export async function hxStepsRealCheck(input: {
@@ -99,7 +132,7 @@ export async function hxStepsRealCheck(input: {
     items.add("S1", "电脑操控驱动", "skip", `这台机器是 ${platform}，逐步操作只在 Mac 和 Windows 上检查`);
     return;
   }
-  const driver = await startDriver(input.driver, platform);
+  const driver = await hxCheckStartDriver(input.driver, platform);
   try {
     if (!items.check("S1", "电脑操控驱动启动并答复（serve --socket）", driver.ready, driver.output().slice(-800)))
       return;
@@ -157,11 +190,16 @@ export async function hxStepsRealCheck(input: {
       JSON.stringify(clip.slice(0, 80)),
     );
     const afterSteps = await readFile(file, "utf8").catch(() => "");
+    // v1.7.3: when the file lacks the text, say why: was the text in the window, which app was in
+    // front, and does a save with the window brought to the front write it?
+    const why = afterSteps.includes(token)
+      ? ""
+      : await hxCheckWhyUnsaved(run, driver.socket, file, token, app.saveKeys, platform);
     items.check(
       "S5",
       "固定步骤：在文字框里输入并保存，文件里有这段文字",
       typed.status === "done" && afterSteps.includes(token),
-      `${typed.status}${typed.stoppedAt ? `：${typed.stoppedAt.reason}` : ""}；${typed.steps.map((step) => `${step.what} [${step.route}${step.checked ? ", checked" : ""}]`).join("；")}；文件：${afterSteps.slice(0, 200)}`,
+      `${typed.status}${typed.stoppedAt ? `：${typed.stoppedAt.reason}` : ""}；${typed.steps.map((step) => `${step.what} [${step.route}${step.checked ? ", checked" : ""}]`).join("；")}；文件：${afterSteps.slice(0, 200)}${why}`,
     );
 
     const risky = await run.run([{ act: "menu", path: ["Edit", "Delete"] }]);

@@ -2,11 +2,58 @@
 title: What's new
 kicker: HXBot Research Edition
 updated: November 18, 2026
-version: Desktop 0.67.11 · Mobile 1.5.0
+version: Desktop 0.67.12 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
 This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.10 on, when HXBot finds a new version as it opens, it downloads and installs it by itself and restarts into it once the assistants are idle; there is nothing to click. The data in the screenshots is demo data.
+
+## Desktop 0.67.12: several agents share the computer, and step aside while you use it {#desktop-0-67-12}
+
+November 18, 2026 · Desktop and web 0.67.12 · Mobile 1.5.0 (no change this time)
+
+> **Highlights**
+> 1. {NEW} Several agents use the computer at the same time without getting in each other's way: one agent per app, up to three apps at once in the background, and one agent at a time types or clicks in the window in front. {on:Desktop}
+> 2. Agents step aside while you use the computer: when you type or move the mouse, or the window to work on is not in front, the agent stops that step, and goes on by itself when you have stopped for 5 seconds. {on:Desktop}
+> 3. Every step is checked: fields that take text directly get it directly and are read back; a wait for a button lasts at most 10 seconds; a step that cannot be read back is marked to check, and only checked steps count as done. {on:Desktop}
+> 4. Fixed: with several teams in the queue, sometimes no work started. Many people on one office network can register and sign in again without hitting a limit. {on:Desktop}
+
+### Several agents on this computer {#desktop-0-67-12-lanes}
+
+![Several agents on the computer: one lane per app; while you type, the step parks and goes on after you stop](/hx-portal/whats-new/computer-lanes.en.jpg)
+
+- **One lane per app:** one agent writes in TextEdit while another calculates in Calculator, both at the same time. One app has one agent at a time, and up to three apps work at once in the background.
+- **One at a time in front:** typing, clicking, scrolling and dragging in the window in front are done by one agent at a time. Opening and closing apps, changing settings, installing apps and running scripts take turns with them, so no window changes under the typing.
+- **It says when it must wait:** a call waits at most 30 seconds. When its turn does not come, the agent learns which agent uses the app and about how long it takes, does the work that does not need that app first, and tries again later.
+- **Your messages first:** the messages that you send to an agent get their turn before handoffs between team members and before routines.
+- **Stop at any time:** press ⌃⌥Esc (Windows: Ctrl+Alt+Esc). Every agent's work on this computer stops before its next step, and the calls that wait stop at once.
+
+### Agents step aside while you use the computer {#desktop-0-67-12-yield}
+
+- **It looks first:** before a step that types or clicks in the window in front, HXBot looks whether you used the keyboard or the mouse in the last 5 seconds (60 seconds for background work such as routines), whether the window to work on is in front, and whether the screen is locked.
+- **It parks the step and says so:** when one of these is not so, it waits a moment, then parks the step. A line in the chat says that it waits for you, and no key of the agent goes into what you type. The agent does the parts of the work that need no keyboard and no mouse first.
+- **It goes on by itself:** when you have stopped for 5 seconds and that window is in front, HXBot sends the agent a message to continue. The agent looks at the window again and does the remaining steps; it still asks you before a send, a payment or a deletion.
+- **“now” and “drop”:** reply “now” in the chat and the agent brings the window to the front and does the step at once; reply “drop” and it does not do it. After 30 minutes, HXBot reminds you once.
+- **You can turn it off:** “Continue parked steps by themselves” in Settings › Computer Use is on by default. When it is off, a parked step goes on only after you reply “now”.
+- **HXBot's own input is not yours:** the keys and clicks that HXBot's driver sends for an agent do not count as your input, also while two agents work at the same time.
+
+### Every step is checked {#desktop-0-67-12-checked}
+
+- **Text goes in directly where it can:** an empty one-line field gets its text directly and is read back; on the Mac, text goes into fields in the background, with no change of the window in front. Where a field does not take text that way (such as the body of Windows Notepad), the agent types it.
+- **Wait for it:** a step can wait for a button or a text to show, for at most 10 seconds. When it does not show, the agent says so and does not count the step as done.
+- **Only checked steps are done:** each step records the window, the way it was done and whether it was checked. A step that cannot be read back is marked to check; only checked steps count as done on the progress card, and after a step to check the agent stops and asks you.
+- **No clicks on a changed window:** when a step names a control by its number from an earlier look and the window has changed since, the step is not done, and the agent looks again.
+- **Clipboard:** when typing used the clipboard, your copy goes back at the end; a new copy that you make meanwhile stays.
+
+### Fixed {#desktop-0-67-12-fixes}
+
+- **No work started in the queue (from 0.67.10):** when several teams had used about the same time, the order of the queue went in a circle (A before B, B before C and C before A). Each piece of work saw another one before it, so no work started though places were free. Now HXBot makes one whole order first and then looks at the place of each piece of work.
+- **Short freezes at start and in the queue after long use:** on a computer with many agents and chats, the end of a turn made the queue read each lane again and again, and the app could stop for seconds (14.9 s at most in the test); at start, the recovery of the last session stopped it for more than 1 s in one go. Now one check reads each lane once and the checks of a moment run as one; the recovery runs in small parts and lets other work go first between them. In the stress test, the longest stop of the app is below 1 s.
+- **Your place was taken:** a routine that waited long and moved to the top could keep the place that HXBot holds for you, so your message could not start. Now that place is for your messages only.
+- **Driver errors counted as done:** a step that the computer-control driver answered with an error no longer counts as a step that may have worked.
+- **One way in:** on the Mac and Windows, the providers no longer get their own computer control as well; every action goes through HXBot's lanes, checks and records. After the update, the provider sessions of agents with Computer Use start again once; the chat stays.
+- **Team folders:** to see whether a team makes progress, HXBot no longer reads folders such as node_modules and .git, so big folders no longer slow it down.
+- **Signing in from an office:** the people of an office use one address on the internet. Before, the 21st person to sign in within 15 minutes had to wait. Now the limit per address is higher; the limit of each account stays the same.
 
 ## Desktop 0.67.11: one HXBot in the Dock, and other apps open and save files without freezes {#desktop-0-67-11}
 
@@ -52,7 +99,7 @@ This version only fixes problems. It adds no new features.
 November 18, 2026 · Desktop and web 0.67.10 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. {NEW} Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
+> 1. Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
 > 2. Teams have no limit on members, time or handoffs: each handoff is accepted and waits in the queue, and none is sent back because "too many are busy". When a team makes no progress, goes in a loop or nobody answers the spend reminders, it pauses and asks you. {on:Desktop}
 > 3. No slowdown after long use: the channel list counts only the new messages, and the queue and the scheduler look only at work that is not done. {on:Desktop}
 > 4. Updates are no longer forced: when HXBot finds a new version as it opens, it downloads and installs it and restarts into it once the assistants are idle; there is nothing to click. Later major versions work the same way. {on:Desktop}

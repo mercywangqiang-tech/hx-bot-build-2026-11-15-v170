@@ -202,7 +202,8 @@ export class AuthService {
       }
 
       yield* this.#enforceRateLimit(`start:email:${email}`, 5, now);
-      yield* this.#enforceRateLimit(`start:ip:${normalizeSourceIp(sourceIp)}`, 20, now);
+      // HXBot (v1.7.3): the people of an office sign in from one address; each account keeps its own limit.
+      yield* this.#enforceRateLimit(`start:ip:${normalizeSourceIp(sourceIp)}`, 100, now);
 
       if (idempotencyKey) {
         const existing = yield* dependencies.repository.findEmailChallenge(challengeHash);
@@ -388,7 +389,8 @@ export class AuthService {
   ): Effect.fn.Return<{ sessionToken: string; user: AuthUser }, AuthWorkflowFailure, AuthDependencies> {
     const dependencies = yield* AuthDependencies;
     const now = dependencies.now();
-    yield* this.#enforceRateLimit(`verify:ip:${normalizeSourceIp(input.sourceIp)}`, 30, now);
+    // HXBot (v1.7.3): as for the start, an office signs in from one address.
+    yield* this.#enforceRateLimit(`verify:ip:${normalizeSourceIp(input.sourceIp)}`, 150, now);
     if (!input.challengeId || input.challengeId.length > 128 || input.code.length > 32) {
       return yield* new AuthServiceError(400, "invalid_sign_in_code", "The sign-in code is invalid.");
     }

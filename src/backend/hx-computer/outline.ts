@@ -21,6 +21,8 @@ export interface HxElement {
   frame: { x: number; y: number; w: number; h: number } | null;
   actions: string[];
   depth: number;
+  /** HXBot (v1.7.3): the driver reads this element's value, so a value set on it can be read back. */
+  hasValue?: boolean;
 }
 
 /** A window the driver read. */
@@ -63,6 +65,7 @@ function readElement(value: unknown): HxElement | null {
       ? value.actions.filter((action): action is string => typeof action === "string").slice(0, 8)
       : [],
     depth: whole(value.depth) ?? 0,
+    ...(typeof value.value === "string" ? { hasValue: true } : {}),
   };
 }
 

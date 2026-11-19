@@ -1085,7 +1085,8 @@ def check_placeholders() -> list[str]:
                 problems.append(f"{locale}: {phrase} missing")
                 continue
             names = set(re.findall(r"\{(\w+)\}", value))
-            expected = V171_PLACEHOLDERS.get(phrase, set()) if phrase in V171_KEYS.values() else \
+            expected = V173_PLACEHOLDERS.get(phrase, set()) if phrase in V173_KEYS.values() else \
+                V171_PLACEHOLDERS.get(phrase, set()) if phrase in V171_KEYS.values() else \
                 V167_PLACEHOLDERS.get(phrase, set()) if phrase in V167_KEYS.values() else \
                 V166_PLACEHOLDERS.get(phrase, set()) if phrase in V166_KEYS.values() else \
                 OPENCODE_PLACEHOLDERS.get(phrase, set()) if phrase in OPENCODE_KEYS.values() else \
@@ -1418,3 +1419,11 @@ from translations_v171 import PLACEHOLDERS as V171_PLACEHOLDERS  # noqa: E402
 KEYS.update(V171_KEYS)
 for _locale in LOCALES:
     PHRASES[_locale].update(_V171_NEW[_locale])
+
+# v1.7.3：电脑操控（五）停放、续做和“停放后自动续做”（hx/computer_v173.py）
+from translations_v173 import NEW as _V173_NEW, NEW_KEYS as V173_KEYS  # noqa: E402
+from translations_v173 import PLACEHOLDERS as V173_PLACEHOLDERS  # noqa: E402
+
+KEYS.update(V173_KEYS)
+for _locale in LOCALES:
+    PHRASES[_locale].update(_V173_NEW[_locale])

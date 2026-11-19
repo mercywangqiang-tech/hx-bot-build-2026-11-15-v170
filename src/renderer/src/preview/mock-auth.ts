@@ -213,6 +213,17 @@ export function createMockAuth(options: MockAuthOptions, { emit }: MockRuntime) 
       freeQuota: { blockedUntil: null, usedToday: 0 },
       decisions: [],
     }),
+    hxComputerSetAutoResume: async (on: boolean) => ({
+      platform: null,
+      builtAt: null,
+      apps: 0,
+      pages: 0,
+      settings: 0,
+      directSettings: 0,
+      disabled: [],
+      unchecked: 0,
+      autoResume: on,
+    }),
     logout: async () => {
       authState = { status: "signed_out" };
       emitAuthState(authState);

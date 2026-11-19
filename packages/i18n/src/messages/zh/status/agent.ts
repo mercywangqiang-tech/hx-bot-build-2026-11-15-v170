@@ -162,4 +162,11 @@ export const messages = {
   "status.agent.hxTeam.spend.api": "协作 · 到现在约花了 {yuan} 元。团队照常工作；要设上限请直接说。",
   "status.agent.hxTeam.spend.plan": "协作 · 套餐本期额度已用 {percent}%。团队照常工作；要设上限请直接说。",
   "status.agent.hxTeam.spend.tokens": "协作 · 到现在约用了 {millions} 百万 token（价格未知）。团队照常工作。",
+  "status.agent.hxComputer.parked":
+    "等你停手：你停手 {seconds} 秒、{app} 的窗口在最前面时，接着做这一步。要马上做，回复“现在做”；不做了，回复“放弃”。",
+  "status.agent.hxComputer.parkedLocked":
+    "等你回来：屏幕锁着。解锁、{app} 的窗口在最前面时，接着做这一步。要马上做，回复“现在做”；不做了，回复“放弃”。",
+  "status.agent.hxComputer.parkedLong": "{app} 的那一步已经等了 30 分钟。要马上做，回复“现在做”；不做了，回复“放弃”。",
+  "status.agent.hxComputer.resume":
+    "（HXBot 自动发送）用户已停手，{app} 在最前面：请接着做停放的那一步。先看一下窗口，再做剩下的 {count} 步；发送、付款、删除这类步骤照样先问用户。",
 } as const satisfies PartialTranslation<typeof source>;

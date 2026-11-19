@@ -31,6 +31,7 @@ export interface AccountPort {
     | "hxComputerSelfTest"
     | "hxAutoModelView"
     | "hxAutoModelUpdate"
+    | "hxComputerSetAutoResume"
     | "revokeMobileConnectedDevice"
     | "revokeMobileConnectLink"
     | "updateAvatar"

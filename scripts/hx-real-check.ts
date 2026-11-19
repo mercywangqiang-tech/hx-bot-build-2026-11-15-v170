@@ -1,7 +1,7 @@
 // HXBot 真实模型与真机检查（v1.6.7）的入口。只在 GitHub 的用完即毁的机器上运行：它会真的打开应用、
 // 输入文字并保存，也会把对话发给免费模型或 GitHub Models。
 //
-//   node hx-real-check.mjs --out out --machine macos-15 --parts steps,install,apps,quiet,team [--driver <cua-driver 的路径>]
+//   node hx-real-check.mjs --out out --machine macos-15 --parts steps,install,apps,quiet,lanes,team [--driver <cua-driver 的路径>]
 //       out/report.json  每一项的结果
 //       out/summary.md   这台机器的成绩单
 //       out/log.txt      模型每一轮调用了什么、得到了什么回答
@@ -27,6 +27,7 @@ import {
   hxOpenCodeFreeModels,
 } from "../src/backend/hx-check/chat-model";
 import { hxInstallRealCheck } from "../src/backend/hx-check/install-run";
+import { hxLanesRealCheck } from "../src/backend/hx-check/lanes-run";
 import { hxQuietRealCheck } from "../src/backend/hx-check/quiet-run";
 import {
   HxRealItems,
@@ -233,6 +234,15 @@ async function main(): Promise<number> {
   // v1.7.0: HXBot does not disturb other apps.
   if (parts.has("quiet"))
     await part("不打扰其他应用", "Q99", 8, () => hxQuietRealCheck({ items, log, platform: process.platform }));
+  // v1.7.3: computer control (5), the lanes and yielding to the user (CONC-05, CONC-06, CU-06).
+  if (parts.has("lanes")) {
+    const driver = option(args, "--driver");
+    if (driver)
+      await part("分道与礼让", "L99", 12, () =>
+        hxLanesRealCheck({ items, log, driver: resolve(driver), platform: process.platform, folder: out }),
+      );
+    else items.add("L0", "分道与礼让", "skip", "没有给 --driver");
+  }
   if (parts.has("team")) {
     if (brain) await part("协作全流程", "T99", 20, () => hxTeamRealCheck({ brain, items, log }));
     else items.add("T1", "协作全流程", "skip", "没有可用的模型");

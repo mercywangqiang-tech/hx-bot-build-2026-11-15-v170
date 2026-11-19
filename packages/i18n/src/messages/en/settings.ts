@@ -972,4 +972,7 @@ export const messages = defineMessages("settings", {
     "Team: members as the work needs; this computer decides how many work at once (now {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Start on a card with several roles makes a team: HXBot picks agents by skill, makes members for missing roles and opens a team room. Progress and the result come back to this chat. A team has no limits; when it makes no progress, it pauses and asks you. To set a limit for one team, say so in the chat.",
+  "settings.hxComputer.autoResume.title": "Continue parked steps by themselves",
+  "settings.hxComputer.autoResume.description":
+    "While you use the computer, an agent parks a step that needs the keyboard or the mouse. With this on, the step goes on by itself after you stop for 5 seconds (60 for routines). With it off, only when you reply “now”.",
 });

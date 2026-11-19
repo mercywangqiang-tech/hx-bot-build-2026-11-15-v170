@@ -285,7 +285,9 @@ export class BootRecovery {
     const runningTurns = this.#store.database.readRunningTurnIds();
     for (const agent of this.threads()) {
       if (!agent.threadId) continue;
-      const turnId = this.#store.database.readConversationRuntime(agent.id, agent.threadId).activeTurnId;
+      // HXBot (v1.7.3): the active turn alone. The runtime read also looks for the latest answer, a scan
+      // of every message of the thread that recovery never reads.
+      const turnId = this.#store.database.readActiveTurnId(agent.id, agent.threadId);
       // A running turn that is not the thread's active turn has no writer left, and no turn of
       // this process runs yet, so the recovery write below closes it too (#2214).
       const staleTurns = (runningTurns.get(agent.threadId) ?? []).filter((candidate) => candidate !== turnId);

@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.67.12",
+    "date": "2026-11-18",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "Several agents can use this computer at the same time without getting in each other's way: one agent per app, up to three apps at once in the background, and one agent at a time types or clicks in the window in front. When a turn does not come within 30 seconds, the agent says who uses the app and about how long it takes, and does other work first.",
+          "Agents step aside while you use the computer: when you type or move the mouse, or the window to work on is not in front, or the screen is locked, the agent stops that step and tells you in the chat. When you have stopped for 5 seconds and that window is in front, it goes on by itself. Reply “now” to have it done now or “drop” to drop it; turn the automatic resume off in Settings › Computer Use.",
+          "Every step is checked: fields that take text directly get it directly and are read back; a wait for a button or a text lasts at most 10 seconds and says so when it did not show; a step that cannot be read back is marked to check, and only checked steps count as done. What you copy meanwhile stays on the clipboard.",
+          "Fixed: with several teams in the queue, sometimes no work started; a routine that waited long could keep your own message out of its place; after long use, opening the app or the queue could make it stop for seconds. Many people on one office network can register and sign in again without hitting a limit."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.67.11",
     "date": "2026-11-18",
     "notices": [],

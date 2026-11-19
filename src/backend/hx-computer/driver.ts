@@ -22,6 +22,14 @@ export interface HxDriverAnswer {
   text: string;
   /** Why the request failed, when `ok` is false. */
   error: string | null;
+  /**
+   * HXBot (v1.7.3): true when the tool itself refused or failed (`isError`). The daemon still answers
+   * `ok`, and `content` then holds the tool's own reason, such as an escalation to the foreground.
+   * Before v1.7.3 such an answer counted as an action that may have worked.
+   */
+  refused?: boolean;
+  /** HXBot (v1.7.3): the images of the result, such as the screenshot of `get_window_state`. */
+  images?: Array<{ data: string; mimeType: string }>;
 }
 
 /** The one thing the steps need from the driver. Tests pass a double. */
@@ -60,7 +68,24 @@ export function hxReadDriverReply(line: string): HxDriverAnswer {
     .map((item) => (isDynamicRecord(item) && item.type === "text" && typeof item.text === "string" ? item.text : ""))
     .filter((part) => part.length > 0)
     .join("\n");
-  return { ok: true, content, text, error: null };
+  const images = items.flatMap((item) =>
+    isDynamicRecord(item) &&
+    item.type === "image" &&
+    typeof item.data === "string" &&
+    item.data.length > 0 &&
+    typeof item.mimeType === "string" &&
+    item.mimeType.startsWith("image/")
+      ? [{ data: item.data, mimeType: item.mimeType }]
+      : [],
+  );
+  return {
+    ok: true,
+    content,
+    text,
+    error: null,
+    ...(result.isError === true ? { refused: true } : {}),
+    ...(images.length > 0 ? { images } : {}),
+  };
 }
 
 function failed(error: string): HxDriverAnswer {

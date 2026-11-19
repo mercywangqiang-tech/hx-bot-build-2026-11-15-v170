@@ -148,4 +148,12 @@ export const messages = {
     "팀 · 요금제 기간의 {percent}%를 썼습니다. 계속 진행합니다. 한도를 말하면 거기서 멈춥니다.",
   "status.agent.hxTeam.spend.tokens":
     "팀 · 지금까지 약 {millions}백만 토큰을 썼습니다(가격 알 수 없음). 계속 진행합니다.",
+  "status.agent.hxComputer.parked":
+    "기다리는 중: {seconds}초 동안 키보드와 마우스를 쓰지 않고 {app} 창이 맨 앞에 있으면 이 단계를 이어서 합니다. 바로 하려면 “지금”, 그만두려면 “취소”라고 답하세요.",
+  "status.agent.hxComputer.parkedLocked":
+    "기다리는 중: 화면이 잠겨 있습니다. 잠금을 풀고 {app} 창이 맨 앞에 있으면 이 단계를 이어서 합니다. 바로 하려면 “지금”, 그만두려면 “취소”라고 답하세요.",
+  "status.agent.hxComputer.parkedLong":
+    "{app}의 단계가 30분째 기다리고 있습니다. 바로 하려면 “지금”, 그만두려면 “취소”라고 답하세요.",
+  "status.agent.hxComputer.resume":
+    "(HXBot이 자동으로 보냄) 사용자가 손을 멈췄고 {app}이(가) 맨 앞에 있습니다. 보류한 단계를 이어서 하세요. 먼저 창을 확인한 다음 남은 {count}개 단계를 하세요. 보내기, 결제, 삭제 전에는 언제나처럼 사용자에게 먼저 물어보세요.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -913,4 +913,7 @@ export const messages = {
     "Team: membri secondo il lavoro; questo computer decide quanti lavorano insieme (ora {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Avvia su una scheda con più ruoli crea un team: HXBot sceglie gli agenti per competenza, crea membri per i ruoli mancanti e apre una stanza del team. Avanzamento e risultato tornano in questa chat. Un team non ha limiti; se non avanza, si mette in pausa e ti chiede. Per un limite a un solo team, dillo nella chat.",
+  "settings.hxComputer.autoResume.title": "Continua da soli i passaggi in sospeso",
+  "settings.hxComputer.autoResume.description":
+    "Mentre usi il computer, un agente mette in sospeso il passaggio che richiede tastiera o mouse. Se è attivo, il passaggio continua da solo dopo che ti fermi per 5 secondi (60 per le routine). Se è disattivato, solo quando rispondi «ora».",
 } as const satisfies PartialTranslation<typeof source>;

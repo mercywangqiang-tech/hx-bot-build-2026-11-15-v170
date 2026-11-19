@@ -876,4 +876,7 @@ export const messages = {
   "settings.hxAutoModel.team.capacity": "团队：人数按工作定；同时干活由电脑安排（现在 {count} 个）",
   "settings.hxAutoModel.team.descriptionOpen":
     "在有几个角色的建议卡上点“开始”就组队：HXBot 按专长选智能体，缺的角色新建成员，开一个协作房间。进度和结果回到这个对话。团队不设上限；没有进展时会停下来问你。想给某一次团队设上限，直接在对话里说。",
+  "settings.hxComputer.autoResume.title": "停放后自动续做",
+  "settings.hxComputer.autoResume.description":
+    "你在用电脑时，助手把要用键盘、鼠标的那一步停放下来。开着时，你停手 5 秒（定时任务 60 秒）后自动接着做；关掉后，只在你回复“现在做”时才做。",
 } as const satisfies PartialTranslation<typeof source>;

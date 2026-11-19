@@ -915,4 +915,7 @@ export const messages = {
     "Equipe: membros conforme o trabalho; este computador decide quantos trabalham ao mesmo tempo (agora {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Iniciar em um cartão com vários papéis cria uma equipe: o HXBot escolhe agentes pela habilidade, cria membros para os papéis que faltam e abre uma sala da equipe. O progresso e o resultado voltam a esta conversa. Uma equipe não tem limites; se não avança, ela pausa e pergunta a você. Para definir um limite para uma equipe, diga isso na conversa.",
+  "settings.hxComputer.autoResume.title": "Continuar sozinhos os passos em espera",
+  "settings.hxComputer.autoResume.description":
+    "Enquanto você usa o computador, um agente deixa em espera o passo que precisa do teclado ou do mouse. Ligado, o passo continua sozinho depois que você para por 5 segundos (60 nas rotinas). Desligado, só quando você responde «agora».",
 } as const satisfies PartialTranslation<typeof source>;

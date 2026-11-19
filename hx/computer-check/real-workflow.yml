@@ -123,7 +123,7 @@ jobs:
           HX_CHECK_MODEL_URL: ${{ secrets.HX_CHECK_MODEL_URL }}
           HX_CHECK_MODEL_KEY: ${{ secrets.HX_CHECK_MODEL_KEY }}
           HX_CHECK_MODEL: ${{ secrets.HX_CHECK_MODEL }}
-        run: node hx-real-check.mjs --out out --machine "$MACHINE" --parts steps,install,apps,quiet --driver "$DRIVER"
+        run: node hx-real-check.mjs --out out --machine "$MACHINE" --parts steps,install,apps,quiet,lanes --driver "$DRIVER"
       - name: Show the summary
         if: always()
         shell: bash

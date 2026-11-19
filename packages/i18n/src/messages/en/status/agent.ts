@@ -174,4 +174,12 @@ export const messages = defineMessages("status.agent", {
     "Team · {percent}% of the plan's period is used. It goes on; name a limit to stop it there.",
   "status.agent.hxTeam.spend.tokens":
     "Team · About {millions} million tokens used so far (the price is not known). It goes on.",
+  "status.agent.hxComputer.parked":
+    "Waiting for you: the step in {app} goes on when you have not used the keyboard or the mouse for {seconds} seconds and its window is in front. Reply “now” to have it done now, or “drop” to drop it.",
+  "status.agent.hxComputer.parkedLocked":
+    "Waiting for you: the screen is locked. The step in {app} goes on after you unlock it and its window is in front. Reply “now” to have it done now, or “drop” to drop it.",
+  "status.agent.hxComputer.parkedLong":
+    "The step in {app} has waited for 30 minutes. Reply “now” to have it done now, or “drop” to drop it.",
+  "status.agent.hxComputer.resume":
+    "(Sent by HXBot) The user has stopped, and {app} is in front: continue the parked step. Look at the window first, then do the {count} remaining steps. Ask the user before a send, a payment or a deletion, as always.",
 });

@@ -206,7 +206,8 @@ export class HxAccounts {
     if (!this.#deps.emailAllowed(email)) {
       refuse(403, "email_not_allowed", "该邮箱不在研究版名单中。This email is not on the research access list.");
     }
-    await this.#limit(`hx:register:ip:${sourceIp}`, 20, now);
+    // v1.7.3: an office registers from one address on its first day; each email and number keeps its limit.
+    await this.#limit(`hx:register:ip:${sourceIp}`, 60, now);
     await this.#limit(`hx:register:email:${email}`, 6, now);
     if (await store.account(email)) {
       refuse(

@@ -939,4 +939,7 @@ export const messages = {
     "Team: Mitglieder nach Bedarf der Arbeit; dieser Computer entscheidet, wie viele gleichzeitig arbeiten (jetzt {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Start auf einer Karte mit mehreren Rollen bildet ein Team: HXBot wählt Agenten nach Fähigkeiten, legt Mitglieder für fehlende Rollen an und öffnet einen Teamraum. Fortschritt und Ergebnis kommen in diesen Chat zurück. Ein Team hat keine Grenzen; kommt es nicht voran, pausiert es und fragt dich. Für eine Grenze für ein Team sag es im Chat.",
+  "settings.hxComputer.autoResume.title": "Geparkte Schritte von selbst fortsetzen",
+  "settings.hxComputer.autoResume.description":
+    "Während du den Computer benutzt, parkt ein Agent einen Schritt, der Tastatur oder Maus braucht. Ist dies an, geht der Schritt von selbst weiter, wenn du 5 Sekunden aufhörst (60 bei Routinen). Ist es aus, nur wenn du „jetzt“ antwortest.",
 } as const satisfies PartialTranslation<typeof source>;

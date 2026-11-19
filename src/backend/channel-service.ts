@@ -61,6 +61,7 @@ import { ChannelMemoryStore } from "./channel-memory-store";
 import { CHANNEL_REPLY_ID_PREFIX, channelReplyExpectedResult, checkChannelReply, isReplyTask } from "./channel-replies";
 import { type ChannelAssignment, type ChannelContext, ChannelStore } from "./channel-store";
 import { hxFlow } from "./hx-flow/ledger";
+import { hxLoopSlices } from "./hx-flow/loop-turn";
 import type { HxBotDatabase } from "./hxbot-database";
 import type { DeliveryContext, MailboxStore } from "./mailbox-store";
 import { type MessageDeleteAccess, MessageDeleteRefused } from "./message-delete";
@@ -2315,8 +2316,13 @@ export class ChannelService {
   ): Effect.fn.Return<void, ChannelOperationError> {
     if (this.#scope.state._tag === "Closed") this.#scope = Scope.makeUnsafe();
     this.#stopped = false;
-    for (const context of yield* channelSync(() => this.store.executionThreads()))
+    // HXBot (v1.7.3): a turn of the event loop every 50 ms of this pass over every member thread. Each
+    // capture reads the thread fresh, as the capture at the end of a turn does.
+    const hxSlice = hxLoopSlices();
+    for (const context of yield* channelSync(() => this.store.executionThreads())) {
       this.capture(yield* channelSync(() => this.store.database.readConversation(context.id, context.threadId)));
+      yield* hxSlice;
+    }
     const archived = yield* channelSync(() => this.store.archivedIds());
     for (const channelId of yield* channelSync(() => this.store.ids())) {
       for (let assignment of (yield* channelSync(() => this.store.assignments(channelId))).filter(activeAssignment)) {

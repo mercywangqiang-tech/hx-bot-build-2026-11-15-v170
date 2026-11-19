@@ -146,4 +146,12 @@ export const messages = {
     "Team · Usato il {percent}% del periodo del piano. Continua; indica un limite per fermarlo lì.",
   "status.agent.hxTeam.spend.tokens":
     "Team · Usati finora circa {millions} milioni di token (prezzo sconosciuto). Continua.",
+  "status.agent.hxComputer.parked":
+    "In attesa: il passaggio in {app} continua quando non usi la tastiera né il mouse per {seconds} secondi e la sua finestra è in primo piano. Rispondi «ora» per farlo subito, o «scarta» per lasciarlo.",
+  "status.agent.hxComputer.parkedLocked":
+    "In attesa: lo schermo è bloccato. Il passaggio in {app} continua quando lo sblocchi e la sua finestra è in primo piano. Rispondi «ora» per farlo subito, o «scarta» per lasciarlo.",
+  "status.agent.hxComputer.parkedLong":
+    "Il passaggio in {app} aspetta da 30 minuti. Rispondi «ora» per farlo subito, o «scarta» per lasciarlo.",
+  "status.agent.hxComputer.resume":
+    "(Inviato da HXBot) L’utente si è fermato e {app} è in primo piano: continua il passaggio in sospeso. Guarda prima la finestra, poi fai i {count} passaggi rimasti. Chiedi all’utente prima di un invio, un pagamento o un’eliminazione, come sempre.",
 } as const satisfies PartialTranslation<typeof source>;

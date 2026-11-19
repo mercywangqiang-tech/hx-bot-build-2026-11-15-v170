@@ -10,7 +10,7 @@ import type { HxComputerStatus, HxSelfTestReport } from "@hxbot/contracts/hx-com
 import type { HxOcCatalog, HxOcIntegration } from "@hxbot/contracts/hx-opencode";
 import type { ComputerUseState } from "@hxbot/contracts/ipc";
 import type { UiConfirmBlock as UiConfirmSpec } from "@hxbot/contracts/ui-blocks";
-import { Text } from "@hxbot/ui";
+import { SwitchField, Text } from "@hxbot/ui";
 import { type AgentStep, AgentStepsDisclosure } from "@hxbot/ui/features/conversation/AgentSteps";
 import { ChatActionMarker } from "@hxbot/ui/features/conversation/ChatActionMarker";
 import { MarkdownMessageText } from "@hxbot/ui/features/conversation/MarkdownMessageText";
@@ -116,6 +116,7 @@ export const ComputerUse: Story = {
           status: async () => COMPUTER_STATUS,
           rebuild: async () => COMPUTER_STATUS,
           selfTest: async () => SELF_TEST,
+          setAutoResume: async (on) => ({ ...COMPUTER_STATUS, autoResume: on }),
         }}
       />
     </main>
@@ -815,6 +816,71 @@ export const ComputerQuiet: Story = {
             agents={[]}
             onSelectAgent={fn()}
             onOpenLink={fn()}
+          />
+        </div>
+      </main>
+    );
+  },
+};
+
+// ---------------------------------------------------------------- v1.7.3: several agents, and the user first
+
+function laneSteps(): AgentStep[] {
+  if (zh())
+    return [
+      { id: "l1", kind: "progress", text: "拿到“文本编辑”这一道：计算器那边同时在做" },
+      { id: "l2", kind: "progress", text: "标题直接填进输入框，读回一致（核对过）" },
+      { id: "l3", kind: "progress", text: "你正在打字：这一步先停放，一个键也没发" },
+      { id: "l4", kind: "progress", text: "你停手 5 秒、文本编辑在最前面：接着打完、保存，读回核对" },
+    ];
+  return [
+    { id: "l1", kind: "progress", text: "Took the TextEdit lane; Calculator works at the same time" },
+    { id: "l2", kind: "progress", text: "Title set in its field directly, read back the same (checked)" },
+    {
+      id: "l3",
+      kind: "progress",
+      text: "You were typing: the step parked, no key sent",
+    },
+    { id: "l4", kind: "progress", text: "You stopped for 5 s with TextEdit in front: typed the rest, saved, checked" },
+  ];
+}
+
+/** v1.7.3: several agents share the computer, and step aside while the user works. */
+export const ComputerLanes: Story = {
+  render: () => {
+    const { t } = useI18n();
+    const chinese = zh();
+    const app = chinese ? "文本编辑" : "TextEdit";
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="message-markdown">
+          <MarkdownMessageText
+            body={
+              chinese
+                ? "把这段会议纪要填进文本编辑，标题写“周会”，然后保存。"
+                : "Put these meeting notes into TextEdit with the title “Weekly meeting”, then save."
+            }
+            agents={[]}
+            onSelectAgent={fn()}
+            onOpenLink={fn()}
+          />
+        </div>
+        <AgentStepsDisclosure steps={laneSteps()} defaultOpen={true} facts={{ durationMs: 12_600, failed: 0 }} />
+        <ChatActionMarker
+          marker={{
+            kind: "channel-change",
+            text: t("status.agent.hxComputer.parked", { app, seconds: 5 }),
+            timestamp: "2026-11-18T10:12:00.000Z",
+          }}
+          agents={[]}
+          onSelectAgent={fn()}
+        />
+        <div class="hx-highlight-settings">
+          <SwitchField
+            checked={true}
+            onChange={fn()}
+            label={t("settings.hxComputer.autoResume.title")}
+            description={t("settings.hxComputer.autoResume.description")}
           />
         </div>
       </main>

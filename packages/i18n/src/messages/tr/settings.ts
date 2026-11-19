@@ -920,4 +920,7 @@ export const messages = {
     "Ekip: üye sayısı işe göre; aynı anda kaçının çalışacağına bu bilgisayar karar verir (şu an {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Birden çok rolü olan bir kartta Başlat'a basmak bir ekip kurar: HXBot ajanları becerilerine göre seçer, eksik roller için üyeler oluşturur ve bir ekip odası açar. İlerleme ve sonuç bu sohbete döner. Ekibin sınırı yoktur; ilerleme olmazsa duraklar ve size sorar. Tek bir ekip için sınır koymak isterseniz sohbette söyleyin.",
+  "settings.hxComputer.autoResume.title": "Bekletilen adımlara kendiliğinden devam et",
+  "settings.hxComputer.autoResume.description":
+    "Bilgisayarı kullanırken bir ajan, klavye veya fare gereken adımı bekletir. Açıksa, 5 saniye durduğunuzda (rutinlerde 60) adım kendiliğinden devam eder. Kapalıysa, yalnızca «şimdi» yanıtını verdiğinizde.",
 } as const satisfies PartialTranslation<typeof source>;

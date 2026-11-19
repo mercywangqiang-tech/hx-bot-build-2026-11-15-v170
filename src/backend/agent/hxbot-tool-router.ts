@@ -647,6 +647,7 @@ export class HxBotToolRouter {
                 hxThreadId !== null &&
                 this.#conversation.isTaskThread(hxThreadId) &&
                 !this.#tasks.isRoutineThreadId(hxThreadId);
+              const hxRoutine = hxThreadId !== null && this.#tasks.isRoutineThreadId(hxThreadId);
               const hxRequestId = toolRequest.id;
               void hxComputer
                 .toolCall(
@@ -656,6 +657,7 @@ export class HxBotToolRouter {
                         name: hxAgent.name,
                         computerUse: agentComputerUseEnabled(hxAgent),
                         inTask: hxInTask,
+                        routine: hxRoutine,
                       }
                     : null,
                   toolRequest.params,

@@ -28,7 +28,7 @@ on:
         default: "no"
       desktop_check_baseline:
         description: "对比用的上一版：本仓库里草稿 Release 的名字（空着不比）"
-        default: "v1.7.1-0.67.10"
+        default: "v1.7.2-0.67.11"
 
 permissions:
   contents: read

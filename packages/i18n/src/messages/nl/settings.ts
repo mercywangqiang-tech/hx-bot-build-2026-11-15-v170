@@ -909,4 +909,7 @@ export const messages = {
     "Team: leden naar het werk; deze computer bepaalt hoeveel er tegelijk werken (nu {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Start op een kaart met meerdere rollen maakt een team: HXBot kiest agents op vaardigheid, maakt leden voor ontbrekende rollen en opent een teamruimte. Voortgang en resultaat komen terug in deze chat. Een team heeft geen grenzen; als het niet opschiet, pauzeert het en vraagt het jou. Wil je een grens voor één team, zeg het in de chat.",
+  "settings.hxComputer.autoResume.title": "Geparkeerde stappen vanzelf voortzetten",
+  "settings.hxComputer.autoResume.description":
+    "Terwijl je de computer gebruikt, parkeert een agent een stap die het toetsenbord of de muis nodig heeft. Staat dit aan, dan gaat de stap vanzelf verder als je 5 seconden stopt (60 bij routines). Staat het uit, alleen als je „nu” antwoordt.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -229,12 +229,14 @@ def own_commit_check(r) -> None:
 # “用保存的密码登录”“删除保密箱条目”（不再要确认），每次对话发的内容变少了，上限跟着降。
 # v1.7.1：团队不设上限（TEAM-01）：start_team 的 limits 多了花费和“不用问”，team 多了 priority、continue、finish
 # 三个动作（CONC-03、CONC-10）；建议卡说明里团队上限的一句改成“默认不设上限，用户说了才传”，文字都压到最短。
+# v1.7.3：只留一个入口（CONC-05）：Computer Use 那一段整段换成 HXBot 电脑工具的说明，每次对话发的内容变少，上限跟着降；
+# computer_do 的 type 多了 by（直接赋值或打字），computer_look 多了 screenshot（截图），只在工具目录里。
 AGENT_CONTEXT_BYTES = {
-    "catalog.descriptions": 45041,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作
-    "catalog.schemas": 81536,  # 上游 70274；v1.7.1 limits 与 team 的新字段
+    "catalog.descriptions": 45025,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作
+    "catalog.schemas": 81800,  # 上游 70274；v1.7.1 limits 与 team 的新字段；v1.7.3 by、screenshot
     "guidance": 21879,  # 上游 22043
-    "instructions.claude": 17199,  # 上游 14897
-    "instructions.codex": 17269,  # 上游 14969
+    "instructions.claude": 16592,  # 上游 14897
+    "instructions.codex": 16662,  # 上游 14969
     "visible-tools": 21137,  # 上游 15681（tool_search 的说明里列出全部工具名）
 }
 
@@ -300,7 +302,9 @@ def unused_exports(r) -> None:
               '    // HXBot (v1.7.0): the quiet check moves the user to File Explorer.\n'
               '    "explorer.exe",\n'
               '    // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).\n'
-              '    "tasklist.exe",\n')
+              '    "tasklist.exe",\n'
+              '    // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.\n'
+              '    "charmap.exe",\n')
     entries = "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in LEFT_AS_UPSTREAM.items())
     r.replace(knip, '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n  },\n',
               '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n'

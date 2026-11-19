@@ -140,4 +140,12 @@ export const messages = {
     "チーム · プランの期間の {percent}% を使いました。作業は続けます。上限を言えばそこで止めます。",
   "status.agent.hxTeam.spend.tokens":
     "チーム · これまでに約 {millions} 百万トークン使いました（価格は不明）。作業は続けます。",
+  "status.agent.hxComputer.parked":
+    "あなたを待っています：{seconds} 秒間キーボードとマウスを使わず、{app} のウィンドウが最前面にあれば、この手順を続けます。今すぐ行うには「今すぐ」、やめるには「やめる」と返信してください。",
+  "status.agent.hxComputer.parkedLocked":
+    "あなたを待っています：画面がロックされています。ロックを解除し、{app} のウィンドウが最前面にあれば、この手順を続けます。今すぐ行うには「今すぐ」、やめるには「やめる」と返信してください。",
+  "status.agent.hxComputer.parkedLong":
+    "{app} の手順は 30 分間待っています。今すぐ行うには「今すぐ」、やめるには「やめる」と返信してください。",
+  "status.agent.hxComputer.resume":
+    "（HXBot が自動送信）ユーザーが操作をやめ、{app} が最前面にあります。保留中の手順を続けてください。まずウィンドウを確認し、残りの {count} 個の手順を行ってください。送信、支払い、削除の前には、いつもどおりユーザーに確認してください。",
 } as const satisfies PartialTranslation<typeof source>;

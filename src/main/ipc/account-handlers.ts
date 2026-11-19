@@ -77,6 +77,13 @@ export function accountIpcHandlers({ centralAuth, host }: AccountIpcDependencies
         hxAutoRouter.store.setSettings(agentId, settings);
         return hxAutoRouter.view(agentId);
       }),
+      hxComputerSetAutoResume: payloadHandler(
+        (value) => {
+          if (typeof value !== "boolean") throw new Error("A boolean is required.");
+          return value;
+        },
+        (on) => hxComputer.setAutoResume(on),
+      ),
       revokeMobileConnectedDevice: payloadHandler(stringPayload("sessionId", INPUT_LIMITS.identifier), (sessionId) =>
         runCauseEffect(centralAuth.revokeMobileConnectedDevice(sessionId)),
       ),

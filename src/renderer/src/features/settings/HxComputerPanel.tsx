@@ -8,6 +8,7 @@ import {
   ItemGroup,
   ItemTitle,
   SettingsSection,
+  SwitchField,
   Text,
 } from "@hxbot/ui";
 import { createEffect, createSignal, For, Show } from "solid-js";
@@ -22,6 +23,8 @@ export interface HxComputerCalls {
   status(): Promise<HxComputerStatus>;
   rebuild(): Promise<HxComputerStatus>;
   selfTest(): Promise<HxSelfTestReport>;
+  /** HXBot (v1.7.3): “停放后自动续做”. */
+  setAutoResume(on: boolean): Promise<HxComputerStatus>;
 }
 
 function portCalls(): HxComputerCalls {
@@ -30,6 +33,7 @@ function portCalls(): HxComputerCalls {
     status: () => auth.hxComputerStatus(),
     rebuild: () => auth.hxComputerRebuild(),
     selfTest: () => auth.hxComputerSelfTest(),
+    setAutoResume: (on) => auth.hxComputerSetAutoResume(on),
   };
 }
 
@@ -37,6 +41,7 @@ function portCalls(): HxComputerCalls {
  * HXBot：设置 → Computer Use 里的“这台电脑上的应用和设置”。显示目录里有多少应用、设置页和设置项，
  * 可以重新建立目录，可以运行自检（在这台电脑上实际读一遍、原样写回，不改变任何设置的值）并把报告存成文件。
  * 还有几项设置没有在这台电脑上核对过时说明一句：自检通过之后，助手才直接修改它们。
+ * v1.7.3：开关“停放后自动续做”（默认开）：你在用电脑时助手停放的步骤，你停手后自动接着做。
  */
 export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCalls }) {
   const i18n = useI18n();
@@ -109,6 +114,18 @@ export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCal
     });
   };
   const problems = () => report()?.items.filter((item) => item.outcome === "failed") ?? [];
+
+  async function setAutoResume(on: boolean) {
+    const current = status();
+    if (current) setStatus({ ...current, autoResume: on });
+    try {
+      setStatus(await calls().setAutoResume(on));
+      setFailed(false);
+    } catch {
+      if (current) setStatus(current);
+      setFailed(true);
+    }
+  }
 
   return (
     <SettingsSection
@@ -190,6 +207,14 @@ export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCal
             </Button>
           </ItemActions>
         </Item>
+        <SwitchField
+          data-settings-row="settings.hxComputer.autoResume.title"
+          checked={status()?.autoResume !== false}
+          disabled={status() === null || !supported()}
+          onChange={(checked) => void setAutoResume(checked)}
+          label={t("settings.hxComputer.autoResume.title")}
+          description={t("settings.hxComputer.autoResume.description")}
+        />
       </ItemGroup>
     </SettingsSection>
   );

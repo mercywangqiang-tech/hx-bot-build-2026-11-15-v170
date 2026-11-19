@@ -258,6 +258,7 @@ import { hxComputer, hxComputerAgentsToStop, hxComputerLine, hxComputerStoppedTe
 import { hxDriverAddress } from "./hx-computer/driver";
 import { HX_IDLE_MIN_MS, hxWithIdlePolicy } from "./hx-flow/idle";
 import { hxFlow } from "./hx-flow/ledger";
+import { hxEventLoopTurn } from "./hx-flow/loop-turn";
 import { hxProgressMessage } from "./hx-progress/progress";
 import { type HxTeamPort, hxTeamLine, hxTeams } from "./hx-team/service";
 import { hxReadSpend } from "./hx-team/spend";
@@ -853,7 +854,12 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
                     : reportOriginalFailure(cause, (failure) => this.#emitError("delivery_reconcile_failed", failure)),
                 ),
               );
+            // HXBot (v1.7.3): each step below is one synchronous pass over the stored history, over a second
+            // together on a large profile, so the event loop gets a turn between them. Each step reads its
+            // state fresh, and events could already arrive before and after this hook.
+            yield* hxEventLoopTurn;
             yield* this.channels.recover();
+            yield* hxEventLoopTurn;
             this.#channelRoutines.reconcileAll();
             yield* this.#boot.backfillProviderHistory().pipe(Effect.forkIn(this.#scope));
           }).pipe(
@@ -861,7 +867,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
             // The drains also run when a step above fails, so no settled lane stays idle.
             Effect.ensuring(
               Effect.sync(() => {
-                for (const agent of this.#store.list()) this.#drain.scheduleDrain(agent.id);
+                // HXBot (v1.7.3): in one pass over the lanes.
+                this.#drain.scheduleDrains(this.#store.list().map((agent) => agent.id));
               }),
             ),
             toProviderOperationFailed,
@@ -948,9 +955,13 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
             );
           }),
         onProviderResumed: (provider) => {
-          for (const agent of this.#store.list()) {
-            if (providerForAgent(agent) === provider) this.#drain.scheduleDrain(agent.id);
-          }
+          // HXBot (v1.7.3): in one pass over the lanes.
+          this.#drain.scheduleDrains(
+            this.#store
+              .list()
+              .filter((agent) => providerForAgent(agent) === provider)
+              .map((agent) => agent.id),
+          );
         },
       },
       emit: (event) => this.#emit(event),
@@ -1447,7 +1458,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
       memory: hostMemory ?? hxDesktopMemory,
       hooks: {
         scheduleAll: () => {
-          for (const agent of this.#store.list()) this.#drain.scheduleDrain(agent.id);
+          // HXBot (v1.7.3): in one pass over the lanes.
+          this.#drain.scheduleDrains(this.#store.list().map((agent) => agent.id));
         },
         retryWaiting: () => {
           // HXBot (v1.7.1): at each memory sample the ledger counts the team shares and pumps the team rooms.
@@ -1532,6 +1544,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           ),
       },
     });
+    // HXBot (v1.7.3): a parked step of computer control goes on with a message to its agent (hx-computer).
+    hxComputer.setResumeHost((agentId, text) => this.#hxComputerResume(agentId, text));
     // HXBot: the step tools of computer control reach the driver and the agent's chat (hx-computer).
     hxComputer.setStepHost({
       driverAddress: () => hxDriverAddress(computerUseMcpServer()),
@@ -3462,6 +3476,31 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
   }, Effect.uninterruptible);
 
   /**
+   * HXBot (v1.7.3): the message that continues a parked step of computer control (hx-computer/parked.ts).
+   * It goes through the mailbox like a message of the user, and waits in the queue like one. It never throws.
+   */
+  async #hxComputerResume(agentId: string, text: string): Promise<void> {
+    try {
+      const receipt = await Effect.runPromise(
+        this.#mailbox.enqueue({
+          sender: { kind: "user" },
+          recipientAgentIds: [agentId],
+          text,
+          replyToMessageId: null,
+          idempotencyKey: `hx-computer-resume:${agentId}:${Date.now()}`,
+        }),
+      );
+      for (const delivery of receipt.deliveries) {
+        await Effect.runPromise(this.#steerAgentMessage(delivery.recipientAgentId, delivery.id));
+        this.#mailboxSync.emitQueue(delivery.recipientAgentId);
+        this.#drain.scheduleDrain(delivery.recipientAgentId);
+      }
+    } catch (error) {
+      this.#emitError("hx_computer_resume_failed", error, agentId);
+    }
+  }
+
+  /**
    * HXBot: a progress card in an agent's chat (hx-progress), written again in place under its id as
    * the work goes on. It never throws.
    */
@@ -4539,8 +4578,11 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           (failure) => new AgentLifecycleFailed({ operation: "reconcile provider sessions", cause: failure.cause }),
         ),
       );
+    yield* lifecycleStep("recover agent state", () => this.#boot.recoverPersistedTurns());
+    // HXBot (v1.7.3): the event loop gets a turn after the pass over every stored thread. No turn runs
+    // before the providers start below, and no routine before `#initialized`.
+    yield* hxEventLoopTurn;
     yield* lifecycleStep("recover agent state", () => {
-      this.#boot.recoverPersistedTurns();
       this.#hostedSites.restore();
       this.#routines.skipMissed(new Date(), options.heldRoutines);
       this.#channelRoutines.skipMissed(new Date(), options.heldRoutines);
@@ -5898,6 +5940,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
     timezone: string | undefined,
     idempotencyKey?: string,
   ) {
+    // HXBot (v1.7.3): “现在做” or “放弃” to an agent with a parked step of computer control (hx-computer).
+    hxComputer.userSaid(input.agentId, input.text);
     const validateRecipient = yield* lifecycleStep("prepare message delivery", () =>
       this.#mailbox.prepareDelivery([input.agentId]),
     );

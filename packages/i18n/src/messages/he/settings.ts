@@ -914,4 +914,7 @@ export const messages = {
   "settings.hxAutoModel.team.capacity": "צוות: חברים לפי העבודה; המחשב הזה מחליט כמה עובדים בבת אחת (עכשיו {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "התחלה בכרטיס עם כמה תפקידים יוצרת צוות: HXBot בוחר סוכנים לפי מומחיות, יוצר חברים לתפקידים חסרים ופותח חדר צוות. ההתקדמות והתוצאה חוזרות לשיחה הזו. לצוות אין מגבלות; כשאין התקדמות הוא מושהה ושואל אותך. כדי לקבוע מגבלה לצוות אחד, אמור זאת בשיחה.",
+  "settings.hxComputer.autoResume.title": "המשך שלבים מושהים מעצמם",
+  "settings.hxComputer.autoResume.description":
+    "בזמן שאתה משתמש במחשב, הסוכן משהה שלב שצריך את המקלדת או העכבר. כשזה פועל, השלב ממשיך מעצמו אחרי שאתה מפסיק ל-5 שניות (60 בשגרות). כשזה כבוי, רק כשאתה משיב „עכשיו”.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -142,7 +142,7 @@ export interface HxFlowOrderContext {
 }
 
 /** Negative when `left` goes first. */
-export function hxFlowCompare(left: HxFlowCandidate, right: HxFlowCandidate, context: HxFlowOrderContext): number {
+function hxFlowCompare(left: HxFlowCandidate, right: HxFlowCandidate, context: HxFlowOrderContext): number {
   const tiers = hxFlowEffectiveTier(left, context.now) - hxFlowEffectiveTier(right, context.now);
   if (tiers !== 0) return tiers;
   if (left.teamId !== null && right.teamId !== null && left.teamId !== right.teamId) {
@@ -176,7 +176,25 @@ function isWarm(lane: string, context: HxFlowOrderContext): boolean {
   return ended !== undefined && context.now - ended <= HX_FLOW_WARM_MS;
 }
 
-/** The candidates in the order in which they start. */
+/**
+ * The candidates in the order in which they start.
+ *
+ * HXBot (v1.7.3, stress test of the ledger): the comparison is not transitive. Two team shares within
+ * 10 % count as equal and fall back to the age, so team A can go before B, B before C, and C before A.
+ * The order is made in two parts, so it is one order all the same: by tier first (that part is
+ * transitive), then inside each tier by the comparison, from the candidates sorted by lane, so the
+ * same candidates give the same order whatever order they came in.
+ */
 export function hxFlowSort(candidates: readonly HxFlowCandidate[], context: HxFlowOrderContext): HxFlowCandidate[] {
-  return [...candidates].sort((left, right) => hxFlowCompare(left, right, context));
+  const tiers = new Map<number, HxFlowCandidate[]>();
+  const byLane = [...candidates].sort((left, right) => (left.lane < right.lane ? -1 : left.lane > right.lane ? 1 : 0));
+  for (const candidate of byLane) {
+    const tier = hxFlowEffectiveTier(candidate, context.now);
+    const group = tiers.get(tier);
+    if (group) group.push(candidate);
+    else tiers.set(tier, [candidate]);
+  }
+  return [...tiers.entries()]
+    .sort(([left], [right]) => left - right)
+    .flatMap(([, group]) => group.sort((left, right) => hxFlowCompare(left, right, context)));
 }

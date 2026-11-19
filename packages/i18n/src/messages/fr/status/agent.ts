@@ -144,4 +144,12 @@ export const messages = {
     "Équipe · {percent} % de la période du forfait est utilisé. Elle continue ; indiquez une limite pour l’arrêter là.",
   "status.agent.hxTeam.spend.tokens":
     "Équipe · Environ {millions} millions de jetons utilisés (prix inconnu). Elle continue.",
+  "status.agent.hxComputer.parked":
+    "En attente : l’étape dans {app} reprend quand vous n’avez pas utilisé le clavier ni la souris pendant {seconds} secondes et que sa fenêtre est au premier plan. Répondez « maintenant » pour la faire tout de suite, ou « abandonner » pour la laisser.",
+  "status.agent.hxComputer.parkedLocked":
+    "En attente : l’écran est verrouillé. L’étape dans {app} reprend quand vous le déverrouillez et que sa fenêtre est au premier plan. Répondez « maintenant » pour la faire tout de suite, ou « abandonner » pour la laisser.",
+  "status.agent.hxComputer.parkedLong":
+    "L’étape dans {app} attend depuis 30 minutes. Répondez « maintenant » pour la faire tout de suite, ou « abandonner » pour la laisser.",
+  "status.agent.hxComputer.resume":
+    "(Envoyé par HXBot) L’utilisateur s’est arrêté et {app} est au premier plan : reprenez l’étape mise en attente. Regardez d’abord la fenêtre, puis faites les {count} étapes restantes. Demandez à l’utilisateur avant un envoi, un paiement ou une suppression, comme toujours.",
 } as const satisfies PartialTranslation<typeof source>;

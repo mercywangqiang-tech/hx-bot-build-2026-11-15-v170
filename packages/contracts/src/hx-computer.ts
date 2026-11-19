@@ -53,6 +53,11 @@ export interface HxComputerStatus {
    * directly only after the self-test passed for it on this computer.
    */
   unchecked: number;
+  /**
+   * HXBot (v1.7.3, CONC-06): “停放后自动续做”. A step parked because the user used the computer goes on
+   * by itself after the user stopped. Absent from an older main process: on.
+   */
+  autoResume?: boolean;
 }
 
 export type HxSelfTestOutcome = "passed" | "failed" | "skipped";
@@ -103,6 +108,7 @@ export function decodeHxComputerStatus(value: unknown): HxComputerStatus {
       typeof id === "string" ? [id.slice(0, 200)] : [],
     ),
     unchecked: count(record.unchecked),
+    autoResume: record.autoResume !== false,
   };
 }
 

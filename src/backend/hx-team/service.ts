@@ -241,6 +241,10 @@ const ACTIVE = new Set(["queued", "running", "waiting"]);
 const SETTLED = new Set(["completed", "failed", "cancelled"]);
 /** v1.7.1: how often the guards look at the running teams. */
 const HX_TEAM_TICK_MS = 15_000;
+/** The most files the progress check of a team folder reads (v1.7.3). */
+const HX_TEAM_HASH_ENTRIES = 4_000;
+/** Folders of packages and of version control: their files are no progress of the team's own. */
+const HX_TEAM_HASH_SKIP: ReadonlySet<string> = new Set(["node_modules", ".git", ".venv", "venv", "__pycache__"]);
 
 /** v1.7.1 (TEAM-01): the limits the user named in `start_team`, or undefined when there are none. */
 function hxStated(
@@ -1279,13 +1283,19 @@ export class HxTeams {
     if (!team.folder) return null;
     try {
       const hash = createHash("sha256");
+      // v1.7.3: the walk runs in the main process. A team that installs packages or clones a repository
+      // in its folder has tens of thousands of files there: the walk skips their folders and stops after
+      // HX_TEAM_HASH_ENTRIES files, so it never holds the app up.
+      let left = HX_TEAM_HASH_ENTRIES;
       const walk = (folder: string, depth: number) => {
         for (const entry of readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+          if (left <= 0) return;
           const path = join(folder, entry.name);
           if (entry.isDirectory()) {
-            if (depth < 3) walk(path, depth + 1);
+            if (depth < 3 && !HX_TEAM_HASH_SKIP.has(entry.name)) walk(path, depth + 1);
             continue;
           }
+          left -= 1;
           const info = statSync(path);
           hash.update(`${path}\0${info.size}\0${info.mtimeMs}\n`);
         }

@@ -95,10 +95,13 @@ describe("what the agent is told", () => {
       expect(text.split(SENTENCE).length - 1, provider).toBe(1);
       expect(text, provider).toContain("hxbot.computer_set");
       expect(text, provider).toContain("leave a security page to the user");
-      // It follows the sentence about the Computer Use skill, in the same paragraph.
-      expect(text, provider).toContain(`before the first GUI action of a conversation. ${SENTENCE}`);
-      // The name of the Computer Use server was filled in: no placeholder is left in the text.
+      // v1.7.3 (CONC-05): one entry. The native driver is given to no agent, and the text names it nowhere.
+      expect(text, provider).toContain(`Use the hxbot computer tools for every GUI task`);
+      expect(text, provider).not.toContain("skill://cua-driver");
       expect(text, provider).not.toContain("COMPUTER_USE_MCP_SERVER_NAME");
+      expect(text, provider).not.toContain("computer_use for every");
+      expect(text, provider).toContain("Only a verified step is done.");
+      expect(text, provider).toContain("waiting_user");
     }
   });
 

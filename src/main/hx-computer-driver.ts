@@ -5,7 +5,7 @@
 import { execFile } from "node:child_process";
 import type { MacPermissionId } from "@hxbot/contracts/ipc";
 import type { AppTranslate } from "@hxbot/i18n";
-import { app, clipboard, desktopCapturer, shell, systemPreferences } from "electron";
+import { app, clipboard, desktopCapturer, powerMonitor, shell, systemPreferences } from "electron";
 import { runCauseEffect } from "../backend/effect-boundary";
 import { hxComputer } from "../backend/hx-computer/computer";
 import { hxStepGrantsMissing } from "../backend/hx-computer/driver-help";
@@ -92,6 +92,12 @@ export function hxConnectComputerDriver(input: {
     },
   });
   hxComputer.setClipboardKeep(hxClipboardKeep);
+  // v1.7.3 (CONC-06): whether the user is at the computer. The idle time counts every input, HXBot's
+  // own too; hx-computer/presence.ts takes HXBot's own inputs out.
+  hxComputer.setPresenceSource({
+    idleSeconds: () => powerMonitor.getSystemIdleTime(),
+    locked: () => powerMonitor.getSystemIdleState(1) === "locked",
+  });
   // v1.7.0: the stop keys are held while an agent works on this computer (hx-computer-stop.ts).
   hxComputerWorkSource(
     () => hxComputer.workedWithin(HX_WORK_HOLDS_MS) || input.driver.lastAction(HX_WORK_HOLDS_MS) !== null,
@@ -128,10 +134,18 @@ async function clipboardKey(): Promise<{ types: string[]; text: string }> {
   return { types: items.flatMap((item) => item.types), text: await clipboard.readText() };
 }
 
+/** Text as two clipboards hold it: line ends differ between the apps that wrote it. */
+function sameText(a: string, b: string): boolean {
+  const plain = (value: string) => value.replace(/\r\n?/gu, "\n").trim();
+  return plain(a) === plain(b);
+}
+
 /**
  * The user's clipboard around typed text (v1.7.0, F5). Only the text is read: reading every type
  * would make the app that copied it produce each one (a large copy in Excel takes seconds).
  * A text copy goes back as it was; a copy of another kind is left as it is now.
+ * v1.7.3 (CU-01): it goes back only while the clipboard holds the typed text (the driver borrowed
+ * it); another text is a copy the user made meanwhile, and stays.
  */
 const hxClipboardKeep: HxClipboardKeep = {
   async save() {
@@ -141,6 +155,10 @@ const hxClipboardKeep: HxClipboardKeep = {
       changed: async () => {
         const now = await clipboardKey();
         return now.text !== before.text || now.types.join("|") !== before.types.join("|");
+      },
+      holds: async (text) => {
+        if (text.length === 0) return false;
+        return sameText(await clipboard.readText(), text);
       },
       putBack: async () => {
         if (!textOnly) return;

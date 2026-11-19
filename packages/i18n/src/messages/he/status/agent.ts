@@ -171,4 +171,12 @@ export const messages = {
   "status.agent.hxTeam.spend.api": "צוות · הוצאו עד עכשיו כ־¥{yuan}. הוא ממשיך; אמור מגבלה כדי לעצור אותו שם.",
   "status.agent.hxTeam.spend.plan": "צוות · נוצלו {percent}% מתקופת התוכנית. הוא ממשיך; אמור מגבלה כדי לעצור אותו שם.",
   "status.agent.hxTeam.spend.tokens": "צוות · נוצלו עד עכשיו כ־{millions} מיליון אסימונים (המחיר לא ידוע). הוא ממשיך.",
+  "status.agent.hxComputer.parked":
+    "ממתין לך: השלב ב-{app} ימשיך כשלא תשתמש במקלדת או בעכבר במשך {seconds} שניות והחלון שלו יהיה בחזית. השב „עכשיו” כדי לבצע אותו מיד, או „ביטול” כדי לוותר עליו.",
+  "status.agent.hxComputer.parkedLocked":
+    "ממתין לך: המסך נעול. השלב ב-{app} ימשיך אחרי שתבטל את הנעילה והחלון שלו יהיה בחזית. השב „עכשיו” כדי לבצע אותו מיד, או „ביטול” כדי לוותר עליו.",
+  "status.agent.hxComputer.parkedLong":
+    "השלב ב-{app} ממתין כבר 30 דקות. השב „עכשיו” כדי לבצע אותו מיד, או „ביטול” כדי לוותר עליו.",
+  "status.agent.hxComputer.resume":
+    "(נשלח על ידי HXBot) המשתמש הפסיק, ו-{app} בחזית: המשך את השלב שהושהה. הסתכל קודם על החלון, ואז בצע את {count} השלבים שנותרו. שאל את המשתמש לפני שליחה, תשלום או מחיקה, כרגיל.",
 } as const satisfies PartialTranslation<typeof source>;

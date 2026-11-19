@@ -191,7 +191,11 @@ describe("computer_look and computer_do", () => {
     expect(answer.steps).toHaveLength(2);
     expect(cards.at(-1)?.plan.steps.map((step) => step.state)).toEqual(["done", "done"]);
     expect(cards.at(-1)?.plan.id).toBe("card-1");
-    expect(records).toEqual(["computer_do TextEdit: 2/2"]);
+    // v1.7.3 (CU-02): one line per step in the activity record, with its route and its check.
+    expect(records).toEqual([
+      "computer_do TextEdit #50 step 1 type via foreground: verified; Body: 2 characters",
+      "computer_do TextEdit #50 step 2 hotkey via keyboard: verified; cmd+s; the driver checked it",
+    ]);
   });
 
   it("says what failed, with the outline, and marks the plan step that failed", async () => {

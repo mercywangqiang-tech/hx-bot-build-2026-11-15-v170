@@ -890,4 +890,7 @@ export const messages = {
     "팀: 인원은 작업에 맞게 정하고, 동시에 일하는 수는 이 컴퓨터가 정합니다(현재 {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "역할이 여러 개인 카드에서 시작을 누르면 팀이 만들어집니다. HXBot이 전문성에 따라 에이전트를 고르고, 없는 역할의 멤버를 만들고, 팀 룸을 엽니다. 진행 상황과 결과는 이 대화로 돌아옵니다. 팀에는 한도가 없으며, 진전이 없으면 일시 중지하고 물어봅니다. 한 팀에만 한도를 두려면 대화에서 말하세요.",
+  "settings.hxComputer.autoResume.title": "보류한 단계를 자동으로 이어서 하기",
+  "settings.hxComputer.autoResume.description":
+    "컴퓨터를 사용하는 동안 에이전트는 키보드나 마우스가 필요한 단계를 보류합니다. 켜 두면 5초(루틴은 60초) 동안 손을 멈춘 뒤 자동으로 이어서 합니다. 끄면 “지금”이라고 답할 때만 합니다.",
 } as const satisfies PartialTranslation<typeof source>;

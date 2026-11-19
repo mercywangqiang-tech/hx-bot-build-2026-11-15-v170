@@ -38,6 +38,7 @@ function calls(change: Partial<HxComputerCalls> = {}): HxComputerCalls {
     status: vi.fn(() => Promise.resolve(STATUS)),
     rebuild: vi.fn(() => Promise.resolve({ ...STATUS, apps: 121, builtAt: BUILT_AT + 5 })),
     selfTest: vi.fn(() => Promise.resolve(REPORT)),
+    setAutoResume: vi.fn((on: boolean) => Promise.resolve({ ...STATUS, autoResume: on })),
     ...change,
   };
 }

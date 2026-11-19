@@ -12,6 +12,7 @@ describe("decodeHxComputerStatus", () => {
       directSettings: 8,
       disabled: ["setting:volume"],
       unchecked: 3,
+      autoResume: false,
     };
     expect(decodeHxComputerStatus(status)).toEqual(status);
     expect(decodeHxComputerStatus({ ...status, platform: "windows" }).platform).toBe("windows");
@@ -27,8 +28,12 @@ describe("decodeHxComputerStatus", () => {
       directSettings: 0,
       disabled: [],
       unchecked: 0,
+      // v1.7.3: “停放后自动续做” is on unless main says it is off.
+      autoResume: true,
     };
     for (const value of [null, undefined, "x", 5, [], {}]) expect(decodeHxComputerStatus(value)).toEqual(empty);
+    expect(decodeHxComputerStatus({ autoResume: false }).autoResume).toBe(false);
+    expect(decodeHxComputerStatus({ autoResume: "no" }).autoResume).toBe(true);
     expect(
       decodeHxComputerStatus({
         platform: "linux",

@@ -19,6 +19,7 @@ import { Deferred, Effect, Schema } from "effect";
 import { agentLaunchPath, isExecutable, isWindowsRunnable } from "./cli";
 import { causeHelpers } from "./effect-boundary";
 import { isMissingFileError } from "./file-errors";
+import { hxNativeDriverGiven } from "./hx-computer/one-entry";
 import type { McpOperationError } from "./mcp-effects";
 import { getRecord } from "./protocol";
 
@@ -172,9 +173,16 @@ function unusableDrop(server: UnusableMcpServer): McpServerDrop {
 /**
  * The configurations one agent is given: all of them, or all but Computer Use when the user turned
  * it off for that agent.
+ *
+ * HXBot (v1.7.3, CONC-05): where HXBot's own computer tools work (macOS, Windows), no agent gets the
+ * native Computer Use driver: every action on this computer goes through HXBot's lanes, checks and
+ * records (hx-computer). The tool list changes once with this version, so each provider starts a
+ * new session once; the chat stays.
  */
 export function agentMcpServers(configs: readonly McpServerConfig[], computerUse: boolean): readonly McpServerConfig[] {
-  return computerUse ? configs : configs.filter((config) => config.id !== COMPUTER_USE_MCP_SERVER_ID);
+  return computerUse && hxNativeDriverGiven()
+    ? configs
+    : configs.filter((config) => config.id !== COMPUTER_USE_MCP_SERVER_ID);
 }
 
 /**

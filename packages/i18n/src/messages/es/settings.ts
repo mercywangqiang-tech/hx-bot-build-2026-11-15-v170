@@ -922,4 +922,7 @@ export const messages = {
     "Equipo: miembros según el trabajo; este ordenador decide cuántos trabajan a la vez (ahora {count})",
   "settings.hxAutoModel.team.descriptionOpen":
     "Iniciar en una tarjeta con varios roles crea un equipo: HXBot elige agentes según su habilidad, crea miembros para los roles que faltan y abre una sala de equipo. El progreso y el resultado vuelven a este chat. Un equipo no tiene límites; si no avanza, hace una pausa y te pregunta. Para poner un límite a un equipo, dilo en el chat.",
+  "settings.hxComputer.autoResume.title": "Continuar solos los pasos aparcados",
+  "settings.hxComputer.autoResume.description":
+    "Mientras usas el ordenador, un agente aparca el paso que necesita el teclado o el ratón. Si está activado, el paso sigue solo cuando paras 5 segundos (60 en las rutinas). Si está desactivado, solo cuando respondes «ahora».",
 } as const satisfies PartialTranslation<typeof source>;
