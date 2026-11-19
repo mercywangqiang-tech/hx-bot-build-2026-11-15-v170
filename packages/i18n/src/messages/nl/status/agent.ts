@@ -208,4 +208,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Team · {name}: de aanbieder van {from} pauzeert al minuten, dus het nieuwe werk gebruikt {to}.",
   "status.agent.hxTeam.card.judge": "Het oordeel van de rechter (alleen advies): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: begint nu",
+  "status.agent.hxTeam.member.provider":
+    "{name}: wacht op de aanbieder van zijn model (plaats {position}, ongeveer {minutes} min)",
+  "status.agent.hxTeam.member.held": "{name}: wacht zolang het team pauzeert of afrondt",
+  "status.agent.hxSkill.space.header": "Ruimte voor versies",
+  "status.agent.hxSkill.space.cap":
+    "De ruimte voor eerdere versies van bestanden is vol ({used} van {cap}). Om de versie van {file} van voor deze wijziging te bewaren, heeft HXBot nog {needed} nodig. Wat moet HXBot doen?",
+  "status.agent.hxSkill.space.disk":
+    "Er is geen ruimte op de schijf om de versie van {file} van voor deze wijziging te bewaren (nodig: {needed}). Wat moet HXBot doen?",
+  "status.agent.hxSkill.space.detail":
+    "Er verandert niets tot je kiest. Je kunt de ruimte wijzigen in Instellingen → PC-besturing.",
+  "status.agent.hxSkill.space.cleanOld": "Oudste versies verwijderen",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Verwijdert de versies van de oudste taken (nooit van deze) tot er ruimte is, en voert dan de wijziging uit.",
+  "status.agent.hxSkill.space.noVersion": "Wijzigen zonder versie",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Voert de wijziging nu uit. Je kunt dit bestand niet terugzetten naar hoe het ervoor was.",
+  "status.agent.hxSkill.space.cancel": "Wijziging annuleren",
+  "status.agent.hxSkill.space.cancelDetail": "Het bestand blijft zoals het is, en alle versies blijven.",
 } as const satisfies PartialTranslation<typeof source>;

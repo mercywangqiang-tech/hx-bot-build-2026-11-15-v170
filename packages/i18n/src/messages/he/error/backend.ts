@@ -368,4 +368,5 @@ export const messages = {
   "error.backend.taskOpenLimitReached": "לסוכן הזה יש {count} משימות פתוחות. יש לסגור משימה ואז להתחיל או לפתוח אחרת.",
   "error.backend.taskRemoteUnsupported": "משימות זמינות רק לסוכנים שנמצאים במחשב הזה.",
   "error.backend.taskStartFailed": "HXBot לא הצליח להתחיל את המשימה. יש לבצע את העבודה בתור הזה במקום.",
+  "error.backend.hxAskOwnerOnly": "רק הבעלים של HXBot הזה יכול לבחור בזה. כל אחד יכול לבטל את השינוי.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -196,4 +196,20 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "צוות · {name}: הספק של {from} מושהה כבר כמה דקות, ולכן העבודה החדשה שלו משתמשת ב־{to}.",
   "status.agent.hxTeam.card.judge": "דעת השופט (עצה בלבד): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: מתחיל עכשיו",
+  "status.agent.hxTeam.member.provider": "{name}: ממתין לספק של המודל שלו (מקום {position}, בערך {minutes} דק׳)",
+  "status.agent.hxTeam.member.held": "{name}: ממתין כל עוד הצוות מושהה או מסיים",
+  "status.agent.hxSkill.space.header": "מקום לגרסאות",
+  "status.agent.hxSkill.space.cap":
+    "המקום לגרסאות קודמות של קבצים מלא ({used} מתוך {cap}). כדי לשמור את הגרסה של {file} מלפני השינוי, HXBot צריך עוד {needed}. מה HXBot יעשה?",
+  "status.agent.hxSkill.space.disk":
+    "אין מקום בדיסק לשמור את הגרסה של {file} מלפני השינוי (צריך {needed}). מה HXBot יעשה?",
+  "status.agent.hxSkill.space.detail": "שום דבר לא משתנה עד שתבחר. אפשר לשנות את המקום בהגדרות ← שליטה במחשב.",
+  "status.agent.hxSkill.space.cleanOld": "להסיר את הגרסאות הישנות ביותר",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "מסיר את הגרסאות שנשמרו למשימות הישנות ביותר (אף פעם לא למשימה הזאת) עד שיש מקום, ואז מבצע את השינוי.",
+  "status.agent.hxSkill.space.noVersion": "לשנות בלי לשמור גרסה",
+  "status.agent.hxSkill.space.noVersionDetail": "מבצע את השינוי עכשיו. לא תוכל להחזיר את הקובץ למצבו הקודם.",
+  "status.agent.hxSkill.space.cancel": "לבטל את השינוי",
+  "status.agent.hxSkill.space.cancelDetail": "הקובץ נשאר כמו שהוא, וכל הגרסאות נשארות.",
 } as const satisfies PartialTranslation<typeof source>;

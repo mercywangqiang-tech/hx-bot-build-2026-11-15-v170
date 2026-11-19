@@ -69,6 +69,27 @@ export class HxHoldDetails {
     return this.#details.get(lane) ?? null;
   }
 
+  /** How many lanes wait for a turn slot of this computer now (as of the last refresh). */
+  machineWaiting(): number {
+    let count = 0;
+    for (const detail of this.#details.values()) if (detail.kind === "machine") count += 1;
+    return count;
+  }
+
+  /**
+   * The detail of an agent's lane that waits, or null. A team member waits on one lane at a time
+   * (its task); when two of its lanes wait, the one nearest the front.
+   */
+  ofAgent(agentId: string): HxHoldDetail | null {
+    let best: HxHoldDetail | null = null;
+    for (const [lane, detail] of this.#details) {
+      if (agentOf(lane) !== agentId) continue;
+      if (!best || (detail.position ?? Number.POSITIVE_INFINITY) < (best.position ?? Number.POSITIVE_INFINITY))
+        best = detail;
+    }
+    return best;
+  }
+
   /** Works the details out again; returns the agents whose detail changed, and tells them. */
   refresh(): string[] {
     // HXBot (v1.7.4, CONC-08): the same tick samples the overload of each tier.

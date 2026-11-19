@@ -167,4 +167,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Equipe · {name}: o provedor de {from} está em pausa há minutos, então o trabalho novo usa {to}.",
   "status.agent.hxTeam.card.judge": "A opinião do juiz (só um conselho): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: começa agora",
+  "status.agent.hxTeam.member.provider":
+    "{name}: espera o provedor do seu modelo (lugar {position}, cerca de {minutes} min)",
+  "status.agent.hxTeam.member.held": "{name}: em espera enquanto a equipe está em pausa ou concluindo",
+  "status.agent.hxSkill.space.header": "Espaço de versões",
+  "status.agent.hxSkill.space.cap":
+    "O espaço para versões anteriores de arquivos está cheio ({used} de {cap}). Para guardar a versão de {file} de antes desta alteração, o HXBot precisa de mais {needed}. O que o HXBot deve fazer?",
+  "status.agent.hxSkill.space.disk":
+    "Não há espaço no disco para guardar a versão de {file} de antes desta alteração (precisa de {needed}). O que o HXBot deve fazer?",
+  "status.agent.hxSkill.space.detail":
+    "Nada muda até você escolher. Você pode alterar o espaço em Configurações → Uso do computador.",
+  "status.agent.hxSkill.space.cleanOld": "Remover as versões mais antigas",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Remove as versões guardadas das tarefas mais antigas (nunca desta) até haver espaço e depois faz a alteração.",
+  "status.agent.hxSkill.space.noVersion": "Alterar sem guardar versão",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Faz a alteração agora. Você não poderá restaurar este arquivo para como estava antes.",
+  "status.agent.hxSkill.space.cancel": "Cancelar a alteração",
+  "status.agent.hxSkill.space.cancelDetail": "O arquivo fica como está, e todas as versões ficam.",
 } as const satisfies PartialTranslation<typeof source>;

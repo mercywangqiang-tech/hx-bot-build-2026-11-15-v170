@@ -12,6 +12,7 @@ import { hxAppDataFolder } from "../hx-access/hub";
 import { hxAccessStore } from "../hx-access/rules";
 import { hxFlow } from "../hx-flow/ledger";
 import type { HxProgressWriter } from "../hx-progress/progress";
+import type { HxAsk } from "../hx-skills/ask";
 import { HX_SKILL_TOOL } from "../hx-skills/declarations";
 import { hxSkillStopAll, hxSkillToolCall } from "../hx-skills/host";
 import type { DynamicToolCallParams, DynamicToolResult } from "../protocol";
@@ -139,6 +140,8 @@ export const hxComputer = {
       threadId?: string | null;
     } | null,
     params: Pick<DynamicToolCallParams, "tool" | "arguments">,
+    /** HXBot (v1.7.4, BAK-03): asks the user in the conversation of the call (computer_skill). */
+    ask: HxAsk | null = null,
   ): Promise<DynamicToolResult> {
     const record = (detail: string) => {
       hxAccessStore.record({ agent: agent?.name ?? "", kind: "command", detail, outcome: "auto" });
@@ -160,6 +163,7 @@ export const hxComputer = {
           arguments: params.arguments,
           run: hxRun,
           settings: current.catalog.platform === null ? null : current.actions,
+          ask,
           systemTurn: (work) =>
             hxSystemTurn(
               holder,

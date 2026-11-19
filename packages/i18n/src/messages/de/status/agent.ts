@@ -174,4 +174,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Team · {name}: Der Anbieter von {from} pausiert seit Minuten, daher nutzt seine neue Arbeit {to}.",
   "status.agent.hxTeam.card.judge": "Einschätzung des Prüfers (nur ein Rat): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: beginnt jetzt",
+  "status.agent.hxTeam.member.provider":
+    "{name}: wartet auf den Anbieter seines Modells (Platz {position}, etwa {minutes} Min.)",
+  "status.agent.hxTeam.member.held": "{name}: wartet, solange das Team pausiert oder abschließt",
+  "status.agent.hxSkill.space.header": "Platz für Versionen",
+  "status.agent.hxSkill.space.cap":
+    "Der Platz für frühere Versionen von Dateien ist voll ({used} von {cap}). Um die Version von {file} vor dieser Änderung zu behalten, braucht HXBot noch {needed}. Was soll HXBot tun?",
+  "status.agent.hxSkill.space.disk":
+    "Auf dem Datenträger ist kein Platz, um die Version von {file} vor dieser Änderung zu behalten (benötigt: {needed}). Was soll HXBot tun?",
+  "status.agent.hxSkill.space.detail":
+    "Bis du wählst, ändert sich nichts. Den Platz kannst du unter Einstellungen → PC-Steuerung ändern.",
+  "status.agent.hxSkill.space.cleanOld": "Älteste Versionen entfernen",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Entfernt die Versionen der ältesten Aufgaben (nie dieser), bis Platz ist, und nimmt dann die Änderung vor.",
+  "status.agent.hxSkill.space.noVersion": "Ohne Version ändern",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Nimmt die Änderung jetzt vor. Diese Datei lässt sich dann nicht auf den Stand davor zurücksetzen.",
+  "status.agent.hxSkill.space.cancel": "Änderung abbrechen",
+  "status.agent.hxSkill.space.cancelDetail": "Die Datei bleibt, wie sie ist, und alle Versionen bleiben.",
 } as const satisfies PartialTranslation<typeof source>;

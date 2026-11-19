@@ -170,4 +170,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Zespół · {name}: dostawca {from} jest wstrzymany od kilku minut, więc nowa praca używa {to}.",
   "status.agent.hxTeam.card.judge": "Opinia sędziego (tylko rada): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: zaczyna teraz",
+  "status.agent.hxTeam.member.provider":
+    "{name}: czeka na dostawcę swojego modelu (miejsce {position}, około {minutes} min)",
+  "status.agent.hxTeam.member.held": "{name}: czeka, dopóki zespół jest wstrzymany lub kończy pracę",
+  "status.agent.hxSkill.space.header": "Miejsce na wersje",
+  "status.agent.hxSkill.space.cap":
+    "Miejsce na wcześniejsze wersje plików jest pełne ({used} z {cap}). Aby zachować wersję {file} sprzed tej zmiany, HXBot potrzebuje jeszcze {needed}. Co ma zrobić HXBot?",
+  "status.agent.hxSkill.space.disk":
+    "Na dysku nie ma miejsca, by zachować wersję {file} sprzed tej zmiany (potrzeba {needed}). Co ma zrobić HXBot?",
+  "status.agent.hxSkill.space.detail":
+    "Nic się nie zmieni, dopóki nie wybierzesz. Miejsce możesz zmienić w Ustawienia → Sterowanie PC.",
+  "status.agent.hxSkill.space.cleanOld": "Usuń najstarsze wersje",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Usuwa wersje zachowane dla najstarszych zadań (nigdy dla tego), aż będzie miejsce, a potem wprowadza zmianę.",
+  "status.agent.hxSkill.space.noVersion": "Zmień bez wersji",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Wprowadza zmianę teraz. Nie da się przywrócić tego pliku do stanu sprzed niej.",
+  "status.agent.hxSkill.space.cancel": "Anuluj zmianę",
+  "status.agent.hxSkill.space.cancelDetail": "Plik zostaje bez zmian i zostają wszystkie wersje.",
 } as const satisfies PartialTranslation<typeof source>;

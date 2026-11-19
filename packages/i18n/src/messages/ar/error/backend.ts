@@ -371,4 +371,5 @@ export const messages = {
   "error.backend.taskOpenLimitReached": "لدى هذا الوكيل {count} مهام مفتوحة. أغلق مهمة، ثم ابدأ مهمة أخرى أو افتحها.",
   "error.backend.taskRemoteUnsupported": "المهام متاحة فقط للوكلاء على هذا الحاسوب.",
   "error.backend.taskStartFailed": "تعذّر على HXBot بدء المهمة. أنجز العمل في هذا الدور بدلًا من ذلك.",
+  "error.backend.hxAskOwnerOnly": "لا يستطيع اختيار هذا إلا مالك HXBot هذا. يمكن لأي شخص إلغاء التغيير.",
 } as const satisfies PartialTranslation<typeof source>;

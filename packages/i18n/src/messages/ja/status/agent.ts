@@ -166,4 +166,21 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "チーム · {name}：{from} のプロバイダーが数分間停止しているため、新しい作業は {to} を使います。",
   "status.agent.hxTeam.card.judge": "判定役の見解（参考のみ）：{verdict}。{reason}",
+  "status.agent.hxTeam.member.starting": "{name}：まもなく開始",
+  "status.agent.hxTeam.member.provider": "{name}：モデルのプロバイダー待ち（{position} 番目、約 {minutes} 分）",
+  "status.agent.hxTeam.member.held": "{name}：チームが一時停止中または仕上げ中のため待機",
+  "status.agent.hxSkill.space.header": "バージョンの保存領域",
+  "status.agent.hxSkill.space.cap":
+    "ファイルの以前のバージョンを保存する領域がいっぱいです（{cap} 中 {used} 使用）。この変更前の {file} を保存するには、あと {needed} 必要です。HXBot はどうしますか？",
+  "status.agent.hxSkill.space.disk":
+    "この変更前の {file} を保存する空きがディスクにありません（{needed} 必要）。HXBot はどうしますか？",
+  "status.agent.hxSkill.space.detail":
+    "選ぶまで何も変わりません。保存領域の大きさは「設定 → Computer Use」で変えられます。",
+  "status.agent.hxSkill.space.cleanOld": "いちばん古いバージョンを削除",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "いちばん古いタスクのバージョンから（このタスクのものは削除しません）空きができるまで削除し、そのあと変更します。",
+  "status.agent.hxSkill.space.noVersion": "バージョンを残さずに変更",
+  "status.agent.hxSkill.space.noVersionDetail": "今すぐ変更します。このファイルを変更前に戻すことはできません。",
+  "status.agent.hxSkill.space.cancel": "変更をキャンセル",
+  "status.agent.hxSkill.space.cancelDetail": "ファイルはそのままで、バージョンもすべて残ります。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -172,4 +172,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Équipe · {name} : le fournisseur de {from} est en pause depuis plusieurs minutes, son nouveau travail utilise donc {to}.",
   "status.agent.hxTeam.card.judge": "L'avis du juge (simple conseil) : {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name} : commence maintenant",
+  "status.agent.hxTeam.member.provider":
+    "{name} : attend le fournisseur de son modèle (place {position}, environ {minutes} min)",
+  "status.agent.hxTeam.member.held": "{name} : en attente tant que l'équipe est en pause ou termine",
+  "status.agent.hxSkill.space.header": "Espace des versions",
+  "status.agent.hxSkill.space.cap":
+    "L'espace pour les versions précédentes des fichiers est plein ({used} sur {cap}). Pour garder la version de {file} d'avant cette modification, HXBot a besoin de {needed} de plus. Que doit faire HXBot ?",
+  "status.agent.hxSkill.space.disk":
+    "Le disque n'a pas la place de garder la version de {file} d'avant cette modification (il faut {needed}). Que doit faire HXBot ?",
+  "status.agent.hxSkill.space.detail":
+    "Rien ne change tant que vous n'avez pas choisi. Vous pouvez modifier l'espace dans Réglages → Computer Use.",
+  "status.agent.hxSkill.space.cleanOld": "Supprimer les plus anciennes versions",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Supprime les versions gardées pour les tâches les plus anciennes (jamais celle-ci) jusqu'à avoir la place, puis fait la modification.",
+  "status.agent.hxSkill.space.noVersion": "Modifier sans garder de version",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Fait la modification maintenant. Vous ne pourrez pas rétablir ce fichier tel qu'il était avant.",
+  "status.agent.hxSkill.space.cancel": "Annuler la modification",
+  "status.agent.hxSkill.space.cancelDetail": "Le fichier reste tel quel, et toutes les versions restent.",
 } as const satisfies PartialTranslation<typeof source>;

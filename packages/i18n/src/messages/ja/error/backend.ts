@@ -401,4 +401,5 @@ export const messages = {
     "このエージェントには {count} 件の開いているタスクがあります。タスクを閉じてから、別のタスクを開始するか開いてください。",
   "error.backend.taskRemoteUnsupported": "タスクは、このコンピューター上のエージェントでのみ利用できます。",
   "error.backend.taskStartFailed": "HXBot はタスクを開始できませんでした。代わりにこのターンで作業してください。",
+  "error.backend.hxAskOwnerOnly": "これを選べるのはこの HXBot の所有者だけです。キャンセルは誰でもできます。",
 } as const satisfies PartialTranslation<typeof source>;

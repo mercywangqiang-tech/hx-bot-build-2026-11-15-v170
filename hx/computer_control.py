@@ -160,6 +160,9 @@ def tools(r) -> None:
               "                      }\n"
               "                    : null,\n"
               "                  toolRequest.params,\n"
+              # v1.7.4（BAK-03）：空间满时在这次调用所在的对话里问你（hx/skills_ui_v174.py 加的 hxAsk）
+              "                  (questions, ownerOnly, signal) =>\n"
+              "                    this.#attention.hxAsk(client, toolRequest, questions, ownerOnly, signal),\n"
               "                )\n"
               "                .then((result) => client.respond(hxRequestId, result));\n"
               "              return;\n"

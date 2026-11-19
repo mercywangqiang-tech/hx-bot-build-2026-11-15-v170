@@ -1,6 +1,6 @@
 // HXBot v1.7.4（CU-07）：computer_skill 接进电脑操控。版本仓库（数据目录 file-versions/）全程序一个，
-// 第一次用之前先收拾上次没写完的（recover）；对话卡片和“空间满了”的提问由智能体服务接上（#54），
-// 没接上时空间满一律“取消修改”，不替用户选。
+// 第一次用之前先收拾上次没写完的（recover）；改了文件的卡片由智能体服务接上（hxSetSkillUiHost），“空间满了”
+// 的提问是这次调用所在对话的提问卡（ask，v1.7.4 #54）。问不了时空间满一律“取消修改”，不替用户选。
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { hxAccessAgent, hxAppDataFolder } from "../hx-access/hub";
@@ -9,17 +9,12 @@ import { hxAccessStore } from "../hx-access/rules";
 import type { HxRunner } from "../hx-computer/runner";
 import { HxFileVersions } from "../hx-files/versions";
 import type { DynamicToolResult } from "../protocol";
+import type { HxAsk } from "./ask";
 import { HX_SKILLS, hxExtension } from "./declarations";
 import { HX_SKILL_ARGS, type HxJson } from "./operations";
-import {
-  HX_SKILL_DEADLINE_MS,
-  type HxFileChangeEvent,
-  HxSkillRequests,
-  HxSkillRunner,
-  type HxSpaceChoice,
-  type HxSpaceQuestion,
-} from "./run";
+import { HX_SKILL_DEADLINE_MS, type HxFileChangeEvent, HxSkillRequests, HxSkillRunner } from "./run";
 import type { HxSettingsHost } from "./settings";
+import { hxAskSpaceFull } from "./space-question";
 
 let versions: HxFileVersions | null = null;
 /** Request ids answered in this run of HXBot (idempotency; spec §3.3). */
@@ -50,9 +45,11 @@ export async function hxReadyFileVersions(): Promise<HxFileVersions | null> {
   return store;
 }
 
-/** What the conversation shows: the change card, and the question when the space is full. */
+/**
+ * What the conversation shows: the card of a change. The question when the space is full comes with
+ * each call (`ask`): it is a question card of the turn that made the call.
+ */
 export interface HxSkillUiHost {
-  askSpaceFull(agentId: string, task: string, question: HxSpaceQuestion): Promise<HxSpaceChoice>;
   changed(agentId: string, event: HxFileChangeEvent): void;
 }
 
@@ -81,6 +78,8 @@ export interface HxSkillCallInput {
   settings: HxSettingsHost | null;
   /** Runs app work in the system lane; it answers by itself when the lane is busy. */
   systemTurn: (work: () => Promise<DynamicToolResult>) => Promise<DynamicToolResult>;
+  /** v1.7.4 (BAK-03): asks the user in the conversation of the call; null where nobody can answer. */
+  ask?: HxAsk | null;
 }
 
 function result(ok: boolean, answer: { readonly [key: string]: HxJson | undefined }): DynamicToolResult {
@@ -97,6 +96,7 @@ export async function hxSkillToolCall(input: HxSkillCallInput): Promise<DynamicT
   const dataFolder = hxAppDataFolder();
   const task = agent.threadId ?? `agent-${agent.id}`;
   const ui = uiHost;
+  const ask = input.ask ?? null;
   const stop = new AbortController();
   running.add(stop);
   const signal = AbortSignal.any([stop.signal, AbortSignal.timeout(HX_SKILL_DEADLINE_MS)]);
@@ -106,7 +106,8 @@ export async function hxSkillToolCall(input: HxSkillCallInput): Promise<DynamicT
     files: { signal },
     versions: store,
     record: (entry) => hxAccessStore.record({ agent: agent.name, ...entry }),
-    askSpaceFull: ui ? (question) => ui.askSpaceFull(agent.id, task, question) : null,
+    // BAK-03-A2: a full space stops the change and asks; with nobody to ask, the change is cancelled.
+    askSpaceFull: ask ? (question) => hxAskSpaceFull(ask, question, signal) : null,
     app: { run: input.run, platform: process.platform },
     settings: input.settings,
     protectedRoots: hxProtectedRoots(homedir(), dataFolder ? [dataFolder] : []),

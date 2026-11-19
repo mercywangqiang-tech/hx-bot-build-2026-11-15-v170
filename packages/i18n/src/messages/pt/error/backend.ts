@@ -402,4 +402,6 @@ export const messages = {
     "Este agente tem {count} tarefas abertas. Feche uma tarefa e depois inicie ou abra outra.",
   "error.backend.taskRemoteUnsupported": "As tarefas só estão disponíveis para agentes neste computador.",
   "error.backend.taskStartFailed": "O HXBot não conseguiu iniciar a tarefa. Faça o trabalho neste turno.",
+  "error.backend.hxAskOwnerOnly":
+    "Só o proprietário deste HXBot pode escolher isto. Qualquer pessoa pode cancelar a alteração.",
 } as const satisfies PartialTranslation<typeof source>;

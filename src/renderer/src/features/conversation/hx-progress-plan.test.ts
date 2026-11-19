@@ -1,5 +1,6 @@
 import { HX_PROGRESS_ITEM_TYPE, hxProgressText } from "@hxbot/contracts/hx-progress";
 import type { ConversationMessage } from "@hxbot/contracts/ipc";
+import { localizeSourceText } from "@hxbot/i18n";
 import { describe, expect, it } from "vitest";
 import { planItems, toAgentMessage } from "../../app-message-projection";
 import { hxProgressLive, hxProgressPlan } from "./hx-progress-plan";
@@ -37,6 +38,34 @@ describe("a progress card in the chat", () => {
       ],
       stopped: false,
     });
+  });
+
+  it("reads a member line in the reader's language, and leaves a step's own words (v1.7.4, CONC-09)", () => {
+    const message: ConversationMessage = {
+      ...card("completed", []),
+      text: hxProgressText({
+        title: "Team · 2 handoffs · 1 min",
+        steps: [
+          { text: "第 1 部分 · 卡2", state: "active" },
+          { text: "卡3: queued (place 3, about 2 min)", state: "pending" },
+        ],
+      }),
+    };
+    // The host writes English; the screen maps it back to its key (here in English, the test's language).
+    expect(hxProgressPlan(message)?.steps.map((step) => step.text)).toEqual([
+      "第 1 部分 · 卡2",
+      "卡3: queued (place 3, about 2 min)",
+    ]);
+    // What a Chinese reader sees: the same key in Chinese, the names as they are.
+    expect(localizeSourceText("卡3: queued (place 3, about 2 min)", "zh")).toBe("卡3：排队（第 3 位，约 2 分钟）");
+    expect(localizeSourceText("卡6: starting now", "zh")).toBe("卡6：马上开始");
+    expect(localizeSourceText("卡6: waits for its model's provider (place 2, about 1 min)", "zh")).toBe(
+      "卡6：等模型服务商（第 2 位，约 1 分钟）",
+    );
+    expect(localizeSourceText("卡6: on hold while the team is paused or wrapping up", "zh")).toBe(
+      "卡6：团队暂停或收尾中，先不开始",
+    );
+    expect(localizeSourceText("第 1 部分 · 卡2", "zh")).toBe("第 1 部分 · 卡2");
   });
 
   it("shows its running step as running while the work goes on, and not after", () => {

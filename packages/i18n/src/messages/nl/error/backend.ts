@@ -406,4 +406,6 @@ export const messages = {
     "Deze agent heeft {count} open taken. Sluit een taak en start of open dan een andere.",
   "error.backend.taskRemoteUnsupported": "Taken zijn alleen beschikbaar voor agents op deze computer.",
   "error.backend.taskStartFailed": "HXBot kon de taak niet starten. Doe het werk in plaats daarvan in deze beurt.",
+  "error.backend.hxAskOwnerOnly":
+    "Alleen de eigenaar van deze HXBot kan dit kiezen. Iedereen kan de wijziging annuleren.",
 } as const satisfies PartialTranslation<typeof source>;

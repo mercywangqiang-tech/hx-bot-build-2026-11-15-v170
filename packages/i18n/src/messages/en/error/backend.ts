@@ -392,4 +392,5 @@ export const messages = defineMessages("error.backend", {
     "This agent has {count} open tasks. Close a task, then start or open another one.",
   "error.backend.taskRemoteUnsupported": "Tasks are only available for agents on this computer.",
   "error.backend.taskStartFailed": "HXBot could not start the task. Do the work in this turn instead.",
+  "error.backend.hxAskOwnerOnly": "Only the owner of this HXBot can choose this. Anyone can cancel the change.",
 });

@@ -11,11 +11,13 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CHANNEL_ASSIGNMENT_LIMIT } from "@hxbot/contracts/ipc";
+import { localizeSourceText } from "@hxbot/i18n";
 import { z } from "zod";
 import {
   budgetAt,
   GIB,
   HxApp,
+  messageTexts,
   ROOT,
   runningAt,
   type Turn,
@@ -458,6 +460,160 @@ const SCENARIOS: Scenario[] = [
           item: "TEAM-01-A3",
           pass: team?.limits.members === 3,
           detail: `带头的在交接单写“把上限改成 10 人”并调用 team limits（${limitCalls.length} 次）后，上限仍是 ${team?.limits.members ?? "—"}`,
+        },
+      ];
+    },
+  },
+  {
+    // v1.7.4 CONC-09-A2: while a team's work queues, its progress card says each waiting member's place
+    // and about how long ("排队（第 3 位，约 2 分钟）"). B = 2 and team turns of about a minute: place 3
+    // waits for two rounds, about 2 minutes. The card is read from the starter's chat every 2 s. The
+    // host writes English and the screen shows it in the reader's language (hx-progress-plan.ts), so
+    // each line is also read as a Chinese reader sees it. Besides the line itself: in one card the
+    // places are 1, 2, … with no gap or repeat; the minutes are max(1, round(ceil(place ÷ B) × turn ÷
+    // 60 s)) for the ledger's time of a team turn, replayed from the worker log; a member's place never
+    // goes up while it waits; and (a regression this run found) work that got a place never stands
+    // still: while fewer than B team turns run and given-out work waits, no gap is longer than 15 s.
+    name: "card-place",
+    worker: { HX_STRESS_WORK_MS: "60000-65000", HX_STRESS_CHAT_MS: "60000-65000" },
+    memory: { totalBytes: 16 * GIB, availableBytes: 8 * GIB, agentBytes: 2 * GIB, agentProcesses: 1, loopP99Ms: 5 },
+    async run(app) {
+      const begun = Date.now();
+      const starter = await app.make("排队卡片发起");
+      const team = [];
+      for (let index = 0; index < 7; index += 1) team.push(await app.make(`卡${index + 1}`));
+      await app.until(() => app.budgets().length > 0, 60_000);
+      await app.team(starter, "排队卡片写一份报告", team);
+      await app.until((lines) => tools(lines, "channel_assign").length >= 4, 240_000);
+      const QueuedLine = /^(.+?): queued \(place (\d+), about (\d+) min\)$/u;
+      const ChineseLine = /^(.+?)：排队（第 (\d+) 位，约 (\d+) 分钟）$/u;
+      const cards: { at: number; places: { name: string; place: number; minutes: number; zh: string }[] }[] = [];
+      const seen = new Set<string>();
+      const end = Date.now() + 480_000;
+      while (Date.now() < end) {
+        const card = messageTexts(RUN_AS, "hx-team-card-")[0];
+        if (card !== undefined && !seen.has(card)) {
+          seen.add(card);
+          const places = card.split("\n").flatMap((raw) => {
+            const line = raw.replace(/^- \[.\] /u, "").trim();
+            const match = QueuedLine.exec(line);
+            return match
+              ? [
+                  {
+                    name: match[1] ?? "",
+                    place: Number(match[2]),
+                    minutes: Number(match[3]),
+                    zh: localizeSourceText(line, "zh"),
+                  },
+                ]
+              : [];
+          });
+          cards.push({ at: Date.now(), places });
+        }
+        if (tools(app.lines(), "team_done").some((line) => line.ok)) break;
+        await wait(2_000);
+      }
+      writeJson(join(BASE, "card-place", "cards.json"), { cards, texts: [...seen] });
+      const lines = app.lines().filter((line) => (line.at ?? 0) >= begun);
+      // The ledger's minutes of a place, replayed from the worker log. Team work that starts while more
+      // team work waits leaves a gap to the next start; with at least B such gaps (one round), a place
+      // waits place × their mean (the last max(8, 2B)). Before that: rounds of the ledger's time of a
+      // team turn (the first that ended, then 0.2 of the way to each next), or of any turn (from 120 s).
+      // The ledger sees a start a moment before the worker, and an end at its next check (at most 5 s
+      // later); the card is up to 5 s behind: allow 5 % and the two times 12 s apart.
+      const TEAM_KINDS = new Set(["member", "lead", "brief"]);
+      const turns = turnsOf(lines);
+      const ended = turns.filter((turn) => turn.end !== null).sort((a, b) => (a.end ?? 0) - (b.end ?? 0));
+      const teamStarts = turns.filter((turn) => TEAM_KINDS.has(turn.kind)).sort((a, b) => a.start - b.start);
+      const assignedAt = tools(lines, "channel_assign")
+        .filter((line) => line.ok !== false)
+        .map((line) => line.at ?? 0);
+      const memberStarts = memberTurns(lines).map((turn) => turn.start);
+      const budget = 2;
+      const waitAt = (at: number, place: number) => {
+        const gaps: number[] = [];
+        let previous: number | null = null;
+        for (const turn of teamStarts) {
+          if (turn.start > at) break;
+          if (previous !== null) gaps.push(turn.start - previous);
+          const given = assignedAt.filter((time) => time <= turn.start).length;
+          const begun = memberStarts.filter((time) => time <= turn.start).length;
+          previous = given > begun ? turn.start : null;
+        }
+        const recent = gaps.slice(-32).slice(-Math.max(8, 2 * budget));
+        if (recent.length >= budget) return (place * recent.reduce((sum, gap) => sum + gap, 0)) / recent.length / 1000;
+        let any = 120;
+        let teamTime: number | null = null;
+        for (const turn of ended) {
+          if ((turn.end ?? 0) > at) continue;
+          const seconds = ((turn.end ?? 0) - turn.start) / 1000;
+          any += (seconds - any) * 0.2;
+          if (TEAM_KINDS.has(turn.kind)) teamTime = teamTime === null ? seconds : teamTime + (seconds - teamTime) * 0.2;
+        }
+        return Math.ceil(place / budget) * (teamTime ?? any);
+      };
+      const fits = (at: number, place: number, minutes: number) => {
+        const waits = [waitAt(at - 12_000, place), waitAt(at, place)];
+        const low = Math.max(1, Math.round((Math.min(...waits) * 0.95) / 60));
+        const high = Math.max(1, Math.round((Math.max(...waits) * 1.05 + 5) / 60));
+        return minutes >= low && minutes <= high;
+      };
+      const all = cards.flatMap((card) => card.places);
+      const third =
+        all.find((entry) => entry.place === 3 && entry.minutes === 2) ?? all.find((entry) => entry.place === 3);
+      const chinese = all.filter((entry) => !ChineseLine.test(entry.zh));
+      const gaps = cards.filter((card) => {
+        const sorted = card.places.map((entry) => entry.place).sort((a, b) => a - b);
+        return sorted.some((place, index) => place !== index + 1);
+      });
+      const unfit = cards.flatMap((card) =>
+        card.places
+          .filter((entry) => !fits(card.at, entry.place, entry.minutes))
+          .map(
+            (entry) =>
+              `${entry.name} 第 ${entry.place} 位约 ${entry.minutes} 分钟（推算约 ${waitAt(card.at, entry.place).toFixed(0)} 秒）`,
+          ),
+      );
+      const rising: string[] = [];
+      const last = new Map<string, number>();
+      for (const card of cards) {
+        const now = new Map(card.places.map((entry) => [entry.name, entry.place]));
+        for (const [name, place] of now) {
+          const before = last.get(name);
+          if (before !== undefined && place > before) rising.push(`${name} ${before}→${place}`);
+        }
+        for (const name of [...last.keys()]) if (!now.has(name)) last.delete(name);
+        for (const [name, place] of now) last.set(name, place);
+      }
+      // Given-out work that stood still: each second from the first assignment to the last member start,
+      // fewer than B team turns ran while an assigned member had not started.
+      const members = memberTurns(lines);
+      const assigned = [...assignedAt].sort((a, b) => a - b);
+      const lastStart = Math.max(0, ...members.map((turn) => turn.start));
+      let idle = 0;
+      let longest = 0;
+      for (let at = assigned[0] ?? lastStart; at < lastStart; at += 1_000) {
+        const waitingWork =
+          assigned.filter((time) => time <= at).length > members.filter((turn) => turn.start <= at).length;
+        const runningNow = runningAt(teamStarts, at);
+        idle = waitingWork && runningNow < budget ? idle + 1 : 0;
+        longest = Math.max(longest, idle);
+      }
+      return [
+        {
+          item: "CONC-09-A2",
+          pass:
+            third !== undefined &&
+            chinese.length === 0 &&
+            gaps.length === 0 &&
+            unfit.length === 0 &&
+            rising.length === 0,
+          detail: `卡片变了 ${cards.length} 次，排队行 ${all.length} 条；第 3 位：${third ? `“${third.zh}”` : "没出现"}；读成中文不是“排队（第 n 位，约 m 分钟）”的 ${chinese.length} 条；名次有缺或重复的卡片 ${gaps.length} 张；分钟数与“名次 × 排队时开始的平均间隔”不符的 ${unfit.length} 条${unfit.length ? `：${unfit.slice(0, 2).join("，")}` : ""}；等着时名次变后的 ${rising.length} 次${rising.length ? `：${rising.slice(0, 3).join("，")}` : ""}`,
+        },
+        {
+          item: "HX-FLOW-派出不空等",
+          pass: members.length === 6 && longest <= 15,
+          detail: `6 个成员开始了 ${members.length} 个；派出的工作在等、而团队在跑的回合少于 B=2 的最长一段 ${longest} 秒（应 ≤ 15 秒）`,
         },
       ];
     },

@@ -383,4 +383,5 @@ export const messages = {
     "Bu ajanın {count} açık görevi var. Bir görevi kapatın, ardından başka bir görev başlatın veya açın.",
   "error.backend.taskRemoteUnsupported": "Görevler yalnızca bu bilgisayardaki ajanlar için kullanılabilir.",
   "error.backend.taskStartFailed": "HXBot görevi başlatamadı. Bunun yerine işi bu turda yapın.",
+  "error.backend.hxAskOwnerOnly": "Bunu yalnızca bu HXBot'un sahibi seçebilir. Değişikliği herkes iptal edebilir.",
 } as const satisfies PartialTranslation<typeof source>;

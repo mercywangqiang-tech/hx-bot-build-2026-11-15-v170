@@ -185,4 +185,18 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "{from} 前面排队太久：这件新工作改用 {to}。",
   "status.agent.hxTeam.overloadMove": "团队 · {name}：{from} 的服务商已暂停好几分钟，它的新工作改用 {to}。",
   "status.agent.hxTeam.card.judge": "裁判的看法（只供参考）：{verdict}。{reason}",
+  "status.agent.hxTeam.member.starting": "{name}：马上开始",
+  "status.agent.hxTeam.member.provider": "{name}：等模型服务商（第 {position} 位，约 {minutes} 分钟）",
+  "status.agent.hxTeam.member.held": "{name}：团队暂停或收尾中，先不开始",
+  "status.agent.hxSkill.space.header": "版本空间",
+  "status.agent.hxSkill.space.cap":
+    "保留文件旧版本的空间满了（已用 {used}，上限 {cap}）。要保留 {file} 修改前的版本，还需要 {needed}。怎么办？",
+  "status.agent.hxSkill.space.disk": "磁盘空间不够，保留不了 {file} 修改前的版本（需要 {needed}）。怎么办？",
+  "status.agent.hxSkill.space.detail": "你选之前什么都不改。空间大小可以在“设置 → Computer Use”里改。",
+  "status.agent.hxSkill.space.cleanOld": "删掉最早的旧版本",
+  "status.agent.hxSkill.space.cleanOldDetail": "从最早的任务留的旧版本删起（不删这次的），腾出空间后再修改。",
+  "status.agent.hxSkill.space.noVersion": "这次不留版本",
+  "status.agent.hxSkill.space.noVersionDetail": "直接修改。这个文件不能再恢复到修改前。",
+  "status.agent.hxSkill.space.cancel": "取消修改",
+  "status.agent.hxSkill.space.cancelDetail": "文件不动，旧版本都留着。",
 } as const satisfies PartialTranslation<typeof source>;

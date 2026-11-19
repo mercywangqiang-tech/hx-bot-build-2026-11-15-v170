@@ -57,6 +57,7 @@ import {
   hxAccessMayAnswer,
   hxAccessToolCall,
 } from "../hx-access/tools";
+import { HX_ASK_OWNER_ONLY, type HxAskAnswers, type HxAskPending } from "../hx-skills/ask";
 import { LINK_CARD_ID_PREFIX, type LinkWallet } from "../link-wallet";
 import { type PasswordVault, type PasswordVaultError, websiteUrl } from "../password-vault";
 import {
@@ -122,6 +123,8 @@ interface PendingPrompt {
   uiBlock?: SurfacedUiBlock;
   /** True while the answer of a `request_api_key` or `request_vault_item` block is saved. */
   saving?: boolean;
+  /** HXBot (v1.7.4, BAK-03): a question of HXBot itself (hxAsk). HXBot reads its answer; the provider gets nothing. */
+  hxAsk?: HxAskPending;
   /** The block's own answer, and the timer that gives it. Removing the prompt clears the timer. */
   autoAnswer?: { state: UiBlockAutoAnswer; timer: ReturnType<typeof setTimeout> };
   /** HXBot: an access card (request_access). Its answer makes the grant; only the owner grants. */
@@ -574,6 +577,12 @@ export class AttentionRegistry {
           throw new InactiveAttentionRequest(sourceText("error.backend.promptInactive"));
         });
       }
+      // HXBot (v1.7.4): a local script may cancel HXBot's own question, not choose for the owner.
+      if (pending.hxAsk)
+        return yield* this.respondToPrompt(
+          { requestId: pending.id, answers: input.answers },
+          { privileged: false, owner: false },
+        );
       return yield* this.respondToPrompt({ requestId: pending.id, answers: input.answers });
     }
     const pending = [...this.#approvals.values()].find(
@@ -638,6 +647,24 @@ export class AttentionRegistry {
       const questionIds = new Set(pending.questions.map((question) => question.id));
       if (Object.keys(input.answers).some((id) => !questionIds.has(id))) {
         throw new Error(sourceText("error.backend.promptAnswerMismatch"));
+      }
+      // HXBot (v1.7.4, BAK-03): HXBot's own question. Only the owner may give an answer that changes the
+      // user's data; anyone may cancel. The answer goes to HXBot, and the provider's request goes on.
+      const hxAsk = pending.hxAsk;
+      if (hxAsk) {
+        if (responder !== undefined && responder.owner !== true && hxAsk.ownerOnly(input.answers))
+          throw new ForbiddenAttentionAnswer(HX_ASK_OWNER_ONLY);
+        this.#routines.markRunningForTurn(pending.turnId);
+        this.#prompts.delete(input.requestId);
+        this.#emitInputResolved("prompt", input.requestId, pending.agentId);
+        try {
+          this.#resolvePersistedPrompt(pending, promptResolution(pending.questions, input.answers));
+        } catch (error) {
+          this.#emitError("prompt_persistence_failed", error, pending.agentId);
+        }
+        this.#emitRuntimeSnapshot();
+        hxAsk.reply(input.answers);
+        return;
       }
       // A refused UI block answer leaves the block open for an answer that fits.
       const uiBlockResponse = pending.uiBlock ? uiBlockAnswer(pending.uiBlock.spec, input.answers, responder) : null;
@@ -1942,6 +1969,67 @@ export class AttentionRegistry {
     if (changed) this.#emitRuntimeSnapshot();
   }
 
+  /**
+   * HXBot (v1.7.4, BAK-03): a question of HXBot itself in the middle of a tool call of the turn, such
+   * as "the space for versions is full". It is a question card like any other, so the person answers
+   * it on this computer, on the web or on a phone. HXBot reads the answer; the provider never sees
+   * this question. Null when nobody can answer here (a chat app thread), or when the card closes with
+   * no answer: a stop or the deadline (`signal`), a lost provider, a message that ended the turn.
+   */
+  hxAsk(
+    client: AgentClient,
+    request: AppServerRequest,
+    questions: AgentPromptQuestion[],
+    ownerOnly: (answers: HxAskAnswers) => boolean,
+    signal: AbortSignal,
+  ): Promise<HxAskAnswers | null> {
+    const threadId = getString(request.params, "threadId");
+    const turnId = getString(request.params, "turnId");
+    const agentId = threadId ? this.#conversation.agentForThread(threadId) : undefined;
+    const publicThreadId = threadId && agentId ? this.#conversation.publicThreadId(agentId, threadId) : null;
+    if (!threadId || !turnId || !agentId || !publicThreadId || signal.aborted) return Promise.resolve(null);
+    if (!validPromptQuestions(questions)) return Promise.resolve(null);
+    if (this.#messagingThread(publicThreadId) || this.#messagingRequestTurn(agentId, turnId)) {
+      return Promise.resolve(null);
+    }
+    const id = `hx-ask-${randomUUID()}`;
+    return new Promise((resolve) => {
+      let messageId: string;
+      try {
+        messageId = this.#persistQuestionPrompt(agentId, publicThreadId, turnId, id, questions);
+      } catch (error) {
+        this.#emitError("prompt_persistence_failed", error, agentId);
+        resolve(null);
+        return;
+      }
+      this.#prompts.set(id, {
+        client,
+        id,
+        responseKind: "dynamic-tool",
+        params: request.params,
+        agentId,
+        publicThreadId,
+        turnId,
+        messageId,
+        questions,
+        hxAsk: { reply: resolve, ownerOnly },
+      });
+      this.#routines.markNeedsAttention(turnId);
+      this.#emit({ type: "prompt", requestId: id, agentId, threadId: publicThreadId, turnId, questions });
+      signal.addEventListener(
+        "abort",
+        () => {
+          const pending = this.#prompts.get(id);
+          if (!pending?.hxAsk) return;
+          this.#routines.markRunningForTurn(turnId);
+          this.#expirePrompt(id, pending);
+          this.#emitRuntimeSnapshot();
+        },
+        { once: true },
+      );
+    });
+  }
+
   /** Expires the prompts of one lost provider client, or of all clients when none is given. */
   clearPrompts(client?: AgentClient): void {
     for (const [requestId, pending] of this.#prompts) {
@@ -2010,7 +2098,9 @@ export class AttentionRegistry {
     this.#prompts.delete(requestId);
     clearTimeout(pending.autoAnswer?.timer);
     this.#emitInputResolved("prompt", requestId, pending.agentId);
-    if (pending.client.running) {
+    // HXBot (v1.7.4, BAK-03): HXBot's own question closes with no answer; the provider never asked it.
+    if (pending.hxAsk) pending.hxAsk.reply(null);
+    else if (pending.client.running) {
       try {
         pending.client.respond(pending.id, result);
       } catch (error) {

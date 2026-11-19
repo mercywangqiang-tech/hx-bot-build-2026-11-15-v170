@@ -251,6 +251,46 @@ describe("the ledger", () => {
     ledger.dispatched("t2");
     expect(ledger.hasPlace("room", "t4")).toBe(false);
     expect(ledger.queuePlace("t4")).toMatchObject({ place: 1 });
+    // v1.7.4: the turn of each piece given out waits in its lane: the place the room took is its own,
+    // so it starts now, not when the place is let go 60 s later. Work that got no place still waits.
+    const assignment = (taskId: string) => ({ channelId: "room", taskId });
+    const at = (ms: number) => new Date(ms).toISOString();
+    const byTask = new Map(ready.map((item) => [item.taskId, item]));
+    ledger.attachTeams({ teamOf: () => "T", task: (_channel, id) => byTask.get(id) ?? null, ready: () => ready });
+    const lanes = (["t3", "t1", "t2"] as const).map((id) =>
+      ledger.rank(`lane-${id}`, head(at(now), "agent"), assignment(id)),
+    );
+    expect(lanes.map((lane) => lane.taskId)).toEqual(["t3", "t1", "t2"]);
+    for (const lane of lanes)
+      expect(
+        ledger.mayStart(
+          lane,
+          lanes.filter((other) => other !== lane),
+          [],
+          4,
+        ),
+      ).toBe(true);
+    // Only one lane is here yet: the two other places stay kept, and its own is free.
+    const [first] = lanes;
+    if (!first) throw new Error("no lane");
+    expect(ledger.mayStart(first, [], [], 4)).toBe(true);
+    // A turn of other work while the three places are kept: it waits (B = 4, one for a person).
+    const other = ledger.rank("lane-other", head(at(now), "agent"), null);
+    expect(ledger.mayStart(other, [], [], 4)).toBe(false);
+    // B = 2, both pieces given out and both waiting here: both start (before: neither, for 60 s).
+    const small = new HxFlowLedger(() => now);
+    small.attachScheduler({ limit: () => 2, running: () => [] });
+    const pair = [task("p1", 1), task("p2", 2)];
+    const pairByTask = new Map(pair.map((item) => [item.taskId, item]));
+    small.attachTeams({ teamOf: () => "T", task: (_channel, id) => pairByTask.get(id) ?? null, ready: () => pair });
+    expect(small.hasPlace("room", "p1")).toBe(true);
+    small.dispatched("p1");
+    expect(small.hasPlace("room", "p2")).toBe(true);
+    small.dispatched("p2");
+    const p1 = small.rank("lane-p1", head(at(now), "agent"), assignment("p1"));
+    const p2 = small.rank("lane-p2", head(at(now), "agent"), assignment("p2"));
+    expect(small.mayStart(p1, [p2], [], 2)).toBe(true);
+    expect(small.mayStart(p2, [p1], [], 2)).toBe(true);
     // The dispatched work starts: its places are running turns now. One ends: t4 gets its place.
     running.push("a", "b", "c");
     for (const [lane, id] of [
@@ -265,6 +305,74 @@ describe("the ledger", () => {
     now += 1_000;
     expect(ledger.hasPlace("room", "t4")).toBe(true);
     expect(ledger.teamRunning("T")).toBe(true);
+  });
+
+  it("tells a team's minutes from the time of team turns, not of quick greetings (v1.7.4, CONC-09-A2)", () => {
+    let now = Date.parse("2026-11-17T10:00:00Z");
+    const ledger = new HxFlowLedger(() => now);
+    const running: string[] = [];
+    ledger.attachScheduler({ limit: () => 2, running: () => running });
+    const work = (taskId: string, order: number) => ({
+      channelId: "room",
+      taskId,
+      teamId: "T",
+      tier: 2 as const,
+      order,
+      batch: null,
+      difficulty: null,
+      dependents: 0,
+    });
+    const ready = [work("q1", 1), work("q2", 2), work("q3", 3)];
+    ledger.attachTeams({ teamOf: () => "T", task: () => null, ready: () => ready });
+    // Before any turn ended: the first guess, 2 min a turn: place 3 with B = 2 is two rounds, 4 min.
+    expect(ledger.queuePlace("q3")).toEqual({ place: 3, minutes: 4 });
+    // Nine greetings of a second each: the time of a turn drops, the team's stays unknown.
+    for (let index = 0; index < 9; index += 1) {
+      running.push(`g${index}`);
+      ledger.started(`g${index}`, candidateOf(`g${index}`), null);
+      now += 1_000;
+      running.pop();
+      ledger.tick(running);
+    }
+    expect(ledger.turnMs()).toBeLessThan(20_000);
+    expect(ledger.queuePlace("q3")).toEqual({ place: 3, minutes: 1 });
+    // One team turn of 62 s: place 3 is two rounds of it, about 2 min; place 1 one round, 1 min.
+    running.push("m");
+    ledger.started("m", { ...candidateOf("m"), teamId: "T" }, null);
+    now += 62_000;
+    running.pop();
+    ledger.tick(running);
+    expect(ledger.queuePlace("q3")).toEqual({ place: 3, minutes: 2 });
+    expect(ledger.queuePlace("q1")).toEqual({ place: 1, minutes: 1 });
+    // Two turns already wait for a slot of this computer: they go first.
+    expect(ledger.queuePlace("q1", 2)).toEqual({ place: 3, minutes: 2 });
+    // Then the rate of team starts while work waits (Little's law): a round of B = 2 starts at once,
+    // the next round a minute later. One gap is not a round yet: still the turn time.
+    const start = (lane: string) => {
+      running.push(lane);
+      ledger.started(lane, { ...candidateOf(lane), teamId: "T" }, `${lane}-task`);
+    };
+    now += 1_000;
+    start("s1");
+    now += 100;
+    start("s2");
+    expect(ledger.queuePlace("q3")).toEqual({ place: 3, minutes: 2 });
+    now += 60_000;
+    start("s3");
+    // Gaps 63 s (m left work waiting, s1 came 63 s later), 0.1 s, 60 s: about 41 s a start; place 3 about 2 min.
+    expect(ledger.queuePlace("q3")).toEqual({ place: 3, minutes: 2 });
+    expect(ledger.queuePlace("q1")).toEqual({ place: 1, minutes: 1 });
+    // A start with nothing else waiting ends the run of gaps: the next start does not count the idle time.
+    ready.splice(0, ready.length);
+    now += 1_000;
+    start("s4");
+    ready.push(work("q4", 4), work("q5", 5), work("q6", 6), work("q7", 7));
+    now += 10 * 60_000;
+    start("s5");
+    now += 30_000;
+    start("s6");
+    // The 10 idle minutes are not a gap: gaps 63, 0.1, 60, 1, 30 s → about 31 s a start.
+    expect(ledger.queuePlace("q7")).toEqual({ place: 4, minutes: 2 });
   });
 });
 

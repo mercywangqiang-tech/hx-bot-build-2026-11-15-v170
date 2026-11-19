@@ -390,4 +390,5 @@ export const messages = {
     "Liczba otwartych zadań tego agenta: {count}. Zamknij zadanie, a potem rozpocznij lub otwórz inne.",
   "error.backend.taskRemoteUnsupported": "Zadania są dostępne tylko dla agentów na tym komputerze.",
   "error.backend.taskStartFailed": "HXBot nie może rozpocząć zadania. Zamiast tego wykonaj pracę w tej turze.",
+  "error.backend.hxAskOwnerOnly": "Tylko właściciel tego HXBot może to wybrać. Każdy może anulować zmianę.",
 } as const satisfies PartialTranslation<typeof source>;

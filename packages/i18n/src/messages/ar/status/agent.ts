@@ -201,4 +201,20 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "العمل ينتظر طويلًا لـ {from}: يستخدم هذا العمل الجديد {to}.",
   "status.agent.hxTeam.overloadMove": "الفريق · {name}: مزوّد {from} متوقف منذ دقائق، لذا يستخدم عمله الجديد {to}.",
   "status.agent.hxTeam.card.judge": "رأي الحَكَم (للاسترشاد فقط): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: يبدأ الآن",
+  "status.agent.hxTeam.member.provider": "{name}: ينتظر مزوّد نموذجه (الترتيب {position}، نحو {minutes} دقيقة)",
+  "status.agent.hxTeam.member.held": "{name}: لا يبدأ ما دام الفريق متوقفًا مؤقتًا أو يختتم العمل",
+  "status.agent.hxSkill.space.header": "مساحة النسخ",
+  "status.agent.hxSkill.space.cap":
+    "امتلأت المساحة المخصصة للنسخ السابقة من الملفات ({used} من {cap}). للاحتفاظ بنسخة {file} قبل هذا التغيير، يحتاج HXBot إلى {needed} إضافية. ماذا يفعل HXBot؟",
+  "status.agent.hxSkill.space.disk":
+    "لا توجد مساحة على القرص للاحتفاظ بنسخة {file} قبل هذا التغيير (يلزم {needed}). ماذا يفعل HXBot؟",
+  "status.agent.hxSkill.space.detail": "لن يتغير شيء حتى تختار. يمكنك تغيير المساحة في الإعدادات ← التحكم في الحاسوب.",
+  "status.agent.hxSkill.space.cleanOld": "إزالة أقدم النسخ",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "يزيل النسخ المحفوظة لأقدم المهام (وليس هذه المهمة أبدًا) حتى تتوفر مساحة، ثم يجري التغيير.",
+  "status.agent.hxSkill.space.noVersion": "التغيير دون الاحتفاظ بنسخة",
+  "status.agent.hxSkill.space.noVersionDetail": "يجري التغيير الآن. لن تتمكن من إعادة هذا الملف إلى ما قبله.",
+  "status.agent.hxSkill.space.cancel": "إلغاء التغيير",
+  "status.agent.hxSkill.space.cancelDetail": "يبقى الملف كما هو، وتبقى كل النسخ.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -18,7 +18,9 @@ export function hxProgressPlan(message: ConversationMessage): AgentMessagePlan |
     explanation: sourceText(card.title),
     steps: card.steps.map((step, index) => ({
       id: String(index),
-      text: step.state === "failed" ? `✗ ${step.text}` : step.text,
+      // HXBot (v1.7.4, CONC-09): a member line is the English of a source key, as the title is: the
+      // reader's language. A step's own words (a goal, a name) do not match a key and stay as they are.
+      text: step.state === "failed" ? `✗ ${sourceText(step.text)}` : sourceText(step.text),
       status: step.state === "done" ? "completed" : step.state === "active" ? "inProgress" : "pending",
     })),
     stopped: message.status === "interrupted" || message.status === "failed",

@@ -253,6 +253,12 @@ STATUS_EN = {
         'Team · {name}: the provider of {from} has been paused for minutes, so its new work uses {to}.',
     'status.agent.hxTeam.card.judge':
         "The judge's view (advice only): {verdict}. {reason}",
+    'status.agent.hxTeam.member.starting':
+        '{name}: starting now',
+    'status.agent.hxTeam.member.provider':
+        "{name}: waits for its model's provider (place {position}, about {minutes} min)",
+    'status.agent.hxTeam.member.held':
+        '{name}: on hold while the team is paused or wrapping up',
 }
 
 STATUS_ZH = {
@@ -284,6 +290,12 @@ STATUS_ZH = {
         '团队 · {name}：{from} 的服务商已暂停好几分钟，它的新工作改用 {to}。',
     'status.agent.hxTeam.card.judge':
         '裁判的看法（只供参考）：{verdict}。{reason}',
+    'status.agent.hxTeam.member.starting':
+        '{name}：马上开始',
+    'status.agent.hxTeam.member.provider':
+        '{name}：等模型服务商（第 {position} 位，约 {minutes} 分钟）',
+    'status.agent.hxTeam.member.held':
+        '{name}：团队暂停或收尾中，先不开始',
 }
 
 

@@ -29,8 +29,16 @@ export type AccessLocale = "zh" | "en";
 
 /** The host language of the card: Chinese unless the app shows another language. */
 let currentLocale: AccessLocale = "zh";
+/** HXBot (v1.7.4): the app's whole language tag, for the cards that are written in all 15 languages. */
+let appLocale = "zh";
 export function setHxAccessLocale(locale: string): void {
   currentLocale = locale.toLowerCase().startsWith("zh") ? "zh" : "en";
+  appLocale = locale;
+}
+
+/** The language the app shows now, as the language service gives it (such as "zh" or "de"). */
+export function hxAppLocale(): string {
+  return appLocale;
 }
 export function hxAccessLocale(): AccessLocale {
   return currentLocale;

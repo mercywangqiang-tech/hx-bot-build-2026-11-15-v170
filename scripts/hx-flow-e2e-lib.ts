@@ -4,6 +4,7 @@
 // budget lines of the app log, the turns and tool calls of the worker log, and the team records.
 //
 // In a container that runs as root, Electron starts as another user under xvfb-run (`runAs`).
+import { Database } from "bun:sqlite";
 import { type ChildProcess, spawn } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -111,6 +112,31 @@ async function anyPortInUse(ports: readonly number[]): Promise<boolean> {
 /** A fresh profile: the app starts with no agents, no channels and no teams. */
 export function wipeProfile(runAs: string | null): void {
   for (const folder of profileFolders(runAs)) rmSync(folder, { recursive: true, force: true });
+}
+
+/**
+ * v1.7.4: the text of each chat message whose id starts with `prefix` (a progress card such as
+ * `hx-team-card-`), newest first. Read-only from the profile's database while the app runs: reading a
+ * chat through the app needs a signed-in account, and these runs have none.
+ */
+export function messageTexts(runAs: string | null, prefix: string): string[] {
+  const file = join(profileFolders(runAs)[1] ?? "", "hxbot.db");
+  if (!existsSync(file)) return [];
+  const database = new Database(file, { readonly: true });
+  try {
+    const rows = database
+      .query("SELECT message_json FROM projection_thread_messages WHERE message_id LIKE ? ORDER BY created_at DESC")
+      .all(`${prefix.replaceAll("%", "")}%`);
+    return z
+      .array(z.object({ message_json: z.string() }))
+      .parse(rows)
+      .flatMap((row) => {
+        const message = z.object({ text: z.string() }).loose().safeParse(JSON.parse(row.message_json));
+        return message.success ? [message.data.text] : [];
+      });
+  } finally {
+    database.close();
+  }
 }
 
 /** The team records of the profile. */

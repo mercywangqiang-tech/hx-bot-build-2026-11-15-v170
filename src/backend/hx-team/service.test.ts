@@ -6,6 +6,7 @@ import type { HxProgressCard } from "@hxbot/contracts/hx-progress";
 import type { ChannelMessage, ChannelTask } from "@hxbot/contracts/ipc";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hxAutoRouter } from "../hx-auto-model/router";
+import { hxHoldDetails } from "../hx-flow/hold-detail";
 import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
 import { hxCapacityLine } from "./protocol";
 import {
@@ -455,6 +456,52 @@ describe("the watcher", () => {
     const written = port.cards.length;
     teams.refreshCards();
     expect(port.cards.length).toBe(written);
+  });
+
+  it("says a member whose work got a place starts now, waits for its provider, or is held by the team (v1.7.4, CONC-09)", async () => {
+    const { id, room } = await started();
+    room.tasks.push(task("sub-ready-1", "root-1", "w", "queued"));
+    const memberLine = () =>
+      (port.cards.at(-1)?.card.steps ?? []).map((step) => step.text).find((text) => text.startsWith("文案小王: "));
+    teams.changed(id);
+    teams.refreshCards();
+    expect(memberLine()).toBe("文案小王: queued (place 1, about 2 min)");
+    // The room gave it a place: no place in the ledger's queue any more, and no dependency to wait for.
+    hxFlow.dispatched("sub-ready-1");
+    teams.refreshCards();
+    expect(memberLine()).toBe("文案小王: starting now");
+    // Its turn waits for the provider of its model: that place, with the rest of the pause.
+    const provider = vi
+      .spyOn(hxHoldDetails, "ofAgent")
+      .mockImplementation((agentId) => (agentId === "w" ? { kind: "provider", position: 2, etaSeconds: 130 } : null));
+    try {
+      teams.refreshCards();
+      expect(memberLine()).toBe("文案小王: waits for its model's provider (place 2, about 2 min)");
+      provider.mockImplementation((agentId) =>
+        agentId === "w" ? { kind: "machine", position: 4, etaSeconds: 20 } : null,
+      );
+      teams.refreshCards();
+      expect(memberLine()).toBe("文案小王: queued (place 4, about 1 min)");
+    } finally {
+      provider.mockRestore();
+    }
+    // The team is paused: its work does not start, whatever its place.
+    const team = teams.store.get(id);
+    if (!team?.guard) throw new Error("no guard");
+    team.guard.paused = { guard: "G1", at: new Date().toISOString(), reason: "30 分钟没有进展" };
+    teams.refreshCards();
+    expect(memberLine()).toBe("文案小王: on hold while the team is paused or wrapping up");
+    // Wrapping up: the members' pieces wait; the lead's go on.
+    team.guard.paused = null;
+    team.guard.wrapUp = true;
+    room.tasks.push(task("sub-ready-2", "root-1", "p", "queued"));
+    hxFlow.dispatched("sub-ready-2");
+    teams.refreshCards();
+    expect(memberLine()).toBe("文案小王: on hold while the team is paused or wrapping up");
+    const lead = (port.cards.at(-1)?.card.steps ?? [])
+      .map((step) => step.text)
+      .filter((text) => text.startsWith("方案老李: "));
+    expect(lead.some((text) => text.includes("on hold"))).toBe(false);
   });
 
   it("finishes with the lead's last answer when every task ended without team_done, and hides the members it made", async () => {

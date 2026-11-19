@@ -174,4 +174,21 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "팀 · {name}: {from}의 제공업체가 몇 분째 일시 중지되어 새 작업은 {to}을(를) 사용합니다.",
   "status.agent.hxTeam.card.judge": "판정 모델의 의견(참고용): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: 곧 시작합니다",
+  "status.agent.hxTeam.member.provider": "{name}: 모델 제공업체 대기 중 ({position}번째, 약 {minutes}분)",
+  "status.agent.hxTeam.member.held": "{name}: 팀이 일시 중지 중이거나 마무리 중이라 대기합니다",
+  "status.agent.hxSkill.space.header": "버전 저장 공간",
+  "status.agent.hxSkill.space.cap":
+    "파일의 이전 버전을 보관하는 공간이 가득 찼습니다({cap} 중 {used} 사용). 이 변경 전 {file} 버전을 보관하려면 {needed}가 더 필요합니다. HXBot이 어떻게 할까요?",
+  "status.agent.hxSkill.space.disk":
+    "디스크에 이 변경 전 {file} 버전을 보관할 공간이 없습니다({needed} 필요). HXBot이 어떻게 할까요?",
+  "status.agent.hxSkill.space.detail":
+    "선택하기 전에는 아무것도 바뀌지 않습니다. 공간 크기는 설정 → 컴퓨터 제어에서 바꿀 수 있습니다.",
+  "status.agent.hxSkill.space.cleanOld": "가장 오래된 버전 삭제",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "가장 오래된 작업의 버전부터(이번 작업은 제외) 공간이 생길 때까지 삭제한 뒤 변경합니다.",
+  "status.agent.hxSkill.space.noVersion": "버전 없이 변경",
+  "status.agent.hxSkill.space.noVersionDetail": "지금 변경합니다. 이 파일을 변경 전으로 되돌릴 수 없습니다.",
+  "status.agent.hxSkill.space.cancel": "변경 취소",
+  "status.agent.hxSkill.space.cancelDetail": "파일은 그대로이며 모든 버전이 남습니다.",
 } as const satisfies PartialTranslation<typeof source>;

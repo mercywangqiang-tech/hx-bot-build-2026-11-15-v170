@@ -405,4 +405,6 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "Le attività sono disponibili solo per gli agenti su questo computer.",
   "error.backend.taskStartFailed":
     "HXBot non è riuscito ad avviare l'attività. Esegui invece il lavoro in questo turno.",
+  "error.backend.hxAskOwnerOnly":
+    "Solo il proprietario di questo HXBot può scegliere questa opzione. Chiunque può annullare la modifica.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -171,4 +171,22 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Команда · {name}: поставщик {from} на паузе уже несколько минут, поэтому новая работа использует {to}.",
   "status.agent.hxTeam.card.judge": "Мнение судьи (только совет): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: начинает сейчас",
+  "status.agent.hxTeam.member.provider": "{name}: ждёт поставщика своей модели (место {position}, около {minutes} мин)",
+  "status.agent.hxTeam.member.held": "{name}: ждёт, пока команда на паузе или завершает работу",
+  "status.agent.hxSkill.space.header": "Место для версий",
+  "status.agent.hxSkill.space.cap":
+    "Место для прежних версий файлов закончилось ({used} из {cap}). Чтобы сохранить версию {file} до этого изменения, HXBot нужно ещё {needed}. Что делать HXBot?",
+  "status.agent.hxSkill.space.disk":
+    "На диске нет места, чтобы сохранить версию {file} до этого изменения (нужно {needed}). Что делать HXBot?",
+  "status.agent.hxSkill.space.detail":
+    "Пока вы не выберете, ничего не меняется. Размер места можно изменить в разделе Настройки → Управление ПК.",
+  "status.agent.hxSkill.space.cleanOld": "Удалить самые старые версии",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Удаляет версии, сохранённые для самых старых задач (никогда для этой), пока не освободится место, затем вносит изменение.",
+  "status.agent.hxSkill.space.noVersion": "Изменить без версии",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Вносит изменение сейчас. Вернуть этот файл к прежнему состоянию будет нельзя.",
+  "status.agent.hxSkill.space.cancel": "Отменить изменение",
+  "status.agent.hxSkill.space.cancelDetail": "Файл остаётся как есть, и все версии сохраняются.",
 } as const satisfies PartialTranslation<typeof source>;

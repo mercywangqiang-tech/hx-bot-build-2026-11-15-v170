@@ -168,4 +168,23 @@ export const messages = {
   "status.agent.hxTeam.overloadMove":
     "Ekip · {name}: {from} sağlayıcısı dakikalardır duraklıyor, bu yüzden yeni işi {to} kullanıyor.",
   "status.agent.hxTeam.card.judge": "Hakemin görüşü (yalnızca öneri): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: şimdi başlıyor",
+  "status.agent.hxTeam.member.provider":
+    "{name}: modelinin sağlayıcısını bekliyor ({position}. sıra, yaklaşık {minutes} dk)",
+  "status.agent.hxTeam.member.held": "{name}: ekip duraklatılmışken veya işi bitirirken bekliyor",
+  "status.agent.hxSkill.space.header": "Sürüm alanı",
+  "status.agent.hxSkill.space.cap":
+    "Dosyaların önceki sürümleri için ayrılan alan doldu ({cap} alanın {used} kadarı kullanılıyor). {file} dosyasının bu değişiklikten önceki sürümünü saklamak için HXBot'un {needed} daha alana ihtiyacı var. HXBot ne yapsın?",
+  "status.agent.hxSkill.space.disk":
+    "{file} dosyasının bu değişiklikten önceki sürümünü saklamak için diskte yer yok ({needed} gerekiyor). HXBot ne yapsın?",
+  "status.agent.hxSkill.space.detail":
+    "Siz seçene kadar hiçbir şey değişmez. Alanı Ayarlar → Bilgisayar Kullanımı bölümünden değiştirebilirsiniz.",
+  "status.agent.hxSkill.space.cleanOld": "En eski sürümleri kaldır",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Yer açılana kadar en eski görevler için saklanan sürümleri kaldırır (bu görevinkini asla), sonra değişikliği yapar.",
+  "status.agent.hxSkill.space.noVersion": "Sürüm saklamadan değiştir",
+  "status.agent.hxSkill.space.noVersionDetail":
+    "Değişikliği şimdi yapar. Bu dosyayı önceki hâline geri getiremezsiniz.",
+  "status.agent.hxSkill.space.cancel": "Değişikliği iptal et",
+  "status.agent.hxSkill.space.cancelDetail": "Dosya olduğu gibi kalır ve tüm sürümler korunur.",
 } as const satisfies PartialTranslation<typeof source>;

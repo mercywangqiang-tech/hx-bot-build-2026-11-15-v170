@@ -662,6 +662,8 @@ export class HxBotToolRouter {
                       }
                     : null,
                   toolRequest.params,
+                  (questions, ownerOnly, signal) =>
+                    this.#attention.hxAsk(client, toolRequest, questions, ownerOnly, signal),
                 )
                 .then((result) => client.respond(hxRequestId, result));
               return;

@@ -82,6 +82,8 @@ const DISPATCH_HOLD_MS = 60_000;
 /** The time of one turn before any turn ended. */
 const DEFAULT_TURN_MS = 120_000;
 const TURN_MS_WEIGHT = 0.2;
+/** How many gaps between queued starts of team work the ledger keeps. */
+const QUEUED_GAPS = 32;
 const IDLE_RELEASE_GAP_MS = 60_000;
 
 export type { HxFlowCandidate } from "./order";
@@ -107,6 +109,19 @@ export class HxFlowLedger {
   #roomsWait = false;
   #waitingLanes = 0;
   #turnMs = DEFAULT_TURN_MS;
+  /**
+   * HXBot (v1.7.4, CONC-09): the recent time of one turn of team work, for the minutes of a team's
+   * place; null until one ended. The first greetings of new members take a second each and pulled the
+   * time of every turn down, so a team queue said "about 1 min" for minutes of work.
+   */
+  #teamTurnMs: number | null = null;
+  /**
+   * HXBot (v1.7.4, CONC-09): the gaps between starts of team work while more team work waited (the
+   * last 32), and the start before. A place's minutes are place × their mean (Little's law): it holds
+   * B, the length of the turns, the lead's turns between them and every hold, as they are now.
+   */
+  readonly #queuedGaps: number[] = [];
+  #lastQueuedStart: number | null = null;
   readonly #now: () => number;
 
   constructor(now: () => number = Date.now) {
@@ -183,6 +198,7 @@ export class HxFlowLedger {
           batch: team.batch,
           difficulty: team.difficulty,
           dependents: team.dependents,
+          taskId: team.taskId,
         };
       }
       return plain(this.#channels?.isRequest(assignment.channelId, assignment.taskId) ? 0 : 2);
@@ -205,10 +221,17 @@ export class HxFlowLedger {
     const now = this.#now();
     this.tick(running);
     this.#waitingLanes = waiting.length + 1;
-    const free = limit - running.length - this.#heldForRooms(now);
+    // HXBot (v1.7.4, found by the CONC-09-A2 E2E): the place a room took for work whose turn now waits
+    // here is that lane's own place. Counted against every lane, the lanes of the work that got the
+    // places could not start: with B = 2 and two pieces given out, team work stood still for the 60 s
+    // that a place is kept, at every round.
+    const own = new Set<string>();
+    for (const item of [candidate, ...waiting]) if (item.taskId) own.add(item.taskId);
+    const held = this.#heldForRooms(now, own);
+    const free = limit - running.length - held;
     if (free <= 0) return false;
     // A person keeps one place: when it is the last place, only a person's turn may take it.
-    const personOnly = limit >= 3 && this.#otherRunning(running) + this.#heldForRooms(now) >= limit - 1;
+    const personOnly = limit >= 3 && this.#otherRunning(running) + held >= limit - 1;
     if (personOnly && candidate.tier !== 0) return false;
     // HXBot (v1.7.3, stress test): the place of the lane in one order of all the lanes that may start
     // now. Counting the lanes that go before it, pair by pair, let a cycle of three teams with near
@@ -233,6 +256,14 @@ export class HxFlowLedger {
       accruedAt: now,
       taskId,
     });
+    if (candidate.teamId) {
+      if (this.#lastQueuedStart !== null) {
+        this.#queuedGaps.push(now - this.#lastQueuedStart);
+        if (this.#queuedGaps.length > QUEUED_GAPS) this.#queuedGaps.shift();
+      }
+      const more = (this.#teams?.ready() ?? []).some((task) => task.taskId !== taskId);
+      this.#lastQueuedStart = more ? now : null;
+    }
     if (taskId) this.#dispatched.delete(taskId);
     if (candidate.batch) this.#batchStarts.set(candidate.batch, (this.#batchStarts.get(candidate.batch) ?? 0) + 1);
   }
@@ -253,6 +284,11 @@ export class HxFlowLedger {
       this.#running.delete(lane);
       this.#lastEnded.set(lane, now);
       this.#turnMs += (now - entry.startedAt - this.#turnMs) * TURN_MS_WEIGHT;
+      if (entry.teamId)
+        this.#teamTurnMs =
+          this.#teamTurnMs === null
+            ? now - entry.startedAt
+            : this.#teamTurnMs + (now - entry.startedAt - this.#teamTurnMs) * TURN_MS_WEIGHT;
       ended = true;
     }
     for (const [taskId, at] of this.#dispatched) if (now - at > DISPATCH_HOLD_MS) this.#dispatched.delete(taskId);
@@ -326,15 +362,26 @@ export class HxFlowLedger {
     this.#dispatched.set(taskId, this.#now());
   }
 
-  /** The place of team work in the queue (1 is next) and the minutes until it starts, for the reply. */
-  queuePlace(taskId: string): { place: number; minutes: number } | null {
+  /**
+   * The place of team work in the queue (1 is next) and the minutes until it starts, for the reply.
+   * HXBot (v1.7.4, CONC-09): `ahead` counts the turns that already got a place and wait for a turn
+   * slot of this computer: they go first, so one card never shows two members at the same place.
+   */
+  queuePlace(taskId: string, ahead = 0): { place: number; minutes: number } | null {
     const now = this.#now();
     const ready = this.#readyCandidates(now);
     const index = ready.findIndex((candidate) => candidate.lane === roomLane(taskId));
     if (index < 0) return null;
+    const place = Math.max(0, ahead) + index + 1;
     const budget = Math.max(1, this.#scheduler?.limit() ?? 1);
-    const minutes = Math.max(1, Math.round((Math.ceil((index + 1) / budget) * this.#turnMs) / 60_000));
-    return { place: index + 1, minutes };
+    // The gaps of at least one round of B starts; before that, rounds of the recent time of a team turn.
+    const gaps = this.#queuedGaps.slice(-Math.max(8, 2 * budget));
+    const waitMs =
+      gaps.length >= budget
+        ? (place * gaps.reduce((sum, gap) => sum + gap, 0)) / gaps.length
+        : Math.ceil(place / budget) * (this.#teamTurnMs ?? this.#turnMs);
+    const minutes = Math.max(1, Math.round(waitMs / 60_000));
+    return { place, minutes };
   }
 
   capacity(): HxFlowCapacity {
@@ -383,9 +430,10 @@ export class HxFlowLedger {
   }
 
   /** Places that team rooms took and whose turns did not start yet. */
-  #heldForRooms(now: number): number {
+  /** The places that rooms took and whose turns did not start yet; `except`: work whose turn waits in a lane. */
+  #heldForRooms(now: number, except: ReadonlySet<string> = new Set()): number {
     let held = 0;
-    for (const at of this.#dispatched.values()) if (now - at <= DISPATCH_HOLD_MS) held += 1;
+    for (const [taskId, at] of this.#dispatched) if (now - at <= DISPATCH_HOLD_MS && !except.has(taskId)) held += 1;
     return held;
   }
 

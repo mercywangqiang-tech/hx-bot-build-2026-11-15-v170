@@ -43,6 +43,11 @@ export interface HxFlowCandidate {
   difficulty: HxFlowDifficulty | null;
   /** How many open pieces of work of the team wait for this one. */
   dependents: number;
+  /**
+   * HXBot (v1.7.4): team work's task id, when its turn waits in a lane. The place that its room took
+   * for it (`dispatched`) is its own place then, not one that another lane must leave free.
+   */
+  taskId?: string;
 }
 
 /** HXBot (v1.7.4, CONC-08): whether background work ages now; overload.ts holds it while work of a person or a team is overloaded. */

@@ -29,6 +29,7 @@ import { z } from "zod";
 import { hxAutoRouter } from "../hx-auto-model/router";
 import { hxComputerLanes } from "../hx-computer/lanes";
 import { hxParkedSteps } from "../hx-computer/parked";
+import { hxHoldDetails } from "../hx-flow/hold-detail";
 import { type HxFlowTeamTask, hxFlow } from "../hx-flow/ledger";
 import { HX_FLOW_RELAXED_WEIGHT, HX_FLOW_URGENT_WEIGHT, HxFlowDifficultyTimes } from "../hx-flow/order";
 import type { HxProgressWriter } from "../hx-progress/progress";
@@ -925,7 +926,7 @@ export class HxTeams {
     if (result.accepted !== true || typeof result.taskId !== "string") return result;
     const zh = team.language === "zh";
     const capacity = hxFlow.capacity();
-    const place = hxFlow.queuePlace(result.taskId);
+    const place = hxFlow.queuePlace(result.taskId, hxHoldDetails.machineWaiting());
     const task = this.#port?.room(channelId).tasks.find((item) => item.id === result.taskId);
     const running = capacity.running;
     let queue: string;
@@ -1018,22 +1019,34 @@ export class HxTeams {
       else {
         const queued = own.find((task) => task.state === "queued");
         const ready = queued?.dependencies.every((id) => SETTLED.has(states.get(id) ?? "")) ?? false;
-        const place = queued && ready ? hxFlow.queuePlace(queued.id) : null;
-        if (place)
-          lines.push(
-            line(
-              sourceText("status.agent.hxTeam.member.queued", {
-                name,
-                position: place.place,
-                minutes: place.minutes,
-              }),
-            ),
-          );
-        else if (queued) lines.push(line(sourceText("status.agent.hxTeam.member.after", { name })));
-        else lines.push(line(sourceText("status.agent.hxTeam.member.free", { name })));
+        if (!queued) lines.push(line(sourceText("status.agent.hxTeam.member.free", { name })));
+        else if (!ready) lines.push(line(sourceText("status.agent.hxTeam.member.after", { name })));
+        else lines.push(line(this.#readyLine(team, member.agentId, name, queued)));
       }
     }
     return lines;
+  }
+
+  /**
+   * The line of a member whose work can start: its place among the team work that waits (the
+   * ledger's); else, the room gave it a place already: its place where its turn waits (its model's
+   * provider or this computer), or it starts now; else, the team holds it (paused, or wrapping up).
+   */
+  #readyLine(team: HxTeamRecord, agentId: string, name: string, task: ChannelTask): string {
+    const place = hxFlow.queuePlace(task.id, hxHoldDetails.machineWaiting());
+    if (place)
+      return sourceText("status.agent.hxTeam.member.queued", { name, position: place.place, minutes: place.minutes });
+    const guard = this.#guard(team);
+    if (guard.paused || (guard.wrapUp && task.parentTaskId !== null && agentId !== team.leadAgentId))
+      return sourceText("status.agent.hxTeam.member.held", { name });
+    const detail = hxHoldDetails.ofAgent(agentId);
+    if (detail?.position) {
+      const minutes = Math.max(1, Math.round((detail.etaSeconds ?? 60) / 60));
+      if (detail.kind === "provider")
+        return sourceText("status.agent.hxTeam.member.provider", { name, position: detail.position, minutes });
+      return sourceText("status.agent.hxTeam.member.queued", { name, position: detail.position, minutes });
+    }
+    return sourceText("status.agent.hxTeam.member.starting", { name });
   }
 
   /** The handoffs so far: each task below a request, and each change of owner. */

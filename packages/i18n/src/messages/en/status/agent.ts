@@ -200,4 +200,22 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxTeam.overloadMove":
     "Team · {name}: the provider of {from} has been paused for minutes, so its new work uses {to}.",
   "status.agent.hxTeam.card.judge": "The judge's view (advice only): {verdict}. {reason}",
+  "status.agent.hxTeam.member.starting": "{name}: starting now",
+  "status.agent.hxTeam.member.provider":
+    "{name}: waits for its model's provider (place {position}, about {minutes} min)",
+  "status.agent.hxTeam.member.held": "{name}: on hold while the team is paused or wrapping up",
+  "status.agent.hxSkill.space.header": "Version space",
+  "status.agent.hxSkill.space.cap":
+    "The space for earlier versions of files is full ({used} of {cap}). To keep the version of {file} before this change, HXBot needs {needed} more. What should HXBot do?",
+  "status.agent.hxSkill.space.disk":
+    "The disk has no room to keep the version of {file} before this change (it needs {needed}). What should HXBot do?",
+  "status.agent.hxSkill.space.detail":
+    "Nothing changes until you choose. You can change the space in Settings → Computer Use.",
+  "status.agent.hxSkill.space.cleanOld": "Remove the oldest versions",
+  "status.agent.hxSkill.space.cleanOldDetail":
+    "Removes the versions kept for the oldest tasks (never this one) until there is room, then makes the change.",
+  "status.agent.hxSkill.space.noVersion": "Change it without a version",
+  "status.agent.hxSkill.space.noVersionDetail": "Makes the change now. You cannot restore this file to before it.",
+  "status.agent.hxSkill.space.cancel": "Cancel the change",
+  "status.agent.hxSkill.space.cancelDetail": "The file stays as it is, and every version stays.",
 });
