@@ -39,7 +39,7 @@ interface LabeledCase {
 }
 
 const ROOT = resolve(import.meta.dirname, "..");
-const OUT = join(ROOT, ".hxbot-build", "hx-judge-eval");
+const DEFAULT_OUT = join(ROOT, ".hxbot-build", "hx-judge-eval");
 
 /** A small deterministic random (mulberry32), so that the set is the same on every run. */
 function random(seed: number): () => number {
@@ -317,11 +317,14 @@ async function main(): Promise<void> {
       "price-in": { type: "string" },
       "price-out": { type: "string" },
       "key-env": { type: "string" },
+      // v1.7.4: where the labels, the reports and the spend go (a run on the user's computer).
+      out: { type: "string" },
     },
   });
   if (!parsed) return;
   const { values } = parsed;
   const cases = hxJudgeLabels();
+  const OUT = values.out ? resolve(values.out) : DEFAULT_OUT;
   mkdirSync(OUT, { recursive: true });
   const prompts = cases.map((item) => hxJudgePromptFor(item.input));
   const longest = Math.max(...prompts.map((prompt) => prompt.length));
