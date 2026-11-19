@@ -501,3 +501,51 @@ describe("CONC-08: new work when the provider of its model is paused", () => {
     expect(overloadMoves()).toEqual([]);
   });
 });
+
+// v1.7.4 (CONC-11-A1): the team's judge gives no view when it is late, refused or its provider is paused;
+// the team then asks the user by its rules (hx-team/service.test.ts).
+describe("CONC-11: the team's judge", () => {
+  it("answers through the lead's provider within the time", async () => {
+    world.judge = async () => "VERDICT: continue\nREASON: ok";
+    expect(await router.teamJudge("a1", "data", 1_000)).toBe("VERDICT: continue\nREASON: ok");
+  });
+
+  it("gives no view when the model is late, and stops the call", async () => {
+    let aborted = false;
+    world.judge = (_prompt, signal) =>
+      new Promise((_resolve, reject) => {
+        signal.addEventListener("abort", () => {
+          aborted = true;
+          reject(new Error("aborted"));
+        });
+      });
+    expect(await router.teamJudge("a1", "data", 50)).toBeNull();
+    expect(aborted).toBe(true);
+  });
+
+  it("gives no view when the provider refuses (429) or the model is paused", async () => {
+    world.judge = async () => {
+      throw new Error("HTTP 429 rate limit");
+    };
+    expect(await router.teamJudge("a1", "data", 1_000)).toBeNull();
+    // Every model the judge could use is held by its provider: no place within 1 s, no call.
+    let called = 0;
+    world.judge = async () => {
+      called += 1;
+      return "VERDICT: continue\nREASON: ok";
+    };
+    for (const model of MODELS) {
+      const key = hxProviderModelOf({ provider: model.provider, model: model.id });
+      if (!key) continue;
+      hxProviderGate.attach({ modelOf: (agentId) => (agentId === key.key ? key : null), wake: () => undefined });
+      hxProviderGate.starting(key.key, false);
+      hxProviderGate.turnStarted(`turn-${key.key}`, key.key, null, 10);
+      hxProviderGate.throttled(`turn-${key.key}`, null, 60_000);
+    }
+    hxProviderGate.attach(null);
+    const started = Date.now();
+    expect(await router.teamJudge("a1", "data", 20_000)).toBeNull();
+    expect(called).toBe(0);
+    expect(Date.now() - started).toBeLessThan(5_000);
+  });
+});
