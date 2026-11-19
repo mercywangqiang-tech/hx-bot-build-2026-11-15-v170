@@ -176,7 +176,7 @@
     "en": [
       "Agents edit Excel, Word, PowerPoint and PDF files directly, and keep a copy first. The card in the chat lists the cells, paragraphs or slides that changed; click “Restore to before the change” to go back. Set the space for these copies in Settings › Computer Use; when it is full, HXBot asks you.",
       "Old formats work too, and the documents you have open stay as they are: .xls, .doc and .ppt are converted on a copy by LibreOffice, Numbers, Pages, Keynote or Office on this computer, and HXBot reads .csv itself. HXBot quits only the apps it opened.",
-      "See the queue: chats and tasks show their place, about how long, and why they wait. A team's progress card has a line for each member, what it does or waits for, and a switch: urgent, normal, not urgent.",
+      "See the queue: chats and tasks show their place, about how long, and why they wait. A team's progress card has a line for each member, what it does or waits for, and a switch: More urgent, Normal, Not urgent.",
       "When a model's provider is busy, HXBot eases off: after a throttle, it sends half as many requests at once and pauses a moment, and your own message still goes first. When a model has too long a queue, an agent with automatic model choice moves new work to a model of the same rank or better, with one line in the chat. When a team pauses because it may be going in circles, a small model's view comes with it, for reference only."
     ]
   }

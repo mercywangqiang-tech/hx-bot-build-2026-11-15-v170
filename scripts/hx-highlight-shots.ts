@@ -73,7 +73,7 @@ export const SHOTS: Shot[] = [
     },
     lead: {
       zh: "改之前 HXBot 先留一份修改前的文件；改完从磁盘读回核对。对话里的卡片列出改了哪些格子、段落或页，点“恢复到修改前”就回去。.xls、.doc、.ppt 这类老格式由电脑上的应用在副本上转换，你开着的文档不动。",
-      en: "Before a change, HXBot keeps a copy of the file; after it, it reads the file back from the disk. The card in the chat lists the cells, paragraphs or slides that changed, and Restore puts the file back. Old formats such as .xls, .doc and .ppt are converted on a copy by an app of this computer; the documents you have open stay as they are.",
+      en: "Before a change, HXBot keeps a copy of the file; after it, it reads the file back from the disk. The card in the chat lists the cells, paragraphs or slides that changed, and “Restore to before the change” puts the file back. Old formats such as .xls, .doc and .ppt are converted on a copy by an app of this computer; the documents you have open stay as they are.",
     },
     crop: ".hx-highlight-frame",
     width: 720,
@@ -96,10 +96,7 @@ export const SHOTS: Shot[] = [
         closest: "button",
         badge: "end",
         label: { zh: "一键回去", en: "One click back" },
-        note: {
-          zh: "留版本的空间在“设置 → Computer Use”里改",
-          en: "The space for copies is in Settings › Computer Use",
-        },
+        note: { zh: "空间大小：设置 → Computer Use", en: "Their space: Settings › Computer Use" },
       },
     ],
   },
@@ -110,10 +107,15 @@ export const SHOTS: Shot[] = [
     title: { zh: "排队看得见，团队可以调先后", en: "See the queue, and put a team first" },
     lead: {
       zh: "团队的进度卡每个成员一行：在做什么、排第几位、大约还要几分钟、在等什么。点“更急 / 普通 / 不急”调这个团队和别的团队的先后。模型服务商忙时，同时发出的请求自动减半，你自己发的消息照样先试。",
-      en: "A team's card has a line for each member: what it does, its place in the queue, about how long, what it waits for. Urgent, normal or not urgent puts this team before or after the others. When a model's provider is busy, HXBot sends half as many requests at once, and your own message still goes first.",
+      en: "A team's card has a line for each member: what it does, its place in the queue, about how long, what it waits for. More urgent, Normal or Not urgent puts this team before or after the others. When a model's provider is busy, HXBot sends half as many requests at once, and your own message still goes first.",
     },
     crop: ".hx-highlight-frame",
     width: 720,
+    prepare: () => {
+      // Two rings on rows next to each other would touch.
+      for (const row of document.querySelectorAll<HTMLElement>(".hx-highlight-frame .task-list-item"))
+        row.style.margin = "7px 0";
+    },
     callouts: [
       {
         text: {
@@ -136,7 +138,7 @@ export const SHOTS: Shot[] = [
         note: { zh: "限速后请求减半、暂停一会儿", en: "Half the requests and a pause after a throttle" },
       },
       {
-        css: ".hx-team-priority",
+        css: ".hx-team-priority-choice",
         badge: "end",
         label: { zh: "调先后", en: "Put it first" },
         note: { zh: "也可以在对话里说“这件更急”", en: "Or say “more urgent” in the chat" },
