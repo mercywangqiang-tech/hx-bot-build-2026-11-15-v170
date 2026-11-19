@@ -229,6 +229,10 @@ CHECKERS = {
 
 
 def main(argv: list[str]) -> int:
+    # The results are Chinese: a console in another encoding (Windows) must not stop the check.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     if len(argv) != 2:
         print(__doc__)
         return 2

@@ -286,8 +286,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Only the packages: the checks upload their own programs and results (folders) to the same run.
       - uses: actions/download-artifact@v8
         with:
+          pattern: hxbot-{mac-arm64,windows-x64,android}
           path: dist
           merge-multiple: true
       - name: Put the packages into a draft release

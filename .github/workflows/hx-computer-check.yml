@@ -144,10 +144,17 @@ jobs:
         shell: bash
         env:
           MACHINE: ${{ matrix.machine }}
+          # The cross-check prints Chinese; the console of Windows is not UTF-8 by default.
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: utf-8
         run: |
           code=0
           node skill-samples/hx-skill-samples.mjs --out out/skills --machine "$MACHINE" --settings-changes || code=$?
-          python="$(command -v python3 || command -v python)"
+          # The Python of macOS runners is managed by Homebrew and refuses pip: the libraries go into a venv.
+          base="$(command -v python3 || command -v python)"
+          "$base" -m venv "$RUNNER_TEMP/crosscheck" || code=1
+          python="$RUNNER_TEMP/crosscheck/bin/python"
+          [ -x "$python" ] || python="$RUNNER_TEMP/crosscheck/Scripts/python.exe"
           "$python" -m pip install --quiet openpyxl python-docx python-pptx pypdf || code=1
           "$python" skill-samples/skills_crosscheck.py out/skills || code=1
           for file in out/skills/summary.md out/skills/crosscheck.md; do

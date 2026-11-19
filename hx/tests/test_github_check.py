@@ -284,11 +284,23 @@ class SkillSamples(unittest.TestCase):
         # The machines have no Office, iWork or LibreOffice: the app tasks run on the user's computer.
         self.assertNotIn("--apps", step)
         self.assertIn("skills_crosscheck.py out/skills", step)
+        # Found on GitHub (run 44639192635): Homebrew's Python refuses pip, and the Windows console is not UTF-8.
+        self.assertIn('-m venv "$RUNNER_TEMP/crosscheck"', step)
+        self.assertLess(step.index("-m venv"), step.index("-m pip install"))
+        self.assertIn('PYTHONIOENCODING: utf-8', step)
+        self.assertIn('stream.reconfigure(encoding="utf-8"', read("hx/computer-check/skills_crosscheck.py"))
         self.assertIn('exit "$code"', step)
         # The results go up with the machine's results (path: out), under a name the merge does not read.
         self.assertLess(machine.index("name: Run the skill samples"), machine.index("name: Upload the results"))
         self.assertFalse("hxbot-skill-samples-program".startswith("hxbot-check-"))
         self.assertEqual(self.text.count("name: hxbot-skill-samples-program"), 2)
+
+    def test_the_draft_release_takes_only_the_packages(self):
+        # The checks upload their programs and results (with folders) to the same run of HXBot build;
+        # downloaded together with the packages, sha256sum stopped at the folders (run 44639192635).
+        build = read(".github/workflows/hx-build.yml")
+        draft = build[build.index("  draft-release:") :]
+        self.assertIn("pattern: hxbot-{mac-arm64,windows-x64,android}", draft)
 
     def test_the_bundle_needs_only_node_and_the_pdf_reader_beside_it(self):
         text = read("hx/scripts/skill-samples-bundle.sh")
