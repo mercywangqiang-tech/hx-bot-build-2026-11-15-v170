@@ -156,4 +156,6 @@ export const messages = {
     "{app}의 단계가 30분째 기다리고 있습니다. 바로 하려면 “지금”, 그만두려면 “취소”라고 답하세요.",
   "status.agent.hxComputer.resume":
     "(HXBot이 자동으로 보냄) 사용자가 손을 멈췄고 {app}이(가) 맨 앞에 있습니다. 보류한 단계를 이어서 하세요. 먼저 창을 확인한 다음 남은 {count}개 단계를 하세요. 보내기, 결제, 삭제 전에는 언제나처럼 사용자에게 먼저 물어보세요.",
+  "status.agent.hxUpdate.resume":
+    "(HXBot이 자동으로 보냄) HXBot이 업데이트를 설치하려고 다시 시작했고, 지금은 {version} 버전입니다. 다시 시작하면서 지난 턴이 중단되었습니다. 먼저 작업이 어디까지 진행됐는지 확인하고, 이미 무언가를 바꾼 단계는 반복하지 말고 나머지를 끝내세요.",
 } as const satisfies PartialTranslation<typeof source>;

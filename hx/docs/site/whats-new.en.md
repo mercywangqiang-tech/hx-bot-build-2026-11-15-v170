@@ -1,12 +1,56 @@
 ---
 title: What's new
 kicker: HXBot Research Edition
-updated: November 18, 2026
-version: Desktop 0.67.12 · Mobile 1.5.0
+updated: November 19, 2026
+version: Desktop 0.67.13 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
-This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.10 on, when HXBot finds a new version as it opens, it downloads and installs it by itself and restarts into it once the assistants are idle; there is nothing to click. The data in the screenshots is demo data.
+This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.13 on, HXBot downloads and installs a new version in the background also while you use it, then saves and restarts into it once the agents are idle, or after 10 minutes at most; there is nothing to click (0.67.10 to 0.67.12 install a version that they find as they open). The data in the screenshots is demo data.
+
+## Desktop 0.67.13: updates while you work, and one HXBot in the Dock {#desktop-0-67-13}
+
+November 19, 2026 · Desktop and web 0.67.13 · Mobile 1.5.0 (no change this time)
+
+This version is an urgent fix of 0.67.12. It adds no other new features.
+
+> **Highlights**
+> 1. HXBot updates while you use it: it downloads and installs a new version in the background, then saves and restarts into it when the agents are idle, or after 10 minutes at most. Agents that the restart cut off continue by themselves. {on:Desktop}
+> 2. One HXBot in the Dock on a Mac: a server on this computer no longer shows a second icon when it starts or restarts. {on:Desktop}
+> 3. A failed update check tells why: no update files on the server, a refused sign-in, no network or a server error each have their own message. {on:Desktop}
+> 4. When the server sorts the downloads or runs its check script, it compares the in-app update files and warns when they were not uploaded. {on:Server}
+
+### Updates while you work {#desktop-0-67-13-update}
+
+- **Before:** only a new version that HXBot found in the first 10 minutes after it opened installed by itself. A version found later waited for the next opening, so a computer that kept HXBot open could stay on an old version for a long time.
+- **Now:**
+  - HXBot looks for a new version every 4 minutes, also while the agents work. It downloads and installs it in the background, at a limited speed, so that you and the agents keep your network.
+  - When it is installed, HXBot restarts into it once the agents are idle. While it waits, new routine runs do not start, so that the work can come to an end; the routines that come due meanwhile run after the restart.
+  - It waits at most 10 minutes. When the agents still work then, HXBot saves first (the chats, the queued messages and the time the routines were held) and restarts. Each agent that the restart cut off gets a message from HXBot after the restart: check how far the work got, do not repeat a step that already changed something, and finish the rest.
+  - HXBot never restarts this way while it starts (for example, while it upgrades its database) or while it downloads or installs.
+  - Before the restart, the notice "HXBot is installing an update" shows as before. Choose Cancel update to skip this restart; the update then installs the next time HXBot opens.
+  - When you were not using HXBot, the new version opens in the background and does not come to the front.
+
+### A second HXBot in the Dock on a Mac {#desktop-0-67-13-dock}
+
+- **Cause:** a server on this computer runs HXBot's own program. macOS gave it a Dock icon at the moment it started, and 0.67.11 hid the icon only after the start, so a second HXBot showed each time a server started or restarted.
+- **Now:** the app information of HXBot says that it does not go into the Dock when it starts, so a server never has an icon. The main HXBot app makes itself a regular app before it finishes launching, so its Dock icon and menu bar are as before.
+
+### A failed update check tells why {#desktop-0-67-13-check}
+
+- **Before:** on a Mac, every failed check showed "Could not check for updates. Try again." You could not tell missing update files on the server from a refused sign-in or a dropped network. On November 19, the cause was in-app update files that were not uploaded to the server.
+- **Now:**
+  - No update files on the server (404): "No published update was found for this platform. HXBot tries again on its own in a few minutes."
+  - A refused sign-in (401, 403): HXBot checks the sign-in once and asks again. When it is refused again: "The update server did not accept your sign-in. Sign in to HXBot again, then check for updates."
+  - No network: HXBot tries once more through the network settings of the system (the proxy included). When that fails too, it asks you to check the network.
+  - A server error (5xx): the update service did not answer, and HXBot tries again in a few minutes.
+  - The update log keeps the status and the cause.
+
+### Server: no more missing update files {#desktop-0-67-13-server}
+
+- When it sorts the downloads (publish-downloads.py), the server warns in capitals when the Mac or Windows version on the download page is newer than the in-app update files, or when the update files were not uploaded, and says how to upload them.
+- The check script (check.sh) has two more checks: the in-app update files of the Mac and Windows versions match the download page.
+- The client folder of each delivery has a file that uploads the in-app updates of that version (a .command file). Double-click it on a Mac to upload the installers and the in-app update files together and switch them on.
 
 ## Desktop 0.67.12: several agents share the computer, and step aside while you use it {#desktop-0-67-12}
 

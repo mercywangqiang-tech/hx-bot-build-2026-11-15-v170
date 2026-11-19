@@ -152,4 +152,6 @@ export const messages = {
     "L’étape dans {app} attend depuis 30 minutes. Répondez « maintenant » pour la faire tout de suite, ou « abandonner » pour la laisser.",
   "status.agent.hxComputer.resume":
     "(Envoyé par HXBot) L’utilisateur s’est arrêté et {app} est au premier plan : reprenez l’étape mise en attente. Regardez d’abord la fenêtre, puis faites les {count} étapes restantes. Demandez à l’utilisateur avant un envoi, un paiement ou une suppression, comme toujours.",
+  "status.agent.hxUpdate.resume":
+    "(Envoyé par HXBot) HXBot a redémarré pour installer une mise à jour et est maintenant en version {version}. Le redémarrage a interrompu votre dernier tour : vérifiez d’abord où en était le travail, ne refaites pas une étape qui a déjà modifié quelque chose, puis terminez le reste.",
 } as const satisfies PartialTranslation<typeof source>;

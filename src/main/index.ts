@@ -1,5 +1,6 @@
 import { hxConnectComputerDriver } from "./hx-computer-driver";
 import { hxRegisterComputerStop } from "./hx-computer-stop";
+import { hxDesktopInDock } from "./hx-desktop-dock";
 import { hxKeepChildWindowsHidden, hxKeepOutOfDock } from "./hx-dock";
 import { hxOfferMoveToApplications } from "./hx-move-to-applications";
 import "./hx-defaults";
@@ -268,6 +269,9 @@ if (localServerChild) hxKeepChildWindowsHidden(app);
 // HXBot (v1.7.2): a hide this early can be lost while macOS activates the app; hx-dock.ts repeats it
 // after `ready` until it holds. Each local server left one more HXBot icon in the Dock.
 if (localServerChild && process.platform === "darwin") hxKeepOutOfDock(app);
+// HXBot (v1.7.3 hotfix): the bundle declares LSUIElement (electron-builder.yml), so a local server child never gets a
+// Dock tile, not even for a moment. This desktop app makes itself a regular app before it finishes launching.
+if (process.platform === "darwin" && !localServerChild && !serverMode && !hostedServer) hxDesktopInDock(app);
 const inviteLinkOptions = {
   allowLocalDevelopmentApiUrl: developmentRemoteRole !== null,
   selfHostedApiOrigin: selfHostedApiOrigin(process.env.HXBOT_AUTH_API_URL),

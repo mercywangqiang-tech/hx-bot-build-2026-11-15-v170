@@ -28,4 +28,6 @@ export const messages = {
   "error.update.remoteDisabled": "Updates door serverbeheerders staan uit op deze computer.",
   "error.update.restartStarted": "HXBot herstart al om de update te installeren.",
   "error.update.alreadyRestarting": "HXBot herstart al.",
+  "error.update.checkSignedOut":
+    "De updateserver heeft je aanmelding niet geaccepteerd. Meld je opnieuw aan bij HXBot en zoek daarna naar updates.",
 } as const satisfies PartialTranslation<typeof source>;

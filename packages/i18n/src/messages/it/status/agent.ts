@@ -154,4 +154,6 @@ export const messages = {
     "Il passaggio in {app} aspetta da 30 minuti. Rispondi «ora» per farlo subito, o «scarta» per lasciarlo.",
   "status.agent.hxComputer.resume":
     "(Inviato da HXBot) L’utente si è fermato e {app} è in primo piano: continua il passaggio in sospeso. Guarda prima la finestra, poi fai i {count} passaggi rimasti. Chiedi all’utente prima di un invio, un pagamento o un’eliminazione, come sempre.",
+  "status.agent.hxUpdate.resume":
+    "(Inviato da HXBot) HXBot si è riavviato per installare un aggiornamento e ora è alla versione {version}. Il riavvio ha interrotto il tuo ultimo turno: controlla prima fin dove è arrivato il lavoro, non ripetere un passaggio che ha già cambiato qualcosa, poi completa il resto.",
 } as const satisfies PartialTranslation<typeof source>;

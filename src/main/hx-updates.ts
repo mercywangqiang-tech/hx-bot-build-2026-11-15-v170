@@ -127,11 +127,22 @@ export function hxReadUpdateFeedUrl(resourcesPath: string): string | null {
   }
 }
 
+/** HXBot (v1.7.3 hotfix): true for an error of electron-updater that the server refused for the sign-in. */
+function hxRefusedSession(error: unknown): boolean {
+  const status = isDynamicRecord(error) && "statusCode" in error ? Number(error.statusCode) : Number.NaN;
+  return status === 401 || status === 403;
+}
+
 /**
  * electron-updater (Windows, Linux) with the HXBot session on each request. Signed out there is no
  * session to send, and the server would refuse: the check then reports no update and changes nothing.
+ * HXBot (v1.7.3 hotfix): a check that the server refuses (401, 403) checks the sign-in once and asks again.
  */
-export function hxAuthorizedUpdater(updater: UpdateAdapter, sessionToken: () => string | null): UpdateAdapter {
+export function hxAuthorizedUpdater(
+  updater: UpdateAdapter,
+  sessionToken: () => string | null,
+  refreshSession?: () => Promise<void>,
+): UpdateAdapter {
   const check = updater.checkForUpdates.bind(updater);
   const download = updater.downloadUpdate.bind(updater);
   const authorize = (): boolean => {
@@ -140,7 +151,21 @@ export function hxAuthorizedUpdater(updater: UpdateAdapter, sessionToken: () => 
     Reflect.set(updater, "requestHeaders", token ? { Authorization: `Bearer ${token}` } : null);
     return token !== null;
   };
-  updater.checkForUpdates = async () => (authorize() ? check() : null);
+  updater.checkForUpdates = async () => {
+    if (!authorize()) return null;
+    try {
+      return await check();
+    } catch (error) {
+      if (!refreshSession || !hxRefusedSession(error)) throw error;
+      try {
+        await refreshSession();
+      } catch {
+        // The check failed: the request below tells the same as the first one.
+      }
+      if (!authorize()) throw error;
+      return check();
+    }
+  };
   updater.downloadUpdate = async (cancellationToken?: UpdateCancellationToken) => {
     authorize();
     return download(cancellationToken);
@@ -269,6 +294,13 @@ type HxMacUpdaterOptions = {
   pid: number;
   quit: () => void;
   fetch?: HxFetch;
+  /**
+   * HXBot (v1.7.3 hotfix): Electron's own network (Chromium: the system proxy, the system's DNS and certificates).
+   * A request that fails at the network with fetch goes once more through it.
+   */
+  netFetch?: HxFetch;
+  /** HXBot (v1.7.3 hotfix): checks the sign-in again (the account service's /v1/me) after the server refused it. */
+  refreshSession?: () => Promise<void>;
   spawnInstaller?: (script: string, args: string[]) => void;
   /** HXBot (v1.7.0): the user works in HXBot now; otherwise the updated HXBot opens behind their app. */
   userInFront?: () => boolean;
@@ -279,6 +311,62 @@ type HxMacUpdaterOptions = {
 
 /** The part of fetch that the adapter uses; a test passes its own. */
 export type HxFetch = (url: URL, init: { headers: Record<string, string>; cache: "no-store" }) => Promise<Response>;
+
+/** HXBot (v1.7.3 hotfix): the code of a request that the server refused for the sign-in, after one new check of it. */
+export const HX_UPDATE_SIGNED_OUT = "HX_UPDATE_SIGNED_OUT";
+
+/**
+ * HXBot (v1.7.3 hotfix): a failed update request, with the HTTP status and a code, as electron-updater gives them.
+ * Before, every failure was a plain Error, and UpdateService showed "Could not check for updates" for each one: a feed
+ * that the server does not have (404, the update files were not uploaded) looked the same as a dropped network.
+ */
+export class HxUpdateRequestError extends Error {
+  readonly code: string;
+  readonly statusCode: number | undefined;
+
+  constructor(message: string, code: string, statusCode?: number) {
+    super(message);
+    this.name = "HxUpdateRequestError";
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
+
+/** The code of an answer that is not ok: the codes of electron-updater where it has one (update-service.ts sorts by them). */
+export function hxUpdateStatusCode(status: number): string {
+  if (status === 404) return "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND";
+  if (status === 401 || status === 403) return HX_UPDATE_SIGNED_OUT;
+  return `HTTP_ERROR_${status}`;
+}
+
+/** A request that did not reach the server: the code of its cause (ENOTFOUND, ECONNREFUSED, a certificate error). */
+function hxNetworkError(first: unknown, second?: unknown): HxUpdateRequestError {
+  const describe = (error: unknown): { code: string; text: string } => {
+    const cause = isDynamicRecord(error) && "cause" in error ? error.cause : null;
+    const code =
+      (isDynamicRecord(cause) && typeof cause.code === "string" && cause.code) ||
+      (isDynamicRecord(error) && typeof error.code === "string" && error.code) ||
+      "ERR_NETWORK";
+    const message = error instanceof Error ? error.message : String(error);
+    const detail = cause instanceof Error ? cause.message : "";
+    return { code, text: detail ? `${message}: ${detail}` : message };
+  };
+  const one = describe(first);
+  const two = second === undefined ? null : describe(second);
+  return new HxUpdateRequestError(
+    two ? `${one.code} ${one.text}; Electron network: ${two.code} ${two.text}` : `${one.code} ${one.text}`,
+    one.code,
+  );
+}
+
+/** Ends an answer that is not read, so that its connection goes back to the pool. */
+async function hxDiscard(response: Response): Promise<void> {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // An answer that is already closed.
+  }
+}
 
 /** One listener type for every event, as hosted-update-adapter.ts has: the intersection takes each overload. */
 type UpdateListener = (value: ProgressInfo & UpdateInfo & Error) => void;
@@ -328,22 +416,71 @@ export class HxMacUpdateAdapter implements UpdateAdapter {
 
   #headers(): Record<string, string> | null {
     const token = this.#options.sessionToken();
-    return token ? { Authorization: `Bearer ${token}` } : null;
+    // HXBot (v1.7.3 hotfix): the app and its version, as the other requests of HXBot send them (hx-client-version.ts).
+    return token
+      ? {
+          Authorization: `Bearer ${token}`,
+          "User-Agent": `HXBot/${this.#options.currentVersion} (Macintosh; ${this.#options.arch})`,
+          "X-HXBot-Client": `desktop/${this.#options.currentVersion}`,
+        }
+      : null;
+  }
+
+  /**
+   * HXBot (v1.7.3 hotfix): one request of the update, with what a request needs to get through:
+   * - a request that fails at the network goes once more through Electron's own network (the system proxy);
+   * - an answer 401 or 403 checks the sign-in once and asks again with the session that the check leaves;
+   * - an answer that is not ok throws an HxUpdateRequestError with its status, so that the user reads the cause.
+   */
+  async #request(url: URL): Promise<Response> {
+    const fetcher: HxFetch = this.#options.fetch ?? ((target, init) => fetch(target, init));
+    const send = async (): Promise<Response> => {
+      const headers = this.#headers();
+      if (!headers) throw new HxUpdateRequestError("Sign in to HXBot to check for updates.", HX_UPDATE_SIGNED_OUT, 401);
+      try {
+        return await fetcher(url, { headers, cache: "no-store" });
+      } catch (error) {
+        const netFetch = this.#options.netFetch;
+        if (!netFetch) throw hxNetworkError(error);
+        try {
+          return await netFetch(url, { headers, cache: "no-store" });
+        } catch (second) {
+          throw hxNetworkError(error, second);
+        }
+      }
+    };
+    let response = await send();
+    if ((response.status === 401 || response.status === 403) && this.#options.refreshSession) {
+      await hxDiscard(response);
+      try {
+        await this.#options.refreshSession();
+      } catch {
+        // The check failed: the request below tells the same as the first one.
+      }
+      response = await send();
+    }
+    if (!response.ok) {
+      await hxDiscard(response);
+      throw new HxUpdateRequestError(
+        `The HXBot update server answered ${response.status} for ${url.pathname}.`,
+        hxUpdateStatusCode(response.status),
+        response.status,
+      );
+    }
+    return response;
   }
 
   async checkForUpdates(): Promise<UpdateCheckOutcome | null> {
     this.#events.emit("checking-for-update");
-    const headers = this.#headers();
-    if (!headers) return null;
-    const fetcher: HxFetch = this.#options.fetch ?? ((url, init) => fetch(url, init));
-    const response = await fetcher(new URL("latest-mac.yml", this.#options.feedUrl), {
-      headers,
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error(`The HXBot update server answered ${response.status}.`);
+    if (!this.#headers()) return null;
+    const response = await this.#request(new URL("latest-mac.yml", this.#options.feedUrl));
     const feed = parseHxUpdateFeed(await response.text());
     const file = feed ? hxMacUpdateFile(feed, this.#options.arch) : null;
-    if (!feed || !file) throw new Error("The HXBot update server sent update information that HXBot cannot read.");
+    if (!feed || !file)
+      throw new HxUpdateRequestError(
+        "The HXBot update server sent update information that HXBot cannot read.",
+        "ERR_UPDATER_INVALID_RELEASE_FEED",
+      );
     const info = this.#info(feed, file);
     if (!hxIsNewerVersion(feed.version, this.#options.currentVersion)) {
       this.#release = null;
@@ -363,8 +500,7 @@ export class HxMacUpdateAdapter implements UpdateAdapter {
   async downloadUpdate(cancellationToken?: UpdateCancellationToken): Promise<string[]> {
     const release = this.#release;
     if (!release) throw new Error("There is no HXBot update to download.");
-    const headers = this.#headers();
-    if (!headers) throw new Error("Sign in to HXBot to download the update.");
+    if (!this.#headers()) throw new Error("Sign in to HXBot to download the update.");
     const pending = join(this.#options.cacheDirectory, "pending");
     await mkdir(pending, { recursive: true });
     const target = join(pending, release.file.url.replace(/[^A-Za-z0-9._-]/gu, "_"));
@@ -373,9 +509,8 @@ export class HxMacUpdateAdapter implements UpdateAdapter {
       return [target];
     }
     const partial = `${target}.part`;
-    const fetcher: HxFetch = this.#options.fetch ?? ((url, init) => fetch(url, init));
-    const response = await fetcher(new URL(release.file.url, this.#options.feedUrl), { headers, cache: "no-store" });
-    if (!response.ok || !response.body) throw new Error(`The HXBot update server answered ${response.status}.`);
+    const response = await this.#request(new URL(release.file.url, this.#options.feedUrl));
+    if (!response.body) throw new Error(`The HXBot update server answered ${response.status} with no body.`);
     const hash = createHash("sha512");
     const out = createWriteStream(partial);
     const total = release.file.size;

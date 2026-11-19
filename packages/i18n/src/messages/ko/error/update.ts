@@ -26,4 +26,6 @@ export const messages = {
   "error.update.remoteDisabled": "이 컴퓨터에서는 서버 관리자의 업데이트가 꺼져 있어요.",
   "error.update.restartStarted": "HXBot이 업데이트를 설치하기 위해 이미 다시 시작하고 있어요.",
   "error.update.alreadyRestarting": "HXBot이 이미 다시 시작하고 있어요.",
+  "error.update.checkSignedOut":
+    "업데이트 서버가 로그인을 받아들이지 않았어요. HXBot에 다시 로그인한 다음 업데이트를 확인하세요.",
 } as const satisfies PartialTranslation<typeof source>;

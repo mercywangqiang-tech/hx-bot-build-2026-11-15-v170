@@ -182,6 +182,27 @@ class PublishTest(unittest.TestCase):
         # 再运行一次结果不变
         self.assertIn("Windows 0.67.1：HXBot-0.67.1-x64.exe", self.publish())
 
+    def test_installers_newer_than_the_update_files_are_named_loudly(self):
+        # v1.7.3 紧急修正：2026-11-19 服务器上只有安装包，没有 updates/desktop/latest-mac.yml，客户端在应用里收不到新版本
+        (self.directory / "HXBot-0.67.13-arm64.dmg").write_bytes(b"mac")
+        (self.directory / "HXBot-0.67.13-x64.exe").write_bytes(b"win")
+        output = self.publish()
+        self.assertIn("！！注意：下载页的 Mac 版是 0.67.13，应用内更新的文件（updates/desktop/latest-mac.yml）没有上传", output)
+        self.assertIn("！！注意：下载页的 Windows 版是 0.67.13，应用内更新的文件（updates/desktop/latest.yml）没有上传", output)
+        self.assertIn("上传应用内更新-0.67.13.command", output)
+        # 还停在旧版本
+        folder = self.desktop_feed("latest-mac.yml", "0.67.12", ["HXBot-0.67.12-arm64.zip"])
+        (folder / "HXBot-0.67.12-arm64.zip").write_bytes(b"zip")
+        self.assertIn("下载页的 Mac 版是 0.67.13，应用内更新还停在 0.67.12", self.publish())
+        # 一致以后不再提示
+        self.desktop_feed("latest-mac.yml", "0.67.13", ["HXBot-0.67.13-arm64.zip"])
+        (folder / "HXBot-0.67.13-arm64.zip").write_bytes(b"zip")
+        self.desktop_feed("latest.yml", "0.67.13", ["HXBot-0.67.13-x64.exe"])
+        output = self.publish()
+        self.assertNotIn("！！注意", output)
+        self.assertIn("Mac 0.67.13", output)
+        self.assertIn("Windows 0.67.13", output)
+
     def test_desktop_update_files_that_point_at_missing_files(self):
         self.desktop_feed("latest-mac.yml", "0.67.1", ["HXBot-0.67.1-arm64.zip"])
         self.desktop_feed("latest.yml", "0.67.1", ["../manifest.json"])

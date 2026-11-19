@@ -149,4 +149,6 @@ export const messages = {
     "O passo em {app} espera há 30 minutos. Responda «agora» para fazer já, ou «descartar» para deixá-lo.",
   "status.agent.hxComputer.resume":
     "(Enviado pelo HXBot) O usuário parou e {app} está na frente: continue o passo em espera. Veja a janela primeiro e depois faça os {count} passos restantes. Pergunte ao usuário antes de enviar, pagar ou apagar, como sempre.",
+  "status.agent.hxUpdate.resume":
+    "(Enviado pelo HXBot) O HXBot reiniciou para instalar uma atualização e agora está na versão {version}. A reinicialização interrompeu seu último turno: verifique primeiro até onde o trabalho chegou, não repita um passo que já mudou algo e depois termine o resto.",
 } as const satisfies PartialTranslation<typeof source>;

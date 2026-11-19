@@ -24,4 +24,5 @@ export const messages = {
   "error.update.remoteDisabled": "这台电脑已关闭“允许服务器成员触发更新”。",
   "error.update.restartStarted": "HXBot 已在重启以安装更新。",
   "error.update.alreadyRestarting": "HXBot 已在重启。",
+  "error.update.checkSignedOut": "更新服务没有认可你的登录。请重新登录 HXBot，再检查更新。",
 } as const satisfies PartialTranslation<typeof source>;

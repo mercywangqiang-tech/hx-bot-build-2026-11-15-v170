@@ -150,4 +150,6 @@ export const messages = {
     "{app} içindeki adım 30 dakikadır bekliyor. Hemen yapılması için «şimdi», bırakmak için «bırak» yanıtını verin.",
   "status.agent.hxComputer.resume":
     "(HXBot tarafından gönderildi) Kullanıcı durdu ve {app} önde: bekletilen adıma devam et. Önce pencereye bak, sonra kalan {count} adımı yap. Göndermeden, ödemeden veya silmeden önce her zamanki gibi kullanıcıya sor.",
+  "status.agent.hxUpdate.resume":
+    "(HXBot tarafından gönderildi) HXBot bir güncellemeyi yüklemek için yeniden başladı ve şimdi {version} sürümünde. Yeniden başlatma son turunu yarıda kesti: önce işin nereye kadar geldiğine bak, bir şeyi zaten değiştirmiş bir adımı tekrarlama, sonra kalanını bitir.",
 } as const satisfies PartialTranslation<typeof source>;

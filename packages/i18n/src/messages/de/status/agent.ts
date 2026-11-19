@@ -156,4 +156,6 @@ export const messages = {
     "Der Schritt in {app} wartet seit 30 Minuten. Antworte „jetzt“, damit er sofort erledigt wird, oder „verwerfen“, um ihn zu lassen.",
   "status.agent.hxComputer.resume":
     "(Von HXBot gesendet) Der Benutzer hat aufgehört, und {app} ist vorne: Setze den geparkten Schritt fort. Sieh dir zuerst das Fenster an, dann erledige die {count} restlichen Schritte. Frage den Benutzer wie immer vor einem Senden, einer Zahlung oder einem Löschen.",
+  "status.agent.hxUpdate.resume":
+    "(Von HXBot gesendet) HXBot wurde neu gestartet, um ein Update zu installieren, und ist jetzt Version {version}. Der Neustart hat deinen letzten Durchlauf unterbrochen: Prüfe zuerst, wie weit die Arbeit gekommen ist, wiederhole keinen Schritt, der schon etwas geändert hat, und erledige dann den Rest.",
 } as const satisfies PartialTranslation<typeof source>;

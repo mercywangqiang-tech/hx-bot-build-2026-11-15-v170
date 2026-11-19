@@ -23,4 +23,6 @@ export const messages = {
   "error.update.remoteDisabled": "التحديثات من مسؤولي الخوادم معطّلة على هذا الحاسوب.",
   "error.update.restartStarted": "يعيد HXBot التشغيل بالفعل لتثبيت التحديث.",
   "error.update.alreadyRestarting": "يعيد HXBot التشغيل بالفعل.",
+  "error.update.checkSignedOut":
+    "لم يقبل خادم التحديثات تسجيل دخولك. سجّل الدخول إلى HXBot مرة أخرى، ثم تحقّق من وجود تحديثات.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -2057,6 +2057,23 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
     return this.listAgents().filter((agent) => working.has(agent.id) || this.#mailbox.hasUnfinishedDelivery(agent.id));
   }
 
+  /** HXBot (v1.7.3 hotfix): the agents whose own chat runs a turn now; an update restart cuts them off (hx-update-resume.ts). */
+  hxAgentsInTurn(): string[] {
+    const agents = new Set<string>();
+    for (const [agentId, snapshot] of this.#conversation.activeSnapshots()) {
+      if (snapshot.activeTurnId && !this.#conversation.isExecutionThread(snapshot.threadId)) agents.add(agentId);
+    }
+    return [...agents];
+  }
+
+  /**
+   * HXBot (v1.7.3 hotfix): tells an agent that the update restart cut its turn off. The message goes through the
+   * mailbox like a message of the user, as the continue of a parked computer step does. It never throws.
+   */
+  hxContinueAfterUpdate(agentId: string, text: string): Promise<void> {
+    return this.#hxComputerResume(agentId, text);
+  }
+
   hasActiveWork(): string[] {
     const reasons: string[] = [];
     for (const [, snapshot] of this.#conversation.activeSnapshots()) {

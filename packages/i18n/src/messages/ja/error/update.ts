@@ -29,4 +29,6 @@ export const messages = {
   "error.update.remoteDisabled": "このコンピューターでは、サーバー管理者からのアップデートはオフになっています。",
   "error.update.restartStarted": "HXBot はアップデートをインストールするため、すでに再起動しています。",
   "error.update.alreadyRestarting": "HXBot はすでに再起動しています。",
+  "error.update.checkSignedOut":
+    "更新サーバーがサインインを受け付けませんでした。HXBot にもう一度サインインしてから、更新を確認してください。",
 } as const satisfies PartialTranslation<typeof source>;

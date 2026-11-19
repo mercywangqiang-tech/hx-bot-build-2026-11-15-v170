@@ -29,4 +29,6 @@ export const messages = {
   "error.update.remoteDisabled": "Sunucu yöneticilerinden gelen güncellemeler bu bilgisayarda kapalı.",
   "error.update.restartStarted": "HXBot, güncellemeyi yüklemek için zaten yeniden başlatılıyor.",
   "error.update.alreadyRestarting": "HXBot zaten yeniden başlatılıyor.",
+  "error.update.checkSignedOut":
+    "Güncelleme sunucusu oturum açmanı kabul etmedi. HXBot'a yeniden giriş yap, sonra güncellemeleri denetle.",
 } as const satisfies PartialTranslation<typeof source>;

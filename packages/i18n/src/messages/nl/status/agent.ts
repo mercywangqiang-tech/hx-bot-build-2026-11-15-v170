@@ -190,4 +190,6 @@ export const messages = {
     "De stap in {app} wacht al 30 minuten. Antwoord „nu” om het meteen te doen, of „overslaan” om het te laten.",
   "status.agent.hxComputer.resume":
     "(Verzonden door HXBot) De gebruiker is gestopt en {app} staat vooraan: ga verder met de geparkeerde stap. Kijk eerst naar het venster en doe dan de {count} resterende stappen. Vraag het de gebruiker zoals altijd vóór verzenden, betalen of verwijderen.",
+  "status.agent.hxUpdate.resume":
+    "(Verzonden door HXBot) HXBot is opnieuw gestart om een update te installeren en is nu versie {version}. De herstart heeft je laatste beurt onderbroken: kijk eerst hoe ver het werk was, herhaal geen stap die al iets heeft veranderd en maak daarna de rest af.",
 } as const satisfies PartialTranslation<typeof source>;

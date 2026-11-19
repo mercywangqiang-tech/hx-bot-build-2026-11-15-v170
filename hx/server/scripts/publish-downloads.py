@@ -332,6 +332,29 @@ def desktop_updates(directory):
     return lines, problems
 
 
+def desktop_update_gaps(directory, items):
+    """v1.7.3 紧急修正：下载页的桌面端安装包比应用内更新新（或者更新文件根本没传）时的提示。
+
+    2026-11-19 服务器上只有安装包、没有 updates/desktop/latest-mac.yml：已经装好的 Mac 版在应用里收不到新版本，
+    “检查更新”只显示出错，没有人发现。这里每次整理下载目录都核对一遍，大字说清楚怎么补。"""
+    gaps = []
+    for platform, name, label in (("macos", "latest-mac.yml", "Mac"), ("windows", "latest.yml", "Windows")):
+        item = next((entry for entry in items if entry.get("platform") == platform), None)
+        if item is None or not item.get("version"):
+            continue
+        feed = read_feed(directory / "updates" / "desktop" / name)
+        have = feed["version"] if feed else None
+        if have is not None and version_key(have) >= version_key(item["version"]):
+            continue
+        gaps.append(
+            "！！注意：下载页的 {label} 版是 {want}，应用内更新{state}。已经装好的 {label} 客户端在应用里收不到 {want}，"
+            "“检查更新”会提示找不到已发布的更新。请在 Mac 上双击交付文件夹 client 里的“上传应用内更新-{want}.command”，"
+            "或运行 bash hx/scripts/upload-downloads.sh root@服务器 HXBot-{want}-…（安装包旁边要有 {name}）。".format(
+                label=label, want=item["version"], name=name,
+                state="还停在 {}".format(have) if have else "的文件（updates/desktop/{}）没有上传".format(name)))
+    return gaps
+
+
 def write_mobile_updates(directory, site, items):
     """updates/mobile.json：手机端点“更新”时打开的地址。"""
     folder = directory / "updates"
@@ -532,7 +555,7 @@ def main():
         print("  桌面端 " + line)
     if not desktop_lines and not desktop_problems:
         print("  桌面端（还没有更新文件：上传安装包时用 hx/scripts/upload-downloads.sh，会一并传上来）")
-    for note in notes + desktop_problems:
+    for note in notes + desktop_problems + desktop_update_gaps(directory, items):
         print()
         print("  " + note)
     return 0

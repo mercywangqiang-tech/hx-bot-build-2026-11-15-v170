@@ -90,6 +90,21 @@ fi
 # 应用内更新（v1.6.2 起）：更新文件只给带登录令牌的客户端；安卓新版安装包由系统浏览器下载，用随机串地址
 check "未登录取应用内更新信息 → 401（返回 404 说明 nginx 还是旧配置，重新运行 setup-https.sh）" 401 "$(code "https://$SITE/updates/mobile.json")"
 check "带无效令牌取桌面端更新信息 → 401" 401 "$(code -H "Authorization: Bearer hx-check-invalid" "https://$SITE/updates/desktop/latest.yml")"
+# v1.7.3 紧急修正：下载页有新安装包、应用内更新文件却没传（或还是旧版本）时，已装的客户端在应用里收不到新版本
+version_of() { python3 -c 'import json, sys
+try:
+    items = json.load(open(sys.argv[1], encoding="utf-8")).get("items", [])
+    print(next((item.get("version") or "" for item in items if item.get("platform") == sys.argv[2]), ""))
+except Exception:
+    print("")' "${HX_DOWNLOADS:-/opt/hxbot/downloads}/manifest.json" "$1" 2>/dev/null; }
+feed_version() { sed -n 's/^version:[[:space:]]*["'"'"']\{0,1\}\([0-9][0-9A-Za-z.+-]*\).*/\1/p' "${HX_DOWNLOADS:-/opt/hxbot/downloads}/updates/desktop/$1" 2>/dev/null | head -1; }
+for pair in "macos latest-mac.yml Mac" "windows latest.yml Windows"; do
+  set -- $pair
+  want="$(version_of "$1")"
+  [ -n "$want" ] || continue
+  have="$(feed_version "$2")"
+  check "$3 的应用内更新文件 updates/desktop/$2 和下载页同为 $want 版（不一致时用交付文件夹 client 里的“上传应用内更新”补传）" "$want" "${have:-没有上传}"
+done
 ota="$(ota_of android)"
 if [ -n "$ota" ]; then
   check "安卓新版安装包（应用里点“更新”后由系统浏览器下载）" 200 "$(code -I "https://$SITE$ota")"

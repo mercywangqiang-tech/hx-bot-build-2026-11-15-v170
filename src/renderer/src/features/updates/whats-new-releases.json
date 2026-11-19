@@ -1,5 +1,21 @@
 [
   {
+    "version": "0.67.13",
+    "date": "2026-11-19",
+    "notices": [],
+    "groups": [
+      {
+        "type": "added",
+        "items": [
+          "HXBot updates while you use it: it looks for a new version every few minutes, downloads and installs it in the background without stopping the work, then saves and restarts into it when the agents are idle, or after 10 minutes at most. Agents that the restart cut off continue by themselves. There is nothing to click.",
+          "One HXBot in the Dock on a Mac: a server on this computer no longer shows a second HXBot icon when it starts or restarts.",
+          "A failed update check tells why: no update files on the server, a refused sign-in, no network or a server error each have their own message. Without a network, HXBot tries once more through the system proxy; after a refused sign-in, it checks the sign-in once and asks again.",
+          "When the server sorts the downloads or runs its check script, it compares the in-app update files: it warns in capitals when the download page has a new version but the in-app update files were not uploaded."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.67.12",
     "date": "2026-11-18",
     "notices": [],

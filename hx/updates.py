@@ -46,6 +46,10 @@ def desktop(r) -> None:
               "        currentVersion,\n"
               "        arch: process.arch,\n"
               "        sessionToken: () => centralAuth.hxSessionToken(),\n"
+              "        // HXBot (v1.7.3 hotfix): a request that fails at the network goes once more through Electron's network (the\n"
+              "        // system proxy), and a refused session is checked once before the check fails (hx-updates.ts).\n"
+              "        netFetch: (url, init) => net.fetch(url.toString(), init),\n"
+              "        refreshSession: hxRefreshSession,\n"
               "        cacheDirectory: updaterCacheDirectory,\n"
               "        executablePath: app.getPath(\"exe\"),\n"
               "        logPath: join(app.getPath(\"userData\"), \"logs\", \"update\", \"install.log\"),\n"
@@ -60,7 +64,7 @@ def desktop(r) -> None:
               "    const realAdapter = await loadElectronUpdater();\n"
               "    if (realAdapter) {\n"
               "      // HXBot: each request carries the HXBot session; the server gives updates only to signed-in clients.\n"
-              "      updateAdapter = hxAuthorizedUpdater(realAdapter, () => centralAuth.hxSessionToken());\n"
+              "      updateAdapter = hxAuthorizedUpdater(realAdapter, () => centralAuth.hxSessionToken(), hxRefreshSession);\n"
               "      updaterCacheDirectory = electronUpdaterCacheDirectory();\n")
 
 

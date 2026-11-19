@@ -54,6 +54,7 @@ import { hxAtMostEvery, hxClientFetch } from "./hx-client-header";
 import { HxDesktopMemory } from "./hx-flow-memory";
 import { HxFlowShare } from "./hx-flow-share";
 import { hxStopOrphanedLocalServers } from "./hx-local-servers";
+import { HX_UPDATE_RESUME_FILE, HxUpdateRestartKeeper, hxContinueAfterUpdate } from "./hx-update-resume";
 import { HxMacUpdateAdapter, hxAuthorizedUpdater, hxReadUpdateFeedUrl } from "./hx-updates";
 import { LicenseDesktopService } from "./license-service";
 import { LocalSignInWindows } from "./local-sign-in-window";
@@ -126,6 +127,7 @@ import {
   desktopCapturer,
   Notification,
   nativeImage,
+  net,
   powerMonitor,
   screen,
   shell,
@@ -1405,6 +1407,8 @@ export async function createApplicationServices({
   const analyticsPreferenceFile = join(app.getPath("userData"), ANALYTICS_PREFERENCE_FILE);
   const updatePreferenceFile = join(app.getPath("userData"), UPDATE_PREFERENCE_FILE);
   const routineHoldFile = join(app.getPath("userData"), ROUTINE_HOLD_FILE);
+  // HXBot (v1.7.3 hotfix): the agents that an automatic update restart cut off (hx-update-resume.ts).
+  const hxUpdateResumeFile = join(app.getPath("userData"), HX_UPDATE_RESUME_FILE);
   const setupState = await runCauseEffect(readSetupState(setupFile));
   const analyticsPreference = await Effect.runPromise(
     readAnalyticsPreference(analyticsPreferenceFile, setupState.completed),
@@ -3712,6 +3716,8 @@ export async function createApplicationServices({
     logger.warn(`HXBot updates are disabled because the application version is not valid SemVer: ${currentVersion}`);
   }
   let updateAdapter: UpdateAdapter = createDisabledUpdateAdapter();
+  // HXBot (v1.7.3 hotfix): the update server refused the session: check the sign-in once (a refused one signs out).
+  const hxRefreshSession = () => Effect.runPromise(centralAuth.refreshProfile()).then(() => undefined);
   let updaterEnabled = updatesEnabled;
   let updaterCacheDirectory: string | undefined;
   if (updatesEnabled && hostedInstaller) {
@@ -3731,6 +3737,10 @@ export async function createApplicationServices({
         currentVersion,
         arch: process.arch,
         sessionToken: () => centralAuth.hxSessionToken(),
+        // HXBot (v1.7.3 hotfix): a request that fails at the network goes once more through Electron's network (the
+        // system proxy), and a refused session is checked once before the check fails (hx-updates.ts).
+        netFetch: (url, init) => net.fetch(url.toString(), init),
+        refreshSession: hxRefreshSession,
         cacheDirectory: updaterCacheDirectory,
         executablePath: app.getPath("exe"),
         logPath: join(app.getPath("userData"), "logs", "update", "install.log"),
@@ -3745,7 +3755,7 @@ export async function createApplicationServices({
     const realAdapter = await loadElectronUpdater();
     if (realAdapter) {
       // HXBot: each request carries the HXBot session; the server gives updates only to signed-in clients.
-      updateAdapter = hxAuthorizedUpdater(realAdapter, () => centralAuth.hxSessionToken());
+      updateAdapter = hxAuthorizedUpdater(realAdapter, () => centralAuth.hxSessionToken(), hxRefreshSession);
       updaterCacheDirectory = electronUpdaterCacheDirectory();
     } else {
       updaterEnabled = false;
@@ -3811,6 +3821,14 @@ export async function createApplicationServices({
       yield* workflowRuntime.sweep();
       // Marks the posts a restart cut off, and sends the answers that ended while HXBot was closed.
       yield* routineResultRuntime.recover();
+      // HXBot (v1.7.3 hotfix): the agents that an update restart cut off continue (hx-update-resume.ts).
+      void hxContinueAfterUpdate({
+        resumePath: hxUpdateResumeFile,
+        version: currentVersion,
+        agentExists: (agentId) => service.listAgents().some((agent) => agent.id === agentId),
+        continueAgent: (agentId, text) => service.hxContinueAfterUpdate(agentId, text),
+        log: (message) => logger.info(message),
+      });
     }),
   );
   const describeRestartReadiness = (): RestartReadiness =>
@@ -3850,15 +3868,28 @@ export async function createApplicationServices({
   const startedAt = Date.now();
   const clientInUseSinceStart = () =>
     clientInUse() || (host.connectedClientCount() > 0 && Date.now() - startedAt < CLIENT_USE_WINDOW_MS);
+  // HXBot (v1.7.3 hotfix): while the automatic restart waits for the agents, no new routine run starts; it waits at most
+  // 10 minutes, then saves what it cuts off and restarts (hx-update-resume.ts).
+  const hxUpdateRestart = new HxUpdateRestartKeeper({
+    holdRoutines: () => service.holdRoutines(),
+    releaseRoutines: () => service.releaseRoutines(),
+    routineHoldPath: routineHoldFile,
+    resumePath: hxUpdateResumeFile,
+    agentsInTurn: () => service.hxAgentsInTurn(),
+    log: (message) => logger.info(message),
+  });
   requestedUpdate = new RequestedUpdate({
     updater,
     describeReadiness: describeRestartReadiness,
+    hxIdleWaitMs: hxUpdateRestart.idleWaitMs,
+    hxHoldRoutines: (held) => hxUpdateRestart.hold(held),
+    hxBeforeRestart: (waitingFor) => hxUpdateRestart.beforeRestart(waitingFor),
     preference: updatePreference,
-    // HXBot (v1.7.1): an update that HXBot finds as it opens downloads, installs and restarts by itself when the
-    // agents are idle, with nothing to click; one found later waits for the next opening. Only an update that the
-    // account service requires waits 10 minutes for Update now first (hx-update-policy.ts).
+    // HXBot (v1.7.1, v1.7.3 hotfix): a new version downloads, installs and restarts by itself when the agents are
+    // idle, with nothing to click, whenever HXBot finds it. Only an update that the account service requires waits
+    // 10 minutes for Update now first (hx-update-policy.ts).
     automaticGraceMs: () => hxAutomaticGraceMs(updater.getStatus()),
-    hxAutomaticOnlyIf: hxInstallsByItself(startedAt, () => updater.getStatus()),
+    hxAutomaticOnlyIf: hxInstallsByItself(() => updater.getStatus()),
     savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),
     log: (message) => logger.info(message),
     announce: (state, version) => host.announceRestart(state, version),

@@ -76,15 +76,15 @@ TEXT_ZH = {
 SETTINGS_EN = {
     "settings.updates.hxForced.title": "Automatic updates",
     "settings.updates.hxForced.description":
-        "When HXBot opens and finds a new version, it downloads and installs it by itself and restarts into it when the "
-        "agents are idle; there is nothing to click. Work that runs finishes first. A new version found later installs "
-        "the next time HXBot opens.",
+        "HXBot looks for a new version every few minutes, also while the agents work. It downloads and installs it in "
+        "the background, then saves and restarts into it when the agents are idle, or after 10 minutes at most. Agents "
+        "that the restart cut off continue by themselves. There is nothing to click.",
 }
 SETTINGS_ZH = {
     "settings.updates.hxForced.title": "自动更新",
     "settings.updates.hxForced.description":
-        "打开 HXBot 时找到的新版本，HXBot 自动下载、装好，在助手都空闲时重启进入新版，不用点；正在进行的工作先做完。"
-        "用着用着才找到的新版本，下次打开时再装。",
+        "HXBot 每隔几分钟查一次新版本，助手干活时也查。找到后在后台下载、装好，等助手都空闲（最多等 10 分钟）就保存并"
+        "重启进入新版；被重启打断的助手重启后自己接着做。不用点。",
 }
 MOBILE_EN = {
     "mobile.app.hxForced.title": "Update HXBot",
@@ -156,8 +156,8 @@ def desktop(r) -> None:
               "    updater.hxSetRequired();\n"
               "    Effect.runFork(updater.checkForUpdates());\n"
               "  });\n")
-    # v1.7.1 起（用户 2026-11-18）：打开 HXBot 时找到的新版本自动下载、装好，在空闲时几秒后重启进入新版，不用点；
-    # 用着用着才找到的，下次打开时再装。只有账号服务要求必须装的（426），先等 10 分钟让用户点“立即更新”。
+    # v1.7.1 起（用户 2026-11-18）：找到的新版本自动下载、装好，在空闲时几秒后重启进入新版，不用点；
+    # v1.7.3 紧急修正起用着用着找到的也一样（不再等下次打开）。只有账号服务要求必须装的（426），先等 10 分钟让用户点“立即更新”。
     requested = "src/main/requested-update.ts"
     r.replace(requested,
               "  graceMs?: number;\n",
@@ -180,11 +180,11 @@ def desktop(r) -> None:
               "    preference: updatePreference,\n"
               "    savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),\n",
               "    preference: updatePreference,\n"
-              "    // HXBot (v1.7.1): an update that HXBot finds as it opens downloads, installs and restarts by itself when the\n"
-              "    // agents are idle, with nothing to click; one found later waits for the next opening. Only an update that the\n"
-              "    // account service requires waits 10 minutes for Update now first (hx-update-policy.ts).\n"
+              "    // HXBot (v1.7.1, v1.7.3 hotfix): a new version downloads, installs and restarts by itself when the agents are\n"
+              "    // idle, with nothing to click, whenever HXBot finds it. Only an update that the account service requires waits\n"
+              "    // 10 minutes for Update now first (hx-update-policy.ts).\n"
               "    automaticGraceMs: () => hxAutomaticGraceMs(updater.getStatus()),\n"
-              "    hxAutomaticOnlyIf: hxInstallsByItself(startedAt, () => updater.getStatus()),\n"
+              "    hxAutomaticOnlyIf: hxInstallsByItself(() => updater.getStatus()),\n"
               "    savePreference: (change) => writeUpdatePreference(updatePreferenceFile, change),\n")
     # 自动下载、自动安装，不能关闭
     store = "src/main/update-preference-store.ts"

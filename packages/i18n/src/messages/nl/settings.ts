@@ -755,7 +755,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "Je weigerde",
   "settings.updates.hxForced.title": "Automatische updates",
   "settings.updates.hxForced.description":
-    "Als HXBot bij het openen een nieuwe versie vindt, downloadt en installeert hij die zelf en start hij opnieuw op in de nieuwe versie zodra de agents niets te doen hebben; je hoeft nergens op te klikken. Lopend werk wordt eerst afgerond. Een later gevonden versie wordt geïnstalleerd de volgende keer dat je HXBot opent.",
+    "HXBot zoekt om de paar minuten naar een nieuwe versie, ook terwijl de agents werken. Hij downloadt en installeert die op de achtergrond, slaat daarna op en start opnieuw op in de nieuwe versie zodra de agents niets te doen hebben, of uiterlijk na 10 minuten. Agents die door de herstart zijn onderbroken, gaan vanzelf verder. Je hoeft nergens op te klikken.",
   "settings.nav.group.settings": "Instellingen",
   "settings.nav.group.features": "Functies",
   "settings.nav.group.data": "Gegevens en beveiliging",

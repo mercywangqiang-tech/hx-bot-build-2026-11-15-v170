@@ -78,6 +78,17 @@ export interface RequestedUpdateOptions {
   /** HXBot: which updates install by themselves: found as HXBot opened, or required (hx-update-policy.ts). */
   hxAutomaticOnlyIf?: () => boolean;
   /**
+   * HXBot (v1.7.3 hotfix): the longest the automatic restart waits for idle agents. Then it saves and restarts all the
+   * same (hx-update-resume.ts). It never restarts this way while HXBot starts or the updater works. Unset: no limit.
+   */
+  hxIdleWaitMs?: number;
+  /** HXBot (v1.7.3 hotfix): holds new routine runs while the automatic restart waits (true), lets them go (false). */
+  hxHoldRoutines?: (held: boolean) => void;
+  /** HXBot (v1.7.3 hotfix): told just before the automatic restart, with what still works (empty when idle). */
+  hxBeforeRestart?: (waitingFor: string[]) => void;
+  /** HXBot (v1.7.3 hotfix): the clock of the wait; a test passes its own. */
+  hxNow?: () => number;
+  /**
    * Set on a hosted server. It installs each release by itself, as its start applied the staged one
    * before, and the automatic restart also waits until no client uses the server.
    */
@@ -107,6 +118,12 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
   readonly #graceMs: number;
   readonly #automaticGraceMs: () => number;
   readonly #hxAutomaticOnlyIf: () => boolean;
+  readonly #hxIdleWaitMs: number | null;
+  readonly #hxHoldRoutines: (held: boolean) => void;
+  readonly #hxBeforeRestart: (waitingFor: string[]) => void;
+  readonly #hxNow: () => number;
+  /** HXBot (v1.7.3 hotfix): when the automatic restart began to wait, null while there is none. */
+  #hxAutomaticSince: number | null = null;
   #allowed: boolean;
   #autoInstall: boolean;
   readonly #clientInUse: (() => boolean) | null;
@@ -140,6 +157,10 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
     this.#graceMs = options.graceMs ?? DEFAULT_GRACE_MS;
     this.#automaticGraceMs = options.automaticGraceMs ?? (() => this.#graceMs);
     this.#hxAutomaticOnlyIf = options.hxAutomaticOnlyIf ?? (() => true);
+    this.#hxIdleWaitMs = options.hxIdleWaitMs ?? null;
+    this.#hxHoldRoutines = options.hxHoldRoutines ?? (() => undefined);
+    this.#hxBeforeRestart = options.hxBeforeRestart ?? (() => undefined);
+    this.#hxNow = options.hxNow ?? Date.now;
     this.#updater.on("status", this.#onStatus);
     this.#onStatus(this.#updater.getStatus());
   }
@@ -185,6 +206,8 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
     if (status.phase === "error" && status.errorCode === "install_failed") return this.snapshot();
     this.#installError = null;
     this.#declinedVersion = null;
+    // HXBot (v1.7.3 hotfix): a member's restart replaces the automatic one, which held the routines.
+    this.#hxEndAutomaticWait();
     this.#schedule = { memberId: member.id, requestedBy: member.name, mode, waitingFor: [] };
     this.#log(`Member ${member.id} asked for an update restart (${mode}).`);
     this.#publish();
@@ -294,6 +317,9 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
       yield* Effect.forkIn(this.#updater.downloadUpdate(), this.#workScope, { startImmediately: true });
     else if (status.phase === "ready") {
       this.#schedule = { memberId: null, requestedBy: null, mode: "when-idle", waitingFor: [] };
+      // HXBot (v1.7.3 hotfix): no new routine run starts while the restart waits, so that the agents come to idle.
+      this.#hxAutomaticSince = this.#hxNow();
+      this.#hxHoldRoutines(true);
       this.#log(`Scheduled the automatic restart into ${status.availableVersion}.`);
       this.#publish();
       this.#scheduleAttempt(this.#automaticGraceMs());
@@ -312,20 +338,28 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
   readonly #attemptEffect = Effect.fn("RequestedUpdate.attempt")(function* (this: RequestedUpdate) {
     const schedule = this.#schedule;
     if (!schedule || this.#updater.getStatus().phase !== "ready") return;
+    // HXBot (v1.7.3 hotfix): what still works when the automatic restart goes ahead.
+    let hxCutOff: string[] = [];
     if (schedule.mode === "when-idle") {
       const { safeToRestart, reasons } = this.#describeReadiness();
       // A member who asks for the restart is a client too, so only the automatic one waits for clients.
       const clientUse = schedule.memberId === null && this.#clientInUse?.() === true;
       if (!safeToRestart || clientUse) {
-        const waitingFor = [...new Set(clientUse ? [...reasons, "client-use"] : reasons)];
-        if (waitingFor.join() !== schedule.waitingFor.join()) {
-          schedule.waitingFor = waitingFor;
-          this.#publish();
+        if (!this.#hxRestartsAnyway(schedule, clientUse, reasons)) {
+          const waitingFor = [...new Set(clientUse ? [...reasons, "client-use"] : reasons)];
+          if (waitingFor.join() !== schedule.waitingFor.join()) {
+            schedule.waitingFor = waitingFor;
+            this.#publish();
+          }
+          this.#scheduleAttempt(this.#pollMs);
+          return;
         }
-        this.#scheduleAttempt(this.#pollMs);
-        return;
+        this.#log(`The automatic restart waited long enough for ${reasons.join(", ")}; it saves and restarts now.`);
+        hxCutOff = reasons;
       }
     }
+    // HXBot (v1.7.3 hotfix): the routines held and the agents cut off are saved for the next start (hx-update-resume.ts).
+    if (schedule.memberId === null) this.#hxBeforeRestart(hxCutOff);
     if (schedule.waitingFor.length > 0) {
       schedule.waitingFor = [];
       this.#publish();
@@ -359,6 +393,25 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
       );
   });
 
+  /**
+   * HXBot (v1.7.3 hotfix): the automatic restart has waited `hxIdleWaitMs` for the agents, and nothing that must not be
+   * cut off still runs: not the start of HXBot (database migrations), not the updater itself, and no client of a
+   * hosted server.
+   */
+  #hxRestartsAnyway(schedule: Schedule, clientUse: boolean, reasons: string[]): boolean {
+    if (schedule.memberId !== null || clientUse || this.#hxIdleWaitMs === null || this.#hxAutomaticSince === null)
+      return false;
+    if (reasons.includes("initialization") || reasons.includes("update-operation")) return false;
+    return this.#hxNow() - this.#hxAutomaticSince >= this.#hxIdleWaitMs;
+  }
+
+  /** HXBot (v1.7.3 hotfix): the automatic restart no longer waits: the routines go on. */
+  #hxEndAutomaticWait(): void {
+    if (this.#hxAutomaticSince === null) return;
+    this.#hxAutomaticSince = null;
+    this.#hxHoldRoutines(false);
+  }
+
   #installsAutomatically(): boolean {
     return (this.#autoInstall && this.#hxAutomaticOnlyIf()) || this.#clientInUse !== null;
   }
@@ -370,6 +423,7 @@ export class RequestedUpdate extends EventEmitter<{ preference: [UpdatePreferenc
   #clear(): void {
     this.#clearTimer();
     this.#schedule = null;
+    this.#hxEndAutomaticWait();
     this.#publish();
   }
 

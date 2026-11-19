@@ -1,6 +1,6 @@
 // HXBot：桌面端更新的规则（@hxbot/contracts/hx-update-policy）。
 import {
-  HX_OPENING_MS,
+  HX_UPDATE_IDLE_WAIT_MS,
   hxAutomaticGraceMs,
   hxInstallsByItself,
   hxReleaseNoteLines,
@@ -29,35 +29,20 @@ describe("which updates install by themselves", () => {
     hxRequired,
   });
 
-  it("installs a version that HXBot found as it opened, and keeps that answer for the version", () => {
-    let now = 1_000;
-    let current = facts("0.67.11");
-    const installs = hxInstallsByItself(
-      1_000,
-      () => current,
-      () => now,
-    );
+  it("installs every new version by itself, also one found while the agents work (v1.7.3 hotfix)", () => {
+    let current = facts("0.67.13");
+    const installs = hxInstallsByItself(() => current);
     expect(installs()).toBe(true);
-    now += HX_OPENING_MS + 60_000;
+    current = facts("0.67.14");
     expect(installs()).toBe(true);
     current = facts(null);
     expect(installs()).toBe(false);
+    current = facts(null, true);
+    expect(installs()).toBe(true);
   });
 
-  it("leaves a version found later for the next opening, and installs a required one at once", () => {
-    let now = 1_000 + HX_OPENING_MS + 1;
-    let current = facts("0.68.0");
-    const installs = hxInstallsByItself(
-      1_000,
-      () => current,
-      () => now,
-    );
-    expect(installs()).toBe(false);
-    current = facts("0.68.0", true);
-    expect(installs()).toBe(true);
-    now += 1;
-    current = facts("0.68.1");
-    expect(installs()).toBe(false);
+  it("waits at most 10 minutes for idle agents before the automatic restart", () => {
+    expect(HX_UPDATE_IDLE_WAIT_MS).toBe(10 * 60_000);
   });
 
   it("waits a few seconds before the restart, and 10 minutes for a required update", () => {

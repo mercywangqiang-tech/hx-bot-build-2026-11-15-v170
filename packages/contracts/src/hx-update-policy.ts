@@ -4,7 +4,10 @@
  * v1.7.1 起（用户 2026-11-18：“以后大版本都不做强制更新，只需要在打开 hxbot 客户端后直接更新即可”）：
  * - 不再按版本号强制：大版本（第二段变了，如 0.67.x → 0.68.0）和小版本一样，不挡住窗口，账号服务也不拒绝。
  * - 打开 HXBot 时找到的新版本自动下载、装好，在助手都空闲时重启进入新版，不弹窗、不用点
- *   （右下角提示“HXBot 正在安装更新”，可以取消这一次）。用着用着才找到的新版本，下次打开时再装。
+ *   （右下角提示“HXBot 正在安装更新”，可以取消这一次）。
+ * - v1.7.3 紧急修正（用户 2026-11-19：“边干活边更新，更新完，保存，然后重启！”）：用着用着找到的新版本也一样，
+ *   在后台下载、装好；等助手空闲最多 HX_UPDATE_IDLE_WAIT_MS，到时间还在忙也保存并重启，被打断的助手重启后接着做
+ *   （src/main/hx-update-resume.ts）。不再等下次打开。
  * - 只有账号服务拒绝了这个版本（426；只在 hx/brand.json 的 minimumVersions 明确写了最低版本时）才必须装：
  *   窗口挡住，点“立即更新”；没人点时 10 分钟后在空闲时自动安装。
  *
@@ -27,31 +30,23 @@ export function hxUpdateIsRequired(facts: HxUpdateFacts): boolean {
   return facts.hxRequired === true;
 }
 
-/** How long after HXBot opens a new version that it finds counts as found at the opening. */
-export const HX_OPENING_MS = 10 * 60_000;
-
 /**
- * The test for an automatic install: true for an update that the account service requires, and for one that HXBot
- * found as it opened (within HX_OPENING_MS of `startedAt`). A version first seen later waits for the next opening.
+ * The test for an automatic install: true for every new version, whenever HXBot finds it, and for an update that the
+ * account service requires. v1.7.1 to 0.67.12 installed by themselves only a version found in the first 10 minutes
+ * after HXBot opened, and one found later waited for the next opening (v1.7.3 hotfix: no longer).
  */
-export function hxInstallsByItself(
-  startedAt: number,
-  status: () => HxUpdateFacts,
-  now: () => number = Date.now,
-): () => boolean {
-  let seen: string | null = null;
-  let atOpening = false;
+export function hxInstallsByItself(status: () => HxUpdateFacts): () => boolean {
   return () => {
     const facts = status();
-    if (hxUpdateIsRequired(facts)) return true;
-    if (!facts.availableVersion) return false;
-    if (facts.availableVersion !== seen) {
-      seen = facts.availableVersion;
-      atOpening = now() - startedAt <= HX_OPENING_MS;
-    }
-    return atOpening;
+    return hxUpdateIsRequired(facts) || facts.availableVersion !== null;
   };
 }
+
+/**
+ * The longest an automatic restart into a new version waits for the agents to be idle. Then HXBot saves and restarts
+ * all the same, and the agents that the restart cut off continue after it (v1.7.3 hotfix).
+ */
+export const HX_UPDATE_IDLE_WAIT_MS = 10 * 60_000;
 
 /**
  * The wait before the automatic restart: 10 minutes for a required update, so the user can choose Update now first,

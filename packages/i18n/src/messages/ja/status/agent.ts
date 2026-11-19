@@ -148,4 +148,6 @@ export const messages = {
     "{app} の手順は 30 分間待っています。今すぐ行うには「今すぐ」、やめるには「やめる」と返信してください。",
   "status.agent.hxComputer.resume":
     "（HXBot が自動送信）ユーザーが操作をやめ、{app} が最前面にあります。保留中の手順を続けてください。まずウィンドウを確認し、残りの {count} 個の手順を行ってください。送信、支払い、削除の前には、いつもどおりユーザーに確認してください。",
+  "status.agent.hxUpdate.resume":
+    "（HXBot が自動送信）HXBot は更新をインストールするために再起動し、現在はバージョン {version} です。再起動で前回のターンが中断されました。まず作業がどこまで進んだかを確認し、すでに何かを変更した手順は繰り返さずに、残りを終わらせてください。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -27,4 +27,6 @@ export const messages = {
   "error.update.remoteDisabled": "Aktualizacje od administratorów serwera są wyłączone na tym komputerze.",
   "error.update.restartStarted": "HXBot już uruchamia się ponownie, aby zainstalować aktualizację.",
   "error.update.alreadyRestarting": "HXBot już uruchamia się ponownie.",
+  "error.update.checkSignedOut":
+    "Serwer aktualizacji nie przyjął twojego logowania. Zaloguj się ponownie do HXBot, a potem sprawdź aktualizacje.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -169,4 +169,6 @@ export const messages = {
   "status.agent.hxComputer.parkedLong": "{app} 的那一步已经等了 30 分钟。要马上做，回复“现在做”；不做了，回复“放弃”。",
   "status.agent.hxComputer.resume":
     "（HXBot 自动发送）用户已停手，{app} 在最前面：请接着做停放的那一步。先看一下窗口，再做剩下的 {count} 步；发送、付款、删除这类步骤照样先问用户。",
+  "status.agent.hxUpdate.resume":
+    "（HXBot 自动发送）HXBot 为安装更新重启了，现在是 {version} 版。重启打断了你上一轮的工作：先看清做到了哪一步，已经改动过东西的步骤不要重复，再把剩下的做完。",
 } as const satisfies PartialTranslation<typeof source>;

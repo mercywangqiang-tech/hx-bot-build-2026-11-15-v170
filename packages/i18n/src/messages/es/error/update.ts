@@ -30,4 +30,6 @@ export const messages = {
     "Las actualizaciones por parte de administradores del servidor están desactivadas en este equipo.",
   "error.update.restartStarted": "HXBot ya se está reiniciando para instalar la actualización.",
   "error.update.alreadyRestarting": "HXBot ya se está reiniciando.",
+  "error.update.checkSignedOut":
+    "El servidor de actualizaciones no aceptó tu inicio de sesión. Vuelve a iniciar sesión en HXBot y busca actualizaciones de nuevo.",
 } as const satisfies PartialTranslation<typeof source>;

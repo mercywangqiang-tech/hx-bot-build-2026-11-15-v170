@@ -883,6 +883,8 @@ const CHECK_STALLED_MESSAGE = sourceText("error.update.checkStalled");
 const CHECK_OFFLINE_MESSAGE = sourceText("error.update.checkOffline");
 const CHECK_SERVICE_MESSAGE = sourceText("error.update.checkUnavailable");
 const CHECK_NO_RELEASE_MESSAGE = sourceText("error.update.checkNoRelease");
+// HXBot (v1.7.3 hotfix): the update server refused the sign-in, also after HXBot checked it once (hx-updates.ts).
+const CHECK_SIGNED_OUT_MESSAGE = sourceText("error.update.checkSignedOut");
 
 /**
  * Node reports a link that never carried the request through `error.code`. electron-updater wraps
@@ -924,6 +926,7 @@ function describeCheckFailure(error: unknown) {
   if (NO_RELEASE_ERROR_CODES.includes(code)) return CHECK_NO_RELEASE_MESSAGE;
   const status =
     typeof error === "object" && error !== null && "statusCode" in error ? Number(error.statusCode) : Number.NaN;
+  if (code === "HX_UPDATE_SIGNED_OUT" || status === 401 || status === 403) return CHECK_SIGNED_OUT_MESSAGE;
   if (status === 429 || status >= 500) return CHECK_SERVICE_MESSAGE;
   // ERR_UPDATER_LATEST_VERSION_NOT_FOUND wraps whatever the release lookup threw, so it only lands
   // here once the causes above have been ruled out of its message.

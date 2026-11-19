@@ -30,4 +30,6 @@ export const messages = {
   "error.update.remoteDisabled": "Les mises à jour des administrateurs du serveur sont désactivées sur cet ordinateur.",
   "error.update.restartStarted": "HXBot redémarre déjà pour installer la mise à jour.",
   "error.update.alreadyRestarting": "HXBot redémarre déjà.",
+  "error.update.checkSignedOut":
+    "Le serveur de mises à jour n’a pas accepté votre connexion. Reconnectez-vous à HXBot, puis recherchez les mises à jour.",
 } as const satisfies PartialTranslation<typeof source>;

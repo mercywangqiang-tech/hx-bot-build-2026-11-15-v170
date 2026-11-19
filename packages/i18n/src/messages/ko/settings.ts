@@ -740,7 +740,7 @@ export const messages = {
   "settings.hxAccess.outcome.refused": "거부함",
   "settings.updates.hxForced.title": "자동 업데이트",
   "settings.updates.hxForced.description":
-    "HXBot을 열 때 새 버전을 찾으면 HXBot이 직접 다운로드하고 설치한 뒤, 에이전트가 쉬고 있을 때 새 버전으로 다시 시작합니다. 아무것도 누를 필요가 없습니다. 진행 중인 작업이 먼저 끝납니다. 사용하는 도중에 찾은 새 버전은 다음에 HXBot을 열 때 설치됩니다.",
+    "HXBot은 에이전트가 일하는 동안에도 몇 분마다 새 버전을 확인합니다. 새 버전을 찾으면 백그라운드에서 다운로드하고 설치한 뒤, 에이전트가 쉬고 있을 때(최대 10분 기다림) 저장하고 새 버전으로 다시 시작합니다. 다시 시작 때문에 중단된 에이전트는 스스로 이어서 작업합니다. 아무것도 누를 필요가 없습니다.",
   "settings.nav.group.settings": "설정",
   "settings.nav.group.features": "기능",
   "settings.nav.group.data": "데이터 및 보안",

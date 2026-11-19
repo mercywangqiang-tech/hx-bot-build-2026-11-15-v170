@@ -26,4 +26,6 @@ export const messages = defineMessages("error.update", {
   "error.update.remoteDisabled": "Updates from server admins are turned off on this computer.",
   "error.update.restartStarted": "HXBot is already restarting to install the update.",
   "error.update.alreadyRestarting": "HXBot is already restarting.",
+  "error.update.checkSignedOut":
+    "The update server did not accept your sign-in. Sign in to HXBot again, then check for updates.",
 });

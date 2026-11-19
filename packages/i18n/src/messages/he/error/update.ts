@@ -23,4 +23,5 @@ export const messages = {
   "error.update.remoteDisabled": "עדכונים ממנהלי שרת כבויים במחשב הזה.",
   "error.update.restartStarted": "HXBot כבר מופעל מחדש כדי להתקין את העדכון.",
   "error.update.alreadyRestarting": "HXBot כבר מופעל מחדש.",
+  "error.update.checkSignedOut": "שרת העדכונים לא קיבל את ההתחברות שלך. התחבר שוב ל-HXBot ואז בדוק אם יש עדכונים.",
 } as const satisfies PartialTranslation<typeof source>;
