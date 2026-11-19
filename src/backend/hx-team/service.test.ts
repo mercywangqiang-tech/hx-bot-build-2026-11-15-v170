@@ -1,10 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HX_AUTO_DEFAULTS, type HxAutoModelSettings } from "@hxbot/contracts/hx-auto-model";
 import type { HxProgressCard } from "@hxbot/contracts/hx-progress";
 import type { ChannelMessage, ChannelTask } from "@hxbot/contracts/ipc";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { hxAutoRouter } from "../hx-auto-model/router";
 import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
 import { hxCapacityLine } from "./protocol";
 import {
@@ -560,6 +561,79 @@ describe("the watcher", () => {
     // The lead hears it in the room: no new work, hand back what the team has.
     expect(port.posts.at(-1)?.text).toContain("hxbot.team_done");
     expect(port.posts.at(-1)?.toAgentIds).toEqual([team?.leadAgentId]);
+  });
+
+  it("adds the judge's view to a G1 pause, reminds the lead once for the cause, records the agreement (v1.7.4, CONC-11)", async () => {
+    const judgeOn = vi.spyOn(hxAutoRouter, "judgeOn").mockReturnValue(true);
+    const teamJudge = vi
+      .spyOn(hxAutoRouter, "teamJudge")
+      .mockResolvedValue("VERDICT: remind\nREASON: 在做的快完成了，提醒带头的先收尾。");
+    try {
+      teams.open(join(folder, "teams"));
+      const { id } = await started();
+      hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+      hxFlow.started("w", { ...candidate(), teamId: id }, null);
+      await work(30.5);
+      const paused = teams.store.get(id)?.guard?.paused;
+      expect(paused?.guard).toBe("G1");
+      expect(paused?.view).toEqual({ verdict: "remind", reason: "在做的快完成了，提醒带头的先收尾。" });
+      // One call for the trigger, with the summary as data, to the lead's provider.
+      expect(teamJudge).toHaveBeenCalledTimes(1);
+      expect(teamJudge.mock.calls[0]?.[0]).toBe(teams.store.get(id)?.leadAgentId);
+      expect(teamJudge.mock.calls[0]?.[1]).toContain("DATA (JSON):");
+      // Advice: the user is asked as before, with one more line.
+      expect(port.delivered.at(-1)?.text).toContain("裁判的看法（只供参考）：提醒带头的。在做的快完成了");
+      expect(port.delivered.at(-1)?.text).toContain("action 为 continue");
+      expect(port.cards.at(-1)?.card.steps.map((step) => step.text)).toContain(
+        "The judge's view (advice only): 提醒带头的. 在做的快完成了，提醒带头的先收尾。",
+      );
+      const reminders = () => port.posts.filter((post) => post.text.startsWith("提醒："));
+      expect(reminders()).toHaveLength(1);
+      expect(reminders()[0]?.toAgentIds).toEqual([teams.store.get(id)?.leadAgentId]);
+      // The user goes on: the view and the choice agree, on this computer.
+      expect(read(await call("team", { action: "continue" }, { key: "k2" })).status).toBe("continued");
+      const record = readFileSync(join(folder, "teams", "hx-judge-agreement.jsonl"), "utf8")
+        .trim()
+        .split("\n");
+      expect(JSON.parse(record.at(-1) ?? "{}")).toMatchObject({ view: "remind", choice: "continue", agrees: true });
+      // The same cause again: a second view, no second reminder.
+      await work(30.5);
+      expect(teamJudge).toHaveBeenCalledTimes(2);
+      expect(reminders()).toHaveLength(1);
+    } finally {
+      judgeOn.mockRestore();
+      teamJudge.mockRestore();
+    }
+  });
+
+  it("asks the user as before when the judge does not answer, or the setting is rules only (CONC-11-A1)", async () => {
+    const judgeOn = vi.spyOn(hxAutoRouter, "judgeOn").mockReturnValue(true);
+    const teamJudge = vi.spyOn(hxAutoRouter, "teamJudge").mockResolvedValue(null);
+    try {
+      const { id } = await started();
+      hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+      hxFlow.started("w", { ...candidate(), teamId: id }, null);
+      await work(30.5);
+      expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+      expect(teams.store.get(id)?.guard?.paused?.view).toBeUndefined();
+      expect(port.delivered.at(-1)?.text).not.toContain("裁判");
+      expect(port.delivered.at(-1)?.text).toContain("action 为 continue");
+      // An answer that is not in the form counts as none.
+      teamJudge.mockResolvedValue("I think the team should continue.");
+      await call("team", { action: "continue" }, { key: "k2" });
+      await work(30.5);
+      expect(teams.store.get(id)?.guard?.paused?.view).toBeUndefined();
+      // Rules only: no call at all.
+      judgeOn.mockReturnValue(false);
+      const calls = teamJudge.mock.calls.length;
+      await call("team", { action: "continue" }, { key: "k3" });
+      await work(30.5);
+      expect(teamJudge.mock.calls.length).toBe(calls);
+      expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+    } finally {
+      judgeOn.mockRestore();
+      teamJudge.mockRestore();
+    }
   });
 
   it("takes a new file in the shared folder for progress at the G1 check", async () => {

@@ -195,4 +195,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "העבודה מחכה הרבה זמן ל־{from}: העבודה החדשה הזאת משתמשת ב־{to}.",
   "status.agent.hxTeam.overloadMove":
     "צוות · {name}: הספק של {from} מושהה כבר כמה דקות, ולכן העבודה החדשה שלו משתמשת ב־{to}.",
+  "status.agent.hxTeam.card.judge": "דעת השופט (עצה בלבד): {verdict}. {reason}",
 } as const satisfies PartialTranslation<typeof source>;

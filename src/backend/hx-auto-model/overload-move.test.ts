@@ -24,8 +24,6 @@ const haiku = model("claude", "claude-haiku-4-5", "Claude Haiku");
 const qwen = model("opencode", "ollama/qwen3:32b", "Qwen (local)");
 const llama = model("opencode", "ollama/llama3.3:70b", "Llama (local)");
 
-let now = 50_000_000;
-
 /** Pauses the provider of `info` with a 429, as the drain and the turns would. */
 function pause(info: HxModelInfo, ms = 30_000) {
   const key = hxProviderModelOf({ provider: info.provider, model: info.id });
@@ -55,7 +53,6 @@ const input = (
 
 afterEach(() => {
   hxProviderGate.reset();
-  now += 1;
 });
 
 describe("CONC-08: a new chat moves only to a model of the same rank or better", () => {

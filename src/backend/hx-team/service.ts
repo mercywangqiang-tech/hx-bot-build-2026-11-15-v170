@@ -12,7 +12,7 @@
 //
 // Nothing here imports the agent service: `HxTeamPort` is what the host gives (agent-service.ts).
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { HxAutoModelSettings, HxDifficulty, HxModelRef, HxNeed, HxWorkType } from "@hxbot/contracts/hx-auto-model";
 import { type HxProgressCard, type HxProgressStep, hxProgressText } from "@hxbot/contracts/hx-progress";
@@ -47,6 +47,17 @@ import {
   hxUnanswered,
   hxWorkTick,
 } from "./guards";
+import {
+  HX_TEAM_JUDGE,
+  type HxJudgeCause,
+  type HxJudgeInput,
+  type HxJudgeView,
+  type HxUserChoice,
+  hxJudgeAgrees,
+  hxJudgeAllowed,
+  hxJudgePromptFor,
+  hxParseTeamJudge,
+} from "./judge";
 import { type HxMatchAgent, hxMatchRoles } from "./match";
 import {
   hxCapacityLine,
@@ -242,6 +253,26 @@ const STOPPED_KEYS = {
 const ACTIVE = new Set(["queued", "running", "waiting"]);
 /** A dependency in one of these states lets the work that waits for it start. */
 const SETTLED = new Set(["completed", "failed", "cancelled"]);
+/** v1.7.4 (CONC-11): the judge's three answers in the words of the room. */
+const JUDGE_WORDS = {
+  zh: { continue: "继续", remind: "提醒带头的", ask: "问你" },
+  en: { continue: "continue", remind: "remind the lead", ask: "ask you" },
+} as const;
+
+/** v1.7.4 (CONC-11): the one note to the lead when the judge says "remind", by the rule that paused the team. */
+const JUDGE_REMINDERS = {
+  zh: {
+    G1: "提醒：团队一段时间没有进展。先把正在做的收尾，写清还差什么，再决定下一步。",
+    G2: "提醒：同一件工作在成员之间来回转。先定下谁负责到底、要交出什么，再交接。",
+    G3: "提醒：新开的工作比做完的多。先把已分出去的做完、合起来，再决定还要不要分。",
+  },
+  en: {
+    G1: "A reminder: the team made no progress for a while. Finish the work that runs, write what is missing, then decide the next step.",
+    G2: "A reminder: the same work goes back and forth between members. Decide who owns it to the end and what they hand back, then hand it over.",
+    G3: "A reminder: more new work opens than gets done. Finish and join the work that is out, then decide whether to split more.",
+  },
+} as const;
+
 /** v1.7.4 (CONC-09): how often a running team's card is read again, and the most lines it shows. */
 const HX_TEAM_CARD_REFRESH_MS = 5_000;
 const HX_TEAM_CARD_LINES = 30;
@@ -307,6 +338,8 @@ export class HxTeams {
   /** v1.7.4 (CONC-08): members that a move for the provider's overload is changing now. */
   readonly #moving = new Set<string>();
   #timesFile: string | null = null;
+  /** v1.7.4 (CONC-11): the folder of the team records, for the judge's agreement record. */
+  #folder: string | null = null;
   #spendReading = false;
   readonly #chains = new Map<string, Promise<void>>();
   readonly #now: () => number;
@@ -374,6 +407,7 @@ export class HxTeams {
   open(folder: string): void {
     this.store.open(folder);
     this.#timesFile = join(folder, "hx-flow-times.json");
+    this.#folder = folder;
     try {
       hxFlow.times = new HxFlowDifficultyTimes(JSON.parse(readFileSync(this.#timesFile, "utf8")));
     } catch {
@@ -401,6 +435,9 @@ export class HxTeams {
   close(): void {
     if (this.#ticker) clearInterval(this.#ticker);
     this.#ticker = null;
+    // v1.7.4: the card refresh stops with the service too.
+    if (this.#cardTimer) clearInterval(this.#cardTimer);
+    this.#cardTimer = null;
   }
 
   isRoom(channelId: string): boolean {
@@ -707,6 +744,7 @@ export class HxTeams {
     }
     if (team.state !== "running") return refuse(`The team has ended (${team.state}). Start a new team for more work.`);
     if (input.action === "stop") {
+      this.#recordAgreement(team, "stop");
       await this.#stop(port, team, "user", false);
       return answer({ status: "stopped", team: this.#summary(team) });
     }
@@ -734,6 +772,7 @@ export class HxTeams {
     }
     if (input.action === "continue" || input.action === "finish") {
       // v1.7.1 (CONC-10): the user answered a pause. A pause only started no new work.
+      this.#recordAgreement(team, input.action);
       const paused = guard.paused;
       guard.paused = null;
       guard.sinceProgressMs = 0;
@@ -946,8 +985,19 @@ export class HxTeams {
     const screen = hxComputerLanes.waitingAgents();
     const line = (text: string, state: HxProgressStep["state"] = "pending"): HxProgressStep => ({ text, state });
     const lines: HxProgressStep[] = [];
-    if (team.guard?.paused)
+    if (team.guard?.paused) {
       lines.push(line(sourceText("status.agent.hxTeam.card.paused", { reason: team.guard.paused.reason })));
+      const view = team.guard.paused.view;
+      if (view)
+        lines.push(
+          line(
+            sourceText("status.agent.hxTeam.card.judge", {
+              verdict: JUDGE_WORDS[team.language === "zh" ? "zh" : "en"][view.verdict],
+              reason: view.reason,
+            }),
+          ),
+        );
+    }
     if (team.weight === "urgent") lines.push(line(sourceText("status.agent.hxTeam.card.urgent")));
     if (team.weight === "relaxed") lines.push(line(sourceText("status.agent.hxTeam.card.relaxed")));
     for (const member of team.members) {
@@ -1469,18 +1519,28 @@ export class HxTeams {
     guard.paused = { guard: guardId, at, reason };
     this.#save(team);
     port.note(team.starterAgentId, sourceText("status.agent.hxTeam.paused", { reason }));
+    // v1.7.4 (CONC-11): G1 to G3, which the code's check could not tell: a judge gives its view. It is
+    // advice: the user is asked as before, and the view is one more line.
+    const view =
+      guardId === "G1" || guardId === "G2" || guardId === "G3" ? await this.#judge(port, team, guardId, reason) : null;
+    if (view && guard.paused) {
+      guard.paused.view = view;
+      this.#save(team);
+    }
     const zh = team.language === "zh";
     const text = zh
       ? [
           `【协作暂停】团队“${team.roomName}”暂停了：${reason}`,
           "暂停只是不开新的工作，在做的会做完。",
           "",
+          ...(view ? [`裁判的看法（只供参考）：${JUDGE_WORDS.zh[view.verdict]}。${view.reason}`, ""] : []),
           "请把情况告诉用户，问用户怎么办：继续（调用 team，action 为 continue）、收尾（action 为 finish，带头的用已有的结果交回）、停（action 为 stop）。",
         ]
       : [
           `[Team paused] The team "${team.roomName}" paused: ${reason}`,
           "A pause only starts no new work; the work that runs finishes.",
           "",
+          ...(view ? [`The judge's view (advice only): ${JUDGE_WORDS.en[view.verdict]}. ${view.reason}`, ""] : []),
           "Tell the user what happened, and ask what to do: continue (call team with action continue), wrap up (action finish: the lead sends what the team has), or stop (action stop).",
         ];
     try {
@@ -1492,6 +1552,81 @@ export class HxTeams {
       });
     } catch (error) {
       port.error("hx_team_pause_failed", error);
+    }
+  }
+
+  /**
+   * v1.7.4 (CONC-11): the judge's view of a pause, or null (the setting is "rules only", the team used
+   * its 6 calls of the hour, or no model answered in the form in 20 s). "Remind" sends the lead one
+   * note, once for each cause.
+   */
+  async #judge(port: HxTeamPort, team: HxTeamRecord, cause: HxJudgeCause, rule: string): Promise<HxJudgeView | null> {
+    const guard = this.#guard(team);
+    if (!hxAutoRouter.judgeOn(team.starterAgentId)) return null;
+    const now = this.#now();
+    const calls = hxJudgeAllowed(guard.judge?.times ?? [], now);
+    if (!calls.allowed) return null;
+    guard.judge = { times: [...calls.times, now], reminded: guard.judge?.reminded ?? [] };
+    this.#save(team);
+    const tasks = this.#tasks(port, team.channelId);
+    const names = (agentId: string | null) =>
+      team.members.find((member) => member.agentId === agentId)?.name ?? (agentId ? "?" : "");
+    const forms = tasks.filter((task) => task.parentTaskId !== null).map((task) => hxReadForm(task.instruction));
+    const input: HxJudgeInput = {
+      language: team.language === "zh" ? "zh" : "en",
+      cause,
+      rule,
+      goal: team.goal,
+      board: tasks.map((task) => ({
+        title: task.parentTaskId === null ? team.goal : (hxReadForm(task.instruction).goal ?? task.instruction),
+        state: task.state,
+        owner: names(task.ownerAgentId),
+        minutes: (now - (team.timing?.[task.id] ?? now)) / 60_000,
+      })),
+      handoffs: forms.slice(-3).map((form) => ({ goal: form.goal ?? "", open: form.open ?? "" })),
+      // G1 and G2 count only when the shared folder did not change; G3 does not look at it.
+      filesChanged: cause === "G3" ? null : false,
+    };
+    const answer = await hxAutoRouter.teamJudge(team.leadAgentId, hxJudgePromptFor(input), HX_TEAM_JUDGE.timeoutMs);
+    const view = answer === null ? null : hxParseTeamJudge(answer);
+    if (!view) return null;
+    const reminded = guard.judge?.reminded ?? [];
+    if (view.verdict === "remind" && !reminded.includes(cause)) {
+      guard.judge = { times: guard.judge?.times ?? [], reminded: [...reminded, cause] };
+      this.#save(team);
+      const lead = this.#lead(team);
+      if (lead)
+        await port
+          .post({
+            channelId: team.channelId,
+            operationId: `hx-team-judge:${team.id}:${cause}`,
+            fromAgentId: team.starterAgentId,
+            text: team.language === "zh" ? JUDGE_REMINDERS.zh[cause] : JUDGE_REMINDERS.en[cause],
+            toAgentIds: [lead.agentId],
+            paths: [],
+          })
+          .catch((error: unknown) => port.error("hx_team_judge_remind_failed", error));
+    }
+    return view;
+  }
+
+  /** v1.7.4 (CONC-11): whether the judge's view and the user's choice agree, kept on this computer. */
+  #recordAgreement(team: HxTeamRecord, choice: HxUserChoice): void {
+    const paused = this.#guard(team).paused;
+    const folder = this.#folder;
+    if (!paused?.view || !folder) return;
+    const line = {
+      at: new Date(this.#now()).toISOString(),
+      team: team.id,
+      cause: paused.guard,
+      view: paused.view.verdict,
+      choice,
+      agrees: hxJudgeAgrees(paused.view.verdict, choice),
+    };
+    try {
+      appendFileSync(join(folder, "hx-judge-agreement.jsonl"), `${JSON.stringify(line)}\n`);
+    } catch {
+      // The record is a convenience; the choice itself is done.
     }
   }
 

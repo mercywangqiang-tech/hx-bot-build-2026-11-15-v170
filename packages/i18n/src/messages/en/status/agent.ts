@@ -199,4 +199,5 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxAutoModel.overloadQueue": "Work waits long for {from}: this new work uses {to}.",
   "status.agent.hxTeam.overloadMove":
     "Team · {name}: the provider of {from} has been paused for minutes, so its new work uses {to}.",
+  "status.agent.hxTeam.card.judge": "The judge's view (advice only): {verdict}. {reason}",
 });

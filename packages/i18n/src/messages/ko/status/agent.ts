@@ -173,4 +173,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "{from}을(를) 오래 기다리고 있습니다: 이 새 작업은 {to}을(를) 사용합니다.",
   "status.agent.hxTeam.overloadMove":
     "팀 · {name}: {from}의 제공업체가 몇 분째 일시 중지되어 새 작업은 {to}을(를) 사용합니다.",
+  "status.agent.hxTeam.card.judge": "판정 모델의 의견(참고용): {verdict}. {reason}",
 } as const satisfies PartialTranslation<typeof source>;

@@ -64,8 +64,15 @@ export interface HxTeamGuardState {
     /** Reminders since the user last spoke. G9. */
     unanswered: number;
   };
-  /** Why the team waits for the user, or null. */
-  paused: { guard: HxGuardId; at: string; reason: string } | null;
+  /** Why the team waits for the user, or null. v1.7.4 (CONC-11): with the judge's view when one answered. */
+  paused: {
+    guard: HxGuardId;
+    at: string;
+    reason: string;
+    view?: { verdict: "continue" | "remind" | "ask"; reason: string };
+  } | null;
+  /** v1.7.4 (CONC-11): when the judge was called (the last hour counts), and the causes the lead was reminded of. */
+  judge?: { times: number[]; reminded: string[] };
   /** The user asked to wrap up: no new work, the lead finishes. */
   wrapUp: boolean;
 }
@@ -88,6 +95,7 @@ export function hxGuardState(previous?: Partial<HxTeamGuardState>): HxTeamGuardS
       unanswered: previous?.spend?.unanswered ?? 0,
     },
     paused: previous?.paused ?? null,
+    judge: { times: previous?.judge?.times ?? [], reminded: previous?.judge?.reminded ?? [] },
     wrapUp: previous?.wrapUp ?? false,
   };
 }

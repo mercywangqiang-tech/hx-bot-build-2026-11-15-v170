@@ -200,4 +200,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadPaused": "مزوّد {from} متوقف بعد تجاوز حدّ المعدّل: يستخدم هذا العمل الجديد {to}.",
   "status.agent.hxAutoModel.overloadQueue": "العمل ينتظر طويلًا لـ {from}: يستخدم هذا العمل الجديد {to}.",
   "status.agent.hxTeam.overloadMove": "الفريق · {name}: مزوّد {from} متوقف منذ دقائق، لذا يستخدم عمله الجديد {to}.",
+  "status.agent.hxTeam.card.judge": "رأي الحَكَم (للاسترشاد فقط): {verdict}. {reason}",
 } as const satisfies PartialTranslation<typeof source>;

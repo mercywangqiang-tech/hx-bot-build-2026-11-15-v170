@@ -249,6 +249,58 @@ export class HxAutoRouter {
     }
   }
 
+  /** HXBot (v1.7.4, CONC-11): whether this agent's setting lets a model help the rules ("rules + model"). */
+  judgeOn(agentId: string): boolean {
+    return this.#store.settings(agentId).judge === "rules+model";
+  }
+
+  /**
+   * HXBot (v1.7.4, CONC-11): the judge of a team: a ready model of the lead's provider that is not of
+   * the weakest rank (another provider only when the lead may move across providers), in a new clean
+   * context, as tier 1 under the provider limit. Null when no model fits, the model has no place, or
+   * no answer came in `timeoutMs`.
+   */
+  async teamJudge(leadAgentId: string, prompt: string, timeoutMs: number): Promise<string | null> {
+    const host = this.#host;
+    const agent = host?.agent(leadAgentId);
+    if (!host || !agent) return null;
+    const settings = this.#store.settings(leadAgentId);
+    const candidates = this.#candidates(leadAgentId).filter(
+      (candidate) => settings.crossProvider || candidate.model.provider === agent.provider,
+    );
+    const pick = hxJudgeModel(
+      candidates.map((candidate) => ({
+        ref: hxRefOf(candidate.model),
+        name: candidate.model.name,
+        tier: candidate.profile.tier,
+        cost: candidate.profile.cost,
+        vision: candidate.profile.vision,
+        ready: candidate.unavailable === null,
+        excluded: settings.excluded.some((ref) => hxSameModel(ref, hxRefOf(candidate.model))),
+      })),
+    );
+    if (!pick) return null;
+    const option = host
+      .models(leadAgentId)
+      .find((model) => hxSameModel(hxRefOf({ ...model, providerAccountId: model.providerAccountId }), pick.ref));
+    if (!option) return null;
+    const gateModel = hxProviderModelOf({
+      provider: option.provider,
+      model: option.id,
+      providerAccountId: option.providerAccountId,
+    });
+    const release = gateModel ? await hxProviderGate.acquire(gateModel, 1, HX_JUDGE_PLACE_MS) : () => {};
+    if (!release) return null;
+    const stop = new AbortController();
+    try {
+      const answer = await hxWithin(host.judge(leadAgentId, option, prompt, stop.signal), timeoutMs);
+      if (answer === null) stop.abort();
+      return answer;
+    } finally {
+      release();
+    }
+  }
+
   /** A model change that the user or another agent made: the agent is no longer on auto. */
   manualChange(agentId: string): void {
     const settings = this.#store.settings(agentId);

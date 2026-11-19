@@ -167,4 +167,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "{from} için uzun süre bekleniyor: bu yeni iş {to} kullanıyor.",
   "status.agent.hxTeam.overloadMove":
     "Ekip · {name}: {from} sağlayıcısı dakikalardır duraklıyor, bu yüzden yeni işi {to} kullanıyor.",
+  "status.agent.hxTeam.card.judge": "Hakemin görüşü (yalnızca öneri): {verdict}. {reason}",
 } as const satisfies PartialTranslation<typeof source>;

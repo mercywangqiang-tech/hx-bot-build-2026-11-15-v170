@@ -251,6 +251,8 @@ STATUS_EN = {
         'Work waits long for {from}: this new work uses {to}.',
     'status.agent.hxTeam.overloadMove':
         'Team · {name}: the provider of {from} has been paused for minutes, so its new work uses {to}.',
+    'status.agent.hxTeam.card.judge':
+        "The judge's view (advice only): {verdict}. {reason}",
 }
 
 STATUS_ZH = {
@@ -280,6 +282,8 @@ STATUS_ZH = {
         '{from} 前面排队太久：这件新工作改用 {to}。',
     'status.agent.hxTeam.overloadMove':
         '团队 · {name}：{from} 的服务商已暂停好几分钟，它的新工作改用 {to}。',
+    'status.agent.hxTeam.card.judge':
+        '裁判的看法（只供参考）：{verdict}。{reason}',
 }
 
 

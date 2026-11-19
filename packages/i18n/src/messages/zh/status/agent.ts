@@ -184,4 +184,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadPaused": "{from} 的服务商限速后在暂停：这件新工作改用 {to}。",
   "status.agent.hxAutoModel.overloadQueue": "{from} 前面排队太久：这件新工作改用 {to}。",
   "status.agent.hxTeam.overloadMove": "团队 · {name}：{from} 的服务商已暂停好几分钟，它的新工作改用 {to}。",
+  "status.agent.hxTeam.card.judge": "裁判的看法（只供参考）：{verdict}。{reason}",
 } as const satisfies PartialTranslation<typeof source>;

@@ -30,6 +30,7 @@ ORDER = [
     "status.agent.hxAutoModel.overloadPaused",
     "status.agent.hxAutoModel.overloadQueue",
     "status.agent.hxTeam.overloadMove",
+    "status.agent.hxTeam.card.judge",
 ]
 
 _LANG: dict[str, list[str]] = {
@@ -56,6 +57,7 @@ _LANG: dict[str, list[str]] = {
         "مزوّد {from} متوقف بعد تجاوز حدّ المعدّل: يستخدم هذا العمل الجديد {to}.",
         "العمل ينتظر طويلًا لـ {from}: يستخدم هذا العمل الجديد {to}.",
         "الفريق · {name}: مزوّد {from} متوقف منذ دقائق، لذا يستخدم عمله الجديد {to}.",
+        "رأي الحَكَم (للاسترشاد فقط): {verdict}. {reason}",
     ],
     "de": [
         "Pausiert: {reason}",
@@ -80,6 +82,7 @@ _LANG: dict[str, list[str]] = {
         "Der Anbieter von {from} pausiert nach einer Ratenbegrenzung: Diese neue Arbeit nutzt {to}.",
         "Für {from} wird lange gewartet: Diese neue Arbeit nutzt {to}.",
         "Team · {name}: Der Anbieter von {from} pausiert seit Minuten, daher nutzt seine neue Arbeit {to}.",
+        "Einschätzung des Prüfers (nur ein Rat): {verdict}. {reason}",
     ],
     "es": [
         "En pausa: {reason}",
@@ -104,6 +107,7 @@ _LANG: dict[str, list[str]] = {
         "El proveedor de {from} está en pausa tras un límite de frecuencia: este trabajo nuevo usa {to}.",
         "El trabajo espera mucho por {from}: este trabajo nuevo usa {to}.",
         "Equipo · {name}: el proveedor de {from} lleva minutos en pausa, así que su trabajo nuevo usa {to}.",
+        "La opinión del juez (solo un consejo): {verdict}. {reason}",
     ],
     "fr": [
         "En pause : {reason}",
@@ -128,6 +132,7 @@ _LANG: dict[str, list[str]] = {
         "Le fournisseur de {from} est en pause après une limite de débit : ce nouveau travail utilise {to}.",
         "Le travail attend longtemps {from} : ce nouveau travail utilise {to}.",
         "Équipe · {name} : le fournisseur de {from} est en pause depuis plusieurs minutes, son nouveau travail utilise donc {to}.",
+        "L'avis du juge (simple conseil) : {verdict}. {reason}",
     ],
     "he": [
         "מושהה: {reason}",
@@ -152,6 +157,7 @@ _LANG: dict[str, list[str]] = {
         "הספק של {from} מושהה אחרי מגבלת קצב: העבודה החדשה הזאת משתמשת ב־{to}.",
         "העבודה מחכה הרבה זמן ל־{from}: העבודה החדשה הזאת משתמשת ב־{to}.",
         "צוות · {name}: הספק של {from} מושהה כבר כמה דקות, ולכן העבודה החדשה שלו משתמשת ב־{to}.",
+        "דעת השופט (עצה בלבד): {verdict}. {reason}",
     ],
     "it": [
         "In pausa: {reason}",
@@ -176,6 +182,7 @@ _LANG: dict[str, list[str]] = {
         "Il fornitore di {from} è in pausa dopo un limite di frequenza: questo nuovo lavoro usa {to}.",
         "Il lavoro aspetta a lungo {from}: questo nuovo lavoro usa {to}.",
         "Team · {name}: il fornitore di {from} è in pausa da minuti, quindi il suo nuovo lavoro usa {to}.",
+        "Il parere del giudice (solo un consiglio): {verdict}. {reason}",
     ],
     "ja": [
         "一時停止中：{reason}",
@@ -200,6 +207,7 @@ _LANG: dict[str, list[str]] = {
         "{from} のプロバイダーはレート制限のあと一時停止中です：この新しい作業は {to} を使います。",
         "{from} の待ちが長くなっています：この新しい作業は {to} を使います。",
         "チーム · {name}：{from} のプロバイダーが数分間停止しているため、新しい作業は {to} を使います。",
+        "判定役の見解（参考のみ）：{verdict}。{reason}",
     ],
     "ko": [
         "일시 중지됨: {reason}",
@@ -224,6 +232,7 @@ _LANG: dict[str, list[str]] = {
         "{from}의 제공업체가 속도 제한 후 일시 중지되었습니다: 이 새 작업은 {to}을(를) 사용합니다.",
         "{from}을(를) 오래 기다리고 있습니다: 이 새 작업은 {to}을(를) 사용합니다.",
         "팀 · {name}: {from}의 제공업체가 몇 분째 일시 중지되어 새 작업은 {to}을(를) 사용합니다.",
+        "판정 모델의 의견(참고용): {verdict}. {reason}",
     ],
     "nl": [
         "Gepauzeerd: {reason}",
@@ -248,6 +257,7 @@ _LANG: dict[str, list[str]] = {
         "De aanbieder van {from} pauzeert na een snelheidslimiet: dit nieuwe werk gebruikt {to}.",
         "Er wordt lang gewacht op {from}: dit nieuwe werk gebruikt {to}.",
         "Team · {name}: de aanbieder van {from} pauzeert al minuten, dus het nieuwe werk gebruikt {to}.",
+        "Het oordeel van de rechter (alleen advies): {verdict}. {reason}",
     ],
     "pl": [
         "Wstrzymano: {reason}",
@@ -272,6 +282,7 @@ _LANG: dict[str, list[str]] = {
         "Dostawca {from} wstrzymał się po limicie szybkości: ta nowa praca używa {to}.",
         "Na {from} czeka się długo: ta nowa praca używa {to}.",
         "Zespół · {name}: dostawca {from} jest wstrzymany od kilku minut, więc nowa praca używa {to}.",
+        "Opinia sędziego (tylko rada): {verdict}. {reason}",
     ],
     "pt": [
         "Em pausa: {reason}",
@@ -296,6 +307,7 @@ _LANG: dict[str, list[str]] = {
         "O provedor de {from} está em pausa após um limite de taxa: este trabalho novo usa {to}.",
         "O trabalho espera muito por {from}: este trabalho novo usa {to}.",
         "Equipe · {name}: o provedor de {from} está em pausa há minutos, então o trabalho novo usa {to}.",
+        "A opinião do juiz (só um conselho): {verdict}. {reason}",
     ],
     "ru": [
         "Приостановлено: {reason}",
@@ -320,6 +332,7 @@ _LANG: dict[str, list[str]] = {
         "Поставщик {from} делает паузу после ограничения частоты: эта новая работа использует {to}.",
         "Работа долго ждёт {from}: эта новая работа использует {to}.",
         "Команда · {name}: поставщик {from} на паузе уже несколько минут, поэтому новая работа использует {to}.",
+        "Мнение судьи (только совет): {verdict}. {reason}",
     ],
     "tr": [
         "Duraklatıldı: {reason}",
@@ -344,6 +357,7 @@ _LANG: dict[str, list[str]] = {
         "{from} sağlayıcısı bir hız sınırından sonra duraklıyor: bu yeni iş {to} kullanıyor.",
         "{from} için uzun süre bekleniyor: bu yeni iş {to} kullanıyor.",
         "Ekip · {name}: {from} sağlayıcısı dakikalardır duraklıyor, bu yüzden yeni işi {to} kullanıyor.",
+        "Hakemin görüşü (yalnızca öneri): {verdict}. {reason}",
     ],
 }
 
@@ -365,4 +379,5 @@ PLACEHOLDERS: dict[str, set[str]] = {
     "status.agent.hxAutoModel.overloadPaused": {"from", "to"},
     "status.agent.hxAutoModel.overloadQueue": {"from", "to"},
     "status.agent.hxTeam.overloadMove": {"name", "from", "to"},
+    "status.agent.hxTeam.card.judge": {"verdict", "reason"},
 }

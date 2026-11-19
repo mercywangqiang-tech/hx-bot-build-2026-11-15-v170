@@ -165,4 +165,5 @@ export const messages = {
   "status.agent.hxAutoModel.overloadQueue": "{from} の待ちが長くなっています：この新しい作業は {to} を使います。",
   "status.agent.hxTeam.overloadMove":
     "チーム · {name}：{from} のプロバイダーが数分間停止しているため、新しい作業は {to} を使います。",
+  "status.agent.hxTeam.card.judge": "判定役の見解（参考のみ）：{verdict}。{reason}",
 } as const satisfies PartialTranslation<typeof source>;
