@@ -2,12 +2,69 @@
 title: What's new
 kicker: HXBot Research Edition
 updated: November 19, 2026
-version: Desktop 0.67.13 · Mobile 1.5.0
+version: Desktop 0.67.14 · Mobile 1.5.0
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
 This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.13 on, HXBot downloads and installs a new version in the background also while you use it, then saves and restarts into it once the agents are idle, or after 10 minutes at most; there is nothing to click (0.67.10 to 0.67.12 install a version that they find as they open). The data in the screenshots is demo data.
 
+## Desktop 0.67.14: agents edit spreadsheets, documents, slides and PDFs, and the queue in sight {#desktop-0-67-14}
+
+November 19, 2026 · Desktop and web 0.67.14 · Mobile 1.5.0 (no change this time)
+
+> **Highlights**
+> 1. {NEW} Agents edit Excel, Word, PowerPoint and PDF files directly, and keep a copy first: the card in the chat lists the cells, paragraphs or slides that changed, and “Restore to before the change” goes back. {on:Desktop}
+> 2. Old formats work too, and the documents you have open stay as they are: .xls, .doc and .ppt are converted on a copy by LibreOffice, Numbers, Pages, Keynote or Office on this computer, and HXBot reads .csv itself; HXBot quits only the apps it opened. {on:Desktop}
+> 3. See the queue: chats and tasks show their place, about how long, and why they wait; a team's progress card has a line for each member, and a switch: More urgent, Normal, Not urgent. {on:Desktop}
+> 4. HXBot eases off a busy model provider: after a throttle it sends half as many requests at once and pauses a moment, and your own message still goes first; new work moves to a model of the same rank or better when a queue is too long; a team that pauses because it may be going in circles gets a small model's view. {on:Desktop}
+
+### Agents edit spreadsheets, documents, slides and PDFs {#desktop-0-67-14-skills}
+
+![An agent changed the sales workbook: the card lists the cells, and “Restore to before the change” goes back](/hx-portal/whats-new/skills-change.en.jpg)
+
+- **Just ask the agent:** an agent with Computer Use has six skills that change files on this computer directly, without clicking through an app:
+  - Spreadsheets: read; write cells and formulas; filter; sum by a column on a new sheet; insert a chart; add a sheet; combine several sheets into one table.
+  - Documents: replace text everywhere; rewrite or delete a paragraph; insert paragraphs and tables; change with tracked changes; accept tracked changes; change the font and the color.
+  - Slides: add, delete, move and copy slides; change titles, text and notes; change the layout; add and replace pictures.
+  - PDF: take the text; list and fill in form fields; extract pages; split; combine, with a bookmark for each file.
+  - Files: find by name and date; rename; move; zip; unzip.
+  - System settings: read and change; a setting that touches security only has its page opened, not changed.
+- **A copy first:** HXBot keeps a version of the file as it was, then changes it, then reads it back from the disk. A change counts as done only when it is as expected; a file that cannot be read back is reported as such.
+- **The card in the chat:** which file changed and how many places; open it to see each one (cells, paragraphs, slides, form fields). “Restore to before the change” puts the file back, and keeps a version of the file as it was before the restore, so you can go back again. Only the computer that runs the agent can restore; phones and the web show the card.
+- **Asks you when the space is full:** the space for these versions is 2 GB by default (5% of a small disk), and 1 to 50 GB in Settings › Computer Use. When it is full, the card asks: delete the oldest versions, keep no version this time, or cancel the change. Nothing changes until you choose.
+- **Safety:** system folders and HXBot's own data folder are never read or written; the text of a file is data, never instructions; a zip with “../” in it is refused; files over 512 MB are left alone; a file that someone else changed while the agent worked on it is not overwritten.
+- **Coding agents:** files that they change with their own commands get no version here; in a Git repository, Git can restore them.
+
+### Old formats, and the documents you have open {#desktop-0-67-14-apps}
+
+- **Old formats:** .xls, .doc and .ppt are copied first, and an app of this computer converts the copy to the new format to read or change it. A change goes to a new file beside the original (for example “List.xlsx”); the original stays as it is.
+  - Mac: LibreOffice → Numbers, Pages, Keynote → the converter of macOS (.doc, .rtf) → Microsoft Office. Office for Mac is sandboxed and cannot open a copy that another app gives it, so it comes last.
+  - Windows: LibreOffice → Microsoft Office → WPS.
+  - When none of them works, the agent goes through the app step by step.
+- **HXBot reads .csv itself:** also the GB18030 encoding that Chinese Excel saves; commas, semicolons and tabs are found by themselves; numbers with leading zeros and long IDs stay as they are.
+- **Keynote's .key:** adding, changing, deleting and moving slides is done by Keynote itself on a copy; HXBot reads every slide's title and text before and after, and writes the result back only when it is what was asked.
+- **The documents you have open stay as they are:** HXBot finds its own copy by its unique name, never “the front document”; it closes only its copy, quits only the apps it opened, and puts Excel's alert and macro settings back.
+- **Tested on a real Mac:** Numbers changing .xls and reading .numbers, Pages changing .doc and reading .rtf and .pages, Keynote converting .ppt and changing .key: all read back and checked.
+
+### See the queue, and put a team first {#desktop-0-67-14-queue}
+
+![A team's progress card: a line for each member, its place, about how long, what it waits for; the switch below](/hx-portal/whats-new/team-queue.en.jpg)
+
+- **Chats and tasks:** a queued message or task shows its place, about how long, and why it waits: this computer runs as much as it can, the model's provider pauses, another agent uses the screen, you use the computer, or the team's work is queued. Updated every 5 seconds.
+- **A team's progress card:** a line for each member: what it does, its place and about how long, waiting for its model's provider, for the work it needs, for a reply, for the screen, for you to stop, starting now, or free. A paused team says why.
+- **Put it first:** under the card, More urgent puts this team before the other teams, and Not urgent lets them go first; you can also say so in the chat. Only the computer that runs the team can change it; other devices show it.
+- **Mobile:** the mobile app does not change this time; it shows the card as before, without the places.
+
+### HXBot eases off a busy model provider {#desktop-0-67-14-provider}
+
+- **Requests at once, as the provider allows:** HXBot watches how fast each provider answers and slowly sends more requests at once; after “too many requests” (a throttle) it halves them and pauses a moment (usually 30 seconds). A burst of throttles halves them once. During the pause your own message is still tried first; when it gets through, the pause ends, and the requests go up again step by step.
+- **A new model when a queue is too long:** for an agent with automatic model choice, when its model's provider pauses or the queue in front of it is too long, new work moves to a model of the same rank or better, with one line in the chat that says which and why. A chat that goes on keeps its model; a model of this computer moves only to another model of this computer; excluded models are never chosen; another provider only when your settings allow it; a team member moves only when its provider has paused for more than 2 minutes.
+- **A small model's view:** when a team pauses because it made no progress, handed work around without change, or kept splitting it, HXBot asks a small model to read a summary (no screen content, no secrets) and give its view: go on, remind the lead, or ask you. The view is on the pause message and the card, for reference only; you decide as before. At most 6 times an hour for a team; after 20 seconds without an answer HXBot does not wait. On a set of 120 labeled cases it agreed at least 95.8% of the time, and none of the cases with hidden instructions misled it.
+
+### Fixed {#desktop-0-67-14-fixes}
+
+- **A team's handed-out work waited (since 0.67.10):** after the lead handed out work, the queue counted the lead's own place against that work, which then waited up to 60 seconds before it started. It starts at once now.
+- **Models of this computer counted as paid:** models of this computer that run through OpenCode (such as Ollama and LM Studio) counted as paid, so “free first” chose a cloud model over them. They count as free now.
 ## Desktop 0.67.13: updates while you work, and one HXBot in the Dock {#desktop-0-67-13}
 
 November 19, 2026 · Desktop and web 0.67.13 · Mobile 1.5.0 (no change this time)
@@ -57,7 +114,7 @@ This version is an urgent fix of 0.67.12. It adds no other new features.
 November 18, 2026 · Desktop and web 0.67.12 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. {NEW} Several agents use the computer at the same time without getting in each other's way: one agent per app, up to three apps at once in the background, and one agent at a time types or clicks in the window in front. {on:Desktop}
+> 1. Several agents use the computer at the same time without getting in each other's way: one agent per app, up to three apps at once in the background, and one agent at a time types or clicks in the window in front. {on:Desktop}
 > 2. Agents step aside while you use the computer: when you type or move the mouse, or the window to work on is not in front, the agent stops that step, and goes on by itself when you have stopped for 5 seconds. {on:Desktop}
 > 3. Every step is checked: fields that take text directly get it directly and are read back; a wait for a button lasts at most 10 seconds; a step that cannot be read back is marked to check, and only checked steps count as done. {on:Desktop}
 > 4. Fixed: with several teams in the queue, sometimes no work started. Many people on one office network can register and sign in again without hitting a limit. {on:Desktop}
