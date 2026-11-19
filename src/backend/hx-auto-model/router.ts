@@ -32,10 +32,12 @@ import type { AgentModelOption, AgentProviderId, AgentReasoningEffort } from "@h
 import { sourceText } from "@hxbot/i18n";
 import { createHxBotLogger } from "@hxbot/logging";
 import { hxFlow } from "../hx-flow/ledger";
+import { HX_OVERLOAD_TARGETS, hxOverload } from "../hx-flow/overload";
 import { hxProviderGate } from "../hx-flow/provider-gate";
 import { hxProviderModelOf } from "../hx-flow/provider-model";
 import { HX_JUDGE_BELOW, type HxAttachmentInfo, hxClassifyWork } from "./classify";
 import { HX_JUDGE_TIMEOUT_MS, hxJudgeModel, hxJudgePrompt, hxParseJudge, hxWithin } from "./judge";
+import { type HxOverloadWhy, hxOverloadChoice } from "./overload-move";
 import { type HxAutoModelStore, hxAutoModelStore } from "./store";
 
 const logger = createHxBotLogger("hx-auto-model");
@@ -118,6 +120,13 @@ const LINE_KEYS = {
 } as const satisfies Record<HxWorkType, readonly [string, string]>;
 
 /** The line in the chat: the kind of work and the model, in the English that each screen translates. */
+/** HXBot (v1.7.4, CONC-08): the line of a move for the provider's overload: which model, and why. */
+export function hxOverloadLine(from: string, to: string, why: HxOverloadWhy): string {
+  return why === "paused"
+    ? sourceText("status.agent.hxAutoModel.overloadPaused", { from, to })
+    : sourceText("status.agent.hxAutoModel.overloadQueue", { from, to });
+}
+
 export function hxAutoLine(work: HxWorkType, model: string, changed: boolean): string {
   const [switched, kept] = LINE_KEYS[work];
   return sourceText(changed ? switched : kept, { model });
@@ -199,6 +208,45 @@ export class HxAutoRouter {
         this.#following.delete(agentId);
         this.#host?.scheduleDrain(agentId);
       });
+  }
+
+  /**
+   * HXBot (v1.7.4, CONC-08): a team member that takes a new piece of work while the provider of its
+   * model has been paused more than 2 minutes moves to a model that ranks the same or better. Returns
+   * the names for the team's line, or null when it stays.
+   */
+  async moveForOverload(agentId: string, now = Date.now()): Promise<{ from: string; to: string } | null> {
+    const host = this.#host;
+    const agent = host?.agent(agentId);
+    if (!host || !agent || this.#following.has(agentId) || host.busy(agentId)) return null;
+    const candidates = this.#candidates(agentId, now);
+    const current = refOfAgent(agent);
+    const currentModel = candidates.find((candidate) => hxSameModel(hxRefOf(candidate.model), current))?.model ?? {
+      provider: agent.provider,
+      id: agent.model,
+      name: agent.model,
+    };
+    const moved = hxOverloadChoice({
+      current: currentModel,
+      candidates,
+      settings: this.#store.settings(agentId),
+      targetMs: HX_OVERLOAD_TARGETS[2],
+      turnMs: hxFlow.turnMs(),
+      member: true,
+      canTake: () => true,
+      now,
+    });
+    if (!moved) return null;
+    this.#following.add(agentId);
+    try {
+      await host.move(agentId, { ...hxRefOf(moved.candidate.model), reasoningEffort: agent.reasoningEffort });
+      return { from: currentModel.name, to: moved.candidate.model.name };
+    } catch (error) {
+      logger.warn("HXBot could not move a team member off a paused provider.", { error: String(error) });
+      return null;
+    } finally {
+      this.#following.delete(agentId);
+    }
   }
 
   /** A model change that the user or another agent made: the agent is no longer on auto. */
@@ -485,6 +533,31 @@ export class HxAutoRouter {
         });
     }
 
+    // HXBot (v1.7.4, CONC-08): new work whose model's provider is the bottleneck moves to a model that
+    // ranks the same or better (overload-move.ts). A model the user named stays.
+    let overload: { from: string; why: HxOverloadWhy } | null = null;
+    if (by !== "follow-up" && by !== "manual") {
+      const planned = choice?.model ??
+        currentCandidate?.model ?? { provider: agent.provider, id: agent.model, name: agent.model };
+      const tier = work.sender === "user" ? 0 : work.sender === "routine" ? 3 : 2;
+      const moved = hxOverloadChoice({
+        current: planned,
+        candidates,
+        settings,
+        targetMs: HX_OVERLOAD_TARGETS[tier],
+        turnMs: hxFlow.turnMs(),
+        member: false,
+        canTake: (candidate) => hxCanTake(candidate, needs, classification.tokens),
+        now,
+      });
+      // A pause moves new work at once; a long queue only while the tier is overloaded.
+      if (moved && (moved.why === "paused" || hxOverload.overloaded(tier))) {
+        overload = { from: planned.name, why: moved.why };
+        choice = asChoice(moved.candidate, current);
+        signals.push(`overload:${moved.why}`);
+      }
+    }
+
     const chosen = choice?.model ??
       currentCandidate?.model ?? { provider: agent.provider, id: agent.model, name: agent.model };
     if (!choice && by !== "follow-up") by = "fallback";
@@ -532,8 +605,11 @@ export class HxAutoRouter {
     this.#store.record(decision);
     if (final.provider === "opencode" && hxModelProfile(final).freeGroup === HX_OPENCODE_FREE_GROUP)
       this.#store.countFree(now);
+    // HXBot (v1.7.4, CONC-08): a move for the provider's overload says which model and why.
+    if (overload && moved && changed)
+      host.note(agentId, work.taskId, hxOverloadLine(overload.from, final.name, overload.why));
     // A follow-up that keeps its model needs no line: the line of its work is just above.
-    if (by !== "follow-up" || (moved && changed))
+    else if (by !== "follow-up" || (moved && changed))
       host.note(agentId, work.taskId, hxAutoLine(kind, final.name, moved && changed));
   }
 

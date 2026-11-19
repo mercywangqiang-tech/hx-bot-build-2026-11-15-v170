@@ -12,6 +12,7 @@
 import type { HxHoldDetail } from "@hxbot/contracts/ipc";
 import { type HxFlowCandidate, hxFlow } from "./ledger";
 import { hxFlowSort } from "./order";
+import { hxOverload } from "./overload";
 import { type HxProviderGate, hxProviderGate } from "./provider-gate";
 
 export interface HxHoldView {
@@ -70,6 +71,16 @@ export class HxHoldDetails {
 
   /** Works the details out again; returns the agents whose detail changed, and tells them. */
   refresh(): string[] {
+    // HXBot (v1.7.4, CONC-08): the same tick samples the overload of each tier.
+    const view = this.#view;
+    if (view) {
+      const now = this.#now();
+      const waiting = [...view.waiting().map((item) => item.candidate), ...hxFlow.waitingTeamWork(now)];
+      hxOverload.sample(
+        now,
+        waiting.map((candidate) => ({ tier: candidate.tier, readyAt: candidate.readyAt })),
+      );
+    }
     const next = this.compute();
     const changed = new Set<string>();
     for (const lane of new Set([...this.#details.keys(), ...next.keys()]))

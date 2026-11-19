@@ -194,4 +194,9 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxTeam.member.screen": "{name}: waits for the screen",
   "status.agent.hxTeam.member.yourTurn": "{name}: waits until you stop using the computer",
   "status.agent.hxTeam.member.free": "{name}: free",
+  "status.agent.hxAutoModel.overloadPaused":
+    "The provider of {from} is paused after a rate limit: this new work uses {to}.",
+  "status.agent.hxAutoModel.overloadQueue": "Work waits long for {from}: this new work uses {to}.",
+  "status.agent.hxTeam.overloadMove":
+    "Team · {name}: the provider of {from} has been paused for minutes, so its new work uses {to}.",
 });

@@ -160,4 +160,9 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}：画面が空くのを待っています",
   "status.agent.hxTeam.member.yourTurn": "{name}：あなたがコンピューターの操作を止めるのを待っています",
   "status.agent.hxTeam.member.free": "{name}：空き",
+  "status.agent.hxAutoModel.overloadPaused":
+    "{from} のプロバイダーはレート制限のあと一時停止中です：この新しい作業は {to} を使います。",
+  "status.agent.hxAutoModel.overloadQueue": "{from} の待ちが長くなっています：この新しい作業は {to} を使います。",
+  "status.agent.hxTeam.overloadMove":
+    "チーム · {name}：{from} のプロバイダーが数分間停止しているため、新しい作業は {to} を使います。",
 } as const satisfies PartialTranslation<typeof source>;

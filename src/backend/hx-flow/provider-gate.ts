@@ -132,6 +132,8 @@ class KeyState {
   long = 1;
   readonly baselines: (number | null)[] = [null, null, null];
   pausedUntil = 0;
+  /** When the pause that runs now began. */
+  pausedAt = 0;
   pauseNamed = false;
   throttles = 0;
   label: string;
@@ -392,6 +394,7 @@ export class HxProviderGate {
       state.throttles += 1;
       state.pauseNamed = named;
       state.pausedUntil = now + wait;
+      state.pausedAt = now;
       this.#log("A provider throttled; its limit halves and it pauses.", {
         key,
         from: before,
@@ -437,6 +440,12 @@ export class HxProviderGate {
       pausedForMs: paused ? state.pausedUntil - now : 0,
       waiting: this.waitingFor(model.key).length,
     };
+  }
+
+  /** When the pause of this key that runs now began, or null when it is not paused (CONC-08). */
+  pausedSince(key: string): number | null {
+    const state = this.#keys.get(key);
+    return state && state.pausedUntil > this.#now() ? state.pausedAt : null;
   }
 
   state(key: string): HxProviderState | null {

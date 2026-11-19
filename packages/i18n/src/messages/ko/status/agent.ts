@@ -168,4 +168,9 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: 화면을 기다리는 중",
   "status.agent.hxTeam.member.yourTurn": "{name}: 컴퓨터 사용을 멈출 때까지 기다리는 중",
   "status.agent.hxTeam.member.free": "{name}: 비어 있음",
+  "status.agent.hxAutoModel.overloadPaused":
+    "{from}의 제공업체가 속도 제한 후 일시 중지되었습니다: 이 새 작업은 {to}을(를) 사용합니다.",
+  "status.agent.hxAutoModel.overloadQueue": "{from}을(를) 오래 기다리고 있습니다: 이 새 작업은 {to}을(를) 사용합니다.",
+  "status.agent.hxTeam.overloadMove":
+    "팀 · {name}: {from}의 제공업체가 몇 분째 일시 중지되어 새 작업은 {to}을(를) 사용합니다.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -191,4 +191,8 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: מחכה למסך",
   "status.agent.hxTeam.member.yourTurn": "{name}: מחכה שתפסיקו להשתמש במחשב",
   "status.agent.hxTeam.member.free": "{name}: פנוי",
+  "status.agent.hxAutoModel.overloadPaused": "הספק של {from} מושהה אחרי מגבלת קצב: העבודה החדשה הזאת משתמשת ב־{to}.",
+  "status.agent.hxAutoModel.overloadQueue": "העבודה מחכה הרבה זמן ל־{from}: העבודה החדשה הזאת משתמשת ב־{to}.",
+  "status.agent.hxTeam.overloadMove":
+    "צוות · {name}: הספק של {from} מושהה כבר כמה דקות, ולכן העבודה החדשה שלו משתמשת ב־{to}.",
 } as const satisfies PartialTranslation<typeof source>;

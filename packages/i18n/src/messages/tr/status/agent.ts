@@ -162,4 +162,9 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: ekranı bekliyor",
   "status.agent.hxTeam.member.yourTurn": "{name}: bilgisayarı kullanmayı bırakmanızı bekliyor",
   "status.agent.hxTeam.member.free": "{name}: boşta",
+  "status.agent.hxAutoModel.overloadPaused":
+    "{from} sağlayıcısı bir hız sınırından sonra duraklıyor: bu yeni iş {to} kullanıyor.",
+  "status.agent.hxAutoModel.overloadQueue": "{from} için uzun süre bekleniyor: bu yeni iş {to} kullanıyor.",
+  "status.agent.hxTeam.overloadMove":
+    "Ekip · {name}: {from} sağlayıcısı dakikalardır duraklıyor, bu yüzden yeni işi {to} kullanıyor.",
 } as const satisfies PartialTranslation<typeof source>;

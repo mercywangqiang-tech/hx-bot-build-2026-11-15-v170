@@ -45,7 +45,15 @@ export interface HxFlowCandidate {
   dependents: number;
 }
 
+/** HXBot (v1.7.4, CONC-08): whether background work ages now; overload.ts holds it while work of a person or a team is overloaded. */
+let agingHeld: (now: number) => boolean = () => false;
+
+export function hxFlowHoldAging(held: (now: number) => boolean): void {
+  agingHeld = held;
+}
+
 export function hxFlowEffectiveTier(candidate: Pick<HxFlowCandidate, "tier" | "readyAt">, now: number): number {
+  if (candidate.tier === 3 && agingHeld(now)) return 3;
   const waited = Math.max(0, now - candidate.readyAt) / 1000;
   return Math.max(0, candidate.tier - Math.floor(waited / HX_FLOW_AGING_S));
 }

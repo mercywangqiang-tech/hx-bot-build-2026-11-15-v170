@@ -2,6 +2,7 @@
 
 translations.py 的最后把这里的内容并进 KEYS 和 PHRASES。每种语言按 ORDER 的顺序一句一句写。
 - CONC-09：团队进度卡每个成员一行、暂停原因、更急/不急；对话和任务里等待的原因、排第几、大约多久。
+- CONC-08：过载时新工作改用别的模型，对话里写的一行。
 """
 
 from __future__ import annotations
@@ -26,6 +27,9 @@ ORDER = [
     "conversation.hx.hold.screen",
     "conversation.hx.hold.userActive",
     "conversation.hx.hold.teamQueue",
+    "status.agent.hxAutoModel.overloadPaused",
+    "status.agent.hxAutoModel.overloadQueue",
+    "status.agent.hxTeam.overloadMove",
 ]
 
 _LANG: dict[str, list[str]] = {
@@ -49,6 +53,9 @@ _LANG: dict[str, list[str]] = {
         "وكيل آخر يستخدم الشاشة.",
         "أنت تستخدم الحاسوب.",
         "عمل الفريق ينتظر مكانًا.",
+        "مزوّد {from} متوقف بعد تجاوز حدّ المعدّل: يستخدم هذا العمل الجديد {to}.",
+        "العمل ينتظر طويلًا لـ {from}: يستخدم هذا العمل الجديد {to}.",
+        "الفريق · {name}: مزوّد {from} متوقف منذ دقائق، لذا يستخدم عمله الجديد {to}.",
     ],
     "de": [
         "Pausiert: {reason}",
@@ -70,6 +77,9 @@ _LANG: dict[str, list[str]] = {
         "Ein anderer Agent benutzt den Bildschirm.",
         "Du benutzt den Computer.",
         "Die Arbeit des Teams wartet auf einen Platz.",
+        "Der Anbieter von {from} pausiert nach einer Ratenbegrenzung: Diese neue Arbeit nutzt {to}.",
+        "Für {from} wird lange gewartet: Diese neue Arbeit nutzt {to}.",
+        "Team · {name}: Der Anbieter von {from} pausiert seit Minuten, daher nutzt seine neue Arbeit {to}.",
     ],
     "es": [
         "En pausa: {reason}",
@@ -91,6 +101,9 @@ _LANG: dict[str, list[str]] = {
         "Otro agente usa la pantalla.",
         "Estás usando el ordenador.",
         "El trabajo del equipo espera un hueco.",
+        "El proveedor de {from} está en pausa tras un límite de frecuencia: este trabajo nuevo usa {to}.",
+        "El trabajo espera mucho por {from}: este trabajo nuevo usa {to}.",
+        "Equipo · {name}: el proveedor de {from} lleva minutos en pausa, así que su trabajo nuevo usa {to}.",
     ],
     "fr": [
         "En pause : {reason}",
@@ -112,6 +125,9 @@ _LANG: dict[str, list[str]] = {
         "Un autre agent utilise l'écran.",
         "Vous utilisez l'ordinateur.",
         "Le travail de l'équipe attend une place.",
+        "Le fournisseur de {from} est en pause après une limite de débit : ce nouveau travail utilise {to}.",
+        "Le travail attend longtemps {from} : ce nouveau travail utilise {to}.",
+        "Équipe · {name} : le fournisseur de {from} est en pause depuis plusieurs minutes, son nouveau travail utilise donc {to}.",
     ],
     "he": [
         "מושהה: {reason}",
@@ -133,6 +149,9 @@ _LANG: dict[str, list[str]] = {
         "סוכן אחר משתמש במסך.",
         "אתם משתמשים במחשב.",
         "העבודה של הצוות מחכה למקום.",
+        "הספק של {from} מושהה אחרי מגבלת קצב: העבודה החדשה הזאת משתמשת ב־{to}.",
+        "העבודה מחכה הרבה זמן ל־{from}: העבודה החדשה הזאת משתמשת ב־{to}.",
+        "צוות · {name}: הספק של {from} מושהה כבר כמה דקות, ולכן העבודה החדשה שלו משתמשת ב־{to}.",
     ],
     "it": [
         "In pausa: {reason}",
@@ -154,6 +173,9 @@ _LANG: dict[str, list[str]] = {
         "Un altro agente usa lo schermo.",
         "Stai usando il computer.",
         "Il lavoro del team aspetta un posto.",
+        "Il fornitore di {from} è in pausa dopo un limite di frequenza: questo nuovo lavoro usa {to}.",
+        "Il lavoro aspetta a lungo {from}: questo nuovo lavoro usa {to}.",
+        "Team · {name}: il fornitore di {from} è in pausa da minuti, quindi il suo nuovo lavoro usa {to}.",
     ],
     "ja": [
         "一時停止中：{reason}",
@@ -175,6 +197,9 @@ _LANG: dict[str, list[str]] = {
         "別のエージェントが画面を使っています。",
         "あなたがコンピューターを使っています。",
         "チームの作業が空きを待っています。",
+        "{from} のプロバイダーはレート制限のあと一時停止中です：この新しい作業は {to} を使います。",
+        "{from} の待ちが長くなっています：この新しい作業は {to} を使います。",
+        "チーム · {name}：{from} のプロバイダーが数分間停止しているため、新しい作業は {to} を使います。",
     ],
     "ko": [
         "일시 중지됨: {reason}",
@@ -196,6 +221,9 @@ _LANG: dict[str, list[str]] = {
         "다른 에이전트가 화면을 사용하고 있습니다.",
         "컴퓨터를 사용하고 있습니다.",
         "팀의 작업이 자리를 기다리고 있습니다.",
+        "{from}의 제공업체가 속도 제한 후 일시 중지되었습니다: 이 새 작업은 {to}을(를) 사용합니다.",
+        "{from}을(를) 오래 기다리고 있습니다: 이 새 작업은 {to}을(를) 사용합니다.",
+        "팀 · {name}: {from}의 제공업체가 몇 분째 일시 중지되어 새 작업은 {to}을(를) 사용합니다.",
     ],
     "nl": [
         "Gepauzeerd: {reason}",
@@ -217,6 +245,9 @@ _LANG: dict[str, list[str]] = {
         "Een andere agent gebruikt het scherm.",
         "Je gebruikt de computer.",
         "Het werk van het team wacht op een plaats.",
+        "De aanbieder van {from} pauzeert na een snelheidslimiet: dit nieuwe werk gebruikt {to}.",
+        "Er wordt lang gewacht op {from}: dit nieuwe werk gebruikt {to}.",
+        "Team · {name}: de aanbieder van {from} pauzeert al minuten, dus het nieuwe werk gebruikt {to}.",
     ],
     "pl": [
         "Wstrzymano: {reason}",
@@ -238,6 +269,9 @@ _LANG: dict[str, list[str]] = {
         "Inny agent używa ekranu.",
         "Używasz komputera.",
         "Praca zespołu czeka na miejsce.",
+        "Dostawca {from} wstrzymał się po limicie szybkości: ta nowa praca używa {to}.",
+        "Na {from} czeka się długo: ta nowa praca używa {to}.",
+        "Zespół · {name}: dostawca {from} jest wstrzymany od kilku minut, więc nowa praca używa {to}.",
     ],
     "pt": [
         "Em pausa: {reason}",
@@ -259,6 +293,9 @@ _LANG: dict[str, list[str]] = {
         "Outro agente está usando a tela.",
         "Você está usando o computador.",
         "O trabalho da equipe espera um lugar.",
+        "O provedor de {from} está em pausa após um limite de taxa: este trabalho novo usa {to}.",
+        "O trabalho espera muito por {from}: este trabalho novo usa {to}.",
+        "Equipe · {name}: o provedor de {from} está em pausa há minutos, então o trabalho novo usa {to}.",
     ],
     "ru": [
         "Приостановлено: {reason}",
@@ -280,6 +317,9 @@ _LANG: dict[str, list[str]] = {
         "Экраном пользуется другой агент.",
         "Вы пользуетесь компьютером.",
         "Работа команды ждёт места.",
+        "Поставщик {from} делает паузу после ограничения частоты: эта новая работа использует {to}.",
+        "Работа долго ждёт {from}: эта новая работа использует {to}.",
+        "Команда · {name}: поставщик {from} на паузе уже несколько минут, поэтому новая работа использует {to}.",
     ],
     "tr": [
         "Duraklatıldı: {reason}",
@@ -301,6 +341,9 @@ _LANG: dict[str, list[str]] = {
         "Ekranı başka bir ajan kullanıyor.",
         "Bilgisayarı siz kullanıyorsunuz.",
         "Ekibin işi bir yer bekliyor.",
+        "{from} sağlayıcısı bir hız sınırından sonra duraklıyor: bu yeni iş {to} kullanıyor.",
+        "{from} için uzun süre bekleniyor: bu yeni iş {to} kullanıyor.",
+        "Ekip · {name}: {from} sağlayıcısı dakikalardır duraklıyor, bu yüzden yeni işi {to} kullanıyor.",
     ],
 }
 
@@ -319,4 +362,7 @@ PLACEHOLDERS: dict[str, set[str]] = {
     "conversation.hx.hold.place": {"position", "time", "reason"},
     "conversation.hx.hold.placeOnly": {"position", "reason"},
     "conversation.hx.hold.minutes": {"count"},
+    "status.agent.hxAutoModel.overloadPaused": {"from", "to"},
+    "status.agent.hxAutoModel.overloadQueue": {"from", "to"},
+    "status.agent.hxTeam.overloadMove": {"name", "from", "to"},
 }

@@ -17,6 +17,7 @@ import {
   type HxFlowTier,
   hxFlowSort,
 } from "./order";
+import { hxOverload } from "./overload";
 
 /** What the drain gives: B now (null for no limit) and the lane keys that run a turn now. */
 export interface HxFlowSchedulerView {
@@ -223,6 +224,8 @@ export class HxFlowLedger {
   /** A lane started a delivery. */
   started(lane: string, candidate: HxFlowCandidate, taskId: string | null): void {
     const now = this.#now();
+    // HXBot (v1.7.4, CONC-08): how long the work waited, for the overload of its tier.
+    hxOverload.started(candidate.tier, now - candidate.readyAt, now);
     this.#running.set(lane, {
       teamId: candidate.teamId,
       tier: candidate.tier,
@@ -350,6 +353,11 @@ export class HxFlowLedger {
   /** The team ended: its share and weight go. */
   forgetTeam(teamId: string): void {
     this.shares.forget(teamId);
+  }
+
+  /** HXBot (v1.7.4, CONC-08): the team work that waits for a place now, for the overload. */
+  waitingTeamWork(now: number = this.#now()): HxFlowCandidate[] {
+    return this.#readyCandidates(now);
   }
 
   #readyCandidates(now: number): HxFlowCandidate[] {

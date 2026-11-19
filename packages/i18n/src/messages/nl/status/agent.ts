@@ -202,4 +202,9 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: wacht op het scherm",
   "status.agent.hxTeam.member.yourTurn": "{name}: wacht tot je de computer niet meer gebruikt",
   "status.agent.hxTeam.member.free": "{name}: vrij",
+  "status.agent.hxAutoModel.overloadPaused":
+    "De aanbieder van {from} pauzeert na een snelheidslimiet: dit nieuwe werk gebruikt {to}.",
+  "status.agent.hxAutoModel.overloadQueue": "Er wordt lang gewacht op {from}: dit nieuwe werk gebruikt {to}.",
+  "status.agent.hxTeam.overloadMove":
+    "Team · {name}: de aanbieder van {from} pauzeert al minuten, dus het nieuwe werk gebruikt {to}.",
 } as const satisfies PartialTranslation<typeof source>;

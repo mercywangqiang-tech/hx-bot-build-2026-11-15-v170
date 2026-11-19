@@ -165,4 +165,9 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: ждёт экран",
   "status.agent.hxTeam.member.yourTurn": "{name}: ждёт, пока вы перестанете пользоваться компьютером",
   "status.agent.hxTeam.member.free": "{name}: свободен",
+  "status.agent.hxAutoModel.overloadPaused":
+    "Поставщик {from} делает паузу после ограничения частоты: эта новая работа использует {to}.",
+  "status.agent.hxAutoModel.overloadQueue": "Работа долго ждёт {from}: эта новая работа использует {to}.",
+  "status.agent.hxTeam.overloadMove":
+    "Команда · {name}: поставщик {from} на паузе уже несколько минут, поэтому новая работа использует {to}.",
 } as const satisfies PartialTranslation<typeof source>;

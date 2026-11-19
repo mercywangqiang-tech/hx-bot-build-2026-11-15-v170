@@ -26,6 +26,7 @@ import {
 import { isDynamicRecord } from "@hxbot/contracts/runtime-values";
 import { sourceText } from "@hxbot/i18n";
 import { z } from "zod";
+import { hxAutoRouter } from "../hx-auto-model/router";
 import { hxComputerLanes } from "../hx-computer/lanes";
 import { hxParkedSteps } from "../hx-computer/parked";
 import { type HxFlowTeamTask, hxFlow } from "../hx-flow/ledger";
@@ -303,6 +304,8 @@ export class HxTeams {
   /** v1.7.4 (CONC-09): the text of each team's card as written last, and the timer that refreshes them. */
   readonly #cardTexts = new Map<string, string>();
   #cardTimer: ReturnType<typeof setInterval> | null = null;
+  /** v1.7.4 (CONC-08): members that a move for the provider's overload is changing now. */
+  readonly #moving = new Set<string>();
   #timesFile: string | null = null;
   #spendReading = false;
   readonly #chains = new Map<string, Promise<void>>();
@@ -330,7 +333,38 @@ export class HxTeams {
 
   /** v1.7.4 (CONC-09): writes the card of each running team whose text changed. It never throws. */
   refreshCards(): void {
-    for (const team of this.store.running()) this.#writeCard(team);
+    for (const team of this.store.running()) {
+      this.#overloadMembers(team);
+      this.#writeCard(team);
+    }
+  }
+
+  /**
+   * v1.7.4 (CONC-08): a member with no work running and new work waiting, whose provider has been
+   * paused more than 2 minutes, moves to a model that ranks the same or better (the router decides);
+   * the starter's chat gets one line.
+   */
+  #overloadMembers(team: HxTeamRecord): void {
+    const port = this.#port;
+    if (!port || team.guard?.paused) return;
+    const tasks = this.#tasks(port, team.channelId);
+    for (const member of team.members) {
+      if (member.left || this.#moving.has(member.agentId)) continue;
+      const own = tasks.filter((task) => task.ownerAgentId === member.agentId);
+      if (own.some((task) => task.state === "running") || !own.some((task) => task.state === "queued")) continue;
+      this.#moving.add(member.agentId);
+      void hxAutoRouter
+        .moveForOverload(member.agentId, this.#now())
+        .then((moved) => {
+          if (moved)
+            port.note(
+              team.starterAgentId,
+              sourceText("status.agent.hxTeam.overloadMove", { name: member.name, from: moved.from, to: moved.to }),
+            );
+        })
+        .catch(() => undefined)
+        .finally(() => this.#moving.delete(member.agentId));
+    }
   }
 
   /**

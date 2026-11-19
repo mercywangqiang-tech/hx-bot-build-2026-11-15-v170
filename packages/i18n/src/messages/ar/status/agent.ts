@@ -197,4 +197,7 @@ export const messages = {
   "status.agent.hxTeam.member.screen": "{name}: ينتظر الشاشة",
   "status.agent.hxTeam.member.yourTurn": "{name}: ينتظر حتى تتوقف عن استخدام الحاسوب",
   "status.agent.hxTeam.member.free": "{name}: متاح",
+  "status.agent.hxAutoModel.overloadPaused": "مزوّد {from} متوقف بعد تجاوز حدّ المعدّل: يستخدم هذا العمل الجديد {to}.",
+  "status.agent.hxAutoModel.overloadQueue": "العمل ينتظر طويلًا لـ {from}: يستخدم هذا العمل الجديد {to}.",
+  "status.agent.hxTeam.overloadMove": "الفريق · {name}: مزوّد {from} متوقف منذ دقائق، لذا يستخدم عمله الجديد {to}.",
 } as const satisfies PartialTranslation<typeof source>;
