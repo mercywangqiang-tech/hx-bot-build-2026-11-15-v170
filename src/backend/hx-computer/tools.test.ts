@@ -50,7 +50,7 @@ function setup() {
 describe("the three tools", () => {
   it("are declared with a name, a description and a shape each", () => {
     // v1.6.7 added computer_plan, computer_look and computer_do (step-tools.ts); v1.6.8 computer_install;
-    // v1.6.9 computer_app and computer_run.
+    // v1.6.9 computer_app and computer_run; v1.7.4 computer_skill (the app skills, hx-skills).
     expect(HX_COMPUTER_TOOL_DEFINITIONS.map((tool) => tool.name)).toEqual([
       "computer_find",
       "computer_open",
@@ -61,6 +61,7 @@ describe("the three tools", () => {
       "computer_plan",
       "computer_look",
       "computer_do",
+      "computer_skill",
     ]);
     expect([...HX_COMPUTER_TOOL_NAMES].sort()).toEqual([
       "computer_app",
@@ -72,6 +73,7 @@ describe("the three tools", () => {
       "computer_plan",
       "computer_run",
       "computer_set",
+      "computer_skill",
     ]);
     for (const tool of HX_COMPUTER_TOOL_DEFINITIONS) {
       expect(tool.description.length, tool.name).toBeGreaterThan(80);

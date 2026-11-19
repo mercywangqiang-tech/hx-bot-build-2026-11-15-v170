@@ -5,11 +5,12 @@
 // 应用只在临时文件夹里的副本上干活；结果交回 run.ts 留版本、写回、读回。文件路径和参数经环境变量传给脚本，
 // 不拼进脚本文字，路径里有引号或特殊字符也不会变成命令。
 import { randomBytes } from "node:crypto";
-import { copyFile, mkdtemp, rm, stat } from "node:fs/promises";
+import { copyFile, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { basename, extname, join } from "node:path";
-import { type HxRunner, hxRunFailure, hxRunOk } from "../hx-computer/runner";
+import { type HxRunner, type HxRunResult, hxRunFailure, hxRunOk } from "../hx-computer/runner";
 import { HX_POWERSHELL } from "../hx-computer/tables-win";
+import { hxCsvToXlsx } from "../hx-files/csv";
 
 export type HxModernType = "xlsx" | "docx" | "pptx";
 
@@ -139,26 +140,58 @@ async function macAppInstalled(host: HxAppRouteHost, app: string): Promise<boole
 }
 
 /**
- * Lines that open the copy as `theDoc`: an app may answer “missing value” while it still imports an old
- * format (Keynote with a .pptx, found on a real Mac), so then the script waits for the new document
- * (at most 20 s) and takes the front one.
+ * AppleScript lines that open HXBot's copy (HX_IN) and set `theDoc` to it among the app's open
+ * `collection`, by the copy's unique name (HX_STEM). They wait up to 60 s while the app still opens or
+ * imports it: Keynote answers “missing value” while it imports a .ppt, and Word's and PowerPoint's
+ * `open` answer nothing (found on a real Mac). Never “the front document”: that may be the user's,
+ * and HXBot closes `theDoc` without saving.
  */
-const OPEN_DOCUMENT = [
-  "set countBefore to count of documents",
-  "try",
-  "  set theDoc to open (POSIX file inPath as alias)",
-  "on error",
-  "  set theDoc to missing value",
-  "end try",
-  "if theDoc is missing value then",
-  "  repeat 100 times",
-  "    if (count of documents) > countBefore then exit repeat",
-  "    delay 0.2",
-  "  end repeat",
-  '  if (count of documents) is not greater than countBefore then error "The file did not open." number -43',
-  "  set theDoc to front document",
-  "end if",
-];
+export function hxMacOpenOwn(collection: string, open: readonly string[]): string[] {
+  return [
+    'set stem to system attribute "HX_STEM"',
+    'set openError to ""',
+    "try",
+    ...open.map((line) => `  ${line}`),
+    "on error errText",
+    "  set openError to errText",
+    "end try",
+    "set theDoc to missing value",
+    "repeat 300 times",
+    `  repeat with d in ${collection}`,
+    "    try",
+    "      if (name of d) starts with stem then",
+    "        set theDoc to contents of d",
+    "        exit repeat",
+    "      end if",
+    "    end try",
+    "  end repeat",
+    "  if theDoc is not missing value then exit repeat",
+    '  if openError is not "" then exit repeat',
+    "  delay 0.2",
+    "end repeat",
+    'if theDoc is missing value then error ("The file did not open. " & openError) number -43',
+  ];
+}
+
+/** A unique name for HXBot's copy: the scripts find the copy by it among the user's own documents. */
+export function hxCopyStem(): string {
+  return `hxbot-${randomBytes(6).toString("hex")}`;
+}
+
+/**
+ * Runs an AppleScript with its paths in the environment. An app that a previous script quit may still
+ * be quitting and answer “not running” (-600, seen on a real Mac): then once more after 2 seconds.
+ */
+export async function hxOsascript(
+  host: HxAppRouteHost,
+  script: string,
+  env: Readonly<Record<string, string>>,
+): Promise<HxRunResult> {
+  const first = await host.run("osascript", ["-e", script], { timeoutMs: TIMEOUT_MS, env });
+  if (hxRunOk(first) || !/\(-600\)/u.test(first.stderr)) return first;
+  await new Promise((done) => setTimeout(done, 2_000));
+  return host.run("osascript", ["-e", script], { timeoutMs: TIMEOUT_MS, env });
+}
 
 /**
  * The lines after the work of a Mac app: an app that HXBot started is quit again when no document is
@@ -175,7 +208,7 @@ function iworkScript(app: string, as: string): string {
     `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
     "  try",
-    ...OPEN_DOCUMENT.map((line) => `    ${line}`),
+    ...hxMacOpenOwn("documents", ["open (POSIX file inPath as alias)"]).map((line) => `    ${line}`),
     `    export theDoc to (POSIX file outPath) as ${as}`,
     "    close theDoc saving no",
     "  on error errMsg number errNum",
@@ -193,10 +226,8 @@ function iworkScript(app: string, as: string): string {
 /**
  * Microsoft Office for Mac, through its AppleScript dictionaries. AppleScript reaches the instance the
  * user may have open: HXBot opens its copy read-only, closes only that document, puts back the alerts
- * setting it changed, and quits only an app that it started itself. Word's and PowerPoint's `open`
- * return nothing and may finish a moment later, so the script waits for the new document (at most 20 s)
- * and takes it as the front one. Excel tries its own `open workbook` first, then the plain `open`.
- * (Found on a real Mac, v1.7.4: Word answered “theDoc is not defined”, PowerPoint “no result”.)
+ * setting it changed, and quits only an app that it started itself. The copy is found by its unique
+ * name (hxMacOpenOwn). Excel tries its own `open workbook` first, then the plain `open`.
  */
 function macOfficeScript(app: string, documents: string, work: readonly string[], close: string): string {
   return [
@@ -205,7 +236,6 @@ function macOfficeScript(app: string, documents: string, work: readonly string[]
     `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
     ...(app === "Microsoft Excel" ? ["  set oldAlerts to display alerts", "  set display alerts to false"] : []),
-    `  set countBefore to count of ${documents}`,
     "  try",
     ...work.map((line) => `    ${line}`),
     `    ${close}`,
@@ -223,15 +253,6 @@ function macOfficeScript(app: string, documents: string, work: readonly string[]
   ].join("\n");
 }
 
-/** Lines that wait (at most 20 s) until `documents` has one more than `before`. */
-const waitForOne = (documents: string) => [
-  "repeat 100 times",
-  `  if (count of ${documents}) > countBefore then exit repeat`,
-  "  delay 0.2",
-  "end repeat",
-  `if (count of ${documents}) is not greater than countBefore then error "The file did not open." number -43`,
-];
-
 const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
   xlsx: {
     app: "Microsoft Excel",
@@ -239,16 +260,16 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "Microsoft Excel",
       "workbooks",
       [
-        "try",
-        "  set wb to open workbook workbook file name (POSIX file inPath as text) read only true",
-        "on error",
-        "  open (POSIX file inPath as alias)",
-        ...waitForOne("workbooks").map((line) => `  ${line}`),
-        "  set wb to active workbook",
-        "end try",
-        "save workbook as wb filename (POSIX file outPath as text) file format Excel XML file format",
+        ...hxMacOpenOwn("workbooks", [
+          "try",
+          "  open workbook workbook file name (POSIX file inPath as text) read only true",
+          "on error",
+          "  open (POSIX file inPath as alias)",
+          "end try",
+        ]),
+        "save workbook as theDoc filename (POSIX file outPath as text) file format Excel XML file format",
       ],
-      "close wb saving no",
+      "close theDoc saving no",
     ),
   },
   docx: {
@@ -257,9 +278,7 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "Microsoft Word",
       "documents",
       [
-        "open file name (POSIX file inPath as text) with read only",
-        ...waitForOne("documents"),
-        "set theDoc to active document",
+        ...hxMacOpenOwn("documents", ["open file name (POSIX file inPath as text) with read only"]),
         "save as theDoc file name (POSIX file outPath as text) file format format document",
       ],
       "close theDoc saving no",
@@ -271,12 +290,10 @@ const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
       "Microsoft PowerPoint",
       "presentations",
       [
-        "open (POSIX file inPath as alias)",
-        ...waitForOne("presentations"),
-        "set thePres to active presentation",
-        "save thePres in (POSIX file outPath as text) as save as Open XML presentation",
+        ...hxMacOpenOwn("presentations", ["open (POSIX file inPath as alias)"]),
+        "save theDoc in (POSIX file outPath as text) as save as Open XML presentation",
       ],
-      "close thePres saving no",
+      "close theDoc saving no",
     ),
   },
 };
@@ -370,10 +387,6 @@ function windowsConvertScript(to: HxModernType): string {
   return windowsScript(to, body[to]);
 }
 
-async function osascript(host: HxAppRouteHost, script: string, env: Readonly<Record<string, string>>) {
-  return host.run("osascript", ["-e", script], { timeoutMs: TIMEOUT_MS, env });
-}
-
 async function powershell(host: HxAppRouteHost, script: string, env: Readonly<Record<string, string>>) {
   return host.run(
     HX_POWERSHELL,
@@ -393,14 +406,25 @@ export async function hxConvertWithApp(
   host: HxAppRouteHost,
 ): Promise<HxAppResult> {
   const extension = extname(source).slice(1).toLowerCase();
-  const input = join(folder, `input.${extension || "bin"}`);
+  // A .csv is text: HXBot reads it itself, with no app (Numbers adds a row with the table's name).
+  if (extension === "csv" && to === "xlsx") {
+    const made = join(folder, "converted.xlsx");
+    try {
+      await writeFile(made, hxCsvToXlsx(await readFile(source), basename(source, extname(source))));
+      return { ok: true, app: "HXBot", path: made };
+    } catch (error) {
+      return { ok: false, reasons: [`HXBot could not read the .csv: ${error instanceof Error ? error.message : "?"}`] };
+    }
+  }
+  const stem = hxCopyStem();
+  const input = join(folder, `${stem}.${extension || "bin"}`);
   await copyFile(source, input);
   const reasons: string[] = [];
   const office = await withLibreOffice(host, input, to, folder);
   if (office.ok) return office;
   reasons.push(...office.reasons);
   const output = join(folder, `converted.${to}`);
-  const env = { HX_IN: input, HX_OUT: output };
+  const env = { HX_IN: input, HX_OUT: output, HX_STEM: stem };
   if (host.platform === "darwin") {
     // LibreOffice (above), then iWork, then textutil, then Office: Office for Mac is sandboxed and on a
     // real Mac could not open a copy that a script gave it, so it comes last.
@@ -422,9 +446,11 @@ export async function hxConvertWithApp(
       const script = attempt.script;
       const office = attempt.app.startsWith("Microsoft ") ? await officeFolder(host) : null;
       try {
-        const here = office ? { HX_IN: join(office, basename(input)), HX_OUT: join(office, basename(output)) } : env;
+        const here = office
+          ? { HX_IN: join(office, basename(input)), HX_OUT: join(office, basename(output)), HX_STEM: stem }
+          : env;
         if (office) await copyFile(input, here.HX_IN);
-        const result = await osascript(host, script, here);
+        const result = await hxOsascript(host, script, here);
         if (hxRunOk(result) && (await fileThere(host, here.HX_OUT))) {
           if (office) await copyFile(here.HX_OUT, output);
           return { ok: true, app: attempt.app, path: output };

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
@@ -685,24 +686,25 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
     process.platform === "linux" &&
     ["/usr/bin/soffice", "/usr/lib/libreoffice/program/soffice"].some((path) => existsSync(path));
   it.runIf(libreOffice)(
-    "reads a .csv through the real LibreOffice, and a change goes to a new .xlsx",
+    "reads an .xls through the real LibreOffice, and a change goes to a new .xlsx",
     { timeout: 180_000 },
     async () => {
       const { hxRun } = await import("../hx-computer/runner");
       const s = await setup({ host: { app: { run: hxRun, platform: process.platform } } });
-      const csv = join(s.work, "名单.csv");
-      await writeFile(csv, "姓名,分数\n张三,90\n李四,85\n");
-      const before = await readFile(csv);
-      const read = await s.run({ skill: "sheet", action: "read", files: [csv] });
+      const xls = join(s.work, "名单.xls");
+      // The .xls fixture of the app tasks (LibreOffice made it from 名单.xlsx: 姓名, 分数; 张三 90, 李四 85).
+      await writeFile(xls, await readFile(join(import.meta.dirname, "../../../hx/computer-check/fixtures/名单.xls")));
+      const before = await readFile(xls);
+      const read = await s.run({ skill: "sheet", action: "read", files: [xls] });
       expect(read.ok, JSON.stringify(read.answer)).toBe(true);
       expect(read.answer.convertedBy).toBe("LibreOffice");
       expect(JSON.stringify(read.answer)).toContain("张三");
-      const write = await s.run({ skill: "sheet", action: "write", files: [csv], params: { cells: { B2: 95 } } });
+      const write = await s.run({ skill: "sheet", action: "write", files: [xls], params: { cells: { B2: 95 } } });
       expect(write.ok, JSON.stringify(write.answer)).toBe(true);
       const made = HxWorkbook.read(await readFile(join(s.work, "名单.xlsx")));
       expect(made.cell(made.sheets()[0]?.name ?? "", "B2").text).toBe("95");
       expect(await leftWork()).toEqual([]);
-      expect(Buffer.compare(await readFile(csv), before)).toBe(0);
+      expect(Buffer.compare(await readFile(xls), before)).toBe(0);
     },
   );
 
@@ -783,6 +785,37 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
           : call.command,
       ),
     ).toEqual(["Pages", "/usr/bin/textutil", "Microsoft Word"]);
+    expect(await leftWork()).toEqual([]);
+  });
+
+  it("reads a .csv itself, with no app: GB18030, quotes, line breaks, leading zeros and long IDs (found on a real Mac)", async () => {
+    // No app answers: a .csv needs none.
+    const { app, calls } = fakeApp("darwin", async () => ({ code: 1 }));
+    const s = await setup({ host: { app } });
+    const csv = join(s.work, "名单.csv");
+    // As Chinese Excel saves it: GB18030, separated by semicolons here, one field with a line break.
+    const text =
+      '姓名;编号;身份证号;金额;备注\r\n张三;007;110101199003071234;1200.5;"说明, 有逗号"\r\n李四;8;110101199003075678;-3;"两行\n说明 ""引号"""\r\n';
+    const gb = new Uint8Array(Buffer.from(new TextEncoder().encode(text)));
+    // Encode as GB18030 with Python (the test runner has no encoder for it).
+    const encoded = execFileSync(
+      "python3",
+      ["-c", "import sys;sys.stdout.buffer.write(sys.stdin.buffer.read().decode('utf-8').encode('gb18030'))"],
+      { input: gb },
+    );
+    await writeFile(csv, encoded);
+    const answer = await s.run({ skill: "sheet", action: "read", files: [csv] });
+    expect(answer.answer.convertedBy, JSON.stringify(answer.answer)).toBe("HXBot");
+    expect(calls).toHaveLength(0);
+    const rows = JSON.stringify(answer.answer.rows);
+    expect(rows).toContain('["A2","张三"]');
+    // A leading zero and an 18-digit ID stay text; a plain number is a number.
+    expect(rows).toContain('["B2","007"]');
+    expect(rows).toContain('["C2","110101199003071234"]');
+    expect(rows).toContain('["D2","1200.5"]');
+    expect(rows).toContain('["E2","说明, 有逗号"]');
+    expect(rows).toContain('["E3","两行\\n说明 \\"引号\\""]');
+    expect(answer.answer.sheet).toBe("名单");
     expect(await leftWork()).toEqual([]);
   });
 

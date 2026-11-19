@@ -7,14 +7,13 @@ import { join } from "node:path";
 import type { z } from "zod";
 import { hxRunFailure, hxRunOk } from "../hx-computer/runner";
 import type { HxBlockChange, HxFileDiff } from "../hx-files/diff";
-import type { HxAppRouteHost } from "./app-route";
+import { type HxAppRouteHost, hxCopyStem, hxMacOpenOwn, hxOsascript } from "./app-route";
 import { SLIDES_PARAMS } from "./declarations";
 import { SkillInputError } from "./office";
 
 /** What the Keynote route does in place; other slide actions go through a .pptx copy. */
 export const HX_KEYNOTE_ACTIONS: ReadonlySet<string> = new Set(["add", "text", "delete", "move"]);
 
-const TIMEOUT_MS = 180_000;
 const UNIT = String.fromCharCode(31);
 const RECORD = String.fromCharCode(30);
 
@@ -86,21 +85,8 @@ const SCRIPT = [
   // Keynote that HXBot started is quit again when no document is left; the user's Keynote keeps running.
   'set wasRunning to application "Keynote" is running',
   'tell application "Keynote"',
-  // Keynote may answer “missing value” while it still opens a file (seen on a real Mac): wait for it.
-  "  set countBefore to count of documents",
-  "  try",
-  "    set theDoc to open (POSIX file inPath)",
-  "  on error",
-  "    set theDoc to missing value",
-  "  end try",
-  "  if theDoc is missing value then",
-  "    repeat 100 times",
-  "      if (count of documents) > countBefore then exit repeat",
-  "      delay 0.2",
-  "    end repeat",
-  '    if (count of documents) is not greater than countBefore then error "The file did not open." number -43',
-  "    set theDoc to front document",
-  "  end if",
+  // HXBot's copy, found by its unique name: never the front document, which may be the user's.
+  ...hxMacOpenOwn("documents", ["open (POSIX file inPath)"]).map((line) => `  ${line}`),
   "  try",
   '    my saveText("before", my slideTexts(theDoc))',
   "    set n to count of slides of theDoc",
@@ -327,7 +313,8 @@ export async function hxKeynoteEdit(
 ): Promise<HxKeynoteResult> {
   const parsed = parse(action, params);
   if (host.platform !== "darwin") return { ok: false, reasons: ["Keynote is on macOS only"] };
-  const input = join(folder, "input.key");
+  const stem = hxCopyStem();
+  const input = join(folder, `${stem}.key`);
   const output = join(folder, "output.key");
   await writeFile(input, bytes);
   const texts: Record<string, string> = {};
@@ -354,19 +341,17 @@ export async function hxKeynoteEdit(
       break;
   }
   for (const [name, text] of Object.entries(texts)) await writeFile(join(folder, name), text, "utf8");
-  const result = await host.run("osascript", ["-e", SCRIPT], {
-    timeoutMs: TIMEOUT_MS,
-    env: {
-      HX_DIR: folder,
-      HX_IN: input,
-      HX_OUT: output,
-      HX_ACTION: parsed.action,
-      HX_N1: String(n1),
-      HX_N2: String(n2),
-      HX_TARGET: target,
-      HX_TITLE: title,
-      HX_BODY: body,
-    },
+  const result = await hxOsascript(host, SCRIPT, {
+    HX_DIR: folder,
+    HX_IN: input,
+    HX_STEM: stem,
+    HX_OUT: output,
+    HX_ACTION: parsed.action,
+    HX_N1: String(n1),
+    HX_N2: String(n2),
+    HX_TARGET: target,
+    HX_TITLE: title,
+    HX_BODY: body,
   });
   if (!hxRunOk(result)) return { ok: false, reasons: [hxRunFailure("Keynote", result)] };
   const read = (name: string) => readFile(join(folder, name), "utf8").catch(() => null);

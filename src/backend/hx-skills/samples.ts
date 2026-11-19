@@ -19,7 +19,7 @@ import { HxFileVersions } from "../hx-files/versions";
 import { HxWorkbook } from "../hx-files/xlsx";
 import { crc32, HxZip } from "../hx-files/zip";
 import { hxMacMetadata } from "../hx-files/zip-stream";
-import type { HxAppRouteHost } from "./app-route";
+import { type HxAppRouteHost, hxCopyStem, hxMacOpenOwn, hxOsascript } from "./app-route";
 import type { HxSkillName } from "./declarations";
 import type { HxJson, HxSkillArgs } from "./operations";
 import { type HxSkillAnswer, HxSkillRequests, HxSkillRunner } from "./run";
@@ -1830,19 +1830,7 @@ async function iworkCopy(c: Context, app: string, from: string, to: string): Pro
     'set outPath to system attribute "HX_OUT"',
     `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
-    "  set countBefore to count of documents",
-    "  try",
-    "    set theDoc to open (POSIX file inPath as alias)",
-    "  on error",
-    "    set theDoc to missing value",
-    "  end try",
-    "  if theDoc is missing value then",
-    "    repeat 100 times",
-    "      if (count of documents) > countBefore then exit repeat",
-    "      delay 0.2",
-    "    end repeat",
-    "    set theDoc to front document",
-    "  end if",
+    ...hxMacOpenOwn("documents", ["open (POSIX file inPath as alias)"]).map((line) => `  ${line}`),
     "  save theDoc in (POSIX file outPath)",
     "  close theDoc saving no",
     "  if not wasRunning and (count of documents) is 0 then quit saving no",
@@ -1850,12 +1838,14 @@ async function iworkCopy(c: Context, app: string, from: string, to: string): Pro
   ].join("\n");
   const temp = await mkdtemp(join(tmpdir(), "hxbot-iwork-"));
   try {
-    const input = join(temp, `in${extname(from)}`);
+    const stem = hxCopyStem();
+    const input = join(temp, `${stem}${extname(from)}`);
     const output = join(temp, `out${extname(to)}`);
     await copyFile(join(c.fixtures, from), input);
-    const result = await run("osascript", ["-e", script], {
-      timeoutMs: 180_000,
-      env: { HX_IN: input, HX_OUT: output },
+    const result = await hxOsascript({ run, platform: "darwin" }, script, {
+      HX_IN: input,
+      HX_OUT: output,
+      HX_STEM: stem,
     });
     if (result.code !== 0 || !(await exists(output)))
       throw new Error(`${app} 没能存出 ${to}：${result.stderr.slice(0, 200)}`);
@@ -1870,7 +1860,7 @@ const APPS: Sample[] = [
   {
     id: "apps-01",
     skill: "sheet",
-    title: "读 .csv（经这台电脑的应用转换）",
+    title: "读 .csv（HXBot 自己读，不经过应用）",
     needsApp: {},
     setup: async (c) => {
       await fixture(c, "名单.csv");
