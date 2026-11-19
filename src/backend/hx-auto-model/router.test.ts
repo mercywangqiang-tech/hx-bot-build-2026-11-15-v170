@@ -5,7 +5,17 @@ import { HX_AUTO_DEFAULTS, type HxAutoModelSettings, type HxModelRef } from "@hx
 
 import type { AgentModelOption, AgentProviderId, AgentReasoningEffort } from "@hxbot/contracts/ipc";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type HxAutoAgent, type HxAutoHost, HxAutoRouter, type HxQueuedWork, hxAutoLine, hxNamedModel } from "./router";
+import { hxProviderGate } from "../hx-flow/provider-gate";
+import { hxProviderModelOf } from "../hx-flow/provider-model";
+import {
+  type HxAutoAgent,
+  type HxAutoHost,
+  HxAutoRouter,
+  type HxQueuedWork,
+  hxAutoLine,
+  hxNamedModel,
+  hxOverloadLine,
+} from "./router";
 import { HxAutoModelStore } from "./store";
 
 // These tests were written for "free first", the default until v1.6.7; the default is now "quality".
@@ -47,6 +57,8 @@ interface World {
   failMove: boolean;
   /** The chat goes on in a provider session (v1.7.0). */
   continuing: boolean;
+  /** v1.7.4: the models the host lists (default MODELS). */
+  models: AgentModelOption[];
 }
 
 function makeWorld(): World {
@@ -70,13 +82,14 @@ function makeWorld(): World {
     reply: null,
     failMove: false,
     continuing: false,
+    models: MODELS,
   };
 }
 
 function hostOf(world: World): HxAutoHost {
   return {
     agent: (agentId) => (agentId === world.agent.id ? world.agent : null),
-    models: () => MODELS,
+    models: () => world.models,
     ready: (ref) => !world.notReady.has(ref.model) && !world.limited.has(ref.model),
     limited: (ref) => world.limited.has(ref.model),
     busy: () => world.busy,
@@ -122,6 +135,7 @@ beforeEach(() => {
 
 afterEach(() => {
   rmSync(folder, { recursive: true, force: true });
+  hxProviderGate.reset();
 });
 
 const work = (text: string, extra: Partial<HxQueuedWork> = {}): HxQueuedWork => ({
@@ -394,5 +408,96 @@ describe("a model named in a message", () => {
     expect(hxNamedModel("use Claude", candidates)).toBeNull();
     expect(hxNamedModel("用中文回答", candidates)).toBeNull();
     expect(hxNamedModel("use it", candidates)).toBeNull();
+  });
+});
+
+// v1.7.4 (CONC-08-A1, CONC-08-A2): the whole decision of the router, with the provider of the agent's
+// model paused by a 429 in the real provider gate, as the turns do. The rules of the move are tested
+// in overload-move.test.ts; here, that the router takes them for new work, says why in one line, and
+// keeps to the user's exclusions and to this computer.
+describe("CONC-08: new work when the provider of its model is paused", () => {
+  const CLOUD = [
+    option("claude", "claude-opus-4-5", "Claude Opus", ["low", "medium", "high"]),
+    option("codex", "gpt-5.2-pro", "GPT Pro", ["low", "medium", "high"]),
+    option("claude", "claude-haiku-4-5", "Claude Haiku", ["low", "medium", "high"]),
+  ];
+  const LOCAL = [
+    option("opencode", "ollama/qwen3:32b", "Qwen (local)"),
+    option("opencode", "ollama/llama3.3:70b", "Llama (local)"),
+  ];
+
+  function pause(provider: AgentProviderId, model: string) {
+    const key = hxProviderModelOf({ provider, model });
+    if (!key) throw new Error("no key");
+    hxProviderGate.attach({ modelOf: (agentId) => (agentId === key.key ? key : null), wake: () => undefined });
+    hxProviderGate.starting(key.key, false);
+    hxProviderGate.turnStarted(`turn-${key.key}`, key.key, null, 10);
+    hxProviderGate.throttled(`turn-${key.key}`, null, 60_000);
+    hxProviderGate.attach(null);
+  }
+
+  function on(
+    provider: AgentProviderId,
+    model: string,
+    models: AgentModelOption[],
+    settings: Partial<HxAutoModelSettings> = {},
+  ) {
+    world.models = models;
+    world.agent = { ...world.agent, provider, model };
+    store.setSettings("a1", { ...HX_AUTO_DEFAULTS, enabled: true, judge: "rules", crossProvider: true, ...settings });
+  }
+
+  it("moves new work to a model of the same rank on another provider, and says why", async () => {
+    on("claude", "claude-opus-4-5", CLOUD);
+    pause("claude", "claude-opus-4-5");
+    world.work = work("帮我设计一套系统的整体架构，要考虑并发和容灾");
+    await router.follow("a1", Date.now());
+    expect(world.moves.at(-1)?.model).toBe("gpt-5.2-pro");
+    expect(world.notes.map((note) => note.text)).toContain(hxOverloadLine("Claude Opus", "GPT Pro", "paused"));
+    expect(store.decisions("a1")[0]?.signals ?? []).toContain("overload:paused");
+  });
+
+  it("CONC-08-A1: never moves to a provider the user excluded, nor across providers when that is off", async () => {
+    on("claude", "claude-opus-4-5", CLOUD, { excluded: [{ provider: "codex", model: "gpt-5.2-pro" }] });
+    pause("claude", "claude-opus-4-5");
+    world.work = work("帮我设计一套系统的整体架构，要考虑并发和容灾");
+    await router.follow("a1", Date.now());
+    expect(world.moves.some((move) => move.model === "gpt-5.2-pro")).toBe(false);
+    expect(world.notes.some((note) => note.text.includes("GPT Pro"))).toBe(false);
+    on("claude", "claude-opus-4-5", CLOUD, { crossProvider: false });
+    world.work = work("再设计一套备用的架构方案");
+    await router.follow("a1", Date.now());
+    expect(world.moves.some((move) => move.provider === "codex")).toBe(false);
+  });
+
+  it("CONC-08-A2: a chat on a model of this computer stays on this computer", async () => {
+    // Cloud models of the same provider too, so only the rule keeps the move on this computer.
+    const sameProviderCloud = [
+      option("opencode", "opencode/claude-opus-4-5", "Claude Opus (OpenCode)"),
+      option("opencode", "opencode/gpt-5.2-pro", "GPT Pro (OpenCode)"),
+    ];
+    const overloadMoves = () =>
+      store.decisions("a1").filter((decision) => decision.signals.some((signal) => signal.startsWith("overload:")));
+    // Free first: the rules keep a model of this computer for writing, so a move is the pause's.
+    on("opencode", "ollama/qwen3:32b", [...LOCAL, ...sameProviderCloud, ...CLOUD], { preference: "free" });
+    pause("opencode", "ollama/qwen3:32b");
+    world.work = work("帮我写一段产品介绍");
+    await router.follow("a1", Date.now());
+    expect(overloadMoves().length).toBeGreaterThan(0);
+    expect(overloadMoves().every((decision) => decision.chosen.model.startsWith("ollama/"))).toBe(true);
+    expect(overloadMoves()[0]?.chosen.model).toBe("ollama/llama3.3:70b");
+    // With no other model of this computer, the pause moves nothing.
+    rmSync(folder, { recursive: true, force: true });
+    folder = mkdtempSync(join(tmpdir(), "hx-auto-router-"));
+    store = new HxAutoModelStore();
+    store.open(folder, NOW);
+    router = new HxAutoRouter(store);
+    router.setHost(hostOf(world));
+    on("opencode", "ollama/qwen3:32b", [LOCAL[0] ?? option("opencode", "x", "x"), ...sameProviderCloud, ...CLOUD], {
+      preference: "free",
+    });
+    world.work = work("再写一段产品介绍");
+    await router.follow("a1", Date.now());
+    expect(overloadMoves()).toEqual([]);
   });
 });

@@ -357,6 +357,12 @@ function contextWindow(model: HxModelInfo, text: string): number {
  * this is a judgement by family: a model it does not know is tier B, with no image input unless its
  * provider reads images, and a 128k window.
  */
+/**
+ * HXBot (v1.7.4): a model that runs on this computer, through OpenCode or the like (Ollama, LM Studio,
+ * llama.cpp, llamafile). It costs nothing, and the provider limit starts it at one turn at a time.
+ */
+export const HX_LOCAL_MODEL = /^(ollama|lmstudio|lm-studio|llama\.?cpp|llamafile)[/:]/iu;
+
 export function hxModelProfile(model: HxModelInfo): HxModelProfile {
   const text = lower(model);
   const family = FAMILY_RULES.find((rule) => rule.pattern.test(text));
@@ -366,15 +372,19 @@ export function hxModelProfile(model: HxModelInfo): HxModelProfile {
   const strengths: Partial<Record<HxWorkType, number>> = { ...(family?.strengths ?? {}) };
   if (REASONING.test(text)) strengths.reasoning = Math.max(strengths.reasoning ?? 0, 1);
   const free = model.provider === "opencode" && isFreeOpencodeModel(model.id, model.name);
-  const cost: HxModelCost = free
-    ? "free"
-    : model.provider === "opencode"
-      ? model.id.toLowerCase().startsWith("opencode-go/")
-        ? "subscription"
-        : "paid"
-      : SUBSCRIPTION_PROVIDERS.has(model.provider)
-        ? "subscription"
-        : "paid";
+  // HXBot (v1.7.4, found by the CONC-08-A2 test): a model of this computer was costed "paid", so "free
+  // first" took a cloud model over it. It is free, outside OpenCode's group of free models.
+  const local = HX_LOCAL_MODEL.test(model.id);
+  const cost: HxModelCost =
+    free || local
+      ? "free"
+      : model.provider === "opencode"
+        ? model.id.toLowerCase().startsWith("opencode-go/")
+          ? "subscription"
+          : "paid"
+        : SUBSCRIPTION_PROVIDERS.has(model.provider)
+          ? "subscription"
+          : "paid";
   return {
     tier,
     vision: VISION_PROVIDERS.has(model.provider) || VISION_NAME.test(text),

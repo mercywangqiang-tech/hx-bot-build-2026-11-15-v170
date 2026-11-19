@@ -6,10 +6,11 @@
 // llama.cpp) is local: its limit starts at 1 and stays under the server's own parallel setting. Ollama
 // reads OLLAMA_NUM_PARALLEL (1 when the variable is not set where HXBot can see it); LM Studio and
 // llama.cpp have no setting that HXBot can read, so 1.
+import { HX_LOCAL_MODEL } from "@hxbot/contracts/hx-auto-model";
 import { DEFAULT_PROVIDER_ACCOUNT_ID } from "@hxbot/contracts/ipc";
 import type { HxProviderModel } from "./provider-gate";
 
-const LOCAL = /^(ollama|lmstudio|lm-studio|llama\.?cpp|llamafile)[/:]/iu;
+const LOCAL = HX_LOCAL_MODEL;
 
 export function hxProviderModelOf(
   agent: { provider: string; model: string; providerAccountId?: string | undefined },

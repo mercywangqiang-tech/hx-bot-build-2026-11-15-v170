@@ -79,6 +79,12 @@ describe("CONC-08: a new chat moves only to a model of the same rank or better",
     expect(hxOverloadChoice(input(opus, all, { settings: { excluded: [], crossProvider: false } }))).toBeNull();
   });
 
+  it("costs a model of this computer nothing, outside OpenCode's group of free models", () => {
+    expect(hxModelProfile(qwen)).toMatchObject({ cost: "free", freeGroup: null });
+    expect(hxModelProfile(model("opencode", "lmstudio/mistral-small", "Mistral (local)")).cost).toBe("free");
+    expect(hxModelProfile(model("opencode", "opencode/claude-opus-4-5", "Claude Opus")).cost).toBe("paid");
+  });
+
   it("CONC-08-A2: a model of this computer moves only to another model of this computer", () => {
     pause(qwen);
     const choice = hxOverloadChoice(input(qwen, [candidate(qwen), candidate(opus), candidate(gpt), candidate(llama)]));
