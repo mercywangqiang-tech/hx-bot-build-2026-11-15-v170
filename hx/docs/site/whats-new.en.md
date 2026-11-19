@@ -15,7 +15,7 @@ November 18, 2026 · Desktop and web 0.67.11 · Mobile 1.5.0 (no change this tim
 This version only fixes problems. It adds no new features.
 
 > **Highlights**
-> 1. {NEW} One HXBot in the Dock and the taskbar: the servers on this computer no longer each add an icon, and the commands that HXBot runs in the background no longer open black console windows. {on:Desktop}
+> 1. One HXBot in the Dock and the taskbar: the servers on this computer no longer each add an icon, and the commands that HXBot runs in the background no longer open black console windows. {on:Desktop}
 > 2. Other apps no longer freeze when they open or save files: the servers on this computer start one after another and run at a lower priority, and all HXBot processes share one limit of work at the same time. {on:Desktop}
 > 3. When HXBot cannot write the record of a permission (for example, when the disk is full), a step that needs your permission does not go ahead, and the agent tells you why. {on:Desktop}
 > 4. On a team server, only owners and admins can add an MCP server that runs a command on this computer. {on:Desktop}
@@ -52,7 +52,7 @@ This version only fixes problems. It adds no new features.
 November 18, 2026 · Desktop and web 0.67.10 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
+> 1. {NEW} Many agents, no freezes: HXBot sets how many turns this computer runs at the same time from its free memory, battery and temperature. The other work waits in a queue; it does not all start at once. {on:Desktop}
 > 2. Teams have no limit on members, time or handoffs: each handoff is accepted and waits in the queue, and none is sent back because "too many are busy". When a team makes no progress, goes in a loop or nobody answers the spend reminders, it pauses and asks you. {on:Desktop}
 > 3. No slowdown after long use: the channel list counts only the new messages, and the queue and the scheduler look only at work that is not done. {on:Desktop}
 > 4. Updates are no longer forced: when HXBot finds a new version as it opens, it downloads and installs it and restarts into it once the assistants are idle; there is nothing to click. Later major versions work the same way. {on:Desktop}
