@@ -89,7 +89,9 @@ const SCRIPT = hxMacOwnScript({
     'set wantBody to system attribute "HX_BODY"',
     'set whichText to system attribute "HX_TARGET"',
   ],
-  open: ["open (POSIX file inPath)"],
+  // As an alias: Keynote on a real Mac opened nothing for 60 s from a plain file reference, and opened
+  // the same copy at once given an alias, as the export route gives it.
+  open: ["open (POSIX file inPath as alias)"],
   work: [
     'my saveText("before", my slideTexts(theDoc))',
     "set n to count of slides of theDoc",

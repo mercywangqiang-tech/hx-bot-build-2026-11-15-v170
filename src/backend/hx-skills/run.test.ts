@@ -862,6 +862,8 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
       expect(script.match(/if \(not wasRunning\) and \(application "[^"]+" is running\) then/gu)?.length, app).toBe(2);
       // The wait for the copy and the wait for the app to quit happen in osascript, not in the app.
       expect(script, app).toContain("repeat 300 times");
+      // iWork opens HXBot's copy given as an alias (a plain file reference opened nothing in Keynote).
+      if (/Keynote|Numbers|Pages|sample/u.test(app)) expect(script, app).toContain("open (POSIX file inPath as alias)");
     }
     expect(await leftWork()).toEqual([]);
   });

@@ -1988,9 +1988,12 @@ const APPS: Sample[] = [
     }),
     check: async (c, answer) =>
       all(
+        // Keynote changed the .key itself: when it cannot, the change goes to a new 汇报.pptx instead.
         yes(
           "Keynote 自己改的（没有另存 .pptx）",
-          !(await exists(c.file("汇报 (2).pptx"))) && !(await exists(c.file("汇报.pptx.pptx"))),
+          field(answer, "changedBy") === "Keynote" &&
+            !(await exists(c.file("汇报.pptx"))) &&
+            !(await exists(c.file("汇报 (2).pptx"))),
         ),
         yes("技能读回对上了", field(answer, "verified") === true),
         kept(answer),
