@@ -274,7 +274,8 @@ async function runOpenAi(baseUrl: string, model: string, key: string, prompt: st
 
 function runCommand(command: string, prompt: string): Promise<JudgeCall> {
   return new Promise<string>((done, fail) => {
-    const child = spawn(command, { shell: true, stdio: ["pipe", "pipe", "pipe"], timeout: 60_000 });
+    // A command-line agent starts slowly and may think first: 3 minutes a call.
+    const child = spawn(command, { shell: true, stdio: ["pipe", "pipe", "pipe"], timeout: 180_000 });
     let out = "";
     child.stdout.on("data", (chunk: Buffer) => {
       out += chunk.toString("utf8");
@@ -310,6 +311,7 @@ async function main(): Promise<void> {
       "base-url": { type: "string" },
       model: { type: "string" },
       command: { type: "string" },
+      concurrency: { type: "string" },
       // v1.7.4: the user's budget (10:45: 5 US dollars), the prices per million tokens (the default is
       // above every Mercury price, so the estimate errs high), the repeats, and the key's variable.
       repeat: { type: "string" },
@@ -402,38 +404,51 @@ async function main(): Promise<void> {
     ms: number;
   };
   const rounds: Result[][] = [];
+  // Calls at once: 1 for an API (its own limits), more for command-line agents, which start slowly.
+  const concurrency = Math.min(8, Math.max(1, Math.round(number(values.concurrency, 1))));
   for (let round = 0; round < repeats && stopped === null; round += 1) {
-    const results: Result[] = [];
-    for (const [index, item] of cases.entries()) {
-      const prompt = prompts[index] ?? "";
-      // The next call at its most (the whole prompt and 120 tokens out) must fit under the cap.
-      if (ledger.totalUsd + spent + costOf(estimateTokens(prompt), 120) > maxUsd) {
-        stopped = `budget: ${(ledger.totalUsd + spent).toFixed(4)} of ${maxUsd} USD spent`;
-        break;
+    const results: (Result | undefined)[] = new Array(cases.length);
+    let next = 0;
+    const worker = async () => {
+      while (stopped === null) {
+        const index = next;
+        next += 1;
+        const item = cases[index];
+        if (!item) return;
+        const prompt = prompts[index] ?? "";
+        // The next call at its most (the whole prompt and 120 tokens out) must fit under the cap.
+        if (ledger.totalUsd + spent + costOf(estimateTokens(prompt), 120) > maxUsd) {
+          stopped = `budget: ${(ledger.totalUsd + spent).toFixed(4)} of ${maxUsd} USD spent`;
+          return;
+        }
+        const started = Date.now();
+        let verdict: HxJudgeVerdict | null = null;
+        try {
+          const answer = await run(prompt);
+          calls += 1;
+          spent += costOf(answer.inTokens, answer.outTokens);
+          verdict = hxParseTeamJudge(answer.text)?.verdict ?? null;
+        } catch {
+          // A failed call is still billed at most what it sent: count the prompt.
+          spent += costOf(estimateTokens(prompt), 0);
+          verdict = null;
+        }
+        results[index] = {
+          id: item.id,
+          kind: item.kind,
+          injected: item.injected,
+          verdict,
+          agrees: verdict !== null && item.accept.includes(verdict),
+          ms: Date.now() - started,
+        };
+        const done = results.filter(Boolean).length;
+        if (done % 20 === 0) process.stderr.write(`round ${round + 1}: ${done}/${cases.length}\n`);
       }
-      const started = Date.now();
-      let verdict: HxJudgeVerdict | null = null;
-      try {
-        const answer = await run(prompt);
-        calls += 1;
-        spent += costOf(answer.inTokens, answer.outTokens);
-        verdict = hxParseTeamJudge(answer.text)?.verdict ?? null;
-      } catch {
-        // A failed call is still billed at most what it sent: count the prompt.
-        spent += costOf(estimateTokens(prompt), 0);
-        verdict = null;
-      }
-      results.push({
-        id: item.id,
-        kind: item.kind,
-        injected: item.injected,
-        verdict,
-        agrees: verdict !== null && item.accept.includes(verdict),
-        ms: Date.now() - started,
-      });
-    }
+    };
+    await Promise.all(Array.from({ length: concurrency }, worker));
     saveLedger();
-    if (results.length === cases.length) rounds.push(results);
+    const complete = results.filter((result): result is Result => result !== undefined);
+    if (complete.length === cases.length) rounds.push(complete);
   }
   const score = (results: Result[]) => {
     const agreement = results.filter((result) => result.agrees).length / results.length;
