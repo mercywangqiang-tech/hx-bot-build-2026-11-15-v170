@@ -10,14 +10,14 @@ import { HxPresentation, type HxSlide } from "./pptx";
 import { sha256 } from "./safe-write";
 import { HxWorkbook } from "./xlsx";
 
-export type HxDiffKind = "text" | "sheet" | "document" | "slides" | "pdf" | "file";
+type HxDiffKind = "text" | "sheet" | "document" | "slides" | "pdf" | "file";
 
-export interface HxFileStamp {
+interface HxFileStamp {
   size: number;
   sha256: string;
 }
 
-export interface HxCellChange {
+interface HxCellChange {
   sheet: string;
   cell: string;
   /** The value as a person reads it; a formula shows as "=FORMULA → value". "" for an empty cell. */

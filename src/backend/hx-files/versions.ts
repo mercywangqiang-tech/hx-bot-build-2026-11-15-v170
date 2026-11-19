@@ -15,7 +15,6 @@ import { join } from "node:path";
 import { z } from "zod";
 import { HxLocks } from "./lock";
 import {
-  HxWriteError,
   type HxWriteFaults,
   hxCreateFile,
   hxReplaceFile,
@@ -28,11 +27,11 @@ import {
 } from "./safe-write";
 
 export const HX_VERSION_CAP_BYTES = 2 * 1024 * 1024 * 1024;
-export const HX_VERSION_CAP_SHARE = 0.05;
+const HX_VERSION_CAP_SHARE = 0.05;
 /** Kept free on the disk beyond a new version, so that saving one never fills the disk. */
-export const HX_VERSION_DISK_MARGIN = 256 * 1024 * 1024;
+const HX_VERSION_DISK_MARGIN = 256 * 1024 * 1024;
 
-export type HxVersionState = "saving" | "saved" | "failed";
+type HxVersionState = "saving" | "saved" | "failed";
 export type HxVersionReason = "before-change" | "before-restore";
 
 export interface HxVersionRecord {
@@ -65,12 +64,12 @@ export interface HxVersionEvent {
   seq: number;
   at: number;
   type: HxVersionEventType;
-  path?: string;
-  versionId?: string;
-  sha256?: string;
-  previousSha256?: string;
-  temp?: string;
-  detail?: string;
+  path?: string | undefined;
+  versionId?: string | undefined;
+  sha256?: string | undefined;
+  previousSha256?: string | undefined;
+  temp?: string | undefined;
+  detail?: string | undefined;
 }
 
 export type HxSaveResult =
@@ -124,7 +123,7 @@ export interface HxFileVersionsOptions {
 }
 
 /** Points where a test stops a save. Production passes none. */
-export interface HxVersionFaults extends HxWriteFaults {
+interface HxVersionFaults extends HxWriteFaults {
   /** After the record says "saving" and before the content is copied. */
   afterRecord?: () => Promise<void> | void;
   /** After the content is in place and before the record says "saved". */
@@ -766,5 +765,3 @@ async function readEvents(file: string): Promise<HxVersionEvent[]> {
   }
   return events;
 }
-
-export { HxWriteError };

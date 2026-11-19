@@ -420,7 +420,7 @@ export async function hxZipWrite(
 }
 
 /** One entry of an archive, as its central directory gives it. */
-export interface HxZipStreamEntry {
+interface HxZipStreamEntry {
   name: string;
   path: string | null;
   directory: boolean;

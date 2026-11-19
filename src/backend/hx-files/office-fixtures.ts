@@ -29,7 +29,7 @@ function rels(items: { id: string; type: string; target: string; external?: bool
 
 // ---------------------------------------------------------------------------------------------- xlsx
 
-export type FixtureCell = string | number | boolean | null | { f: string; v?: number | string } | { date: number };
+type FixtureCell = string | number | boolean | null | { f: string; v?: number | string } | { date: number };
 
 export interface FixtureSheet {
   name: string;

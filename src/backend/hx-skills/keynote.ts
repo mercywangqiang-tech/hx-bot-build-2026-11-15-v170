@@ -17,7 +17,7 @@ export const HX_KEYNOTE_ACTIONS: ReadonlySet<string> = new Set(["add", "text", "
 const UNIT = String.fromCharCode(31);
 const RECORD = String.fromCharCode(30);
 
-export interface HxKeynoteSlide {
+interface HxKeynoteSlide {
   title: string;
   body: string;
 }
@@ -126,11 +126,11 @@ const SCRIPT = hxMacOwnScript({
 });
 
 /** Keynote's text with its line breaks (CR, CRLF, line and paragraph separators) as LF. */
-export function hxKeynoteText(text: string): string {
+function hxKeynoteText(text: string): string {
   return text.replace(/\r\n|\r|\u2028|\u2029/g, "\n");
 }
 
-export function hxKeynoteSlides(text: string): HxKeynoteSlide[] {
+function hxKeynoteSlides(text: string): HxKeynoteSlide[] {
   return text
     .split(RECORD)
     .slice(0, -1)
@@ -176,7 +176,7 @@ function parse(action: string, params: unknown): Parsed {
 }
 
 /** The slides as they must be after the action, a null text meaning any. Throws for a slide that is not there. */
-export function hxKeynoteExpected(parsed: Parsed, before: readonly HxKeynoteSlide[]): Wanted[] {
+function hxKeynoteExpected(parsed: Parsed, before: readonly HxKeynoteSlide[]): Wanted[] {
   const now: Wanted[] = before.map((slide) => ({ ...slide }));
   const count = before.length;
   switch (parsed.action) {

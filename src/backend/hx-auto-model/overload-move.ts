@@ -49,7 +49,7 @@ function rank(candidate: Pick<HxCandidate, "profile">): number {
 }
 
 /** Why the provider of this model holds new work now, or null when it does not. */
-export function hxProviderBottleneck(
+function hxProviderBottleneck(
   model: HxModelInfo,
   targetMs: number,
   turnMs: number,

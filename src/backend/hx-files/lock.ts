@@ -20,7 +20,7 @@ export interface HxLockOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-export class HxLockTimeout extends Error {
+class HxLockTimeout extends Error {
   constructor() {
     super("Another HXBot task is changing this file. Try again in a moment.");
     this.name = "HxLockTimeout";

@@ -129,8 +129,6 @@ const BUILTIN_STYLES: Readonly<
   Normal: { name: "Normal", aliases: ["正文", "Normal"] },
 };
 
-const TEXT_ELEMENTS = new Set(["t", "delText"]);
-
 interface ParagraphRef {
   p: HxXmlElement;
   cell: { table: number; row: number; col: number } | null;
@@ -552,7 +550,14 @@ export class HxDocument {
   /** Sets the look of every run of a paragraph. */
   format(
     index: number,
-    look: { bold?: boolean; italic?: boolean; underline?: boolean; size?: number; color?: string; font?: string },
+    look: {
+      bold?: boolean | undefined;
+      italic?: boolean | undefined;
+      underline?: boolean | undefined;
+      size?: number | undefined;
+      color?: string | undefined;
+      font?: string | undefined;
+    },
   ): void {
     const { p } = this.#paragraph(index);
     for (const run of visibleRuns(p)) {
@@ -1045,7 +1050,7 @@ function tabOrBreakAt(run: HxXmlElement, ref: CharRef): HxXmlElement | null {
 }
 
 /** The text of a paragraph as it reads now: insertions in, deletions and field codes out. */
-export function paragraphText(p: HxXmlElement): string {
+function paragraphText(p: HxXmlElement): string {
   return charMap(p)
     .map((item) => item.char)
     .join("");
@@ -1056,5 +1061,3 @@ function hasRevisions(p: HxXmlElement): boolean {
     if (p.descendants(W, name).length > 0) return true;
   return false;
 }
-
-export { TEXT_ELEMENTS };

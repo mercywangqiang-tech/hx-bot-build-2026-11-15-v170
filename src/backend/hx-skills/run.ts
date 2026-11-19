@@ -61,7 +61,7 @@ import { type HxSettingsHost, hxSettingsRun } from "./settings";
 export const HX_SKILL_DEADLINE_MS = 10 * 60 * 1000;
 
 /** The largest file a skill reads into memory. */
-export const HX_SKILL_MAX_BYTES = 512 * 1024 * 1024;
+const HX_SKILL_MAX_BYTES = 512 * 1024 * 1024;
 const MAX_PICTURE_BYTES = 50 * 1024 * 1024;
 
 export type HxSpaceChoice = "clean-old" | "no-version" | "cancel";
@@ -256,7 +256,7 @@ async function readInput(path: string, limit = HX_SKILL_MAX_BYTES): Promise<Uint
 }
 
 /** The diff in a few KB for the model; the card gets the whole. */
-export function hxDiffForModel(diff: HxFileDiff): { [key: string]: HxJson | undefined } {
+function hxDiffForModel(diff: HxFileDiff): { [key: string]: HxJson | undefined } {
   return {
     summary: diff.summary,
     counts: diff.counts,

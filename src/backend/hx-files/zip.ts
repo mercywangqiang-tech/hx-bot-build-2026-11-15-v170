@@ -31,7 +31,7 @@ export interface HxZipLimits {
 }
 
 /** For a document that HXBot holds in memory. */
-export const HX_ZIP_LIMITS: HxZipLimits = {
+const HX_ZIP_LIMITS: HxZipLimits = {
   maxEntries: 20_000,
   maxEntrySize: 512 * 1024 * 1024,
   maxTotalSize: 1024 * 1024 * 1024,

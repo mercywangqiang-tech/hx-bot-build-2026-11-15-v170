@@ -36,7 +36,7 @@ export function hxSkillStopAll(): void {
 let recovered: Promise<unknown> | null = null;
 
 /** The one store of file versions, once the data folder is known. */
-export function hxFileVersionsStore(): HxFileVersions | null {
+function hxFileVersionsStore(): HxFileVersions | null {
   const folder = hxAppDataFolder();
   if (!folder) return null;
   versions ??= new HxFileVersions({ root: () => join(hxAppDataFolder() ?? folder, "file-versions") });
@@ -44,7 +44,7 @@ export function hxFileVersionsStore(): HxFileVersions | null {
 }
 
 /** The store after the leftovers of a crash were put right (once per run of HXBot). */
-export async function hxReadyFileVersions(): Promise<HxFileVersions | null> {
+async function hxReadyFileVersions(): Promise<HxFileVersions | null> {
   const store = hxFileVersionsStore();
   if (!store) return null;
   recovered ??= store.recover().catch(() => undefined);
@@ -88,7 +88,7 @@ export async function hxRestoreFileChangeCall(input: HxRestoreFileChangeInput): 
 }
 
 /** Whether a call needs an app or the system (and so the system lane): settings, legacy files, a live PivotTable. */
-export function hxSkillNeedsApp(args: unknown): boolean {
+function hxSkillNeedsApp(args: unknown): boolean {
   const parsed = HX_SKILL_ARGS.safeParse(args);
   if (!parsed.success) return false;
   const { skill, action, files = [] } = parsed.data;

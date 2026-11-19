@@ -71,7 +71,7 @@ function folderOf(part: string): string {
 }
 
 /** The zip name of a relationship target, relative to the part that holds the relationship. */
-export function resolveTarget(source: string, target: string): string {
+function resolveTarget(source: string, target: string): string {
   const raw = target.startsWith("/") ? target.slice(1) : `${folderOf(source)}${target}`;
   const out: string[] = [];
   for (const segment of decodeURIComponent(raw).split("/")) {
@@ -83,7 +83,7 @@ export function resolveTarget(source: string, target: string): string {
 }
 
 /** The target to write in the relationships of `source` for the part `part`. */
-export function relativeTarget(source: string, part: string): string {
+function relativeTarget(source: string, part: string): string {
   const from = folderOf(source).split("/").filter(Boolean);
   const to = part.split("/");
   let common = 0;
@@ -91,7 +91,7 @@ export function relativeTarget(source: string, part: string): string {
   return [...Array(from.length - common).fill(".."), ...to.slice(common)].join("/");
 }
 
-export function relsPartOf(part: string): string {
+function relsPartOf(part: string): string {
   return `${folderOf(part)}_rels/${part.slice(folderOf(part).length)}.rels`;
 }
 

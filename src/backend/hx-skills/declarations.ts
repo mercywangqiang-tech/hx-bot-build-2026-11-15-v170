@@ -9,7 +9,7 @@ export const HX_SKILL_TOOL = "computer_skill";
 export const HX_SKILL_NAMES = ["sheet", "document", "slides", "pdf", "files", "settings"] as const;
 export type HxSkillName = (typeof HX_SKILL_NAMES)[number];
 
-export interface HxSkillAction {
+interface HxSkillAction {
   /** It changes or makes files (and so keeps a version and returns a diff). */
   changes: boolean;
   /** Doing it twice gives what doing it once gives. */

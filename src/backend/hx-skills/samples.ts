@@ -25,9 +25,9 @@ import type { HxJson, HxSkillArgs } from "./operations";
 import { type HxSkillAnswer, HxSkillRequests, HxSkillRunner } from "./run";
 import type { HxSettingsHost } from "./settings";
 
-export type HxSampleStatus = "一致" | "待核实" | "出错" | "跳过";
+type HxSampleStatus = "一致" | "待核实" | "出错" | "跳过";
 
-export interface HxSampleResult {
+interface HxSampleResult {
   id: string;
   /** One of the 60 (the release gate), or a task of the app route (counted apart). */
   group: "samples" | "apps";
@@ -44,7 +44,7 @@ export interface HxSampleResult {
 }
 
 /** One file for the independent check (skills_crosscheck.py). Paths are relative to the work folder. */
-export interface HxSampleManifestItem {
+interface HxSampleManifestItem {
   id: string;
   kind: "xlsx" | "docx" | "pptx" | "pdf" | "zip" | "tree";
   path: string;
@@ -156,7 +156,7 @@ const partBytes = (zip: HxZip, name: string) => (zip.has(name) ? zip.read(name) 
 // ---------------------------------------------------------------------------------------- fixtures
 
 /** A PNG of one colour, w × h pixels. */
-export function hxSolidPng(width: number, height: number, rgb: readonly [number, number, number]): Uint8Array {
+function hxSolidPng(width: number, height: number, rgb: readonly [number, number, number]): Uint8Array {
   const chunk = (type: string, data: Uint8Array) => {
     const body = new Uint8Array(4 + data.length);
     body.set(new TextEncoder().encode(type), 0);
@@ -194,7 +194,7 @@ export function hxSolidPng(width: number, height: number, rgb: readonly [number,
 }
 
 /** A .zip with stored entries whose names are written as given (also "../x"), for the archive that must be refused. */
-export function hxStoredZip(entries: readonly { name: string; data: Uint8Array }[]): Uint8Array {
+function hxStoredZip(entries: readonly { name: string; data: Uint8Array }[]): Uint8Array {
   const local: Uint8Array[] = [];
   const central: Uint8Array[] = [];
   let offset = 0;
@@ -2057,10 +2057,7 @@ const APPS: Sample[] = [
   },
 ];
 
-export const HX_SKILL_SAMPLES: readonly Sample[] = [...SHEET, ...DOCUMENT, ...SLIDES, ...PDF, ...FILES, ...SETTINGS];
-
-/** The tasks of the app route, apart from the 60: they need the apps of the computer. */
-export const HX_APP_SAMPLES: readonly Sample[] = APPS;
+const HX_SKILL_SAMPLES: readonly Sample[] = [...SHEET, ...DOCUMENT, ...SLIDES, ...PDF, ...FILES, ...SETTINGS];
 
 // ------------------------------------------------------------------------------------------ runner
 

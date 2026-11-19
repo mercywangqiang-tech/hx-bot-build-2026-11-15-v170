@@ -16,7 +16,7 @@ const SHARED_REL = /\/(image|slideLayout|slide|video|audio|media|hdphoto|notesMa
 /** Comments are not copied with a slide. */
 const COMMENT_REL = /comments$|commentAuthors$/i;
 
-export interface HxSlideShape {
+interface HxSlideShape {
   name: string;
   /** The placeholder type (title, body, ctrTitle, subTitle...), "" for a placeholder without one, null for a plain shape. */
   placeholder: string | null;
@@ -523,7 +523,11 @@ export class HxPresentation {
   }
 
   /** Puts a picture on a slide; without a place, it is centred at most 60% of the slide wide and high. */
-  addImage(index: number, image: HxImage, place?: { x?: number; y?: number; cx?: number; cy?: number }): number {
+  addImage(
+    index: number,
+    image: HxImage,
+    place?: { x?: number | undefined; y?: number | undefined; cx?: number | undefined; cy?: number | undefined },
+  ): number {
     const slide = this.#slide(index);
     const root = this.pkg.xml(slide.part).root;
     const tree = root.child(P, "cSld")?.child(P, "spTree");
@@ -676,7 +680,7 @@ function shapesOf(root: HxXmlElement): HxSlideShape[] {
 }
 
 /** The text of a text body: its paragraphs on lines, line breaks inside them as line breaks too. */
-export function textOf(body: HxXmlElement): string {
+function textOf(body: HxXmlElement): string {
   return body
     .childrenNamed(A, "p")
     .map((p) =>

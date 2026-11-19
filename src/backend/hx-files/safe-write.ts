@@ -57,7 +57,7 @@ export async function hxTargetOf(path: string): Promise<string> {
 }
 
 /** The name of the temporary file next to `target`; hidden, and marked as HXBot's. */
-export function hxTempName(target: string, random: string = randomBytes(6).toString("hex")): string {
+function hxTempName(target: string, random: string = randomBytes(6).toString("hex")): string {
   return join(dirname(target), `.${basename(target).slice(0, 80)}.hx-${random}.tmp`);
 }
 
@@ -79,7 +79,7 @@ export async function hxReplaceFile(
   options: {
     expectSha256?: string;
     onTemp?: (temp: string) => Promise<void> | void;
-    faults?: HxWriteFaults;
+    faults?: HxWriteFaults | undefined;
     random?: () => string;
   } = {},
 ): Promise<HxReplaceResult> {
@@ -130,7 +130,11 @@ export async function hxReplaceFile(
 export async function hxCreateFile(
   path: string,
   content: Uint8Array,
-  options: { faults?: HxWriteFaults; random?: () => string; onTemp?: (temp: string) => Promise<void> | void } = {},
+  options: {
+    faults?: HxWriteFaults | undefined;
+    random?: () => string;
+    onTemp?: (temp: string) => Promise<void> | void;
+  } = {},
 ): Promise<HxReplaceResult> {
   const temp = hxTempName(path, options.random?.());
   await options.onTemp?.(temp);

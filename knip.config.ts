@@ -54,6 +54,9 @@ const config: KnipConfig = {
     "apps/mobile/src/features/auth/components/email-code-input.tsx": ["exports"],
     "apps/mobile/src/features/auth/components/sign-in-motion.ts": ["exports"],
     "src/backend/process-confinement.ts": ["exports"],
+    // HXBot (v1.7.4): whole copies of released decoders, which a test reads new messages with.
+    "src/backend/hx-flow/fixtures/released-0.67.9-ipc-agent-tasks.ts": ["exports", "types"],
+    "src/backend/hx-flow/fixtures/released-0.67.9-ipc-queue.ts": ["exports", "types"],
   },
   // Host tools that scripts and tests call. They are not npm packages.
   ignoreBinaries: [

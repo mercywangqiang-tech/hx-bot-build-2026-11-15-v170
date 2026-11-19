@@ -27,7 +27,7 @@ export function u16(value: number): number[] {
 export function u32(value: number): number[] {
   return [value & 0xff, (value >>> 8) & 0xff, (value >>> 16) & 0xff, (value >>> 24) & 0xff];
 }
-export function u64(value: number): number[] {
+function u64(value: number): number[] {
   return [...u32(value), ...u32(Math.floor(value / 0x100000000))];
 }
 

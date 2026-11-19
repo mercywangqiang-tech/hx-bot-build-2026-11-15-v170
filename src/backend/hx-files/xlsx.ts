@@ -165,7 +165,7 @@ const WORKBOOK_ORDER = [
 ];
 
 /** Puts `element` among the children of `parent` where the schema wants it; replaces one of the same name. */
-export function placeChild(parent: HxXmlElement, element: HxXmlElement, order: readonly string[]): void {
+function placeChild(parent: HxXmlElement, element: HxXmlElement, order: readonly string[]): void {
   const existing = parent.elements().find((child) => child.local === element.local && child.ns === parent.ns);
   if (existing) {
     parent.replaceChild(existing, element);
@@ -185,7 +185,7 @@ const BUILTIN_DATE_FORMATS = new Set([
 ]);
 
 /** True when a number format code shows dates or times: d, m, y, h or s outside quotes, brackets and escapes. */
-export function isDateFormat(code: string): boolean {
+function isDateFormat(code: string): boolean {
   const plain = code
     .replace(/"[^"]*"/g, "")
     .replace(/\\./g, "")
@@ -348,10 +348,10 @@ export interface HxFilterColumn {
   /** A column letter, or the text of the header cell. */
   column: string;
   /** Rows whose cell is one of these texts stay visible. */
-  equals?: string[];
+  equals?: string[] | undefined;
   /** A comparison with a number or a text; "contains" keeps cells that contain the value. */
-  op?: "gt" | "ge" | "lt" | "le" | "ne" | "eq" | "contains";
-  value?: string | number;
+  op?: "gt" | "ge" | "lt" | "le" | "ne" | "eq" | "contains" | undefined;
+  value?: string | number | undefined;
 }
 
 export type HxSummaryFunction = "sum" | "count" | "average" | "min" | "max";
@@ -1162,7 +1162,7 @@ export class HxWorkbook {
     sheetName: string | null,
     range: string,
     rows: readonly string[],
-    values: readonly { column: string; fn: HxSummaryFunction; label?: string }[],
+    values: readonly { column: string; fn: HxSummaryFunction; label?: string | undefined }[],
     options: { target?: string; totalLabel?: string } = {},
   ): { sheet: string; range: string; groups: number } {
     const source = this.#sheet(this.sheetName(sheetName));
@@ -1307,10 +1307,10 @@ export class HxWorkbook {
     sheetName: string | null,
     spec: {
       type: "column" | "bar" | "line" | "pie";
-      title?: string;
+      title?: string | undefined;
       categories: string;
-      series: readonly { name?: string; values: string }[];
-      anchor?: string;
+      series: readonly { name?: string | undefined; values: string }[];
+      anchor?: string | undefined;
     },
   ): { chart: string; anchor: string } {
     const sheet = this.#sheet(this.sheetName(sheetName));

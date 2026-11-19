@@ -293,6 +293,12 @@ LEFT_AS_UPSTREAM = {
     "src/backend/process-confinement.ts": ["exports"],
 }
 
+# v1.7.4（CONC-09-A1）：0.67.9 发布版解码器的原样副本，测试用它读带新字段的消息；和上游冻结的团队接口编解码一样整份保留。
+FROZEN_COPIES = {
+    "src/backend/hx-flow/fixtures/released-0.67.9-ipc-agent-tasks.ts": ["exports", "types"],
+    "src/backend/hx-flow/fixtures/released-0.67.9-ipc-queue.ts": ["exports", "types"],
+}
+
 
 def unused_exports(r) -> None:
     knip = "knip.config.ts"
@@ -308,6 +314,8 @@ def unused_exports(r) -> None:
               '    // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.\n'
               '    "charmap.exe",\n')
     entries = "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in LEFT_AS_UPSTREAM.items())
+    entries += "    // HXBot (v1.7.4): whole copies of released decoders, which a test reads new messages with.\n"
+    entries += "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in FROZEN_COPIES.items())
     r.replace(knip, '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n  },\n',
               '    "apps/auth-api/src/lib/plugin-catalog.generated.ts": ["exports", "types"],\n'
               "    // HXBot: the research edition has no marketing site, no sign-in by emailed code and no plush\n"

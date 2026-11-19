@@ -122,7 +122,7 @@ function inside(parent: string, child: string): boolean {
 // ----------------------------------------------------------------------------------------------- find
 
 /** A pattern with * and ? matches the whole name; other text matches a part of it. Case does not count. */
-export function hxNameMatcher(pattern: string): (name: string) => boolean {
+function hxNameMatcher(pattern: string): (name: string) => boolean {
   const normal = pattern.normalize("NFC").toLowerCase();
   if (!/[*?]/.test(normal)) return (name) => name.normalize("NFC").toLowerCase().includes(normal);
   const source = normal
@@ -134,7 +134,7 @@ export function hxNameMatcher(pattern: string): (name: string) => boolean {
 }
 
 /** "2026-11-01" (a day here) or a full ISO time. */
-export function hxParseDay(text: string): Date {
+function hxParseDay(text: string): Date {
   const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.trim());
   const when = day ? new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3])) : new Date(text);
   if (Number.isNaN(when.getTime()) || (day && when.getDate() !== Number(day[3]))) {
@@ -143,7 +143,7 @@ export function hxParseDay(text: string): Date {
   return when;
 }
 
-export interface HxFoundFile {
+interface HxFoundFile {
   path: string;
   type: "file" | "folder";
   size?: number;
@@ -221,7 +221,7 @@ export async function hxFilesFind(folders: readonly string[], params: unknown, h
 // ------------------------------------------------------------------------------------- move and rename
 
 /** A name that every computer can hold: no folder, no character Windows refuses, at most 255 bytes. */
-export function hxCheckName(name: string): string {
+function hxCheckName(name: string): string {
   const normal = name.normalize("NFC");
   if (normal.includes("/") || normal.includes("\\"))
     throw new SkillInputError("The new name must not contain / or \\; give a name, not a path.");

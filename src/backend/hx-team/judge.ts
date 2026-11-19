@@ -33,7 +33,7 @@ export interface HxJudgeView {
   reason: string;
 }
 
-export interface HxJudgeBoardRow {
+interface HxJudgeBoardRow {
   title: string;
   state: string;
   owner: string;

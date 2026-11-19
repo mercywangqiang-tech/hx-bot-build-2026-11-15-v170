@@ -10,10 +10,10 @@ const DELIMITERS = [",", ";", "\t", "|"] as const;
 /** At most this many cells; larger files are refused rather than read slowly into memory. */
 const MAX_CELLS = 5_000_000;
 
-export class HxCsvError extends Error {}
+class HxCsvError extends Error {}
 
 /** The text of a .csv file: by its byte order mark, else UTF-8, else GB18030. */
-export function hxCsvText(bytes: Uint8Array): string {
+function hxCsvText(bytes: Uint8Array): string {
   if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf)
     return new TextDecoder("utf-8").decode(bytes.subarray(3));
   if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(bytes.subarray(2));
@@ -62,7 +62,7 @@ function delimiterOf(text: string): string {
 }
 
 /** The rows of a .csv text (RFC 4180: quotes, doubled quotes, line breaks inside quotes). */
-export function hxCsvRows(text: string, delimiter = delimiterOf(text)): string[][] {
+function hxCsvRows(text: string, delimiter = delimiterOf(text)): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -115,7 +115,7 @@ function cell(raw: string): string | number | null {
 }
 
 /** A sheet name Excel accepts, from a file name. */
-export function hxSheetNameOf(stem: string): string {
+function hxSheetNameOf(stem: string): string {
   const name = stem
     .replace(/[[\]:*?/\\]/gu, " ")
     .replace(/^'+|'+$/gu, "")

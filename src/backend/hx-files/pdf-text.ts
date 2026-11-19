@@ -45,7 +45,7 @@ export async function hxPdfText(bytes: Uint8Array, options: HxPdfTextOptions = {
 export interface HxPdfTextOptions {
   pages?: number[];
   maxChars?: number;
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
   password?: string;
 }
 

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import {
   lstat,
   mkdir,
@@ -130,7 +130,7 @@ print(json.dumps({"bad":z.testzip(),"items":[[i.filename,i.compress_type,hashlib
       report.items.map((item: [string, number, string, number[]]) => [item[0], item]),
     );
     for (const [name, content] of Object.entries(files)) {
-      expect(byName.get(name)?.[2]).toBe(execFileSync("sha256sum", { input: content, encoding: "utf8" }).split(" ")[0]);
+      expect(byName.get(name)?.[2]).toBe(createHash("sha256").update(content).digest("hex"));
     }
     expect(byName.get("项目/pic.png")?.[1]).toBe(0);
     expect(byName.get("项目/a.txt")?.[1]).toBe(8);

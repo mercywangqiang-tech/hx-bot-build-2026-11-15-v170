@@ -24,7 +24,7 @@ export interface HxXmlLimits {
   maxChars: number;
 }
 
-export const HX_XML_LIMITS: HxXmlLimits = { maxDepth: 512, maxNodes: 6_000_000, maxChars: 256 * 1024 * 1024 };
+const HX_XML_LIMITS: HxXmlLimits = { maxDepth: 512, maxNodes: 6_000_000, maxChars: 256 * 1024 * 1024 };
 
 export type HxXmlNode = HxXmlElement | HxXmlText | HxXmlOther;
 
@@ -57,7 +57,7 @@ export class HxXmlText {
 }
 
 /** A comment, a CDATA section, a processing instruction or the XML declaration, written back as it was. */
-export class HxXmlOther {
+class HxXmlOther {
   readonly kind: "comment" | "cdata" | "pi";
   readonly raw: string;
   parent: HxXmlElement | null = null;
@@ -739,7 +739,7 @@ export function stripInvalid(value: string): string {
   return out.join("");
 }
 
-export function decodeText(bytes: Uint8Array): { text: string; encoding: HxXmlEncoding; bom: boolean } {
+function decodeText(bytes: Uint8Array): { text: string; encoding: HxXmlEncoding; bom: boolean } {
   try {
     if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
       return {
