@@ -210,4 +210,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Outro agente está usando a tela.",
   "conversation.hx.hold.userActive": "Você está usando o computador.",
   "conversation.hx.hold.teamQueue": "O trabalho da equipe espera um lugar.",
+  "conversation.hx.fileChange.restore": "Restaurar para antes da alteração",
+  "conversation.hx.fileChange.restoring": "Restaurando…",
+  "conversation.hx.fileChange.restoredNow": "Restaurado.",
+  "conversation.hx.fileChange.unchanged": "O arquivo já estava como antes da alteração.",
+  "conversation.hx.fileChange.failed": "Não foi possível restaurar: {reason}",
+  "conversation.hx.fileChange.show": "Mostrar as alterações ({count})",
+  "conversation.hx.fileChange.hide": "Ocultar as alterações",
+  "conversation.hx.fileChange.remote": "Você pode restaurar no computador que executa este agente.",
 } as const satisfies PartialTranslation<typeof source>;

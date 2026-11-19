@@ -952,4 +952,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Продолжать отложенные шаги самостоятельно",
   "settings.hxComputer.autoResume.description":
     "Пока вы пользуетесь компьютером, агент откладывает шаг, которому нужны клавиатура или мышь. Если включено, шаг продолжится сам, когда вы остановитесь на 5 с (60 с для регулярных задач). Если выключено, только когда вы ответите «сейчас».",
+  "settings.hxComputer.versions.title": "Версии до изменений",
+  "settings.hxComputer.versions.description":
+    "Прежде чем навык приложения изменит файл, HXBot сохраняет файл в прежнем виде, чтобы карточка в чате могла его восстановить. Когда место заканчивается, HXBot спрашивает вас, прежде чем удалять старые версии.",
+  "settings.hxComputer.versions.usage": "Версий: {count}, занято {used}",
+  "settings.hxComputer.versions.cap": "Место",
+  "settings.hxComputer.versions.default": "{size} (по умолчанию)",
+  "settings.hxComputer.versions.git":
+    "Агент-программист, который меняет файлы своими командами, не хранит здесь версии. В папке Git их может восстановить Git.",
 } as const satisfies PartialTranslation<typeof source>;

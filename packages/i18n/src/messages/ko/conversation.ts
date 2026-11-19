@@ -209,4 +209,12 @@ export const messages = {
   "conversation.hx.hold.screen": "다른 에이전트가 화면을 사용하고 있습니다.",
   "conversation.hx.hold.userActive": "컴퓨터를 사용하고 있습니다.",
   "conversation.hx.hold.teamQueue": "팀의 작업이 자리를 기다리고 있습니다.",
+  "conversation.hx.fileChange.restore": "변경 전으로 되돌리기",
+  "conversation.hx.fileChange.restoring": "되돌리는 중…",
+  "conversation.hx.fileChange.restoredNow": "되돌렸습니다.",
+  "conversation.hx.fileChange.unchanged": "파일이 이미 변경 전 상태였습니다.",
+  "conversation.hx.fileChange.failed": "되돌리지 못했습니다: {reason}",
+  "conversation.hx.fileChange.show": "변경 내용 보기({count})",
+  "conversation.hx.fileChange.hide": "변경 내용 숨기기",
+  "conversation.hx.fileChange.remote": "이 에이전트를 실행하는 컴퓨터에서 되돌릴 수 있습니다.",
 } as const satisfies PartialTranslation<typeof source>;

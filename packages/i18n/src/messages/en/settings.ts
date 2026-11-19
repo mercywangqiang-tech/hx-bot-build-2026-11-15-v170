@@ -975,4 +975,12 @@ export const messages = defineMessages("settings", {
   "settings.hxComputer.autoResume.title": "Continue parked steps by themselves",
   "settings.hxComputer.autoResume.description":
     "While you use the computer, an agent parks a step that needs the keyboard or the mouse. With this on, the step goes on by itself after you stop for 5 seconds (60 for routines). With it off, only when you reply “now”.",
+  "settings.hxComputer.versions.title": "Versions kept before changes",
+  "settings.hxComputer.versions.description":
+    "Before an app skill changes a file, HXBot keeps the file as it was, so the card in the chat can restore it. When this space is full, HXBot asks you before it removes old versions.",
+  "settings.hxComputer.versions.usage": "{used} used by {count} versions",
+  "settings.hxComputer.versions.cap": "Space",
+  "settings.hxComputer.versions.default": "{size} (default)",
+  "settings.hxComputer.versions.git":
+    "A coding agent that changes files with its own commands keeps no versions here. In a Git folder, Git can restore them.",
 });

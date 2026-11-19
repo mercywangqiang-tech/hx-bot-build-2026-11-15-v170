@@ -893,4 +893,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "보류한 단계를 자동으로 이어서 하기",
   "settings.hxComputer.autoResume.description":
     "컴퓨터를 사용하는 동안 에이전트는 키보드나 마우스가 필요한 단계를 보류합니다. 켜 두면 5초(루틴은 60초) 동안 손을 멈춘 뒤 자동으로 이어서 합니다. 끄면 “지금”이라고 답할 때만 합니다.",
+  "settings.hxComputer.versions.title": "변경 전에 보관하는 버전",
+  "settings.hxComputer.versions.description":
+    "앱 스킬이 파일을 바꾸기 전에 HXBot이 원래 파일을 보관해 두므로 채팅의 카드에서 되돌릴 수 있습니다. 이 공간이 가득 차면 오래된 버전을 지우기 전에 물어봅니다.",
+  "settings.hxComputer.versions.usage": "버전 {count}개가 {used} 사용",
+  "settings.hxComputer.versions.cap": "공간",
+  "settings.hxComputer.versions.default": "{size}(기본값)",
+  "settings.hxComputer.versions.git":
+    "자체 명령으로 파일을 바꾸는 코딩 에이전트는 여기에 버전을 남기지 않습니다. Git 폴더에서는 Git으로 되돌릴 수 있습니다.",
 } as const satisfies PartialTranslation<typeof source>;

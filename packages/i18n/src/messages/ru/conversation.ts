@@ -213,4 +213,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Экраном пользуется другой агент.",
   "conversation.hx.hold.userActive": "Вы пользуетесь компьютером.",
   "conversation.hx.hold.teamQueue": "Работа команды ждёт места.",
+  "conversation.hx.fileChange.restore": "Вернуть как было до изменения",
+  "conversation.hx.fileChange.restoring": "Восстановление…",
+  "conversation.hx.fileChange.restoredNow": "Восстановлено.",
+  "conversation.hx.fileChange.unchanged": "Файл уже был таким, как до изменения.",
+  "conversation.hx.fileChange.failed": "Не удалось восстановить: {reason}",
+  "conversation.hx.fileChange.show": "Показать изменения ({count})",
+  "conversation.hx.fileChange.hide": "Скрыть изменения",
+  "conversation.hx.fileChange.remote": "Восстановить можно на компьютере, где работает этот агент.",
 } as const satisfies PartialTranslation<typeof source>;

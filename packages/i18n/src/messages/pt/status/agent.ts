@@ -186,4 +186,27 @@ export const messages = {
     "Faz a alteração agora. Você não poderá restaurar este arquivo para como estava antes.",
   "status.agent.hxSkill.space.cancel": "Cancelar a alteração",
   "status.agent.hxSkill.space.cancelDetail": "O arquivo fica como está, e todas as versões ficam.",
+  "status.agent.hxSkill.change.made": "{file} criado",
+  "status.agent.hxSkill.change.same": "{file} salvo; o conteúdo não mudou",
+  "status.agent.hxSkill.change.fileOnly": "{file} alterado (este tipo de arquivo não mostra detalhes)",
+  "status.agent.hxSkill.change.counts":
+    "{file} alterado: {changed} alterados, {added} adicionados, {removed} removidos",
+  "status.agent.hxSkill.change.restored": "{file} restaurado para como estava antes da alteração",
+  "status.agent.hxSkill.change.checked": "O HXBot leu o arquivo de novo, e ele está como esperado.",
+  "status.agent.hxSkill.change.unchecked": "O HXBot não conseguiu ler o arquivo de novo para conferi-lo.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "O HXBot leu o arquivo de novo, e ele está como esperado. Nenhuma versão foi guardada, então esta alteração não pode ser desfeita.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "O HXBot não conseguiu ler o arquivo de novo para conferi-lo. Nenhuma versão foi guardada, então esta alteração não pode ser desfeita.",
+  "status.agent.hxSkill.change.restoredNote":
+    "O arquivo está como antes da alteração. O arquivo como estava antes da restauração também foi guardado como versão.",
+  "status.agent.hxSkill.change.more": "… mais {count} alterações",
+  "status.agent.hxSkill.change.cut": "… a lista para aqui; os números do título estão completos",
+  "status.agent.hxSkill.restore.starting": "O HXBot ainda está iniciando. Tente de novo em instantes.",
+  "status.agent.hxSkill.restore.notInChat": "Este cartão não está mais nesta conversa.",
+  "status.agent.hxSkill.restore.noVersion":
+    "Nenhuma versão foi guardada antes desta alteração, então não é possível restaurar.",
+  "status.agent.hxSkill.restore.notKept": "A versão de antes desta alteração não está mais guardada.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Não há espaço para guardar o arquivo como está agora antes da restauração. Libere espaço no disco ou aumente o espaço em Configurações → Uso do computador.",
 } as const satisfies PartialTranslation<typeof source>;

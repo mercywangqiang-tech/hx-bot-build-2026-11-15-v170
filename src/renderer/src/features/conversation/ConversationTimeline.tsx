@@ -65,6 +65,7 @@ import { chatVisualPageUrl } from "./chat-visual-url";
 import { isIncomingAgentMessage } from "./conversation-read-state";
 import { conversationRuntime } from "./conversation-runtime";
 import { useConversationViewScope } from "./conversation-scope";
+import { HxFileChangeRow, isHxFileChangeRow } from "./HxFileChangeRow";
 import { agentSkillsMode } from "./installed-skills-source";
 import { MarketplaceSuggestionChatCard, marketplaceSuggestionKnown } from "./MarketplaceSuggestionChatCard";
 import { McpSignInChatCard } from "./McpSignInChatCard";
@@ -1061,6 +1062,55 @@ export function ConversationTimeline() {
                               />
                             </div>
                           </Show>
+                        </article>
+                      </ChatRowBoundary>
+                    </div>
+                  );
+                }
+                // HXBot (v1.7.4, #54): the card of a file that an app skill changed, with its changes and
+                // “恢复到修改前”. Only this computer restores the files of its own agents.
+                if (untrack(() => isHxFileChangeRow(initialMessage))) {
+                  return (
+                    <div
+                      data-index={virtualRow.index}
+                      ref={messageVirtualizer.measureElement}
+                      class="virtual-chat-row"
+                      style={{
+                        transform: messageVirtualizer.isVirtualized()
+                          ? `translateY(${virtualRow.start - messageVirtualizer.scrollMargin()}px)`
+                          : "none",
+                      }}
+                    >
+                      <Show when={message()?.id === compactionBefore()}>
+                        <CompactionMarker />
+                      </Show>
+                      <Show when={dayMarker()}>
+                        {(label) => (
+                          <div class="time-marker">
+                            <span>{label()}</span>
+                          </div>
+                        )}
+                      </Show>
+                      <Show when={message()?.id === unreadBoundaryMessageId()}>
+                        <UnreadMessagesDivider
+                          animateIn={unreadDividerArrives}
+                          elementRef={(element) => {
+                            setUnreadMessagesDividerElement(element);
+                            scheduleUnreadDividerVisibilityUpdate();
+                          }}
+                        />
+                      </Show>
+                      <ChatRowBoundary>
+                        <article
+                          data-chat-search-message={message()?.id}
+                          class={{ "message-entry-animated": animateEntrance }}
+                        >
+                          <HxFileChangeRow
+                            message={message() ?? initialMessage}
+                            agentId={props.agent?.id}
+                            threadId={props.agent?.threadId}
+                            local={!props.runtime}
+                          />
                         </article>
                       </ChatRowBoundary>
                     </div>

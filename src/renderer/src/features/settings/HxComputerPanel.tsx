@@ -1,4 +1,5 @@
 import type { HxComputerStatus, HxSelfTestReport } from "@hxbot/contracts/hx-computer";
+import { HX_FILE_VERSION_CAPS, type HxFileVersionsView, hxByteSize } from "@hxbot/contracts/hx-file-change";
 import {
   Button,
   Item,
@@ -7,6 +8,11 @@ import {
   ItemDescription,
   ItemGroup,
   ItemTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   SettingsSection,
   SwitchField,
   Text,
@@ -25,6 +31,10 @@ export interface HxComputerCalls {
   selfTest(): Promise<HxSelfTestReport>;
   /** HXBot (v1.7.3): “停放后自动续做”. */
   setAutoResume(on: boolean): Promise<HxComputerStatus>;
+  /** HXBot (v1.7.4): the space for the versions kept before changes, and what they take. */
+  versions(): Promise<HxFileVersionsView>;
+  /** HXBot (v1.7.4): sets that space; null goes back to the default. */
+  setVersionsCap(bytes: number | null): Promise<HxFileVersionsView>;
 }
 
 function portCalls(): HxComputerCalls {
@@ -34,7 +44,14 @@ function portCalls(): HxComputerCalls {
     rebuild: () => auth.hxComputerRebuild(),
     selfTest: () => auth.hxComputerSelfTest(),
     setAutoResume: (on) => auth.hxComputerSetAutoResume(on),
+    versions: () => auth.hxFileVersionsView(),
+    setVersionsCap: (bytes) => auth.hxFileVersionsSetCap(bytes),
   };
+}
+
+/** The spaces to choose from: the default of this computer, then the fixed ones, smallest first. */
+export function hxVersionCapOptions(view: HxFileVersionsView): number[] {
+  return [...new Set([view.defaultCapBytes, ...HX_FILE_VERSION_CAPS, view.capBytes])].sort((a, b) => a - b);
 }
 
 /**
@@ -43,7 +60,12 @@ function portCalls(): HxComputerCalls {
  * 还有几项设置没有在这台电脑上核对过时说明一句：自检通过之后，助手才直接修改它们。
  * v1.7.3：开关“停放后自动续做”（默认开）：你在用电脑时助手停放的步骤，你停手后自动接着做。
  */
-export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCalls }) {
+export function HxComputerPanel(props: {
+  visible: boolean;
+  calls?: HxComputerCalls;
+  /** Where the list of a select opens: the settings dialog. */
+  selectMount?: HTMLElement | undefined;
+}) {
   const i18n = useI18n();
   const t = i18n.t;
   const calls = () => props.calls ?? portCalls();
@@ -51,6 +73,7 @@ export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCal
   const [report, setReport] = createSignal<HxSelfTestReport | null>(null);
   const [busy, setBusy] = createSignal<"rebuild" | "self-test" | null>(null);
   const [failed, setFailed] = createSignal(false);
+  const [versions, setVersions] = createSignal<HxFileVersionsView | null>(null);
 
   async function load() {
     try {
@@ -59,7 +82,30 @@ export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCal
     } catch {
       setFailed(true);
     }
+    try {
+      setVersions(await calls().versions());
+    } catch {
+      setVersions(null);
+    }
   }
+
+  /** v1.7.4: a smaller space deletes nothing; the next change asks when it is full. */
+  async function setVersionsCap(bytes: number) {
+    const current = versions();
+    if (!current || bytes === current.capBytes) return;
+    try {
+      setVersions(await calls().setVersionsCap(bytes === current.defaultCapBytes ? null : bytes));
+      setFailed(false);
+    } catch {
+      setFailed(true);
+    }
+  }
+  const capLabel = (bytes: number | undefined) => {
+    const view = versions();
+    if (bytes === undefined || !view) return "";
+    const size = hxByteSize(bytes);
+    return bytes === view.defaultCapBytes ? t("settings.hxComputer.versions.default", { size }) : size;
+  };
 
   createEffect(
     () => props.visible,
@@ -215,6 +261,44 @@ export function HxComputerPanel(props: { visible: boolean; calls?: HxComputerCal
           label={t("settings.hxComputer.autoResume.title")}
           description={t("settings.hxComputer.autoResume.description")}
         />
+        <Item data-settings-row="settings.hxComputer.versions.title">
+          <ItemContent>
+            <ItemTitle>{t("settings.hxComputer.versions.title")}</ItemTitle>
+            <ItemDescription>{t("settings.hxComputer.versions.description")}</ItemDescription>
+            <Show when={versions()}>
+              {(view) => (
+                <ItemDescription data-hx-computer="versions">
+                  {t("settings.hxComputer.versions.usage", {
+                    used: hxByteSize(view().usedBytes),
+                    count: view().versions,
+                  })}
+                </ItemDescription>
+              )}
+            </Show>
+            <ItemDescription>{t("settings.hxComputer.versions.git")}</ItemDescription>
+          </ItemContent>
+          <Show when={versions()}>
+            {(view) => (
+              <ItemActions>
+                <Select<number>
+                  class="settings-modal-select"
+                  options={hxVersionCapOptions(view())}
+                  value={view().capBytes}
+                  onChange={(value) => value !== null && void setVersionsCap(value)}
+                  placement="bottom-end"
+                  itemComponent={(selectProps) => (
+                    <SelectItem item={selectProps.item}>{capLabel(selectProps.item.rawValue)}</SelectItem>
+                  )}
+                >
+                  <SelectTrigger size="sm" aria-label={t("settings.hxComputer.versions.cap")}>
+                    <SelectValue<number>>{(state) => capLabel(state.selectedOption())}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent mount={props.selectMount} />
+                </Select>
+              </ItemActions>
+            )}
+          </Show>
+        </Item>
       </ItemGroup>
     </SettingsSection>
   );

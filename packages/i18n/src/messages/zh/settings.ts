@@ -879,4 +879,11 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "停放后自动续做",
   "settings.hxComputer.autoResume.description":
     "你在用电脑时，助手把要用键盘、鼠标的那一步停放下来。开着时，你停手 5 秒（定时任务 60 秒）后自动接着做；关掉后，只在你回复“现在做”时才做。",
+  "settings.hxComputer.versions.title": "修改前保留的版本",
+  "settings.hxComputer.versions.description":
+    "应用技能改文件前，HXBot 会留一份修改前的文件，对话里的卡片可以一键恢复。空间满了时，先问你再删旧版本。",
+  "settings.hxComputer.versions.usage": "已用 {used}，共 {count} 个版本",
+  "settings.hxComputer.versions.cap": "空间上限",
+  "settings.hxComputer.versions.default": "{size}（默认）",
+  "settings.hxComputer.versions.git": "编程智能体用自己的命令改的文件不在这里留版本；在 Git 仓库里可以用 Git 恢复。",
 } as const satisfies PartialTranslation<typeof source>;

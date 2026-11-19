@@ -217,4 +217,25 @@ export const messages = {
   "status.agent.hxSkill.space.noVersionDetail": "يجري التغيير الآن. لن تتمكن من إعادة هذا الملف إلى ما قبله.",
   "status.agent.hxSkill.space.cancel": "إلغاء التغيير",
   "status.agent.hxSkill.space.cancelDetail": "يبقى الملف كما هو، وتبقى كل النسخ.",
+  "status.agent.hxSkill.change.made": "تم إنشاء {file}",
+  "status.agent.hxSkill.change.same": "تم حفظ {file}؛ لم يتغير محتواه",
+  "status.agent.hxSkill.change.fileOnly": "تم تغيير {file} (هذا النوع من الملفات لا يعرض التفاصيل)",
+  "status.agent.hxSkill.change.counts": "تم تغيير {file}: تغيير {changed}، إضافة {added}، حذف {removed}",
+  "status.agent.hxSkill.change.restored": "تمت إعادة {file} إلى ما قبل التغيير",
+  "status.agent.hxSkill.change.checked": "قرأ HXBot الملف مرة أخرى، وهو كما هو متوقع.",
+  "status.agent.hxSkill.change.unchecked": "لم يتمكن HXBot من قراءة الملف مرة أخرى للتحقق منه.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "قرأ HXBot الملف مرة أخرى، وهو كما هو متوقع. لم يُحتفظ بنسخة، لذلك لا يمكن التراجع عن هذا التغيير.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "لم يتمكن HXBot من قراءة الملف مرة أخرى للتحقق منه. لم يُحتفظ بنسخة، لذلك لا يمكن التراجع عن هذا التغيير.",
+  "status.agent.hxSkill.change.restoredNote":
+    "الملف كما كان قبل التغيير. ونسخة الملف كما كان قبل الاستعادة محفوظة أيضًا.",
+  "status.agent.hxSkill.change.more": "… {count} تغييرات أخرى",
+  "status.agent.hxSkill.change.cut": "… تنتهي القائمة هنا؛ الأرقام في العنوان كاملة",
+  "status.agent.hxSkill.restore.starting": "لا يزال HXBot قيد البدء. حاول مرة أخرى بعد قليل.",
+  "status.agent.hxSkill.restore.notInChat": "لم تعد هذه البطاقة في هذه الدردشة.",
+  "status.agent.hxSkill.restore.noVersion": "لم يُحتفظ بنسخة قبل هذا التغيير، لذلك لا يمكن الاستعادة.",
+  "status.agent.hxSkill.restore.notKept": "لم تعد النسخة السابقة لهذا التغيير محفوظة.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "لا توجد مساحة للاحتفاظ بالملف كما هو الآن قبل الاستعادة. حرّر مساحة على القرص، أو كبّر المساحة في الإعدادات ← التحكم في الحاسوب.",
 } as const satisfies PartialTranslation<typeof source>;

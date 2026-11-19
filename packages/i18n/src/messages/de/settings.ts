@@ -942,4 +942,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Geparkte Schritte von selbst fortsetzen",
   "settings.hxComputer.autoResume.description":
     "Während du den Computer benutzt, parkt ein Agent einen Schritt, der Tastatur oder Maus braucht. Ist dies an, geht der Schritt von selbst weiter, wenn du 5 Sekunden aufhörst (60 bei Routinen). Ist es aus, nur wenn du „jetzt“ antwortest.",
+  "settings.hxComputer.versions.title": "Versionen vor Änderungen",
+  "settings.hxComputer.versions.description":
+    "Bevor ein App-Skill eine Datei ändert, behält HXBot die Datei, wie sie war, damit die Karte im Chat sie zurücksetzen kann. Ist dieser Platz voll, fragt HXBot dich, bevor alte Versionen entfernt werden.",
+  "settings.hxComputer.versions.usage": "{used} belegt von {count} Versionen",
+  "settings.hxComputer.versions.cap": "Platz",
+  "settings.hxComputer.versions.default": "{size} (Standard)",
+  "settings.hxComputer.versions.git":
+    "Ein Coding-Agent, der Dateien mit eigenen Befehlen ändert, behält hier keine Versionen. In einem Git-Ordner kann Git sie zurücksetzen.",
 } as const satisfies PartialTranslation<typeof source>;

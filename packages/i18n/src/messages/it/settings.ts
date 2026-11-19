@@ -916,4 +916,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Continua da soli i passaggi in sospeso",
   "settings.hxComputer.autoResume.description":
     "Mentre usi il computer, un agente mette in sospeso il passaggio che richiede tastiera o mouse. Se è attivo, il passaggio continua da solo dopo che ti fermi per 5 secondi (60 per le routine). Se è disattivato, solo quando rispondi «ora».",
+  "settings.hxComputer.versions.title": "Versioni tenute prima delle modifiche",
+  "settings.hxComputer.versions.description":
+    "Prima che una competenza app modifichi un file, HXBot tiene il file com'era, così la scheda nella chat può ripristinarlo. Quando questo spazio è pieno, HXBot ti chiede prima di rimuovere versioni vecchie.",
+  "settings.hxComputer.versions.usage": "{used} usati da {count} versioni",
+  "settings.hxComputer.versions.cap": "Spazio",
+  "settings.hxComputer.versions.default": "{size} (predefinito)",
+  "settings.hxComputer.versions.git":
+    "Un agente di programmazione che modifica file con i propri comandi non tiene versioni qui. In una cartella Git, Git può ripristinarli.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -208,4 +208,12 @@ export const messages = defineMessages("conversation", {
   "conversation.hx.hold.screen": "Another agent uses the screen.",
   "conversation.hx.hold.userActive": "You are using the computer.",
   "conversation.hx.hold.teamQueue": "The team's work waits for a place.",
+  "conversation.hx.fileChange.restore": "Restore to before the change",
+  "conversation.hx.fileChange.restoring": "Restoring…",
+  "conversation.hx.fileChange.restoredNow": "Restored.",
+  "conversation.hx.fileChange.unchanged": "The file was already as it was before the change.",
+  "conversation.hx.fileChange.failed": "Could not restore: {reason}",
+  "conversation.hx.fileChange.show": "Show the changes ({count})",
+  "conversation.hx.fileChange.hide": "Hide the changes",
+  "conversation.hx.fileChange.remote": "You can restore it on the computer that runs this agent.",
 });

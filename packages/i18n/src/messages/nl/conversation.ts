@@ -211,4 +211,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Een andere agent gebruikt het scherm.",
   "conversation.hx.hold.userActive": "Je gebruikt de computer.",
   "conversation.hx.hold.teamQueue": "Het werk van het team wacht op een plaats.",
+  "conversation.hx.fileChange.restore": "Terugzetten naar voor de wijziging",
+  "conversation.hx.fileChange.restoring": "Terugzetten…",
+  "conversation.hx.fileChange.restoredNow": "Teruggezet.",
+  "conversation.hx.fileChange.unchanged": "Het bestand was al zoals voor de wijziging.",
+  "conversation.hx.fileChange.failed": "Terugzetten lukte niet: {reason}",
+  "conversation.hx.fileChange.show": "Wijzigingen tonen ({count})",
+  "conversation.hx.fileChange.hide": "Wijzigingen verbergen",
+  "conversation.hx.fileChange.remote": "Je kunt het terugzetten op de computer waarop deze agent draait.",
 } as const satisfies PartialTranslation<typeof source>;

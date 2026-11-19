@@ -106,6 +106,15 @@ const SELF_TEST: HxSelfTestReport = {
   file: "~/Downloads/HXBot-self-test-2026-11-14.json",
 };
 
+/** v1.7.4: the space for the versions kept before an app skill changes a file. */
+const FILE_VERSIONS = {
+  capBytes: 2 * 1024 ** 3,
+  defaultCapBytes: 2 * 1024 ** 3,
+  custom: false,
+  usedBytes: 380 * 1024 ** 2,
+  versions: 42,
+};
+
 /** Settings › Computer Use: the catalog of this computer and the self-test. */
 export const ComputerUse: Story = {
   render: () => (
@@ -117,6 +126,8 @@ export const ComputerUse: Story = {
           rebuild: async () => COMPUTER_STATUS,
           selfTest: async () => SELF_TEST,
           setAutoResume: async (on) => ({ ...COMPUTER_STATUS, autoResume: on }),
+          versions: async () => FILE_VERSIONS,
+          setVersionsCap: async (bytes) => ({ ...FILE_VERSIONS, capBytes: bytes ?? FILE_VERSIONS.defaultCapBytes }),
         }}
       />
     </main>

@@ -189,4 +189,25 @@ export const messages = {
     "Вносит изменение сейчас. Вернуть этот файл к прежнему состоянию будет нельзя.",
   "status.agent.hxSkill.space.cancel": "Отменить изменение",
   "status.agent.hxSkill.space.cancelDetail": "Файл остаётся как есть, и все версии сохраняются.",
+  "status.agent.hxSkill.change.made": "Создан {file}",
+  "status.agent.hxSkill.change.same": "{file} сохранён; содержимое не изменилось",
+  "status.agent.hxSkill.change.fileOnly": "{file} изменён (для такого файла подробности недоступны)",
+  "status.agent.hxSkill.change.counts": "{file} изменён: изменено {changed}, добавлено {added}, удалено {removed}",
+  "status.agent.hxSkill.change.restored": "{file} возвращён к состоянию до изменения",
+  "status.agent.hxSkill.change.checked": "HXBot перечитал файл, и он такой, как ожидалось.",
+  "status.agent.hxSkill.change.unchecked": "HXBot не смог перечитать файл, чтобы проверить его.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot перечитал файл, и он такой, как ожидалось. Версия не сохранена, поэтому это изменение нельзя отменить.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot не смог перечитать файл, чтобы проверить его. Версия не сохранена, поэтому это изменение нельзя отменить.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Файл такой же, как до изменения. Файл в состоянии до восстановления тоже сохранён как версия.",
+  "status.agent.hxSkill.change.more": "… ещё изменений: {count}",
+  "status.agent.hxSkill.change.cut": "… список обрывается здесь; числа в заголовке полные",
+  "status.agent.hxSkill.restore.starting": "HXBot ещё запускается. Повторите попытку через минуту.",
+  "status.agent.hxSkill.restore.notInChat": "Этой карточки больше нет в этом чате.",
+  "status.agent.hxSkill.restore.noVersion": "Перед этим изменением версия не сохранялась, поэтому восстановить нельзя.",
+  "status.agent.hxSkill.restore.notKept": "Версия до этого изменения больше не хранится.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Нет места, чтобы перед восстановлением сохранить текущий файл. Освободите место на диске или увеличьте место в разделе Настройки → Управление ПК.",
 } as const satisfies PartialTranslation<typeof source>;

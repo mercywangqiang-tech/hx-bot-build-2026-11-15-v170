@@ -206,4 +206,12 @@ export const messages = {
   "conversation.hx.hold.screen": "另一个助手正在用屏幕。",
   "conversation.hx.hold.userActive": "你正在用电脑。",
   "conversation.hx.hold.teamQueue": "团队的工作在排队。",
+  "conversation.hx.fileChange.restore": "恢复到修改前",
+  "conversation.hx.fileChange.restoring": "正在恢复…",
+  "conversation.hx.fileChange.restoredNow": "已恢复。",
+  "conversation.hx.fileChange.unchanged": "文件本来就是修改前的样子。",
+  "conversation.hx.fileChange.failed": "没能恢复：{reason}",
+  "conversation.hx.fileChange.show": "展开改动（{count}）",
+  "conversation.hx.fileChange.hide": "收起改动",
+  "conversation.hx.fileChange.remote": "在运行这个助手的电脑上可以恢复。",
 } as const satisfies PartialTranslation<typeof source>;

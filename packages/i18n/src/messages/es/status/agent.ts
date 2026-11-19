@@ -187,4 +187,26 @@ export const messages = {
     "Hace el cambio ahora. No podrás devolver este archivo a como estaba antes.",
   "status.agent.hxSkill.space.cancel": "Cancelar el cambio",
   "status.agent.hxSkill.space.cancelDetail": "El archivo queda como está y se conservan todas las versiones.",
+  "status.agent.hxSkill.change.made": "Se creó {file}",
+  "status.agent.hxSkill.change.same": "Se guardó {file}; su contenido no cambió",
+  "status.agent.hxSkill.change.fileOnly": "Se cambió {file} (este tipo de archivo no muestra detalles)",
+  "status.agent.hxSkill.change.counts": "Se cambió {file}: {changed} cambiados, {added} añadidos, {removed} quitados",
+  "status.agent.hxSkill.change.restored": "Se devolvió {file} a como estaba antes del cambio",
+  "status.agent.hxSkill.change.checked": "HXBot volvió a leer el archivo y está como se esperaba.",
+  "status.agent.hxSkill.change.unchecked": "HXBot no pudo volver a leer el archivo para comprobarlo.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot volvió a leer el archivo y está como se esperaba. No se guardó ninguna versión, así que este cambio no se puede deshacer.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot no pudo volver a leer el archivo para comprobarlo. No se guardó ninguna versión, así que este cambio no se puede deshacer.",
+  "status.agent.hxSkill.change.restoredNote":
+    "El archivo está como antes del cambio. El archivo tal como estaba antes de restaurarlo también se guarda como versión.",
+  "status.agent.hxSkill.change.more": "… {count} cambios más",
+  "status.agent.hxSkill.change.cut": "… la lista termina aquí; los números del título están completos",
+  "status.agent.hxSkill.restore.starting": "HXBot aún se está iniciando. Vuelve a intentarlo en un momento.",
+  "status.agent.hxSkill.restore.notInChat": "Esta tarjeta ya no está en este chat.",
+  "status.agent.hxSkill.restore.noVersion":
+    "No se guardó ninguna versión antes de este cambio, así que no se puede restaurar.",
+  "status.agent.hxSkill.restore.notKept": "La versión de antes de este cambio ya no se conserva.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "No hay espacio para guardar el archivo tal como está ahora antes de restaurarlo. Libera espacio en el disco o amplía el espacio en Ajustes → Uso del equipo.",
 } as const satisfies PartialTranslation<typeof source>;

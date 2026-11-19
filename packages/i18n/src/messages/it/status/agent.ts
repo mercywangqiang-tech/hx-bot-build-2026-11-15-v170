@@ -190,4 +190,26 @@ export const messages = {
   "status.agent.hxSkill.space.noVersionDetail": "Fa la modifica ora. Non potrai riportare questo file a com'era prima.",
   "status.agent.hxSkill.space.cancel": "Annulla la modifica",
   "status.agent.hxSkill.space.cancelDetail": "Il file resta com'è, e restano tutte le versioni.",
+  "status.agent.hxSkill.change.made": "Creato {file}",
+  "status.agent.hxSkill.change.same": "Salvato {file}; il contenuto non è cambiato",
+  "status.agent.hxSkill.change.fileOnly": "Modificato {file} (questo tipo di file non mostra dettagli)",
+  "status.agent.hxSkill.change.counts": "Modificato {file}: {changed} modificati, {added} aggiunti, {removed} rimossi",
+  "status.agent.hxSkill.change.restored": "{file} riportato a com'era prima della modifica",
+  "status.agent.hxSkill.change.checked": "HXBot ha riletto il file, ed è come previsto.",
+  "status.agent.hxSkill.change.unchecked": "HXBot non è riuscito a rileggere il file per controllarlo.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot ha riletto il file, ed è come previsto. Non è stata tenuta nessuna versione, quindi questa modifica non si può annullare.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot non è riuscito a rileggere il file per controllarlo. Non è stata tenuta nessuna versione, quindi questa modifica non si può annullare.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Il file è com'era prima della modifica. Anche il file com'era prima del ripristino è tenuto come versione.",
+  "status.agent.hxSkill.change.more": "… altre {count} modifiche",
+  "status.agent.hxSkill.change.cut": "… l'elenco finisce qui; i numeri nel titolo sono completi",
+  "status.agent.hxSkill.restore.starting": "HXBot si sta ancora avviando. Riprova tra un momento.",
+  "status.agent.hxSkill.restore.notInChat": "Questa scheda non è più in questa chat.",
+  "status.agent.hxSkill.restore.noVersion":
+    "Prima di questa modifica non è stata tenuta nessuna versione, quindi non si può ripristinare.",
+  "status.agent.hxSkill.restore.notKept": "La versione di prima di questa modifica non è più tenuta.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Non c'è spazio per tenere il file com'è ora prima del ripristino. Libera spazio sul disco o aumenta lo spazio in Impostazioni → Controllo PC.",
 } as const satisfies PartialTranslation<typeof source>;

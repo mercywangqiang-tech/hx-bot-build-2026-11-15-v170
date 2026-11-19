@@ -1,7 +1,9 @@
 import { decodeHxAutoModelUpdate } from "@hxbot/contracts/hx-auto-model";
+import { decodeHxFileVersionCap, decodeHxRestoreFileChangeInput } from "@hxbot/contracts/hx-file-change";
 import { hxAccessStore } from "../../backend/hx-access/rules";
 import { hxAutoRouter } from "../../backend/hx-auto-model/router";
 import { hxComputer } from "../../backend/hx-computer/computer";
+import { hxFileVersionsSetCap, hxFileVersionsView, hxRestoreFileChangeCall } from "../../backend/hx-skills/host";
 // The cloud account: email sign-in, profile, and the mobile devices connected to it.
 
 import { INPUT_LIMITS } from "@hxbot/contracts/input-limits";
@@ -84,6 +86,9 @@ export function accountIpcHandlers({ centralAuth, host }: AccountIpcDependencies
         },
         (on) => hxComputer.setAutoResume(on),
       ),
+      hxRestoreFileChange: payloadHandler(decodeHxRestoreFileChangeInput, (input) => hxRestoreFileChangeCall(input)),
+      hxFileVersionsView: handler(() => hxFileVersionsView()),
+      hxFileVersionsSetCap: payloadHandler(decodeHxFileVersionCap, (bytes) => hxFileVersionsSetCap(bytes)),
       revokeMobileConnectedDevice: payloadHandler(stringPayload("sessionId", INPUT_LIMITS.identifier), (sessionId) =>
         runCauseEffect(centralAuth.revokeMobileConnectedDevice(sessionId)),
       ),

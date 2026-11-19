@@ -912,4 +912,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Geparkeerde stappen vanzelf voortzetten",
   "settings.hxComputer.autoResume.description":
     "Terwijl je de computer gebruikt, parkeert een agent een stap die het toetsenbord of de muis nodig heeft. Staat dit aan, dan gaat de stap vanzelf verder als je 5 seconden stopt (60 bij routines). Staat het uit, alleen als je „nu” antwoordt.",
+  "settings.hxComputer.versions.title": "Versies van voor wijzigingen",
+  "settings.hxComputer.versions.description":
+    "Voordat een app-vaardigheid een bestand wijzigt, bewaart HXBot het bestand zoals het was, zodat de kaart in de chat het kan terugzetten. Als deze ruimte vol is, vraagt HXBot het je voordat oude versies worden verwijderd.",
+  "settings.hxComputer.versions.usage": "{used} gebruikt door {count} versies",
+  "settings.hxComputer.versions.cap": "Ruimte",
+  "settings.hxComputer.versions.default": "{size} (standaard)",
+  "settings.hxComputer.versions.git":
+    "Een programmeeragent die bestanden met eigen opdrachten wijzigt, bewaart hier geen versies. In een Git-map kan Git ze terugzetten.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -193,4 +193,26 @@ export const messages = {
     "Nimmt die Änderung jetzt vor. Diese Datei lässt sich dann nicht auf den Stand davor zurücksetzen.",
   "status.agent.hxSkill.space.cancel": "Änderung abbrechen",
   "status.agent.hxSkill.space.cancelDetail": "Die Datei bleibt, wie sie ist, und alle Versionen bleiben.",
+  "status.agent.hxSkill.change.made": "{file} erstellt",
+  "status.agent.hxSkill.change.same": "{file} gespeichert; der Inhalt hat sich nicht geändert",
+  "status.agent.hxSkill.change.fileOnly": "{file} geändert (für diese Art von Datei gibt es keine Details)",
+  "status.agent.hxSkill.change.counts": "{file} geändert: {changed} geändert, {added} hinzugefügt, {removed} entfernt",
+  "status.agent.hxSkill.change.restored": "{file} auf den Stand vor der Änderung zurückgesetzt",
+  "status.agent.hxSkill.change.checked": "HXBot hat die Datei wieder gelesen, und sie ist wie erwartet.",
+  "status.agent.hxSkill.change.unchecked": "HXBot konnte die Datei zur Prüfung nicht wieder lesen.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot hat die Datei wieder gelesen, und sie ist wie erwartet. Es wurde keine Version behalten, deshalb lässt sich diese Änderung nicht zurücksetzen.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot konnte die Datei zur Prüfung nicht wieder lesen. Es wurde keine Version behalten, deshalb lässt sich diese Änderung nicht zurücksetzen.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Die Datei ist wieder wie vor der Änderung. Die Datei, wie sie vor dem Zurücksetzen war, ist auch als Version behalten.",
+  "status.agent.hxSkill.change.more": "… {count} weitere Änderungen",
+  "status.agent.hxSkill.change.cut": "… die Liste endet hier; die Zahlen im Titel sind vollständig",
+  "status.agent.hxSkill.restore.starting": "HXBot startet noch. Versuche es gleich noch einmal.",
+  "status.agent.hxSkill.restore.notInChat": "Diese Karte ist nicht mehr in diesem Chat.",
+  "status.agent.hxSkill.restore.noVersion":
+    "Vor dieser Änderung wurde keine Version behalten, deshalb lässt sie sich nicht zurücksetzen.",
+  "status.agent.hxSkill.restore.notKept": "Die Version von vor dieser Änderung ist nicht mehr vorhanden.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Es ist kein Platz, um die Datei, wie sie jetzt ist, vor dem Zurücksetzen zu behalten. Gib Speicherplatz frei oder vergrößere den Platz unter Einstellungen → PC-Steuerung.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -939,4 +939,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Reprendre seules les étapes en attente",
   "settings.hxComputer.autoResume.description":
     "Quand vous utilisez l’ordinateur, un agent met en attente l’étape qui a besoin du clavier ou de la souris. Activé, l’étape reprend seule après 5 secondes d’arrêt (60 pour les routines). Désactivé, seulement quand vous répondez « maintenant ».",
+  "settings.hxComputer.versions.title": "Versions gardées avant les modifications",
+  "settings.hxComputer.versions.description":
+    "Avant qu'une compétence d'application modifie un fichier, HXBot garde le fichier tel qu'il était, pour que la carte de la conversation puisse le rétablir. Quand cet espace est plein, HXBot vous demande avant de supprimer d'anciennes versions.",
+  "settings.hxComputer.versions.usage": "{used} utilisés par {count} versions",
+  "settings.hxComputer.versions.cap": "Espace",
+  "settings.hxComputer.versions.default": "{size} (par défaut)",
+  "settings.hxComputer.versions.git":
+    "Un agent de code qui modifie des fichiers avec ses propres commandes ne garde pas de versions ici. Dans un dossier Git, Git peut les rétablir.",
 } as const satisfies PartialTranslation<typeof source>;

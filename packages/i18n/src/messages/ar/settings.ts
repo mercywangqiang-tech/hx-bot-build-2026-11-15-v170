@@ -973,4 +973,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "متابعة الخطوات المؤجلة تلقائيًا",
   "settings.hxComputer.autoResume.description":
     "عندما تستخدم الحاسوب، يؤجل الوكيل الخطوة التي تحتاج إلى لوحة المفاتيح أو الفأرة. عند التشغيل، تتابع الخطوة تلقائيًا بعد توقفك 5 ثوانٍ (60 للمهام المجدولة). عند الإيقاف، لا تتابع إلا إذا رددت بـ «الآن».",
+  "settings.hxComputer.versions.title": "النسخ المحفوظة قبل التغييرات",
+  "settings.hxComputer.versions.description":
+    "قبل أن تغيّر مهارة تطبيق ملفًا، يحتفظ HXBot بالملف كما كان، لتتمكن البطاقة في الدردشة من استعادته. عندما تمتلئ هذه المساحة، يسألك HXBot قبل أن يزيل النسخ القديمة.",
+  "settings.hxComputer.versions.usage": "{used} مستخدمة لـ {count} نسخة",
+  "settings.hxComputer.versions.cap": "المساحة",
+  "settings.hxComputer.versions.default": "{size} (افتراضي)",
+  "settings.hxComputer.versions.git":
+    "وكيل البرمجة الذي يغيّر الملفات بأوامره الخاصة لا يحتفظ بنسخ هنا. في مجلد Git، يمكن لـ Git استعادتها.",
 } as const satisfies PartialTranslation<typeof source>;

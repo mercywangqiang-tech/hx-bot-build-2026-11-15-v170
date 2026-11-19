@@ -218,4 +218,25 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxSkill.space.noVersionDetail": "Makes the change now. You cannot restore this file to before it.",
   "status.agent.hxSkill.space.cancel": "Cancel the change",
   "status.agent.hxSkill.space.cancelDetail": "The file stays as it is, and every version stays.",
+  "status.agent.hxSkill.change.made": "Made {file}",
+  "status.agent.hxSkill.change.same": "Saved {file}; its content did not change",
+  "status.agent.hxSkill.change.fileOnly": "Changed {file} (this kind of file shows no details)",
+  "status.agent.hxSkill.change.counts": "Changed {file}: {changed} changed, {added} added, {removed} removed",
+  "status.agent.hxSkill.change.restored": "Restored {file} to before the change",
+  "status.agent.hxSkill.change.checked": "HXBot read the file back, and it is as expected.",
+  "status.agent.hxSkill.change.unchecked": "HXBot could not read the file back to check it.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot read the file back, and it is as expected. No version was kept, so this change cannot be restored.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot could not read the file back to check it. No version was kept, so this change cannot be restored.",
+  "status.agent.hxSkill.change.restoredNote":
+    "The file is as it was before the change. The file as it was before the restore is kept as a version too.",
+  "status.agent.hxSkill.change.more": "… {count} more changes",
+  "status.agent.hxSkill.change.cut": "… the list stops here; the numbers in the title are complete",
+  "status.agent.hxSkill.restore.starting": "HXBot is still starting. Try again in a moment.",
+  "status.agent.hxSkill.restore.notInChat": "This card is not in this chat any more.",
+  "status.agent.hxSkill.restore.noVersion": "No version was kept before this change, so it cannot be restored.",
+  "status.agent.hxSkill.restore.notKept": "The version from before this change is not kept any more.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "There is no room to keep the file as it is now before the restore. Free up disk space, or make the space larger in Settings → Computer Use.",
 });

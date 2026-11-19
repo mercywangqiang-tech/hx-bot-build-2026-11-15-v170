@@ -212,4 +212,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Inny agent używa ekranu.",
   "conversation.hx.hold.userActive": "Używasz komputera.",
   "conversation.hx.hold.teamQueue": "Praca zespołu czeka na miejsce.",
+  "conversation.hx.fileChange.restore": "Przywróć stan sprzed zmiany",
+  "conversation.hx.fileChange.restoring": "Przywracanie…",
+  "conversation.hx.fileChange.restoredNow": "Przywrócono.",
+  "conversation.hx.fileChange.unchanged": "Plik był już taki jak przed zmianą.",
+  "conversation.hx.fileChange.failed": "Nie udało się przywrócić: {reason}",
+  "conversation.hx.fileChange.show": "Pokaż zmiany ({count})",
+  "conversation.hx.fileChange.hide": "Ukryj zmiany",
+  "conversation.hx.fileChange.remote": "Możesz to przywrócić na komputerze, na którym działa ten agent.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -953,4 +953,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Kontynuuj wstrzymane kroki samoczynnie",
   "settings.hxComputer.autoResume.description":
     "Gdy używasz komputera, agent wstrzymuje krok, który potrzebuje klawiatury lub myszy. Gdy to jest włączone, krok jest kontynuowany sam po 5 s przerwy (60 s dla rutyn). Gdy wyłączone, tylko gdy odpowiesz „teraz”.",
+  "settings.hxComputer.versions.title": "Wersje zachowane przed zmianami",
+  "settings.hxComputer.versions.description":
+    "Zanim umiejętność aplikacji zmieni plik, HXBot zachowuje plik w poprzednim stanie, aby karta w czacie mogła go przywrócić. Gdy to miejsce się zapełni, HXBot zapyta cię, zanim usunie stare wersje.",
+  "settings.hxComputer.versions.usage": "{used} zajmuje {count} wersji",
+  "settings.hxComputer.versions.cap": "Miejsce",
+  "settings.hxComputer.versions.default": "{size} (domyślnie)",
+  "settings.hxComputer.versions.git":
+    "Agent programistyczny, który zmienia pliki własnymi poleceniami, nie zachowuje tu wersji. W folderze Git przywrócić je może Git.",
 } as const satisfies PartialTranslation<typeof source>;

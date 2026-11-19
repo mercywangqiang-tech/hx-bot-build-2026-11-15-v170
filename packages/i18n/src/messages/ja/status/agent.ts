@@ -183,4 +183,25 @@ export const messages = {
   "status.agent.hxSkill.space.noVersionDetail": "今すぐ変更します。このファイルを変更前に戻すことはできません。",
   "status.agent.hxSkill.space.cancel": "変更をキャンセル",
   "status.agent.hxSkill.space.cancelDetail": "ファイルはそのままで、バージョンもすべて残ります。",
+  "status.agent.hxSkill.change.made": "{file} を作成しました",
+  "status.agent.hxSkill.change.same": "{file} を保存しました。内容は変わっていません",
+  "status.agent.hxSkill.change.fileOnly": "{file} を変更しました（この種類のファイルは詳細を表示できません）",
+  "status.agent.hxSkill.change.counts": "{file} を変更しました：変更 {changed} 件、追加 {added} 件、削除 {removed} 件",
+  "status.agent.hxSkill.change.restored": "{file} を変更前に戻しました",
+  "status.agent.hxSkill.change.checked": "HXBot がファイルを読み直し、想定どおりでした。",
+  "status.agent.hxSkill.change.unchecked": "HXBot はファイルを読み直して確認できませんでした。",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot がファイルを読み直し、想定どおりでした。バージョンを残していないため、この変更は元に戻せません。",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot はファイルを読み直して確認できませんでした。バージョンを残していないため、この変更は元に戻せません。",
+  "status.agent.hxSkill.change.restoredNote":
+    "ファイルは変更前の状態です。復元する前の状態もバージョンとして残っています。",
+  "status.agent.hxSkill.change.more": "……ほかに {count} 件の変更",
+  "status.agent.hxSkill.change.cut": "……一覧はここまでです。タイトルの件数はすべてを数えています",
+  "status.agent.hxSkill.restore.starting": "HXBot はまだ起動中です。少し待ってからもう一度お試しください。",
+  "status.agent.hxSkill.restore.notInChat": "このカードはもうこのチャットにありません。",
+  "status.agent.hxSkill.restore.noVersion": "この変更の前にバージョンを残していないため、復元できません。",
+  "status.agent.hxSkill.restore.notKept": "この変更前のバージョンはもう残っていません。",
+  "status.agent.hxSkill.restore.spaceFull":
+    "復元の前に今のファイルを残す空きがありません。ディスクの空きを増やすか、「設定 → Computer Use」で保存領域を広げてください。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -925,4 +925,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Continuar solos los pasos aparcados",
   "settings.hxComputer.autoResume.description":
     "Mientras usas el ordenador, un agente aparca el paso que necesita el teclado o el ratón. Si está activado, el paso sigue solo cuando paras 5 segundos (60 en las rutinas). Si está desactivado, solo cuando respondes «ahora».",
+  "settings.hxComputer.versions.title": "Versiones guardadas antes de los cambios",
+  "settings.hxComputer.versions.description":
+    "Antes de que una habilidad de aplicación cambie un archivo, HXBot guarda el archivo como estaba, para que la tarjeta del chat pueda restaurarlo. Cuando este espacio se llena, HXBot te pregunta antes de quitar versiones antiguas.",
+  "settings.hxComputer.versions.usage": "{used} usados por {count} versiones",
+  "settings.hxComputer.versions.cap": "Espacio",
+  "settings.hxComputer.versions.default": "{size} (predeterminado)",
+  "settings.hxComputer.versions.git":
+    "Un agente de programación que cambia archivos con sus propios comandos no guarda versiones aquí. En una carpeta Git, Git puede restaurarlos.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -9,6 +9,15 @@ import type {
 } from "@hxbot/contracts/ipc";
 import { clone, type Listener, type MockRuntime } from "./mock-support";
 
+/** HXBot (v1.7.4): the space for versions that the preview shows (Settings → Computer Use). */
+let mockFileVersions = {
+  capBytes: 2 * 1024 ** 3,
+  defaultCapBytes: 2 * 1024 ** 3,
+  custom: false,
+  usedBytes: 380 * 1024 ** 2,
+  versions: 42,
+};
+
 export interface MockAuthOptions {
   authState?: CentralAuthState;
 }
@@ -213,6 +222,16 @@ export function createMockAuth(options: MockAuthOptions, { emit }: MockRuntime) 
       freeQuota: { blockedUntil: null, usedToday: 0 },
       decisions: [],
     }),
+    hxRestoreFileChange: async () => ({ status: "restored" as const }),
+    hxFileVersionsView: async () => ({ ...mockFileVersions }),
+    hxFileVersionsSetCap: async (bytes: number | null) => {
+      mockFileVersions = {
+        ...mockFileVersions,
+        capBytes: bytes ?? mockFileVersions.defaultCapBytes,
+        custom: bytes !== null,
+      };
+      return { ...mockFileVersions };
+    },
     hxComputerSetAutoResume: async (on: boolean) => ({
       platform: null,
       builtAt: null,

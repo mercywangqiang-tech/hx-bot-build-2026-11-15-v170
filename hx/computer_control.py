@@ -252,7 +252,8 @@ def settings_page(r) -> None:
               '          <ComputerUseSetup variant="settings" />\n',
               '          <ComputerUseSetup variant="settings" />\n'
               "          {/* HXBot: the catalog of this computer, and its self-test (hx-computer). */}\n"
-              '          <HxComputerPanel visible={props.open && activeTab() === "computer-use"} />\n')
+              # v1.7.4：版本空间的下拉列表在设置窗口里打开
+              '          <HxComputerPanel visible={props.open && activeTab() === "computer-use"} selectMount={modalElement} />\n')
     # 设置窗口顶部的搜索也能找到这两行
     r.replace("src/renderer/src/features/settings/settings-tabs.ts",
               '    rows: [{ titleKey: "computerUse.permissions.title", descriptionKey: "computerUse.permissions.description" }],\n',
@@ -267,6 +268,11 @@ def settings_page(r) -> None:
               "      {\n"
               '        titleKey: "settings.hxComputer.autoResume.title",\n'
               '        descriptionKey: "settings.hxComputer.autoResume.description",\n'
+              "      },\n"
+              # v1.7.4：“修改前保留的版本”（hx/skills_ui_v174.py）
+              "      {\n"
+              '        titleKey: "settings.hxComputer.versions.title",\n'
+              '        descriptionKey: "settings.hxComputer.versions.description",\n'
               "      },\n"
               "    ],\n")
 

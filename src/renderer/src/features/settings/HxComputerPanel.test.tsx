@@ -1,9 +1,10 @@
 // HXBot：设置 → Computer Use 里的“这台电脑上的应用和设置”（HxComputerPanel.tsx）。
 import type { HxComputerStatus, HxSelfTestReport } from "@hxbot/contracts/hx-computer";
+import type { HxFileVersionsView } from "@hxbot/contracts/hx-file-change";
 import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { flush } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
-import { type HxComputerCalls, HxComputerPanel } from "./HxComputerPanel";
+import { type HxComputerCalls, HxComputerPanel, hxVersionCapOptions } from "./HxComputerPanel";
 
 const BUILT_AT = 1_700_000_000_000;
 const STATUS: HxComputerStatus = {
@@ -33,12 +34,25 @@ const REPORT: HxSelfTestReport = {
   file: "/Users/a/Downloads/HXBot-self-test.json",
 };
 
+const GIB = 1024 ** 3;
+const VERSIONS: HxFileVersionsView = {
+  capBytes: 2 * GIB,
+  defaultCapBytes: 2 * GIB,
+  custom: false,
+  usedBytes: 380 * 1024 ** 2,
+  versions: 42,
+};
+
 function calls(change: Partial<HxComputerCalls> = {}): HxComputerCalls {
   return {
     status: vi.fn(() => Promise.resolve(STATUS)),
     rebuild: vi.fn(() => Promise.resolve({ ...STATUS, apps: 121, builtAt: BUILT_AT + 5 })),
     selfTest: vi.fn(() => Promise.resolve(REPORT)),
     setAutoResume: vi.fn((on: boolean) => Promise.resolve({ ...STATUS, autoResume: on })),
+    versions: vi.fn(() => Promise.resolve(VERSIONS)),
+    setVersionsCap: vi.fn((bytes: number | null) =>
+      Promise.resolve({ ...VERSIONS, capBytes: bytes ?? VERSIONS.defaultCapBytes, custom: bytes !== null }),
+    ),
     ...change,
   };
 }
@@ -227,5 +241,50 @@ describe("HxComputerPanel", () => {
     expect(selfTest).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(button("Run the self-test").hasAttribute("disabled")).toBe(false);
+  });
+
+  it("shows the space for versions and what they take, and offers the default and the fixed sizes (v1.7.4)", async () => {
+    const shown = calls();
+    render(() => <HxComputerPanel visible calls={shown} />);
+    await settle();
+    expect(shown.versions).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Versions kept before changes")).toBeTruthy();
+    expect(document.querySelector('[data-hx-computer="versions"]')?.textContent).toBe("380 MB used by 42 versions");
+    // The trigger names itself with its value.
+    expect(screen.getByRole("button", { name: /2 GB \(default\)/u }).getAttribute("aria-label")).toBe("Space");
+    expect(hxVersionCapOptions(VERSIONS).map((bytes) => bytes / GIB)).toEqual([1, 2, 5, 10, 20, 50]);
+    // A small disk: the default is 5 % of it, and it is first among the choices.
+    expect(hxVersionCapOptions({ ...VERSIONS, defaultCapBytes: 0.5 * GIB, capBytes: 0.5 * GIB })[0]).toBe(0.5 * GIB);
+    // A space set some other way stays among the choices.
+    expect(hxVersionCapOptions({ ...VERSIONS, capBytes: 3 * GIB, custom: true })).toContain(3 * GIB);
+  });
+
+  it("sets another space, and the default as none of its own (v1.7.4)", async () => {
+    const shown = calls();
+    render(() => <HxComputerPanel visible calls={shown} />);
+    await settle();
+    const choose = async (from: RegExp, option: string) => {
+      const trigger = screen.getByRole("button", { name: from });
+      fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
+      fireEvent.pointerUp(trigger, { pointerType: "mouse", button: 0 });
+      fireEvent.click(trigger);
+      flush();
+      fireEvent.click(await screen.findByRole("option", { name: option }));
+      await settle();
+    };
+    await choose(/2 GB \(default\)/u, "10 GB");
+    expect(shown.setVersionsCap).toHaveBeenLastCalledWith(10 * GIB);
+    expect(screen.getByRole("button", { name: /10 GB/u })).toBeTruthy();
+    await choose(/10 GB/u, "2 GB (default)");
+    expect(shown.setVersionsCap).toHaveBeenLastCalledWith(null);
+  });
+
+  it("keeps the rest of the panel when the versions cannot be read", async () => {
+    const shown = calls({ versions: vi.fn(() => Promise.reject(new Error("not yet"))) });
+    render(() => <HxComputerPanel visible calls={shown} />);
+    await settle();
+    expect(summary()).toBe("120 apps, 42 settings pages, 12 settings (11 can be changed directly)");
+    expect(document.querySelector('[data-hx-computer="versions"]')).toBeNull();
+    expect(screen.queryByRole("button", { name: /default/u })).toBeNull();
   });
 });

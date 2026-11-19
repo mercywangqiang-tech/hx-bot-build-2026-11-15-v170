@@ -214,4 +214,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Ein anderer Agent benutzt den Bildschirm.",
   "conversation.hx.hold.userActive": "Du benutzt den Computer.",
   "conversation.hx.hold.teamQueue": "Die Arbeit des Teams wartet auf einen Platz.",
+  "conversation.hx.fileChange.restore": "Auf Stand vor der Änderung zurücksetzen",
+  "conversation.hx.fileChange.restoring": "Wird zurückgesetzt…",
+  "conversation.hx.fileChange.restoredNow": "Zurückgesetzt.",
+  "conversation.hx.fileChange.unchanged": "Die Datei war schon wie vor der Änderung.",
+  "conversation.hx.fileChange.failed": "Zurücksetzen nicht möglich: {reason}",
+  "conversation.hx.fileChange.show": "Änderungen zeigen ({count})",
+  "conversation.hx.fileChange.hide": "Änderungen ausblenden",
+  "conversation.hx.fileChange.remote": "Zurücksetzen kannst du auf dem Computer, auf dem dieser Agent läuft.",
 } as const satisfies PartialTranslation<typeof source>;

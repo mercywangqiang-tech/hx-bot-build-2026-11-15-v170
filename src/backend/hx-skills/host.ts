@@ -3,6 +3,12 @@
 // 的提问是这次调用所在对话的提问卡（ask，v1.7.4 #54）。问不了时空间满一律“取消修改”，不替用户选。
 import { homedir } from "node:os";
 import { join } from "node:path";
+import type {
+  HxFileVersionsView,
+  HxRestoreFileChangeInput,
+  HxRestoreFileChangeResult,
+} from "@hxbot/contracts/hx-file-change";
+import { sourceText } from "@hxbot/i18n";
 import { hxAccessAgent, hxAppDataFolder } from "../hx-access/hub";
 import { hxProtectedRoots } from "../hx-access/policy";
 import { hxAccessStore } from "../hx-access/rules";
@@ -10,6 +16,7 @@ import type { HxRunner } from "../hx-computer/runner";
 import { HxFileVersions } from "../hx-files/versions";
 import type { DynamicToolResult } from "../protocol";
 import type { HxAsk } from "./ask";
+import { hxRestoreFileChange } from "./change-card";
 import { HX_SKILLS, hxExtension } from "./declarations";
 import { HX_SKILL_ARGS, type HxJson } from "./operations";
 import { HX_SKILL_DEADLINE_MS, type HxFileChangeEvent, HxSkillRequests, HxSkillRunner } from "./run";
@@ -57,6 +64,27 @@ let uiHost: HxSkillUiHost | null = null;
 
 export function hxSetSkillUiHost(host: HxSkillUiHost | null): void {
   uiHost = host;
+}
+
+/** Settings → Computer Use: the space the versions may take, and what they take now. */
+export async function hxFileVersionsView(): Promise<HxFileVersionsView> {
+  const store = await hxReadyFileVersions();
+  if (!store) throw new Error(sourceText("status.agent.hxSkill.restore.starting"));
+  const { capBytes, defaultCapBytes, custom, usedBytes, versions } = await store.settings();
+  return { capBytes, defaultCapBytes, custom, usedBytes, versions };
+}
+
+/** Sets the space (null: the default). A smaller space deletes nothing; the next change asks when it is full. */
+export async function hxFileVersionsSetCap(bytes: number | null): Promise<HxFileVersionsView> {
+  const store = await hxReadyFileVersions();
+  if (!store) throw new Error(sourceText("status.agent.hxSkill.restore.starting"));
+  await store.setCap(bytes);
+  return hxFileVersionsView();
+}
+
+/** “恢复到修改前” on the card of a change (change-card.ts); the record names the user as the one who restored. */
+export async function hxRestoreFileChangeCall(input: HxRestoreFileChangeInput): Promise<HxRestoreFileChangeResult> {
+  return hxRestoreFileChange(input, await hxReadyFileVersions(), "user");
 }
 
 /** Whether a call needs an app or the system (and so the system lane): settings, legacy files, a live PivotTable. */

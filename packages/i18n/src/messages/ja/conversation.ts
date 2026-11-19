@@ -209,4 +209,12 @@ export const messages = {
   "conversation.hx.hold.screen": "別のエージェントが画面を使っています。",
   "conversation.hx.hold.userActive": "あなたがコンピューターを使っています。",
   "conversation.hx.hold.teamQueue": "チームの作業が空きを待っています。",
+  "conversation.hx.fileChange.restore": "変更前に戻す",
+  "conversation.hx.fileChange.restoring": "戻しています…",
+  "conversation.hx.fileChange.restoredNow": "戻しました。",
+  "conversation.hx.fileChange.unchanged": "ファイルはすでに変更前の状態でした。",
+  "conversation.hx.fileChange.failed": "戻せませんでした：{reason}",
+  "conversation.hx.fileChange.show": "変更を表示（{count}）",
+  "conversation.hx.fileChange.hide": "変更を隠す",
+  "conversation.hx.fileChange.remote": "このエージェントを動かしているコンピューターで戻せます。",
 } as const satisfies PartialTranslation<typeof source>;

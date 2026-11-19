@@ -1,5 +1,6 @@
 // HXBot v1.7.4（BAK-03-A2）：版本空间满了，修改停下来问你：删掉最早的旧版本、这次不留版本、取消修改。
 // 不问就不删任何旧版本；没人能答（外部聊天、停止、到时间）就是取消。卡片用界面的语言写（15 种）。
+import { hxByteSize } from "@hxbot/contracts/hx-file-change";
 import type { AgentPromptQuestion } from "@hxbot/contracts/ipc";
 import { TRANSLATED_LOCALES, type TranslatedLocale } from "@hxbot/i18n";
 import { sourceTranslateFor } from "@hxbot/i18n/source";
@@ -21,22 +22,8 @@ export function hxSpaceLocale(tag: string = hxAppLocale()): TranslatedLocale {
   );
 }
 
-/** A size as a person reads it: KB under 1 MB, MB under 1 GB, else GB; one decimal from 10 down. */
-export function hxSize(bytes: number): string {
-  const units = [
-    { unit: "GB", size: 1024 ** 3 },
-    { unit: "MB", size: 1024 ** 2 },
-    { unit: "KB", size: 1024 },
-  ];
-  const value = Math.max(0, bytes);
-  for (const { unit, size } of units) {
-    if (value < size && unit !== "KB") continue;
-    const amount = value / size;
-    const shown = amount >= 10 ? Math.round(amount).toString() : (Math.round(amount * 10) / 10).toString();
-    return `${shown} ${unit}`;
-  }
-  return "0 KB";
-}
+/** A size as a person reads it (the same words as Settings → Computer Use). */
+export const hxSize = hxByteSize;
 
 /** The file's name for the card: the last part of the path, cut at 80 characters. */
 function fileName(path: string): string {

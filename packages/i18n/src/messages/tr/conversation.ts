@@ -212,4 +212,12 @@ export const messages = {
   "conversation.hx.hold.screen": "Ekranı başka bir ajan kullanıyor.",
   "conversation.hx.hold.userActive": "Bilgisayarı siz kullanıyorsunuz.",
   "conversation.hx.hold.teamQueue": "Ekibin işi bir yer bekliyor.",
+  "conversation.hx.fileChange.restore": "Değişiklikten önceki hâline geri getir",
+  "conversation.hx.fileChange.restoring": "Geri getiriliyor…",
+  "conversation.hx.fileChange.restoredNow": "Geri getirildi.",
+  "conversation.hx.fileChange.unchanged": "Dosya zaten değişiklikten önceki hâlindeydi.",
+  "conversation.hx.fileChange.failed": "Geri getirilemedi: {reason}",
+  "conversation.hx.fileChange.show": "Değişiklikleri göster ({count})",
+  "conversation.hx.fileChange.hide": "Değişiklikleri gizle",
+  "conversation.hx.fileChange.remote": "Bu ajanı çalıştıran bilgisayarda geri getirebilirsiniz.",
 } as const satisfies PartialTranslation<typeof source>;

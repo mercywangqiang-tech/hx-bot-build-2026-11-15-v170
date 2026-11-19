@@ -227,4 +227,26 @@ export const messages = {
     "Voert de wijziging nu uit. Je kunt dit bestand niet terugzetten naar hoe het ervoor was.",
   "status.agent.hxSkill.space.cancel": "Wijziging annuleren",
   "status.agent.hxSkill.space.cancelDetail": "Het bestand blijft zoals het is, en alle versies blijven.",
+  "status.agent.hxSkill.change.made": "{file} gemaakt",
+  "status.agent.hxSkill.change.same": "{file} opgeslagen; de inhoud is niet veranderd",
+  "status.agent.hxSkill.change.fileOnly": "{file} gewijzigd (dit soort bestand toont geen details)",
+  "status.agent.hxSkill.change.counts":
+    "{file} gewijzigd: {changed} gewijzigd, {added} toegevoegd, {removed} verwijderd",
+  "status.agent.hxSkill.change.restored": "{file} teruggezet naar hoe het voor de wijziging was",
+  "status.agent.hxSkill.change.checked": "HXBot heeft het bestand opnieuw gelezen, en het is zoals verwacht.",
+  "status.agent.hxSkill.change.unchecked": "HXBot kon het bestand niet opnieuw lezen om het te controleren.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot heeft het bestand opnieuw gelezen, en het is zoals verwacht. Er is geen versie bewaard, dus deze wijziging kan niet worden teruggezet.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot kon het bestand niet opnieuw lezen om het te controleren. Er is geen versie bewaard, dus deze wijziging kan niet worden teruggezet.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Het bestand is weer zoals voor de wijziging. Het bestand zoals het voor het terugzetten was, is ook als versie bewaard.",
+  "status.agent.hxSkill.change.more": "… nog {count} wijzigingen",
+  "status.agent.hxSkill.change.cut": "… de lijst stopt hier; de aantallen in de titel zijn volledig",
+  "status.agent.hxSkill.restore.starting": "HXBot start nog. Probeer het zo opnieuw.",
+  "status.agent.hxSkill.restore.notInChat": "Deze kaart staat niet meer in deze chat.",
+  "status.agent.hxSkill.restore.noVersion": "Voor deze wijziging is geen versie bewaard, dus terugzetten kan niet.",
+  "status.agent.hxSkill.restore.notKept": "De versie van voor deze wijziging is niet meer bewaard.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Er is geen ruimte om het bestand zoals het nu is te bewaren voor het terugzetten. Maak schijfruimte vrij of vergroot de ruimte in Instellingen → PC-besturing.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -917,4 +917,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "המשך שלבים מושהים מעצמם",
   "settings.hxComputer.autoResume.description":
     "בזמן שאתה משתמש במחשב, הסוכן משהה שלב שצריך את המקלדת או העכבר. כשזה פועל, השלב ממשיך מעצמו אחרי שאתה מפסיק ל-5 שניות (60 בשגרות). כשזה כבוי, רק כשאתה משיב „עכשיו”.",
+  "settings.hxComputer.versions.title": "גרסאות שנשמרות לפני שינויים",
+  "settings.hxComputer.versions.description":
+    "לפני שמיומנות אפליקציה משנה קובץ, HXBot שומר את הקובץ כפי שהיה, כדי שהכרטיס בצ'אט יוכל לשחזר אותו. כשהמקום הזה מתמלא, HXBot שואל אותך לפני שהוא מסיר גרסאות ישנות.",
+  "settings.hxComputer.versions.usage": "{used} בשימוש על ידי {count} גרסאות",
+  "settings.hxComputer.versions.cap": "מקום",
+  "settings.hxComputer.versions.default": "{size} (ברירת מחדל)",
+  "settings.hxComputer.versions.git":
+    "סוכן קוד שמשנה קבצים בפקודות שלו לא שומר כאן גרסאות. בתיקיית Git, ‏Git יכול לשחזר אותם.",
 } as const satisfies PartialTranslation<typeof source>;

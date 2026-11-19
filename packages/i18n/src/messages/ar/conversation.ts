@@ -220,4 +220,12 @@ export const messages = {
   "conversation.hx.hold.screen": "وكيل آخر يستخدم الشاشة.",
   "conversation.hx.hold.userActive": "أنت تستخدم الحاسوب.",
   "conversation.hx.hold.teamQueue": "عمل الفريق ينتظر مكانًا.",
+  "conversation.hx.fileChange.restore": "الاستعادة إلى ما قبل التغيير",
+  "conversation.hx.fileChange.restoring": "جارٍ الاستعادة…",
+  "conversation.hx.fileChange.restoredNow": "تمت الاستعادة.",
+  "conversation.hx.fileChange.unchanged": "كان الملف بالفعل كما كان قبل التغيير.",
+  "conversation.hx.fileChange.failed": "تعذرت الاستعادة: {reason}",
+  "conversation.hx.fileChange.show": "عرض التغييرات ({count})",
+  "conversation.hx.fileChange.hide": "إخفاء التغييرات",
+  "conversation.hx.fileChange.remote": "يمكنك الاستعادة على الحاسوب الذي يشغّل هذا الوكيل.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -1,6 +1,7 @@
 import type { HxAccessLogView, HxAccessRuleView } from "./hx-access-settings";
 import type { HxAutoModelUpdate, HxAutoModelView } from "./hx-auto-model";
 import type { HxComputerStatus, HxSelfTestReport } from "./hx-computer";
+import type { HxFileVersionsView, HxRestoreFileChangeInput, HxRestoreFileChangeResult } from "./hx-file-change";
 import type {
   HxOcAttempt,
   HxOcAttemptRef,
@@ -1590,6 +1591,10 @@ export const IPC_ENDPOINTS = {
     hxAutoModelUpdate: request<HxAutoModelUpdate, HxAutoModelView>()("auth:hx-auto-model-update"),
     // HXBot (v1.7.3): Settings → Computer Use, “停放后自动续做” (hx-computer).
     hxComputerSetAutoResume: request<boolean, HxComputerStatus>()("auth:hx-computer-set-auto-resume"),
+    // HXBot (v1.7.4, #54): “恢复到修改前” on the card of a file change, and the space for versions (hx-skills).
+    hxRestoreFileChange: request<HxRestoreFileChangeInput, HxRestoreFileChangeResult>()("auth:hx-restore-file-change"),
+    hxFileVersionsView: request<undefined, HxFileVersionsView>()("auth:hx-file-versions-view"),
+    hxFileVersionsSetCap: request<number | null, HxFileVersionsView>()("auth:hx-file-versions-set-cap"),
     revokeMobileConnectedDevice: request<string, void>()("auth:revoke-mobile-connected-device"),
     logout: request<undefined, CentralAuthState>()("auth:logout"),
     // Company sign-in. `openCompanySignIn` opens the provider page again for the email in the state.

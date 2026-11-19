@@ -359,7 +359,7 @@ export function SettingsModal(props: SettingsModalProps) {
         <Tabs.Content value="computer-use" class="settings-modal-tab-panel" data-tab="computer-use">
           <ComputerUseSetup variant="settings" />
           {/* HXBot: the catalog of this computer, and its self-test (hx-computer). */}
-          <HxComputerPanel visible={props.open && activeTab() === "computer-use"} />
+          <HxComputerPanel visible={props.open && activeTab() === "computer-use"} selectMount={modalElement} />
         </Tabs.Content>
 
         <Tabs.Content value="profile" class="settings-modal-tab-panel profile-panel" data-tab="profile">

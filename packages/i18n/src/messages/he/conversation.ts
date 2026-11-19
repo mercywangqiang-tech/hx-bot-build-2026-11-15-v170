@@ -214,4 +214,12 @@ export const messages = {
   "conversation.hx.hold.screen": "סוכן אחר משתמש במסך.",
   "conversation.hx.hold.userActive": "אתם משתמשים במחשב.",
   "conversation.hx.hold.teamQueue": "העבודה של הצוות מחכה למקום.",
+  "conversation.hx.fileChange.restore": "לשחזר למצב שלפני השינוי",
+  "conversation.hx.fileChange.restoring": "משחזר…",
+  "conversation.hx.fileChange.restoredNow": "שוחזר.",
+  "conversation.hx.fileChange.unchanged": "הקובץ כבר היה כפי שהיה לפני השינוי.",
+  "conversation.hx.fileChange.failed": "לא ניתן לשחזר: {reason}",
+  "conversation.hx.fileChange.show": "להציג את השינויים ({count})",
+  "conversation.hx.fileChange.hide": "להסתיר את השינויים",
+  "conversation.hx.fileChange.remote": "אפשר לשחזר במחשב שמריץ את הסוכן הזה.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -191,4 +191,26 @@ export const messages = {
     "Fait la modification maintenant. Vous ne pourrez pas rétablir ce fichier tel qu'il était avant.",
   "status.agent.hxSkill.space.cancel": "Annuler la modification",
   "status.agent.hxSkill.space.cancelDetail": "Le fichier reste tel quel, et toutes les versions restent.",
+  "status.agent.hxSkill.change.made": "{file} créé",
+  "status.agent.hxSkill.change.same": "{file} enregistré ; son contenu n'a pas changé",
+  "status.agent.hxSkill.change.fileOnly": "{file} modifié (ce type de fichier ne montre pas de détails)",
+  "status.agent.hxSkill.change.counts": "{file} modifié : {changed} modifiés, {added} ajoutés, {removed} supprimés",
+  "status.agent.hxSkill.change.restored": "{file} rétabli tel qu'il était avant la modification",
+  "status.agent.hxSkill.change.checked": "HXBot a relu le fichier, et il est comme prévu.",
+  "status.agent.hxSkill.change.unchecked": "HXBot n'a pas pu relire le fichier pour le vérifier.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot a relu le fichier, et il est comme prévu. Aucune version n'a été gardée, donc cette modification ne peut pas être annulée.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot n'a pas pu relire le fichier pour le vérifier. Aucune version n'a été gardée, donc cette modification ne peut pas être annulée.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Le fichier est tel qu'il était avant la modification. Le fichier tel qu'il était avant le rétablissement est aussi gardé comme version.",
+  "status.agent.hxSkill.change.more": "… {count} autres modifications",
+  "status.agent.hxSkill.change.cut": "… la liste s'arrête ici ; les nombres du titre sont complets",
+  "status.agent.hxSkill.restore.starting": "HXBot démarre encore. Réessayez dans un instant.",
+  "status.agent.hxSkill.restore.notInChat": "Cette carte n'est plus dans cette conversation.",
+  "status.agent.hxSkill.restore.noVersion":
+    "Aucune version n'a été gardée avant cette modification, donc elle ne peut pas être rétablie.",
+  "status.agent.hxSkill.restore.notKept": "La version d'avant cette modification n'est plus gardée.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Il n'y a pas la place de garder le fichier tel qu'il est maintenant avant le rétablissement. Libérez de l'espace disque ou agrandissez l'espace dans Réglages → Computer Use.",
 } as const satisfies PartialTranslation<typeof source>;

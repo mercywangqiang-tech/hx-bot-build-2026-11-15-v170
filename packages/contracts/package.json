@@ -47,6 +47,7 @@
     "./speech-models": "./src/speech-models.ts",
     "./speech-text": "./src/speech-text.ts",
     "./agent-memory-context": "./src/agent-memory-context.ts",
+    "./hx-file-change": "./src/hx-file-change.ts",
     "./hx-progress": "./src/hx-progress.ts",
     "./hx-opencode": "./src/hx-opencode.ts",
     "./hx-auto-model": "./src/hx-auto-model.ts",

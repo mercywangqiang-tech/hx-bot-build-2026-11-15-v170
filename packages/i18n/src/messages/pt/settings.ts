@@ -918,4 +918,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Continuar sozinhos os passos em espera",
   "settings.hxComputer.autoResume.description":
     "Enquanto você usa o computador, um agente deixa em espera o passo que precisa do teclado ou do mouse. Ligado, o passo continua sozinho depois que você para por 5 segundos (60 nas rotinas). Desligado, só quando você responde «agora».",
+  "settings.hxComputer.versions.title": "Versões guardadas antes das alterações",
+  "settings.hxComputer.versions.description":
+    "Antes que uma habilidade de aplicativo altere um arquivo, o HXBot guarda o arquivo como estava, para que o cartão na conversa possa restaurá-lo. Quando este espaço enche, o HXBot pergunta a você antes de remover versões antigas.",
+  "settings.hxComputer.versions.usage": "{used} usados por {count} versões",
+  "settings.hxComputer.versions.cap": "Espaço",
+  "settings.hxComputer.versions.default": "{size} (padrão)",
+  "settings.hxComputer.versions.git":
+    "Um agente de programação que altera arquivos com os próprios comandos não guarda versões aqui. Em uma pasta Git, o Git pode restaurá-los.",
 } as const satisfies PartialTranslation<typeof source>;

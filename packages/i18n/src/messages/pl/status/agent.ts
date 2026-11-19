@@ -189,4 +189,25 @@ export const messages = {
     "Wprowadza zmianę teraz. Nie da się przywrócić tego pliku do stanu sprzed niej.",
   "status.agent.hxSkill.space.cancel": "Anuluj zmianę",
   "status.agent.hxSkill.space.cancelDetail": "Plik zostaje bez zmian i zostają wszystkie wersje.",
+  "status.agent.hxSkill.change.made": "Utworzono {file}",
+  "status.agent.hxSkill.change.same": "Zapisano {file}; zawartość się nie zmieniła",
+  "status.agent.hxSkill.change.fileOnly": "Zmieniono {file} (ten rodzaj pliku nie pokazuje szczegółów)",
+  "status.agent.hxSkill.change.counts": "Zmieniono {file}: zmienione {changed}, dodane {added}, usunięte {removed}",
+  "status.agent.hxSkill.change.restored": "Przywrócono {file} do stanu sprzed zmiany",
+  "status.agent.hxSkill.change.checked": "HXBot ponownie odczytał plik i jest zgodny z oczekiwaniami.",
+  "status.agent.hxSkill.change.unchecked": "HXBot nie mógł ponownie odczytać pliku, aby go sprawdzić.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot ponownie odczytał plik i jest zgodny z oczekiwaniami. Nie zachowano wersji, więc tej zmiany nie da się cofnąć.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot nie mógł ponownie odczytać pliku, aby go sprawdzić. Nie zachowano wersji, więc tej zmiany nie da się cofnąć.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Plik jest taki jak przed zmianą. Plik w stanie sprzed przywrócenia też zachowano jako wersję.",
+  "status.agent.hxSkill.change.more": "… jeszcze {count} zmian",
+  "status.agent.hxSkill.change.cut": "… lista kończy się tutaj; liczby w tytule są pełne",
+  "status.agent.hxSkill.restore.starting": "HXBot jeszcze się uruchamia. Spróbuj ponownie za chwilę.",
+  "status.agent.hxSkill.restore.notInChat": "Tej karty nie ma już w tym czacie.",
+  "status.agent.hxSkill.restore.noVersion": "Przed tą zmianą nie zachowano wersji, więc nie da się jej przywrócić.",
+  "status.agent.hxSkill.restore.notKept": "Wersja sprzed tej zmiany nie jest już przechowywana.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Brak miejsca, by przed przywróceniem zachować plik w obecnym stanie. Zwolnij miejsce na dysku albo zwiększ miejsce w Ustawienia → Sterowanie PC.",
 } as const satisfies PartialTranslation<typeof source>;

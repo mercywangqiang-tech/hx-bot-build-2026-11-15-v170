@@ -923,4 +923,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "Bekletilen adımlara kendiliğinden devam et",
   "settings.hxComputer.autoResume.description":
     "Bilgisayarı kullanırken bir ajan, klavye veya fare gereken adımı bekletir. Açıksa, 5 saniye durduğunuzda (rutinlerde 60) adım kendiliğinden devam eder. Kapalıysa, yalnızca «şimdi» yanıtını verdiğinizde.",
+  "settings.hxComputer.versions.title": "Değişikliklerden önce saklanan sürümler",
+  "settings.hxComputer.versions.description":
+    "Bir uygulama becerisi bir dosyayı değiştirmeden önce HXBot dosyanın önceki hâlini saklar; böylece sohbetteki kart onu geri getirebilir. Bu alan dolduğunda HXBot eski sürümleri kaldırmadan önce size sorar.",
+  "settings.hxComputer.versions.usage": "{count} sürüm {used} kullanıyor",
+  "settings.hxComputer.versions.cap": "Alan",
+  "settings.hxComputer.versions.default": "{size} (varsayılan)",
+  "settings.hxComputer.versions.git":
+    "Dosyaları kendi komutlarıyla değiştiren bir kodlama ajanı burada sürüm saklamaz. Git klasöründe Git onları geri getirebilir.",
 } as const satisfies PartialTranslation<typeof source>;

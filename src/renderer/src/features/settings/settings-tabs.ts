@@ -198,6 +198,10 @@ export const navItems: ReadonlyArray<SettingsNavItem> = [
         titleKey: "settings.hxComputer.autoResume.title",
         descriptionKey: "settings.hxComputer.autoResume.description",
       },
+      {
+        titleKey: "settings.hxComputer.versions.title",
+        descriptionKey: "settings.hxComputer.versions.description",
+      },
     ],
   },
   {

@@ -260,6 +260,8 @@ import { HX_IDLE_MIN_MS, hxWithIdlePolicy } from "./hx-flow/idle";
 import { hxFlow } from "./hx-flow/ledger";
 import { hxEventLoopTurn } from "./hx-flow/loop-turn";
 import { hxProgressMessage } from "./hx-progress/progress";
+import { hxFileChangeMessage, hxSetFileCardPort } from "./hx-skills/change-card";
+import { hxSetSkillUiHost } from "./hx-skills/host";
 import { type HxTeamPort, hxTeamLine, hxTeams } from "./hx-team/service";
 import { hxReadSpend } from "./hx-team/spend";
 import type { SignInRegion } from "./kimi-region";
@@ -1543,6 +1545,20 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
             Effect.asVoid,
           ),
       },
+    });
+    // HXBot (v1.7.4, #54): the card of a file change goes to the chat where the agent changed it, and
+    // “恢复到修改前” reads it back there (hx-skills/change-card.ts).
+    hxSetSkillUiHost({
+      changed: (agentId, event) =>
+        this.#hxFileCard(
+          agentId,
+          event.task === `agent-${agentId}` ? null : event.task,
+          hxFileChangeMessage(event, randomUUID),
+        ),
+    });
+    hxSetFileCardPort({
+      write: (agentId, threadId, message) => this.#hxFileCard(agentId, threadId, message),
+      read: (agentId, threadId, messageId) => this.#hxReadFileCard(agentId, threadId, messageId),
     });
     // HXBot (v1.7.3): a parked step of computer control goes on with a message to its agent (hx-computer).
     hxComputer.setResumeHost((agentId, text) => this.#hxComputerResume(agentId, text));
@@ -3491,6 +3507,56 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
     }
     return agent;
   }, Effect.uninterruptible);
+
+  /**
+   * HXBot (v1.7.4, #54): the card of a file change, in the chat where it happened (null: the main chat),
+   * or that card written again in place. A card that is no longer in the cached part of the chat is
+   * written to the database only, where it already is. It never throws.
+   */
+  #hxFileCard(agentId: string, threadId: string | null, message: ConversationMessage): void {
+    const database = this.#store.database;
+    try {
+      const main = threadId === null || this.#conversation.requireKnownAgent(agentId).threadId === threadId;
+      const apply = (transactionThreadId: string, snapshot: ConversationSnapshot): ConversationSnapshot => {
+        const at = snapshot.messages.findIndex((item) => item.id === message.id);
+        if (at >= 0) snapshot.messages[at] = message;
+        else if (database.readConversationMessages(agentId, transactionThreadId, [message.id]).length === 0) {
+          snapshot.messages.push(message);
+          sortConversationMessages(snapshot.messages);
+        }
+        snapshot.revision = database.persistConversationChanges({
+          agentId,
+          threadId: transactionThreadId,
+          activeTurnId: snapshot.activeTurnId,
+          changedMessages: [message],
+          eventType: "thread.hx-file-change",
+        });
+        return snapshot;
+      };
+      if (main || threadId === null)
+        this.#conversation.withConversationTransaction(agentId, (transaction) => ({
+          result: undefined,
+          snapshot: apply(transaction.threadId, transaction.snapshot),
+        }));
+      else
+        this.#conversation.withThreadTransaction(agentId, threadId, (transaction) => ({
+          result: undefined,
+          snapshot: apply(transaction.threadId, transaction.snapshot),
+        }));
+    } catch (error) {
+      this.#emitError("hx_file_card_failed", error, agentId);
+    }
+  }
+
+  /** HXBot (v1.7.4, #54): a card of a file change in a chat, from the database; null when it is not there. */
+  #hxReadFileCard(agentId: string, threadId: string | null, messageId: string): ConversationMessage | null {
+    try {
+      const own = this.#conversation.requireKnownAgent(agentId).threadId;
+      return this.#store.database.readConversationMessages(agentId, threadId ?? own, [messageId])[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * HXBot (v1.7.3): the message that continues a parked step of computer control (hx-computer/parked.ts).

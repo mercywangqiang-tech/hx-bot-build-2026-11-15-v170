@@ -187,4 +187,25 @@ export const messages = {
     "Değişikliği şimdi yapar. Bu dosyayı önceki hâline geri getiremezsiniz.",
   "status.agent.hxSkill.space.cancel": "Değişikliği iptal et",
   "status.agent.hxSkill.space.cancelDetail": "Dosya olduğu gibi kalır ve tüm sürümler korunur.",
+  "status.agent.hxSkill.change.made": "{file} oluşturuldu",
+  "status.agent.hxSkill.change.same": "{file} kaydedildi; içeriği değişmedi",
+  "status.agent.hxSkill.change.fileOnly": "{file} değiştirildi (bu tür dosya ayrıntı göstermez)",
+  "status.agent.hxSkill.change.counts": "{file} değiştirildi: {changed} değişti, {added} eklendi, {removed} kaldırıldı",
+  "status.agent.hxSkill.change.restored": "{file} değişiklikten önceki hâline geri getirildi",
+  "status.agent.hxSkill.change.checked": "HXBot dosyayı yeniden okudu ve dosya beklendiği gibi.",
+  "status.agent.hxSkill.change.unchecked": "HXBot dosyayı kontrol etmek için yeniden okuyamadı.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot dosyayı yeniden okudu ve dosya beklendiği gibi. Sürüm saklanmadı, bu yüzden bu değişiklik geri alınamaz.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot dosyayı kontrol etmek için yeniden okuyamadı. Sürüm saklanmadı, bu yüzden bu değişiklik geri alınamaz.",
+  "status.agent.hxSkill.change.restoredNote":
+    "Dosya değişiklikten önceki hâlinde. Geri getirmeden önceki hâli de sürüm olarak saklandı.",
+  "status.agent.hxSkill.change.more": "… {count} değişiklik daha",
+  "status.agent.hxSkill.change.cut": "… liste burada bitiyor; başlıktaki sayılar eksiksiz",
+  "status.agent.hxSkill.restore.starting": "HXBot hâlâ başlıyor. Birazdan yeniden deneyin.",
+  "status.agent.hxSkill.restore.notInChat": "Bu kart artık bu sohbette değil.",
+  "status.agent.hxSkill.restore.noVersion": "Bu değişiklikten önce sürüm saklanmadı, bu yüzden geri getirilemez.",
+  "status.agent.hxSkill.restore.notKept": "Bu değişiklikten önceki sürüm artık saklanmıyor.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "Geri getirmeden önce dosyanın şu anki hâlini saklayacak yer yok. Diskte yer açın veya Ayarlar → Bilgisayar Kullanımı bölümünden alanı büyütün.",
 } as const satisfies PartialTranslation<typeof source>;

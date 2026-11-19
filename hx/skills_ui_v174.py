@@ -141,6 +141,216 @@ REGISTRY_PAIRS = [
      "  /** Expires the prompts of one lost provider client, or of all clients when none is given. */\n"),
 ]
 
+SERVICE = "src/backend/agent-service.ts"
+SERVICE_IMPORTS = [
+    'import { hxFileChangeMessage, hxSetFileCardPort } from "./hx-skills/change-card";',
+    'import { hxSetSkillUiHost } from "./hx-skills/host";',
+]
+SERVICE_PAIRS = [
+    # 3. 改了文件的卡片：写进改文件的那个对话（放在 computer_v173.py 那一段的前面，不插进它中间）
+    ("    // HXBot (v1.7.3): a parked step of computer control goes on with a message to its agent (hx-computer).\n",
+     "    // HXBot (v1.7.4, #54): the card of a file change goes to the chat where the agent changed it, and\n"
+     "    // “恢复到修改前” reads it back there (hx-skills/change-card.ts).\n"
+     "    hxSetSkillUiHost({\n"
+     "      changed: (agentId, event) =>\n"
+     "        this.#hxFileCard(\n"
+     "          agentId,\n"
+     "          event.task === `agent-${agentId}` ? null : event.task,\n"
+     "          hxFileChangeMessage(event, randomUUID),\n"
+     "        ),\n"
+     "    });\n"
+     "    hxSetFileCardPort({\n"
+     "      write: (agentId, threadId, message) => this.#hxFileCard(agentId, threadId, message),\n"
+     "      read: (agentId, threadId, messageId) => this.#hxReadFileCard(agentId, threadId, messageId),\n"
+     "    });\n"
+     "    // HXBot (v1.7.3): a parked step of computer control goes on with a message to its agent (hx-computer).\n"),
+    # 放在 computer_v173.py 加的方法（续做停放的步骤）的前面：它接在 computer_steps.py 那几个方法前，不能插进中间
+    ("  /**\n"
+     "   * HXBot (v1.7.3): the message that continues a parked step of computer control (hx-computer/parked.ts).\n",
+     "  /**\n"
+     "   * HXBot (v1.7.4, #54): the card of a file change, in the chat where it happened (null: the main chat),\n"
+     "   * or that card written again in place. A card that is no longer in the cached part of the chat is\n"
+     "   * written to the database only, where it already is. It never throws.\n"
+     "   */\n"
+     "  #hxFileCard(agentId: string, threadId: string | null, message: ConversationMessage): void {\n"
+     "    const database = this.#store.database;\n"
+     "    try {\n"
+     "      const main = threadId === null || this.#conversation.requireKnownAgent(agentId).threadId === threadId;\n"
+     "      const apply = (transactionThreadId: string, snapshot: ConversationSnapshot): ConversationSnapshot => {\n"
+     "        const at = snapshot.messages.findIndex((item) => item.id === message.id);\n"
+     "        if (at >= 0) snapshot.messages[at] = message;\n"
+     "        else if (database.readConversationMessages(agentId, transactionThreadId, [message.id]).length === 0) {\n"
+     "          snapshot.messages.push(message);\n"
+     "          sortConversationMessages(snapshot.messages);\n"
+     "        }\n"
+     "        snapshot.revision = database.persistConversationChanges({\n"
+     "          agentId,\n"
+     "          threadId: transactionThreadId,\n"
+     "          activeTurnId: snapshot.activeTurnId,\n"
+     "          changedMessages: [message],\n"
+     '          eventType: "thread.hx-file-change",\n'
+     "        });\n"
+     "        return snapshot;\n"
+     "      };\n"
+     "      if (main || threadId === null)\n"
+     "        this.#conversation.withConversationTransaction(agentId, (transaction) => ({\n"
+     "          result: undefined,\n"
+     "          snapshot: apply(transaction.threadId, transaction.snapshot),\n"
+     "        }));\n"
+     "      else\n"
+     "        this.#conversation.withThreadTransaction(agentId, threadId, (transaction) => ({\n"
+     "          result: undefined,\n"
+     "          snapshot: apply(transaction.threadId, transaction.snapshot),\n"
+     "        }));\n"
+     "    } catch (error) {\n"
+     '      this.#emitError("hx_file_card_failed", error, agentId);\n'
+     "    }\n"
+     "  }\n"
+     "\n"
+     "  /** HXBot (v1.7.4, #54): a card of a file change in a chat, from the database; null when it is not there. */\n"
+     "  #hxReadFileCard(agentId: string, threadId: string | null, messageId: string): ConversationMessage | null {\n"
+     "    try {\n"
+     "      const own = this.#conversation.requireKnownAgent(agentId).threadId;\n"
+     "      return this.#store.database.readConversationMessages(agentId, threadId ?? own, [messageId])[0] ?? null;\n"
+     "    } catch {\n"
+     "      return null;\n"
+     "    }\n"
+     "  }\n"
+     "\n"
+     "  /**\n"
+     "   * HXBot (v1.7.3): the message that continues a parked step of computer control (hx-computer/parked.ts).\n"),
+]
+
+# 4. 主进程的三个请求：改了文件的卡片上“恢复到修改前”，设置里看和改版本空间（接在 computer_v173.py 那几行之后）
+IPC_ENDPOINTS = "packages/contracts/src/ipc-endpoints.ts"
+IPC_IMPORT = (
+    'import type { HxFileVersionsView, HxRestoreFileChangeInput, HxRestoreFileChangeResult } from "./hx-file-change";'
+)
+IPC_PAIRS = [
+    ('    hxComputerSetAutoResume: request<boolean, HxComputerStatus>()("auth:hx-computer-set-auto-resume"),\n',
+     '    hxComputerSetAutoResume: request<boolean, HxComputerStatus>()("auth:hx-computer-set-auto-resume"),\n'
+     "    // HXBot (v1.7.4, #54): “恢复到修改前” on the card of a file change, and the space for versions (hx-skills).\n"
+     "    hxRestoreFileChange: request<HxRestoreFileChangeInput, HxRestoreFileChangeResult>()(\n"
+     '      "auth:hx-restore-file-change",\n'
+     "    ),\n"
+     '    hxFileVersionsView: request<undefined, HxFileVersionsView>()("auth:hx-file-versions-view"),\n'
+     '    hxFileVersionsSetCap: request<number | null, HxFileVersionsView>()("auth:hx-file-versions-set-cap"),\n'),
+]
+HANDLERS = "src/main/ipc/account-handlers.ts"
+HANDLER_IMPORTS = [
+    'import { decodeHxFileVersionCap, decodeHxRestoreFileChangeInput } from "@hxbot/contracts/hx-file-change";',
+    'import { hxFileVersionsSetCap, hxFileVersionsView, hxRestoreFileChangeCall } from "../../backend/hx-skills/host";',
+]
+HANDLER_PAIRS = [
+    ("        (on) => hxComputer.setAutoResume(on),\n      ),\n",
+     "        (on) => hxComputer.setAutoResume(on),\n      ),\n"
+     "      hxRestoreFileChange: payloadHandler(decodeHxRestoreFileChangeInput, (input) => hxRestoreFileChangeCall(input)),\n"
+     "      hxFileVersionsView: handler(() => hxFileVersionsView()),\n"
+     "      hxFileVersionsSetCap: payloadHandler(decodeHxFileVersionCap, (bytes) => hxFileVersionsSetCap(bytes)),\n"),
+]
+PRELOAD = "src/preload/index.ts"
+PRELOAD_IMPORT = (
+    'import { decodeHxFileVersionsView, decodeHxRestoreFileChangeResult } from "@hxbot/contracts/hx-file-change";'
+)
+PRELOAD_PAIRS = [
+    ("    hxComputerSetAutoResume: decodeHxComputerStatus,\n",
+     "    hxComputerSetAutoResume: decodeHxComputerStatus,\n"
+     "    hxRestoreFileChange: decodeHxRestoreFileChangeResult,\n"
+     "    hxFileVersionsView: decodeHxFileVersionsView,\n"
+     "    hxFileVersionsSetCap: decodeHxFileVersionsView,\n"),
+]
+PORT_PAIRS = [
+    ('    | "hxComputerSetAutoResume"\n',
+     '    | "hxComputerSetAutoResume"\n    | "hxRestoreFileChange"\n    | "hxFileVersionsView"\n    | "hxFileVersionsSetCap"\n'),
+]
+# 预览：放在 computer_v173.py 那一段的前面
+MOCK_PAIRS = [
+    ("    hxComputerSetAutoResume: async (on: boolean) => ({\n",
+     "    hxRestoreFileChange: async () => ({ status: \"restored\" as const }),\n"
+     "    hxFileVersionsView: async () => ({ ...mockFileVersions }),\n"
+     "    hxFileVersionsSetCap: async (bytes: number | null) => {\n"
+     "      mockFileVersions = { ...mockFileVersions, capBytes: bytes ?? mockFileVersions.defaultCapBytes, custom: bytes !== null };\n"
+     "      return { ...mockFileVersions };\n"
+     "    },\n"
+     "    hxComputerSetAutoResume: async (on: boolean) => ({\n"),
+]
+MOCK_STATE = (
+    "/** HXBot (v1.7.4): the space for versions that the preview shows (Settings → Computer Use). */\n"
+    "let mockFileVersions = {\n"
+    "  capBytes: 2 * 1024 ** 3,\n"
+    "  defaultCapBytes: 2 * 1024 ** 3,\n"
+    "  custom: false,\n"
+    "  usedBytes: 380 * 1024 ** 2,\n"
+    "  versions: 42,\n"
+    "};\n"
+)
+
+# 5. 对话里画这张卡片（放在“计划”那一行之前：卡片不是计划，也不是普通的文字）
+TIMELINE = "src/renderer/src/features/conversation/ConversationTimeline.tsx"
+TIMELINE_IMPORT = 'import { HxFileChangeRow, isHxFileChangeRow } from "./HxFileChangeRow";'
+TIMELINE_PAIRS = [
+    ('                if (untrack(() => initialMessage.kind === "plan")) {\n',
+     "                // HXBot (v1.7.4, #54): the card of a file that an app skill changed, with its changes and\n"
+     "                // “恢复到修改前”. Only this computer restores the files of its own agents.\n"
+     "                if (untrack(() => isHxFileChangeRow(initialMessage))) {\n"
+     "                  return (\n"
+     "                    <div\n"
+     "                      data-index={virtualRow.index}\n"
+     "                      ref={messageVirtualizer.measureElement}\n"
+     '                      class="virtual-chat-row"\n'
+     "                      style={{\n"
+     "                        transform: messageVirtualizer.isVirtualized()\n"
+     "                          ? `translateY(${virtualRow.start - messageVirtualizer.scrollMargin()}px)`\n"
+     '                          : "none",\n'
+     "                      }}\n"
+     "                    >\n"
+     "                      <Show when={message()?.id === compactionBefore()}>\n"
+     "                        <CompactionMarker />\n"
+     "                      </Show>\n"
+     "                      <Show when={dayMarker()}>\n"
+     "                        {(label) => (\n"
+     '                          <div class="time-marker">\n'
+     "                            <span>{label()}</span>\n"
+     "                          </div>\n"
+     "                        )}\n"
+     "                      </Show>\n"
+     "                      <Show when={message()?.id === unreadBoundaryMessageId()}>\n"
+     "                        <UnreadMessagesDivider\n"
+     "                          animateIn={unreadDividerArrives}\n"
+     "                          elementRef={(element) => {\n"
+     "                            setUnreadMessagesDividerElement(element);\n"
+     "                            scheduleUnreadDividerVisibilityUpdate();\n"
+     "                          }}\n"
+     "                        />\n"
+     "                      </Show>\n"
+     "                      <ChatRowBoundary>\n"
+     "                        <article\n"
+     "                          data-chat-search-message={message()?.id}\n"
+     '                          class={{ "message-entry-animated": animateEntrance }}\n'
+     "                        >\n"
+     "                          <HxFileChangeRow\n"
+     "                            message={message() ?? initialMessage}\n"
+     "                            agentId={props.agent?.id}\n"
+     "                            threadId={props.agent?.threadId}\n"
+     "                            local={!props.runtime}\n"
+     "                          />\n"
+     "                        </article>\n"
+     "                      </ChatRowBoundary>\n"
+     "                    </div>\n"
+     "                  );\n"
+     "                }\n"
+     '                if (untrack(() => initialMessage.kind === "plan")) {\n'),
+]
+UI_PACKAGE_PAIRS = [
+    ('    "./features/conversation/TaskList": "./src/features/conversation/TaskList.tsx",\n',
+     '    "./features/conversation/HxFileChangeCard": "./src/features/conversation/HxFileChangeCard.tsx",\n'
+     '    "./features/conversation/TaskList": "./src/features/conversation/TaskList.tsx",\n'),
+]
+STYLE_PAIRS = [
+    ('@import "./styles/task-list.css";\n',
+     '@import "./styles/task-list.css";\n@import "./styles/hx-file-change.css";\n'),
+]
+
 TEXT_EN = {
     "status.agent.hxSkill.space.header": "Version space",
     "status.agent.hxSkill.space.cap":
@@ -158,6 +368,28 @@ TEXT_EN = {
     "status.agent.hxSkill.space.noVersionDetail": "Makes the change now. You cannot restore this file to before it.",
     "status.agent.hxSkill.space.cancel": "Cancel the change",
     "status.agent.hxSkill.space.cancelDetail": "The file stays as it is, and every version stays.",
+    "status.agent.hxSkill.change.made": "Made {file}",
+    "status.agent.hxSkill.change.same": "Saved {file}; its content did not change",
+    "status.agent.hxSkill.change.fileOnly": "Changed {file} (this kind of file shows no details)",
+    "status.agent.hxSkill.change.counts": "Changed {file}: {changed} changed, {added} added, {removed} removed",
+    "status.agent.hxSkill.change.restored": "Restored {file} to before the change",
+    "status.agent.hxSkill.change.checked": "HXBot read the file back, and it is as expected.",
+    "status.agent.hxSkill.change.unchecked": "HXBot could not read the file back to check it.",
+    "status.agent.hxSkill.change.checkedNoVersion":
+        "HXBot read the file back, and it is as expected. No version was kept, so this change cannot be restored.",
+    "status.agent.hxSkill.change.uncheckedNoVersion":
+        "HXBot could not read the file back to check it. No version was kept, so this change cannot be restored.",
+    "status.agent.hxSkill.change.restoredNote":
+        "The file is as it was before the change. The file as it was before the restore is kept as a version too.",
+    "status.agent.hxSkill.change.more": "… {count} more changes",
+    "status.agent.hxSkill.change.cut": "… the list stops here; the numbers in the title are complete",
+    "status.agent.hxSkill.restore.starting": "HXBot is still starting. Try again in a moment.",
+    "status.agent.hxSkill.restore.notInChat": "This card is not in this chat any more.",
+    "status.agent.hxSkill.restore.noVersion": "No version was kept before this change, so it cannot be restored.",
+    "status.agent.hxSkill.restore.notKept": "The version from before this change is not kept any more.",
+    "status.agent.hxSkill.restore.spaceFull":
+        "There is no room to keep the file as it is now before the restore. "
+        "Free up disk space, or make the space larger in Settings → Computer Use.",
 }
 
 TEXT_ZH = {
@@ -172,6 +404,68 @@ TEXT_ZH = {
     "status.agent.hxSkill.space.noVersionDetail": "直接修改。这个文件不能再恢复到修改前。",
     "status.agent.hxSkill.space.cancel": "取消修改",
     "status.agent.hxSkill.space.cancelDetail": "文件不动，旧版本都留着。",
+    "status.agent.hxSkill.change.made": "新建了 {file}",
+    "status.agent.hxSkill.change.same": "保存了 {file}，内容没有变化",
+    "status.agent.hxSkill.change.fileOnly": "改了 {file}（这类文件看不到具体改动）",
+    "status.agent.hxSkill.change.counts": "改了 {file}：改 {changed} 处，加 {added} 处，删 {removed} 处",
+    "status.agent.hxSkill.change.restored": "已把 {file} 恢复到修改前",
+    "status.agent.hxSkill.change.checked": "HXBot 已读回核对，和预期一致。",
+    "status.agent.hxSkill.change.unchecked": "HXBot 没能读回核对这个文件。",
+    "status.agent.hxSkill.change.checkedNoVersion": "HXBot 已读回核对，和预期一致。这次没留版本，不能恢复到修改前。",
+    "status.agent.hxSkill.change.uncheckedNoVersion": "HXBot 没能读回核对这个文件。这次没留版本，不能恢复到修改前。",
+    "status.agent.hxSkill.change.restoredNote": "文件已回到修改前的样子；恢复前的样子也留了一个版本。",
+    "status.agent.hxSkill.change.more": "……还有 {count} 处改动",
+    "status.agent.hxSkill.change.cut": "……列表到这里为止；标题里的数目是完整的",
+    "status.agent.hxSkill.restore.starting": "HXBot 还在启动，请稍后再试。",
+    "status.agent.hxSkill.restore.notInChat": "这张卡片已经不在这个对话里了。",
+    "status.agent.hxSkill.restore.noVersion": "这次修改前没留版本，不能恢复。",
+    "status.agent.hxSkill.restore.notKept": "修改前的版本已经不在了。",
+    "status.agent.hxSkill.restore.spaceFull":
+        "空间不够，恢复前保留不了现在的文件。请腾出磁盘空间，或在“设置 → Computer Use”里把空间调大。",
+}
+
+CONVERSATION_EN = {
+    "conversation.hx.fileChange.restore": "Restore to before the change",
+    "conversation.hx.fileChange.restoring": "Restoring…",
+    "conversation.hx.fileChange.restoredNow": "Restored.",
+    "conversation.hx.fileChange.unchanged": "The file was already as it was before the change.",
+    "conversation.hx.fileChange.failed": "Could not restore: {reason}",
+    "conversation.hx.fileChange.show": "Show the changes ({count})",
+    "conversation.hx.fileChange.hide": "Hide the changes",
+    "conversation.hx.fileChange.remote": "You can restore it on the computer that runs this agent.",
+}
+
+CONVERSATION_ZH = {
+    "conversation.hx.fileChange.restore": "恢复到修改前",
+    "conversation.hx.fileChange.restoring": "正在恢复…",
+    "conversation.hx.fileChange.restoredNow": "已恢复。",
+    "conversation.hx.fileChange.unchanged": "文件本来就是修改前的样子。",
+    "conversation.hx.fileChange.failed": "没能恢复：{reason}",
+    "conversation.hx.fileChange.show": "展开改动（{count}）",
+    "conversation.hx.fileChange.hide": "收起改动",
+    "conversation.hx.fileChange.remote": "在运行这个助手的电脑上可以恢复。",
+}
+
+SETTINGS_EN = {
+    "settings.hxComputer.versions.title": "Versions kept before changes",
+    "settings.hxComputer.versions.description":
+        "Before an app skill changes a file, HXBot keeps the file as it was, so the card in the chat can restore it. "
+        "When this space is full, HXBot asks you before it removes old versions.",
+    "settings.hxComputer.versions.usage": "{used} used by {count} versions",
+    "settings.hxComputer.versions.cap": "Space",
+    "settings.hxComputer.versions.default": "{size} (default)",
+    "settings.hxComputer.versions.git":
+        "A coding agent that changes files with its own commands keeps no versions here. In a Git folder, Git can restore them.",
+}
+
+SETTINGS_ZH = {
+    "settings.hxComputer.versions.title": "修改前保留的版本",
+    "settings.hxComputer.versions.description":
+        "应用技能改文件前，HXBot 会留一份修改前的文件，对话里的卡片可以一键恢复。空间满了时，先问你再删旧版本。",
+    "settings.hxComputer.versions.usage": "已用 {used}，共 {count} 个版本",
+    "settings.hxComputer.versions.cap": "空间上限",
+    "settings.hxComputer.versions.default": "{size}（默认）",
+    "settings.hxComputer.versions.git": "编程智能体用自己的命令改的文件不在这里留版本；在 Git 仓库里可以用 Git 恢复。",
 }
 
 ERROR_EN = {
@@ -197,8 +491,56 @@ def text(r) -> None:
     r.add_messages(f"{messages}/zh/status/agent.ts", "\n} as const satisfies", TEXT_ZH)
     r.add_messages(f"{messages}/en/error/backend.ts", "\n});\n", ERROR_EN)
     r.add_messages(f"{messages}/zh/error/backend.ts", "\n} as const satisfies", ERROR_ZH)
+    r.add_messages(f"{messages}/en/conversation.ts", "\n});\n", CONVERSATION_EN)
+    r.add_messages(f"{messages}/zh/conversation.ts", "\n} as const satisfies", CONVERSATION_ZH)
+    r.add_messages(f"{messages}/en/settings.ts", "\n});\n", SETTINGS_EN)
+    r.add_messages(f"{messages}/zh/settings.ts", "\n} as const satisfies", SETTINGS_ZH)
+
+
+def service(r) -> None:
+    for line in SERVICE_IMPORTS:
+        brand_rename.add_import(r, SERVICE, line)
+    for old, new in SERVICE_PAIRS:
+        r.replace(SERVICE, old, new)
+
+
+def plumbing(r) -> None:
+    """主进程的请求、preload 的解码、设置页能用的名字、预览。"""
+    brand_rename.add_import(r, IPC_ENDPOINTS, IPC_IMPORT)
+    for old, new in IPC_PAIRS:
+        r.replace(IPC_ENDPOINTS, old, new)
+    for line in HANDLER_IMPORTS:
+        brand_rename.add_import(r, HANDLERS, line)
+    for old, new in HANDLER_PAIRS:
+        r.replace(HANDLERS, old, new)
+    brand_rename.add_import(r, PRELOAD, PRELOAD_IMPORT)
+    for old, new in PRELOAD_PAIRS:
+        r.replace(PRELOAD, old, new)
+    for old, new in PORT_PAIRS:
+        r.replace("src/renderer/src/features/account/account-port.ts", old, new)
+    mock = "src/renderer/src/preview/mock-auth.ts"
+    for old, new in MOCK_PAIRS:
+        r.replace(mock, old, new)
+    text_now = r.read(mock)
+    if "let mockFileVersions" not in text_now:
+        # 放在第一个 export 之前（文件开头的 import 之后）
+        at = text_now.index("\nexport ")
+        r.write(mock, text_now[: at + 1] + MOCK_STATE + "\n" + text_now[at + 1 :])
+    brand_rename.add_import(r, TIMELINE, TIMELINE_IMPORT)
+    for old, new in TIMELINE_PAIRS:
+        r.replace(TIMELINE, old, new)
+    for old, new in UI_PACKAGE_PAIRS:
+        r.replace("packages/ui/package.json", old, new)
+    for old, new in STYLE_PAIRS:
+        r.replace("packages/ui/src/features/conversation/conversation.css", old, new)
+    # 合同包的出口：放在 computer_steps.py 那一行的前面
+    r.replace("packages/contracts/package.json",
+              '    "./hx-progress": "./src/hx-progress.ts",\n',
+              '    "./hx-file-change": "./src/hx-file-change.ts",\n    "./hx-progress": "./src/hx-progress.ts",\n')
 
 
 def apply(r) -> None:
     registry(r)
+    service(r)
+    plumbing(r)
     text(r)

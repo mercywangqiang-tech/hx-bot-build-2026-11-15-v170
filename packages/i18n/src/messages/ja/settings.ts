@@ -910,4 +910,12 @@ export const messages = {
   "settings.hxComputer.autoResume.title": "保留した手順を自動で続ける",
   "settings.hxComputer.autoResume.description":
     "あなたがコンピュータを使っている間、エージェントはキーボードやマウスが必要な手順を保留します。オンのときは、あなたが 5 秒（定期実行は 60 秒）手を止めると自動で続けます。オフのときは「今すぐ」と返信したときだけ続けます。",
+  "settings.hxComputer.versions.title": "変更前に残すバージョン",
+  "settings.hxComputer.versions.description":
+    "アプリスキルがファイルを変更する前に、HXBot は変更前のファイルを残します。チャットのカードから元に戻せます。この領域がいっぱいになると、古いバージョンを消す前に確認します。",
+  "settings.hxComputer.versions.usage": "{count} 個のバージョンで {used} 使用",
+  "settings.hxComputer.versions.cap": "保存領域",
+  "settings.hxComputer.versions.default": "{size}（既定）",
+  "settings.hxComputer.versions.git":
+    "自分のコマンドでファイルを変更するコーディングエージェントは、ここにバージョンを残しません。Git のフォルダーでは Git で戻せます。",
 } as const satisfies PartialTranslation<typeof source>;

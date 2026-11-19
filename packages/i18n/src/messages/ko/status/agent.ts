@@ -191,4 +191,24 @@ export const messages = {
   "status.agent.hxSkill.space.noVersionDetail": "지금 변경합니다. 이 파일을 변경 전으로 되돌릴 수 없습니다.",
   "status.agent.hxSkill.space.cancel": "변경 취소",
   "status.agent.hxSkill.space.cancelDetail": "파일은 그대로이며 모든 버전이 남습니다.",
+  "status.agent.hxSkill.change.made": "{file} 만듦",
+  "status.agent.hxSkill.change.same": "{file} 저장함. 내용은 바뀌지 않았습니다",
+  "status.agent.hxSkill.change.fileOnly": "{file} 변경함(이 종류의 파일은 자세한 내용을 볼 수 없습니다)",
+  "status.agent.hxSkill.change.counts": "{file} 변경함: {changed}곳 변경, {added}곳 추가, {removed}곳 삭제",
+  "status.agent.hxSkill.change.restored": "{file}을(를) 변경 전으로 되돌렸습니다",
+  "status.agent.hxSkill.change.checked": "HXBot이 파일을 다시 읽어 보았고, 예상대로입니다.",
+  "status.agent.hxSkill.change.unchecked": "HXBot이 파일을 다시 읽어 확인하지 못했습니다.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot이 파일을 다시 읽어 보았고, 예상대로입니다. 버전을 남기지 않아 이 변경은 되돌릴 수 없습니다.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot이 파일을 다시 읽어 확인하지 못했습니다. 버전을 남기지 않아 이 변경은 되돌릴 수 없습니다.",
+  "status.agent.hxSkill.change.restoredNote": "파일이 변경 전 상태입니다. 되돌리기 전의 파일도 버전으로 남아 있습니다.",
+  "status.agent.hxSkill.change.more": "… 변경 {count}곳 더",
+  "status.agent.hxSkill.change.cut": "… 목록은 여기까지입니다. 제목의 숫자는 전체입니다",
+  "status.agent.hxSkill.restore.starting": "HXBot이 아직 시작하는 중입니다. 잠시 후 다시 시도하세요.",
+  "status.agent.hxSkill.restore.notInChat": "이 카드는 더 이상 이 채팅에 없습니다.",
+  "status.agent.hxSkill.restore.noVersion": "이 변경 전에 버전을 남기지 않아 되돌릴 수 없습니다.",
+  "status.agent.hxSkill.restore.notKept": "이 변경 전의 버전이 더 이상 남아 있지 않습니다.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "되돌리기 전에 지금 파일을 보관할 공간이 없습니다. 디스크 공간을 확보하거나 설정 → 컴퓨터 제어에서 공간을 늘리세요.",
 } as const satisfies PartialTranslation<typeof source>;

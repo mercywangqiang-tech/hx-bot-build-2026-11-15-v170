@@ -212,4 +212,25 @@ export const messages = {
   "status.agent.hxSkill.space.noVersionDetail": "מבצע את השינוי עכשיו. לא תוכל להחזיר את הקובץ למצבו הקודם.",
   "status.agent.hxSkill.space.cancel": "לבטל את השינוי",
   "status.agent.hxSkill.space.cancelDetail": "הקובץ נשאר כמו שהוא, וכל הגרסאות נשארות.",
+  "status.agent.hxSkill.change.made": "נוצר {file}",
+  "status.agent.hxSkill.change.same": "{file} נשמר; התוכן שלו לא השתנה",
+  "status.agent.hxSkill.change.fileOnly": "{file} שונה (סוג קובץ זה לא מציג פרטים)",
+  "status.agent.hxSkill.change.counts": "{file} שונה: {changed} שונו, {added} נוספו, {removed} הוסרו",
+  "status.agent.hxSkill.change.restored": "{file} הוחזר למצבו לפני השינוי",
+  "status.agent.hxSkill.change.checked": "HXBot קרא את הקובץ שוב, והוא כמצופה.",
+  "status.agent.hxSkill.change.unchecked": "HXBot לא הצליח לקרוא את הקובץ שוב כדי לבדוק אותו.",
+  "status.agent.hxSkill.change.checkedNoVersion":
+    "HXBot קרא את הקובץ שוב, והוא כמצופה. לא נשמרה גרסה, ולכן אי אפשר לבטל את השינוי הזה.",
+  "status.agent.hxSkill.change.uncheckedNoVersion":
+    "HXBot לא הצליח לקרוא את הקובץ שוב כדי לבדוק אותו. לא נשמרה גרסה, ולכן אי אפשר לבטל את השינוי הזה.",
+  "status.agent.hxSkill.change.restoredNote":
+    "הקובץ חזר למצבו לפני השינוי. הקובץ כפי שהיה לפני השחזור נשמר גם הוא כגרסה.",
+  "status.agent.hxSkill.change.more": "… עוד {count} שינויים",
+  "status.agent.hxSkill.change.cut": "… הרשימה נעצרת כאן; המספרים בכותרת מלאים",
+  "status.agent.hxSkill.restore.starting": "HXBot עדיין עולה. נסה שוב בעוד רגע.",
+  "status.agent.hxSkill.restore.notInChat": "הכרטיס הזה כבר לא נמצא בצ'אט הזה.",
+  "status.agent.hxSkill.restore.noVersion": "לא נשמרה גרסה לפני השינוי הזה, ולכן אי אפשר לשחזר.",
+  "status.agent.hxSkill.restore.notKept": "הגרסה מלפני השינוי הזה כבר לא שמורה.",
+  "status.agent.hxSkill.restore.spaceFull":
+    "אין מקום לשמור את הקובץ כפי שהוא עכשיו לפני השחזור. פנה מקום בדיסק, או הגדל את המקום בהגדרות ← שליטה במחשב.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -396,6 +396,20 @@ export class HxFileVersions {
   }
 
   /**
+   * v1.7.4 (#54): a version by its id alone, in whichever task keeps it, for the card of a change.
+   * The id is a random name of a file in one task's folder; a record whose own id differs is not it.
+   */
+  async find(id: string): Promise<HxVersionRecord | null> {
+    if (!/^v[0-9a-z]{6,24}$/.test(id)) return null;
+    const root = this.#options.root();
+    for (const folder of await listDirs(root)) {
+      const record = await readRecord(join(root, folder, `${id}.json`));
+      if (record?.id === id) return record;
+    }
+    return null;
+  }
+
+  /**
    * Puts the version back. The file as it is now is kept as a version first, so that the restore
    * can itself be undone; with `keepCurrent: false` (the user's choice when the space is full) it is not.
    */
