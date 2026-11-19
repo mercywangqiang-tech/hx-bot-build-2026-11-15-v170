@@ -72,6 +72,14 @@ describe("CONC-02: the limit L of one provider, account and model", () => {
     expect(r.state()?.slowStart).toBe(true);
   });
 
+  it("does not grow past twice what is in flight, however many turns started at a lower L", () => {
+    const r = rig();
+    // Never more than 2 at once (the computer's budget holds the rest): the last sample that counts is
+    // at L = 4 (2 is half of it), so L stops at 5.
+    for (let i = 0; i < 30; i++) r.sample(1000, 100, 2);
+    expect(r.limit()).toBe(5);
+  });
+
   it("does not grow a limit that the turns did not use", () => {
     const r = rig();
     r.sample(1000, 100, 2);

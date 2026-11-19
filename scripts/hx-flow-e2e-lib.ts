@@ -76,6 +76,8 @@ export interface AppOptions {
   worker?: Record<string, string>;
   /** More environment for the app, such as HXBOT_HX_FLOW_SAMPLE_FILE. */
   env?: Record<string, string>;
+  /** v1.7.4: another fake agent, relative to the tree (default: the team worker). */
+  workerScript?: string;
   /** The source tree whose build runs (default: this one). */
   root?: string;
   debugPort?: number;
@@ -161,7 +163,7 @@ export class HxApp {
     const exports = Object.entries(env)
       .map(([name, value]) => `export ${name}=${JSON.stringify(value)}\n`)
       .join("");
-    const worker = join(this.root, "scripts/provider-fakes/agents/hx-team-worker.ts");
+    const worker = join(this.root, this.options.workerScript ?? "scripts/provider-fakes/agents/hx-team-worker.ts");
     writeFileSync(path, `#!/bin/sh\n${exports}exec "${sharedBun()}" "${worker}" "$@"\n`);
     chmodSync(path, 0o755);
     if (!existsSync(this.workerLog)) writeFileSync(this.workerLog, "");

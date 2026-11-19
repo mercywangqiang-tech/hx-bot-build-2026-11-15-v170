@@ -334,8 +334,11 @@ export class HxProviderGate {
     const gradient = clamp((HX_PROVIDER_LIMITS.tolerance * state.long) / short, HX_PROVIDER_LIMITS.minGradient, 1);
     // A limit that the turns did not use says nothing about the provider: it does not grow. The first
     // turn of a burst started alone but waited with the others, so the in flight of now counts too.
+    // It is compared with L as it is now: turns that started at a lower L and answer later do not
+    // count as a test of the L that the earlier ones raised (the E2E run: with the computer's turn
+    // budget at 2, L climbed to 6 without ever more than 2 in flight).
     const used = Math.max(turn.usedAtStart, this.#inFlight(turn.key, this.#now()));
-    const tested = used * 2 >= turn.limitAtStart;
+    const tested = used * 2 >= state.whole();
     const before = state.limit;
     if (state.slowStart && gradient === 1) {
       if (tested) state.limit = Math.min(state.cap, state.limit + 1);
