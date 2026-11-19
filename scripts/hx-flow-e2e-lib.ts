@@ -115,28 +115,47 @@ export function wipeProfile(runAs: string | null): void {
 }
 
 /**
- * v1.7.4: the text of each chat message whose id starts with `prefix` (a progress card such as
- * `hx-team-card-`), newest first. Read-only from the profile's database while the app runs: reading a
- * chat through the app needs a signed-in account, and these runs have none.
+ * v1.7.4: each chat message whose id starts with `prefix` (a progress card such as `hx-team-card-`,
+ * a file change card, a question card), as stored, newest first. Read-only from the profile's
+ * database while the app runs: reading a chat through the app needs a signed-in account, and these
+ * runs have none.
  */
-export function messageTexts(runAs: string | null, prefix: string): string[] {
+export const StoredMessageSchema = z
+  .object({
+    id: z.string(),
+    text: z.string(),
+    itemType: z.string().optional(),
+    status: z.string().optional(),
+    questionPrompt: z.unknown().optional(),
+  })
+  .loose();
+export type StoredMessage = z.infer<typeof StoredMessageSchema>;
+
+export function messageRecords(runAs: string | null, prefix: string): StoredMessage[] {
   const file = join(profileFolders(runAs)[1] ?? "", "hxbot.db");
   if (!existsSync(file)) return [];
   const database = new Database(file, { readonly: true });
   try {
     const rows = database
-      .query("SELECT message_json FROM projection_thread_messages WHERE message_id LIKE ? ORDER BY created_at DESC")
-      .all(`${prefix.replaceAll("%", "")}%`);
+      .query(
+        "SELECT message_json FROM projection_thread_messages WHERE message_id LIKE ? ORDER BY created_at DESC, ordinal DESC",
+      )
+      .all(`${prefix.replaceAll("%", "").replaceAll("_", "")}%`);
     return z
       .array(z.object({ message_json: z.string() }))
       .parse(rows)
       .flatMap((row) => {
-        const message = z.object({ text: z.string() }).loose().safeParse(JSON.parse(row.message_json));
-        return message.success ? [message.data.text] : [];
+        const message = StoredMessageSchema.safeParse(JSON.parse(row.message_json));
+        return message.success ? [message.data] : [];
       });
   } finally {
     database.close();
   }
+}
+
+/** The text of each chat message whose id starts with `prefix`, newest first (see `messageRecords`). */
+export function messageTexts(runAs: string | null, prefix: string): string[] {
+  return messageRecords(runAs, prefix).map((message) => message.text);
 }
 
 /** The team records of the profile. */

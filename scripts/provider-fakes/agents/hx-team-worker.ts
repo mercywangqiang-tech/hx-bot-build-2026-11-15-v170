@@ -8,6 +8,7 @@
 // - a later turn of the lead: team_done when every piece of work is back;
 // - a handoff form (目标：): the member streams text for a while, holding `HX_STRESS_RSS_MB` of memory
 //   as a model CLI does, then answers with channel_result;
+// - "HX-SKILL <base64 JSON>" (v1.7.4, hx-skills-e2e.ts): one computer_skill call with those arguments;
 // - anything else (a person's message, a routine): it streams text for `HX_STRESS_CHAT_MS`.
 // Each turn start and end goes to `FAKE_LOG`, so the script counts the turns that run at once.
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -35,6 +36,17 @@ type ToolValue =
   | { readonly [key: string]: ToolValue };
 /** The arguments this worker passes to a tool. */
 type ToolArgs = { readonly [key: string]: ToolValue };
+/** v1.7.4: the JSON arguments of a computer_skill call that a message carries. */
+const ToolValueSchema: z.ZodType<ToolValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(ToolValueSchema),
+    z.record(z.string(), ToolValueSchema),
+  ]),
+);
 
 const Member = z.object({ agentId: z.string(), lead: z.boolean(), role: z.string() });
 // The part of team_board "read" that the worker uses.
@@ -219,6 +231,8 @@ async function turn(request: AcpRequest, peer: AcpPeer): Promise<void> {
     // same channel task (when the first results come back), so that one root task gets n + m.
     const fanout = /HX-FANOUT (\d+)(?:\+(\d+))? ([\w,-]+)/u.exec(text);
     const more = existsSync(leadFile(`fanout-more-${sessionId}`));
+    // The last one: a new session's prompt can carry the earlier messages of the chat too.
+    const skillCall = [...text.matchAll(/HX-SKILL ([A-Za-z0-9+/=]+)/gu)].at(-1);
     // A session with no MCP server is HXBot's private prompt (such as the question of the automatic
     // model choice, what kind of work a message is): an answer in words, no tools.
     if (session && !session.servers.some((server) => server.url)) {
@@ -226,6 +240,14 @@ async function turn(request: AcpRequest, peer: AcpPeer): Promise<void> {
     } else if (process.env.HX_STRESS_QUICK_GREETING === "1" && text.trim().endsWith("你好，准备开始。")) {
       // The first message of a new agent: HXBot puts its instructions before it (about 18 KB).
       peer.say(sessionId, "好的。");
+    } else if (skillCall?.[1]) {
+      // v1.7.4 (hx-skills-e2e.ts): "HX-SKILL <base64 JSON>" calls computer_skill with those arguments.
+      const args = z
+        .record(z.string(), ToolValueSchema)
+        .parse(JSON.parse(Buffer.from(skillCall[1], "base64").toString("utf8")));
+      const answer = await tool(sessionId, "computer_skill", args);
+      logEntry({ event: "skill-answer", sessionId, text: answer.slice(0, 8000), at: Date.now() });
+      peer.say(sessionId, "完成。");
     } else if ((fanout?.[1] && fanout[3] && !existsSync(leadFile(`fanout-${sessionId}`))) || more) {
       mkdirSync(LEAD_DIR, { recursive: true });
       // A channel that is not a team room: one assignment after another to the members named.
