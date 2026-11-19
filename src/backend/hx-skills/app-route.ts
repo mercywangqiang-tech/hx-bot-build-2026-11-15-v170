@@ -155,12 +155,14 @@ export function hxMacOsaxInsideTell(script: string): string[] {
   let depth = 0;
   for (const raw of script.split("\n")) {
     const line = raw.trim();
-    // `tell application "X" to …` is one line and leaves no block open.
-    const tell = /^tell application "[^"]*"(.*)$/u.exec(line);
+    // `tell X to …` is one statement, unless it ends by opening a block (`… to tell process p`). Any
+    // `tell` block counts: a command inside `tell theDoc` inside the app goes to the app as well.
+    const tell = /^tell\b(.*)$/u.exec(line);
     if (tell) {
-      if (/^\s+to\s/u.test(tell[1] ?? "")) {
-        if (MAC_OSAX.test(tell[1] ?? "")) found.push(line);
-      } else depth += 1;
+      const parts = (tell[1] ?? "").split(/\s+to\s+/u);
+      const last = (parts.at(-1) ?? "").trim();
+      if (parts.length === 1 || /^tell\b/u.test(last)) depth += 1;
+      else if (MAC_OSAX.test(tell[1] ?? "")) found.push(line);
       continue;
     }
     if (line === "end tell") {

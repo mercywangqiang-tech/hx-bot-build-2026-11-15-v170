@@ -800,6 +800,12 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
       ),
     ).toEqual(["delay 0.2"]);
     expect(hxMacOsaxInsideTell('tell application "Pages" to delay 1')).toEqual(['tell application "Pages" to delay 1']);
+    expect(
+      hxMacOsaxInsideTell('tell application "System Events" to tell process "Numbers"\n  delay 0.3\nend tell'),
+    ).toEqual(["delay 0.3"]);
+    expect(hxMacOsaxInsideTell('tell application "Keynote"\n  tell theDoc\n  end tell\n  delay 0.2\nend tell')).toEqual(
+      ["delay 0.2"],
+    );
     expect(hxMacOsaxInsideTell('set x to system attribute "A"\ndelay 0.2\ntell application "Pages" to quit')).toEqual(
       [],
     );
