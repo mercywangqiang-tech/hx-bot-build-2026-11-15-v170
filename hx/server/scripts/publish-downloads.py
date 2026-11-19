@@ -332,7 +332,7 @@ def desktop_updates(directory):
     return lines, problems
 
 
-def desktop_update_gaps(directory, items):
+def desktop_update_gaps(directory, items, versions=None):
     """v1.7.3 紧急修正：下载页的桌面端安装包比应用内更新新（或者更新文件根本没传）时的提示。
 
     2026-11-19 服务器上只有安装包、没有 updates/desktop/latest-mac.yml：已经装好的 Mac 版在应用里收不到新版本，
@@ -345,6 +345,19 @@ def desktop_update_gaps(directory, items):
         feed = read_feed(directory / "updates" / "desktop" / name)
         have = feed["version"] if feed else None
         if have is not None and version_key(have) >= version_key(item["version"]):
+            continue
+        present = (versions or {}).get(platform, {})
+        if have is not None and have in present:
+            # v1.7.4：2026-11-19 下载目录里留着 v1.7.1 的 0.68.0 安装包，0.67.13 的安装包和更新文件都传了，
+            # 下载页却取了版本号大的 0.68.0。这时该挪走的是旧的高版本安装包，不是去补传它的更新文件。
+            gaps.append(
+                "！！注意：下载目录里同时有 {label} 版 {want} 和 {have} 的安装包，下载页用了版本号大的 {want}，"
+                "应用内更新是 {have}。要发布的是 {have}：把 {want} 的安装包挪走后重新运行本命令——"
+                "mkdir -p {old} && mv {files} {old}/ 。要发布的是 {want}：补传它的应用内更新"
+                "（双击交付文件夹 client 里的“上传应用内更新-{want}.command”）。".format(
+                    label=label, want=item["version"], have=have,
+                    old=str(directory.parent / (directory.name + "-old")),
+                    files=" ".join(str(directory / name) for name in present.get(item["version"], []))))
             continue
         gaps.append(
             "！！注意：下载页的 {label} 版是 {want}，应用内更新{state}。已经装好的 {label} 客户端在应用里收不到 {want}，"
@@ -441,6 +454,7 @@ def main():
     cache = {item.get("file"): item for item in previous_items if item.get("file")}
 
     best = {}
+    versions = {}  # platform → version → 安装包文件名（检查有没有留着别的版本）
     for file in sorted(directory.iterdir()):
         if not file.is_file() or file.is_symlink():
             continue
@@ -461,6 +475,7 @@ def main():
                 "sha256": old["sha256"] if unchanged else sha256(file),
                 "date": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
             }
+            versions.setdefault(platform, {}).setdefault(item["version"], []).append(file.name)
             current = best.get(platform)
             if current is None or version_key(item["version"]) >= version_key(current["version"]):
                 best[platform] = item
@@ -555,7 +570,7 @@ def main():
         print("  桌面端 " + line)
     if not desktop_lines and not desktop_problems:
         print("  桌面端（还没有更新文件：上传安装包时用 hx/scripts/upload-downloads.sh，会一并传上来）")
-    for note in notes + desktop_problems + desktop_update_gaps(directory, items):
+    for note in notes + desktop_problems + desktop_update_gaps(directory, items, versions):
         print()
         print("  " + note)
     return 0

@@ -12,6 +12,8 @@ import { hxAppDataFolder } from "../hx-access/hub";
 import { hxAccessStore } from "../hx-access/rules";
 import { hxFlow } from "../hx-flow/ledger";
 import type { HxProgressWriter } from "../hx-progress/progress";
+import { HX_SKILL_TOOL } from "../hx-skills/declarations";
+import { hxSkillStopAll, hxSkillToolCall } from "../hx-skills/host";
 import type { DynamicToolCallParams, DynamicToolResult } from "../protocol";
 import { HxComputerActions } from "./actions";
 import { hxAppControl } from "./app-control";
@@ -127,7 +129,15 @@ export const hxComputer = {
    * nobody, the steps of one app wait for that app, the front of the screen and the system for theirs.
    */
   toolCall(
-    agent: { id?: string; name: string; computerUse: boolean; inTask: boolean; routine?: boolean } | null,
+    agent: {
+      id?: string;
+      name: string;
+      computerUse: boolean;
+      inTask: boolean;
+      routine?: boolean;
+      /** HXBot (v1.7.4): the conversation's public thread id: computer_skill keeps a task's versions together. */
+      threadId?: string | null;
+    } | null,
     params: Pick<DynamicToolCallParams, "tool" | "arguments">,
   ): Promise<DynamicToolResult> {
     const record = (detail: string) => {
@@ -138,6 +148,27 @@ export const hxComputer = {
       name: agent?.name ?? "",
       tier: agent?.routine ? 3 : agent?.id ? (hxFlow.tierOf(agent.id) ?? 2) : 2,
     };
+    // HXBot (v1.7.4, CU-07): the skills work on files directly; only settings, old formats and a live
+    // PivotTable take the system lane, because they use an app.
+    if (params.tool === HX_SKILL_TOOL) {
+      const allowed = hxComputerAllowed(agent);
+      const current = parts();
+      return hxComputerCounted(() =>
+        hxSkillToolCall({
+          agent: agent?.id ? { id: agent.id, name: agent.name, threadId: agent.threadId ?? null } : null,
+          allowed,
+          arguments: params.arguments,
+          run: hxRun,
+          settings: current.catalog.platform === null ? null : current.actions,
+          systemTurn: (work) =>
+            hxSystemTurn(
+              holder,
+              { lanes: hxComputerLanes, presence: hxPresence, stopped: () => stopHolds(Date.now()) },
+              work,
+            ),
+        }),
+      );
+    }
     if (HX_COMPUTER_STEP_TOOL_NAMES.has(params.tool)) {
       const agentId = agent?.id ?? "";
       return hxComputerCounted(async () => {
@@ -282,6 +313,8 @@ export const hxComputer = {
   stopAll(now = Date.now()): void {
     hxComputerStops.stop(null);
     stopUntil = now + HX_COMPUTER_STOP_MS;
+    // v1.7.4 (CU-07): skill calls that have not written yet stop and take their work back.
+    hxSkillStopAll();
     // v1.7.3 (CONC-05, CONC-06): every lane, every wait for one, and every parked step.
     hxComputerLanes.stopAll();
     hxParkedSteps.dropAll();

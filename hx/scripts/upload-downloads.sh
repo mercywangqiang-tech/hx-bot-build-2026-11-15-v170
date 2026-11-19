@@ -87,8 +87,11 @@ add_updates() {
 # 在 Mac 上上传时，从 dmg 旁边的 zip 里取出 HXBot.app 核对：签名身份要有应用标识 com.hxallai.bot，并且是证书签名
 # （固定证书或 Developer ID），不是临时签名。设置了 HXBOT_MAC_CERT_SHA1（mac-signing-cert.sh 显示的指纹）时还核对指纹。
 # 测试包要上传时设 HXBOT_ALLOW_UNSIGNED_MAC=1。
+# v1.7.3.1：固定证书是自签的，根证书和叶证书是同一张，codesign 在有的 Mac 上写 certificate root，有的写
+# certificate leaf，两种都认；没设 HXBOT_MAC_CERT_SHA1 时，核对的是 HXBot 固定证书的指纹（9FA98521…）。
+HX_FIXED_CERT_SHA1="9FA98521AA648E5D0922704B1184E1A38F3B548B"
 check_mac_signature() {
-  local installer="$1" zip work dr sha1
+  local installer="$1" zip work dr sha1 upper
   zip="${installer%.dmg}.zip"
   [ -f "$zip" ] || return 0
   if ! command -v codesign >/dev/null || ! command -v ditto >/dev/null; then
@@ -99,10 +102,11 @@ check_mac_signature() {
   ditto -x -k "$zip" "$work" || { rm -rf "$work"; echo "解不开 $zip" >&2; exit 1; }
   dr="$(codesign -d -r- "$work/HXBot.app" 2>&1 | sed -n 's/^designated => //p')"
   rm -rf "$work"
-  sha1="$(printf '%s' "${HXBOT_MAC_CERT_SHA1:-}" | tr '[:lower:]' '[:upper:]')"
+  sha1="$(printf '%s' "${HXBOT_MAC_CERT_SHA1:-$HX_FIXED_CERT_SHA1}" | tr '[:lower:]' '[:upper:]')"
+  upper="$(printf '%s' "$dr" | tr '[:lower:]' '[:upper:]')"
   if [[ "$dr" == *'identifier "com.hxallai.bot"'* ]] &&
-     { [[ "$dr" == *'certificate leaf = H"'* ]] || [[ "$dr" == *"anchor apple generic"* ]]; } &&
-     { [ -z "$sha1" ] || [[ "$(printf '%s' "$dr" | tr '[:lower:]' '[:upper:]')" == *"H\"$sha1\""* ]]; }; then
+     { { [[ "$dr" == *'certificate leaf = H"'* ]] || [[ "$dr" == *'certificate root = H"'* ]]; } &&
+       [[ "$upper" == *"H\"$sha1\""* ]] || [[ "$dr" == *"anchor apple generic"* ]]; }; then
     echo "Mac 版的签名身份：$dr"
     return 0
   fi

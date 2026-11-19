@@ -12,6 +12,7 @@ import { createHxBotLogger, toLogValue } from "@hxbot/logging";
 import { Effect, Fiber, Result, Schema } from "effect";
 import type { AgentClient } from "../agent-client";
 import { causeHelpers } from "../effect-boundary";
+import { hxSidePlace } from "../hx-flow/provider-side";
 import {
   type AppServerNotification,
   type AppServerRequest,
@@ -86,6 +87,9 @@ export const generateTextWithoutTools = Effect.fn("Agent.generateTextWithoutTool
   mode: ToollessMode = "text",
 ) {
   let cleanupFailure: ProfileGenerationFailed | null = null;
+  // HXBot (v1.7.4, CONC-02): HXBot's own model call takes a place under the limit of its provider,
+  // account and model (src/backend/hx-flow/provider-side.ts), and gives it back at the end.
+  const hxRelease = yield* Effect.promise(() => hxSidePlace(model, observe, cancelled));
   const result = yield* Effect.acquireUseRelease(
     makeToollessDirectory(),
     (cwd) =>
@@ -113,7 +117,7 @@ export const generateTextWithoutTools = Effect.fn("Agent.generateTextWithoutTool
           logger.warn("A temporary generation folder was not removed.", toLogValue(removed.failure.cause));
         if (Result.isFailure(stopped)) cleanupFailure = stopped.failure;
       }),
-  );
+  ).pipe(Effect.ensuring(Effect.sync(hxRelease)));
   if (cleanupFailure) return yield* Effect.fail(cleanupFailure);
   if (Result.isFailure(result)) return yield* result.failure;
   return result.success.text;

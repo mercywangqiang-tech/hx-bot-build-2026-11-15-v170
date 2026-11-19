@@ -72,6 +72,20 @@ describe("tool_search (HXBot additions)", () => {
     expect(result.note).toContain("hxbot.web_search is not for this agent's provider");
   });
 
+  it("finds computer_skill for Office, PDF and file words (v1.7.4)", () => {
+    for (const query of [
+      "合并 PDF",
+      "把表格里的公式改一下",
+      "改一下 Word 文档的段落",
+      "PPT 加一页",
+      "压缩这个文件夹",
+      "rename these files",
+      "fill the pdf form",
+    ]) {
+      expect(names(search({ query })).slice(0, 3), query).toContain("hxbot.computer_skill");
+    }
+  });
+
   it("keeps the usual results for a usual search", () => {
     expect(names(search({ query: "computer_plan" }))[0]).toBe("hxbot.computer_plan");
     expect(names(search({ queries: ["list tables"] }))).toContain("hxbot.list_tables");

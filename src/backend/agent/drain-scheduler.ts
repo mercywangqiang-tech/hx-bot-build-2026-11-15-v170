@@ -9,6 +9,8 @@ import type { ChannelService } from "../channel-service";
 import { causeHelpers } from "../effect-boundary";
 import { hxApprovalPolicy } from "../hx-access/hub";
 import { hxFlow, hxTickMemo } from "../hx-flow/ledger";
+import { hxProviderGate } from "../hx-flow/provider-gate";
+import { hxProviderModelOf } from "../hx-flow/provider-model";
 import type { DeliveryContext, MailboxStore } from "../mailbox-store";
 import type { MessagingThreads } from "../messaging/messaging-threads";
 import { decodeTurnResponse } from "../protocol";
@@ -258,11 +260,12 @@ export class DrainScheduler {
       },
       isWaiting: (key) => {
         const lane = laneOf(key);
-        return (
-          this.#mayStartNow(lane) &&
-          this.#memory.mayDrain(lane.agentId) &&
-          this.#mailbox.nextQueued(lane.agentId, lane.taskId) !== null
-        );
+        const next =
+          this.#mayStartNow(lane) && this.#memory.mayDrain(lane.agentId)
+            ? this.#mailbox.nextQueued(lane.agentId, lane.taskId)
+            : null;
+        // HXBot (v1.7.4, CONC-02): a lane that its provider holds waits for the provider, not for a slot.
+        return next !== null && hxProviderGate.check(key, this.#hxPerson(key, next.delivery));
       },
       head: (key) => {
         const lane = laneOf(key);
@@ -281,6 +284,18 @@ export class DrainScheduler {
         }),
       ),
     });
+    // HXBot (v1.7.4, CONC-02): the provider limits read each agent's model, once per microtask: a check
+    // asks for every waiting lane, and the list copies every agent.
+    const hxModels = hxTickMemo(() => new Map(this.#store.list().map((agent) => [agent.id, hxProviderModelOf(agent)])));
+    hxProviderGate.attach({
+      modelOf: (agentId) => hxModels().get(agentId) ?? null,
+      wake: () => this.retrySlotWaiters(),
+    });
+  }
+
+  /** HXBot (v1.7.4): a turn for a person's message, by its HX-Flow tier. */
+  #hxPerson(key: string, head: DeliveryContext["delivery"]): boolean {
+    return hxFlow.rank(key, head, this.#channels?.store.assignmentForDelivery(head.id) ?? null).tier === 0;
   }
 
   /** The clauses of this agent's own state. `#heldByMachine` adds the memory and the turn slots. */
@@ -656,6 +671,8 @@ export class DrainScheduler {
           return;
         }
       }
+      // HXBot (v1.7.4, CONC-02): the start waits for its model until its turn starts.
+      hxProviderGate.starting(key, this.#hxPerson(key, context.delivery));
       // One message from the user lets one turn try a limit, so the other lanes stay held.
       this.#usageLimits.tryStarted(agentId);
       // HXBot (v1.7.1): the ledger counts the turn of this lane for its team (src/backend/hx-flow).
@@ -666,6 +683,8 @@ export class DrainScheduler {
       Effect.ensuring(
         Effect.sync(() => {
           this.#drainingLanes.delete(key);
+          // HXBot (v1.7.4, CONC-02): a start that ended with no turn frees its place under the provider limit.
+          if (!this.#laneRunning(lane)) hxProviderGate.startEnded(key);
           if (this.#requeuedAtLimit.delete(agentId) || this.#mailbox.nextQueued(agentId))
             this.#scheduleLane(mainLane(agentId));
           // Every task too: this lane can have held another one for the task limit or the process.

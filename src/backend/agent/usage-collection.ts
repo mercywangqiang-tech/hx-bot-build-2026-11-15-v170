@@ -5,6 +5,7 @@ import { type DynamicRecord, isDynamicRecord } from "@hxbot/contracts/runtime-va
 import { createHxBotLogger } from "@hxbot/logging";
 import type { AgentUsage } from "../database/agent-usage";
 import type { ProviderSession } from "../database/provider-sessions";
+import { hxTagSideObserver } from "../hx-flow/provider-side";
 import { getRecord, getString } from "../protocol";
 
 const logger = createHxBotLogger("usage-collection");
@@ -218,13 +219,14 @@ export function sideSessionUsageObserver(
   model: AgentSummary["model"],
 ): (notification: { method: string; params?: unknown }) => void {
   const session = { id: `${kind}:${randomUUID()}`, provider, createdAt: new Date().toISOString() };
-  return ({ method, params }) => {
+  // HXBot (v1.7.4, CONC-02): the kind tells generateTextWithoutTools which place the call takes.
+  return hxTagSideObserver(({ method, params }: { method: string; params?: unknown }) => {
     try {
       collectProviderUsage(usage, { id: agentId, model }, session, method, params);
     } catch (error) {
       logger.warn("Could not save the usage of a side session.", { kind, provider, error });
     }
-  };
+  }, kind);
 }
 
 /**

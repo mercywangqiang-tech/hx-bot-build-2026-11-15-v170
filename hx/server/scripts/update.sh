@@ -143,8 +143,14 @@ free="$(df -Pk "$ROOT" | awk 'NR == 2 { print $4 }')"
 [ -z "$free" ] || [ "$free" -gt 1048576 ] || { cleanup_stage; die "$ROOT 所在磁盘剩余不到 1 GB，先清理再升级"; }
 
 # ---------- 2. 升级前的状况 ----------
+# 应用内更新文件和下载页的版本对不上，是上传的文件的问题，不是服务器程序的问题：只提醒，不因此回滚。
+# （v1.7.4：2026-11-19 下载目录里留着 v1.7.1 的 0.68.0 安装包，升级 v1.7.3.1 时新加的这两项不通过，整个升级被回滚。）
+UPLOAD_ITEM='的应用内更新文件 updates/desktop/'
 failures() { # check.sh 的失败项（只要名称），一行一项
-  sed -n 's/^  失败  //p' | sed 's/（期望 .*$//' | LC_ALL=C sort -u
+  sed -n 's/^  失败  //p' | grep -v -F "$UPLOAD_ITEM" | sed 's/（期望 .*$//' | LC_ALL=C sort -u
+}
+upload_problems() { # 上传的文件对不上的项（整行，含期望和实际）
+  sed -n 's/^  失败  //p' | grep -F "$UPLOAD_ITEM" | LC_ALL=C sort -u
 }
 reminders() { grep '^提醒：' | LC_ALL=C sort -u; }
 echo "升级前检查……"
@@ -282,5 +288,13 @@ cleanup_stage
 docker image prune -f >/dev/null 2>&1 || true
 echo
 echo "✔ 已升级到 $NEW_VERSION。升级前的文件备份：$FILES_BACKUP；数据库备份：$DB_BACKUP"
+upload_issues="$(printf '%s\n' "$after" | upload_problems)"
+if [ -n "$upload_issues" ]; then
+  echo
+  echo "！！提醒（不影响这次升级）：下载页和应用内更新文件的版本对不上，已装的客户端可能收不到新版本："
+  printf '%s\n' "$upload_issues" | sed 's/^/  /'
+  echo "  运行 python3 /opt/hxbot/server/scripts/publish-downloads.py /opt/hxbot/downloads，按最后的大字提示处理"
+  echo "  （下载目录里留着更高版本的旧安装包时，把它挪走；应用内更新文件没传时，补传）。"
+fi
 echo "  浏览器里已经打开的 HXBot 页面要关掉重开（或 Ctrl+F5）。客户端在应用里检查更新即可拿到新版（要先把新安装包上传到下载中心）。"
 status updated "$NEW_VERSION"

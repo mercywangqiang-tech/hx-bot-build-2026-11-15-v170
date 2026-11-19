@@ -282,6 +282,32 @@ export class HxComputerActions {
       : { status: "candidates", candidates: resolved.candidates };
   }
 
+  /**
+   * HXBot (v1.7.4, CU-07 settings skill): opens a settings page, or the page of a setting, and nothing
+   * else: no app, file or address, whatever the words match.
+   */
+  async openSettingsPage(input: { id?: string; query?: string }): Promise<HxOpenResult> {
+    if (this.#catalog.platform === null) return UNSUPPORTED;
+    if ((input.id ? 1 : 0) + (input.query ? 1 : 0) !== 1)
+      return { status: "invalid", reason: "Give exactly one of id and query." };
+    const resolved = await this.#resolve(input, ["page", "setting"]);
+    if (!resolved) return { status: "not-found", reason: "No settings page has that name. Try other words." };
+    return "entry" in resolved
+      ? this.#openEntry(resolved.entry)
+      : { status: "candidates", candidates: resolved.candidates };
+  }
+
+  /** HXBot (v1.7.4, CU-07 settings skill): reads a setting; a page or an app is never opened for it. */
+  async readSetting(input: { id?: string; query?: string }): Promise<HxSetResult> {
+    if (this.#catalog.platform === null) return UNSUPPORTED;
+    if ((input.id ? 1 : 0) + (input.query ? 1 : 0) !== 1)
+      return { status: "invalid", reason: "Give exactly one of id and query." };
+    const resolved = await this.#resolve(input, ["setting"]);
+    if (!resolved) return { status: "not-found", reason: "No setting has that name. Try other words." };
+    if ("candidates" in resolved) return { status: "candidates", candidates: resolved.candidates };
+    return this.set({ id: resolved.entry.id });
+  }
+
   async #openUrl(url: string): Promise<HxOpenResult> {
     let parsed: URL;
     try {

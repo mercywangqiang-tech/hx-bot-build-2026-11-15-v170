@@ -231,13 +231,15 @@ def own_commit_check(r) -> None:
 # 三个动作（CONC-03、CONC-10）；建议卡说明里团队上限的一句改成“默认不设上限，用户说了才传”，文字都压到最短。
 # v1.7.3：只留一个入口（CONC-05）：Computer Use 那一段整段换成 HXBot 电脑工具的说明，每次对话发的内容变少，上限跟着降；
 # computer_do 的 type 多了 by（直接赋值或打字），computer_look 多了 screenshot（截图），只在工具目录里。
+# v1.7.4：应用技能（CU-07）computer_skill 只在工具目录里（说明和参数已压到最短）；每次对话只多一句
+# “Office 文件、PDF 和移动文件先用 computer_skill”（63 字节），tool_search 列出的工具名多了它。
 AGENT_CONTEXT_BYTES = {
-    "catalog.descriptions": 45025,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作
-    "catalog.schemas": 81800,  # 上游 70274；v1.7.1 limits 与 team 的新字段；v1.7.3 by、screenshot
+    "catalog.descriptions": 45392,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作；v1.7.4 computer_skill
+    "catalog.schemas": 82321,  # 上游 70274；v1.7.1 limits 与 team 的新字段；v1.7.3 by、screenshot；v1.7.4 computer_skill（含幂等键 requestId）
     "guidance": 21879,  # 上游 22043
-    "instructions.claude": 16592,  # 上游 14897
-    "instructions.codex": 16662,  # 上游 14969
-    "visible-tools": 21137,  # 上游 15681（tool_search 的说明里列出全部工具名）
+    "instructions.claude": 16655,  # 上游 14897；v1.7.4 computer_skill 一句
+    "instructions.codex": 16725,  # 上游 14969；v1.7.4 computer_skill 一句
+    "visible-tools": 21153,  # 上游 15681（tool_search 的说明里列出全部工具名）
 }
 
 

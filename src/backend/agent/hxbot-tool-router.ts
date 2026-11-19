@@ -658,6 +658,7 @@ export class HxBotToolRouter {
                         computerUse: agentComputerUseEnabled(hxAgent),
                         inTask: hxInTask,
                         routine: hxRoutine,
+                        threadId: hxThreadId,
                       }
                     : null,
                   toolRequest.params,

@@ -32,6 +32,7 @@ import { newAssistantMessage, normalizeCompletionStatus } from "../conversation-
 import { causeHelpers, reportOriginalFailure } from "../effect-boundary";
 import { hxRecordItem, hxReleaseEarlierTurns } from "../hx-access/hub";
 import { hxAutoRouter } from "../hx-auto-model/router";
+import { hxProviderGate, hxRetryAfterMs } from "../hx-flow/provider-gate";
 import type { DeliveryContext, MailboxStore, UsageLimitContinuation } from "../mailbox-store";
 import {
   type AppServerNotification,
@@ -540,6 +541,7 @@ export class TurnLifecycle {
     for (const [turnId, turn] of this.#runningTurns) {
       if (turn.client !== client) continue;
       this.#runningTurns.delete(turnId);
+      hxProviderGate.turnEnded(turnId);
       // A routine run's own session saves no history, so its turn ends now and closes the session.
       if (
         options.keepRecoverable &&
@@ -731,6 +733,8 @@ export class TurnLifecycle {
           acted: false,
           openTools: new Set(),
         });
+        // HXBot (v1.7.4, CONC-02): the turn waits for its model until its first output (src/backend/hx-flow).
+        hxProviderGate.turnStarted(turnId, agentId, taskId, starting?.text.length ?? 0);
         this.#traces.begin(turnId, new Date().toISOString());
         const publicThreadId = this.#conversation.publicThreadId(agentId, threadId);
         const snapshot = this.#conversation.ensureSnapshot(agentId, publicThreadId);
@@ -978,6 +982,10 @@ export class TurnLifecycle {
         // error became a sentence for the user. The other clients leave it to the error.
         const reportedCause = isRecord(params) && isCauseCode(params.causeCode) ? params.causeCode : null;
         const causeCode = reportedCause ?? classifyFailure(error ?? message);
+        // HXBot (v1.7.4, CONC-02): a short throttle (a 429, not a spent plan) halves the limit of the
+        // provider, account and model, and pauses it. The CLI retries by itself; HXBot does not.
+        if (causeCode === "rate_limit" && !isUsageLimitDiagnostic(message) && !isPlanLimitDiagnostic(message))
+          hxProviderGate.throttled(getString(params, "turnId"), agentId ?? null, hxRetryAfterMs(message));
         if (notification.method === "warning" && isNonActionableCodexWarning(message)) {
           // No banner, but the log keeps the reason, such as a closed WebSocket.
           logger.info("A provider warning needs no action.", {
@@ -1173,6 +1181,7 @@ export class TurnLifecycle {
     function* (this: TurnLifecycle, agentId: string, threadId: string, turnId: string, status: string) {
       const running = this.#runningTurns.get(turnId);
       this.#runningTurns.delete(turnId);
+      hxProviderGate.turnEnded(turnId);
       this.#markEnded(turnId);
       this.#completingTurns.add(turnId);
       // A turn that runs again below starts a new trace, so each path takes this one.
@@ -1593,6 +1602,7 @@ export class TurnLifecycle {
     const runningThreadId = running?.threadId ?? threadId;
     if (running) this.#keepTurnTiming(turnId, running);
     this.#runningTurns.delete(turnId);
+    hxProviderGate.turnEnded(turnId);
     this.#reportedFailures.delete(turnId);
     this.#markEnded(turnId);
     this.#instructions.dropTurn(agentId, turnId);
@@ -1756,7 +1766,11 @@ export class TurnLifecycle {
     if (!running) return;
     running.produced = true;
     if (acted) running.acted = true;
-    if (streamed) running.firstOutputAt ??= Date.now();
+    if (streamed && running.firstOutputAt === null) {
+      running.firstOutputAt = Date.now();
+      // HXBot (v1.7.4, CONC-02): one sample of the model's speed.
+      hxProviderGate.firstOutput(turnId);
+    }
   }
 
   readonly #associateStartedTurn = Effect.fn("TurnLifecycle.associateStartedTurn")(function* (
@@ -1923,6 +1937,8 @@ export class TurnLifecycle {
     if (openTools && isToolItem(item) && isString(item.id)) {
       if (completed) lastToolClosed = openTools.delete(item.id) && openTools.size === 0;
       else openTools.add(item.id);
+      // HXBot (v1.7.4, CONC-02): in a tool step the turn works here, it does not wait for the model.
+      hxProviderGate.toolSteps(turnId, openTools.size);
     }
     // MCP credentials and the shared secret patterns come out before the text leaves the agent service.
     const failure = completed ? toolFailureText(item, (text) => this.#hooks.redactMcp(text)) : null;

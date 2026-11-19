@@ -5,6 +5,7 @@
 // computer_run 在主程序里运行 AppleScript、JXA、快捷指令或 PowerShell（run-script.ts）。
 // 助手的“Computer Use”开着才能用；结果是一段 JSON，status 说明发生了什么。
 import { z } from "zod";
+import { HX_SKILL_NAMES, HX_SKILL_TOOL } from "../hx-skills/declarations";
 import type { DynamicToolCallParams, DynamicToolResult } from "../protocol";
 import type { HxComputerActions, HxFindResult, HxOpenResult, HxSetResult } from "./actions";
 import type { HxAppInput, HxAppResult } from "./app-control";
@@ -18,7 +19,7 @@ const COMPUTER_SET_TOOL = "computer_set";
 const COMPUTER_INSTALL_TOOL = "computer_install";
 const COMPUTER_APP_TOOL = "computer_app";
 const COMPUTER_RUN_TOOL = "computer_run";
-/** The tools the router hands to hx-computer: these six and the step tools of v1.6.7. */
+/** The tools the router hands to hx-computer: these six, the step tools of v1.6.7 and computer_skill of v1.7.4. */
 export const HX_COMPUTER_TOOL_NAMES: ReadonlySet<string> = new Set([
   COMPUTER_FIND_TOOL,
   COMPUTER_OPEN_TOOL,
@@ -27,6 +28,7 @@ export const HX_COMPUTER_TOOL_NAMES: ReadonlySet<string> = new Set([
   COMPUTER_APP_TOOL,
   COMPUTER_RUN_TOOL,
   ...HX_COMPUTER_STEP_TOOL_NAMES,
+  HX_SKILL_TOOL,
 ]);
 
 // These texts go to the model with every conversation (computer_open and computer_set) or with every
@@ -69,6 +71,15 @@ const RUN_SHAPE = {
   script: z.string().min(1).max(20000).describe("The script; for shortcut, its name."),
   input: z.string().max(20000).optional().describe("Input text of a shortcut."),
   confirmed: z.boolean().optional().describe("Only after the user said yes."),
+};
+// v1.7.4 (CU-07): the six skills; the runner checks params against the declaration of the action.
+const SKILL_SHAPE = {
+  skill: z.enum(HX_SKILL_NAMES),
+  action: z.string().min(1).max(40),
+  files: z.array(z.string().min(1).max(4096)).max(100).optional().describe("Input files or folders."),
+  output: z.string().min(1).max(4096).optional().describe("A new file or folder."),
+  params: z.record(z.string(), z.unknown()).optional(),
+  requestId: z.string().min(1).max(100).optional().describe("Same id again: done once."),
 };
 const SET_SHAPE = {
   id: id.optional(),
@@ -115,6 +126,13 @@ export const HX_COMPUTER_TOOL_DEFINITIONS = [
   },
   // v1.6.7: computer_plan, computer_look and computer_do, in the tool catalog only.
   ...HX_COMPUTER_STEP_TOOL_DEFINITIONS,
+  // v1.7.4 (CU-07): in the tool catalog only.
+  {
+    name: HX_SKILL_TOOL,
+    description:
+      "Edit files without the app window: sheet (.xlsx), document (.docx), slides (.pptx), pdf (text, form, extract, split, merge), files (find, move, rename, zip, unzip), settings (read, change, open). A wrong action answers with the actions and their params. Old formats go through an app. A change keeps a version, is read back and returns a diff. Nothing is overwritten.",
+    shape: SKILL_SHAPE,
+  },
 ];
 
 /** Everything a tool can answer: what the actions return, and the three answers of this file. */

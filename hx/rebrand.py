@@ -49,6 +49,8 @@ import fixes_172 as hx_fixes_172  # 同目录：修 bug（v1.7.2：程序坞多�
 import computer_v173 as hx_computer_v173  # 同目录：电脑操控（五）分道、礼让用户、停放续做、读回核对（v1.7.3）
 import fixes_173 as hx_fixes_173  # 同目录：全面排查修 bug（v1.7.3：同一出口地址的多人登录等）
 import hotfix_173 as hx_hotfix_173  # 同目录：v1.7.3 紧急修正（程序坞第二个图标、边干活边更新、检查更新说清原因）
+import office_files as hx_office_files  # 同目录：应用技能（一）办公与文件（v1.7.4）
+import flow_v174 as hx_flow_v174  # 同目录：并发（二）提供商在途上限、等待看得见、过载换模型、裁判建议（v1.7.4）
 
 ROOT = Path(__file__).resolve().parent.parent
 BRAND = json.loads((ROOT / "hx" / "brand.json").read_text(encoding="utf-8"))
@@ -1993,6 +1995,16 @@ def hotfix_173() -> None:
     hx_hotfix_173.apply(sys.modules[__name__])
 
 
+def office_files() -> None:
+    """应用技能（一）：办公与文件，改前留版本、改后给差异（hx/office_files.py；用户 2026-11-19）。"""
+    hx_office_files.apply(sys.modules[__name__])
+
+
+def concurrency_two() -> None:
+    """并发（二）：提供商在途上限、等待看得见、过载换模型、裁判建议（hx/flow_v174.py；用户 2026-11-19）。"""
+    hx_flow_v174.apply(sys.modules[__name__])
+
+
 def test_expectations() -> None:
     """上游测试里写死的名称和地址，随改名和封堵一起改，让测试检查 HX 版的实际行为。"""
     csp = "src/main/content-security-policy.test.ts"
@@ -2028,7 +2040,7 @@ def upstream() -> None:
 def main() -> int:
     for step in (desktop, logo, site_pages, shared, account, login_password, mobile, visible_names, interface_text, keychain,
                  giraffe_pile, mobile_giraffe_pile, secret_box, animal_avatars, upstream, on_demand_access, own_link_and_names,
-                 registered_accounts, in_app_updates, own_account_deletion, access_settings_page, required_updates, workbuddy_look, settings_groups, computer_catalog, auto_model, opencode_connect, team_rooms, computer_work, computer_real, vault_login, window_fixes, quiet, concurrency, bug_fixes_172, computer_lanes, bug_fixes_173, hotfix_173, test_expectations, checks_of_upstream, rename_all):
+                 registered_accounts, in_app_updates, own_account_deletion, access_settings_page, required_updates, workbuddy_look, settings_groups, computer_catalog, auto_model, opencode_connect, team_rooms, computer_work, computer_real, vault_login, window_fixes, quiet, concurrency, bug_fixes_172, computer_lanes, bug_fixes_173, hotfix_173, office_files, concurrency_two, test_expectations, checks_of_upstream, rename_all):
         step()
     brand_rename.finish(sys.modules[__name__])
     if not CHECK_ONLY or not pending:

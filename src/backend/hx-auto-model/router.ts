@@ -32,6 +32,8 @@ import type { AgentModelOption, AgentProviderId, AgentReasoningEffort } from "@h
 import { sourceText } from "@hxbot/i18n";
 import { createHxBotLogger } from "@hxbot/logging";
 import { hxFlow } from "../hx-flow/ledger";
+import { hxProviderGate } from "../hx-flow/provider-gate";
+import { hxProviderModelOf } from "../hx-flow/provider-model";
 import { HX_JUDGE_BELOW, type HxAttachmentInfo, hxClassifyWork } from "./classify";
 import { HX_JUDGE_TIMEOUT_MS, hxJudgeModel, hxJudgePrompt, hxParseJudge, hxWithin } from "./judge";
 import { type HxAutoModelStore, hxAutoModelStore } from "./store";
@@ -41,6 +43,9 @@ const logger = createHxBotLogger("hx-auto-model");
 /** A reply that says the agent could not do the work. Only its last 600 characters are read. */
 const GAVE_UP =
   /无法完成|做不到|做不了|无能为力|超出了?我的能力|需要更强的模型|没办法完成|我不能完成|\b(?:i can(?:no|')t (?:do|complete|finish|solve)|i(?:'m| am) (?:not able|unable) to (?:do|complete|finish|solve)|beyond my (?:capabilities|ability)|need a (?:stronger|more capable) model|i (?:could not|couldn't) (?:complete|finish|solve))\b/iu;
+
+/** How long a judge call waits for a place under its model's limit before the rules decide. */
+const HX_JUDGE_PLACE_MS = 1_000;
 
 /** One move to another provider in this time, for the same chat; more only when the work needs it. */
 const CROSS_PROVIDER_MS = 10 * 60_000;
@@ -552,11 +557,24 @@ export class HxAutoRouter {
       .find((model) => hxSameModel(hxRefOf({ ...model, providerAccountId: model.providerAccountId }), pick.ref));
     if (!option) return null;
     const prompt = hxJudgePrompt({ text: work.text, attachments: work.attachments.map((item) => item.name), previous });
+    // HXBot (v1.7.4, CONC-02): a judge call is tier 1 under the limit of its model. With no place in a
+    // second (the model is paused or full), the rules decide.
+    const gateModel = hxProviderModelOf({
+      provider: option.provider,
+      model: option.id,
+      providerAccountId: option.providerAccountId,
+    });
+    const release = gateModel ? await hxProviderGate.acquire(gateModel, 1, HX_JUDGE_PLACE_MS) : () => {};
+    if (!release) return null;
     const stop = new AbortController();
-    const answer = await hxWithin(host.judge(agentId, option, prompt, stop.signal), HX_JUDGE_TIMEOUT_MS);
-    // A judge that did not answer in time is stopped, so it does not hold the spare client.
-    if (answer === null) stop.abort();
-    return answer === null ? null : hxParseJudge(answer);
+    try {
+      const answer = await hxWithin(host.judge(agentId, option, prompt, stop.signal), HX_JUDGE_TIMEOUT_MS);
+      // A judge that did not answer in time is stopped, so it does not hold the spare client.
+      if (answer === null) stop.abort();
+      return answer === null ? null : hxParseJudge(answer);
+    } finally {
+      release();
+    }
   }
 }
 

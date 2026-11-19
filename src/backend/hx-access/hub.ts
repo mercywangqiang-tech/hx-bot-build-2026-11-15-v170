@@ -5,6 +5,8 @@ import { isAbsolute, resolve } from "node:path";
 import type { HookCallbackMatcher, Options } from "@anthropic-ai/claude-agent-sdk";
 import { type AgentSummary, workspaceAccessEnforced } from "@hxbot/contracts/ipc";
 import { workspaceTemporaryPaths, workspaceWritableRoots } from "../agent/workspace-sandbox";
+import { HX_SKILL_TOOL } from "../hx-skills/declarations";
+import { hxSkillOperations } from "../hx-skills/operations";
 import type { DynamicToolCallParams } from "../protocol";
 import { type DynamicToolResult, getArray, getRecord, getString, isRecord } from "../protocol";
 import { hxAccessGrants } from "./grants";
@@ -430,6 +432,9 @@ export function hxHxBotToolOperations(tool: string, args: unknown, agent: HxAcce
       return [{ kind: "screen" }];
     case "web_search":
       return [{ kind: "search" }];
+    // HXBot (v1.7.4, CU-07): the files a skill reads and changes, resolved as the runner resolves them.
+    case HX_SKILL_TOOL:
+      return hxSkillOperations(args, agent?.workspacePath ?? process.cwd());
     case "attach_files_to_response": {
       const cwd = agent?.workspacePath ?? process.cwd();
       return getArray(args, "paths")

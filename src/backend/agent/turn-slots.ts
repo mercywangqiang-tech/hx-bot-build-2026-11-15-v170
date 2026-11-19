@@ -1,5 +1,6 @@
 import type { QueueDelivery } from "@hxbot/contracts/ipc";
 import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
+import { hxProviderGate } from "../hx-flow/provider-gate";
 import { HxSlotPass } from "../hx-flow/slot-pass";
 
 export interface TurnSlotsOptions {
@@ -49,6 +50,11 @@ export class TurnSlots {
   }
 
   mayStart(lane: string): boolean {
+    // HXBot (v1.7.4, CONC-02): the limit of the lane's provider, account and model comes first, with or
+    // without a machine limit; a person's message has one place more. A lane that its provider holds
+    // is not waiting for a slot (drain-scheduler.ts, isWaiting), so it takes no free place from this one.
+    const hxHead = this.#options.head(lane);
+    if (hxHead && !hxProviderGate.mayStart(lane, this.#hxPerson(lane, hxHead))) return false;
     const limit = this.#options.limit();
     if (limit === null) return true;
     const lanes = this.#options.lanes();
@@ -78,6 +84,12 @@ export class TurnSlots {
       if (otherHead && startsBefore(otherHead, other, head, lane)) ahead += 1;
     }
     return ahead < free;
+  }
+
+  /** HXBot (v1.7.4): a turn for a person's message, by its HX-Flow tier when the lanes have one. */
+  #hxPerson(lane: string, head: QueueDelivery): boolean {
+    const rank = this.#options.rank;
+    return rank ? rank(lane, head).tier === 0 : head.sender.kind === "user";
   }
 }
 

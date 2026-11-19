@@ -37,6 +37,17 @@ files:
   # Nothing reads the source maps of the dependencies, and they were 150 MB of the 414 MB app.asar.
   # A hosted server fetches the whole app.asar from its lazy disk before HXBot can start.
   - "!node_modules/**/*.map"
+  # HXBot (v1.7.4): pdf.js reads the text of PDFs in the main process. Only its legacy build, the character maps
+  # and the standard fonts are used; it draws nothing, so its viewer, image decoders and native canvas stay out.
+  - "!node_modules/pdfjs-dist/build/**/*"
+  - "!node_modules/pdfjs-dist/web/**/*"
+  - "!node_modules/pdfjs-dist/image_decoders/**/*"
+  - "!node_modules/pdfjs-dist/types/**/*"
+  - "!node_modules/pdfjs-dist/legacy/web/**/*"
+  - "!node_modules/pdfjs-dist/legacy/image_decoders/**/*"
+  - "!node_modules/pdfjs-dist/legacy/build/*.min.mjs"
+  - "!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*"
+  - "!node_modules/@napi-rs/canvas*/**/*"
 asarUnpack:
   # The database host is loaded by path as a separate process, not required into the main bundle.
   - out/main/agent-database-host.js
