@@ -106,11 +106,59 @@ async function withLibreOffice(
 }
 
 // The scripts read their paths from the environment (HX_IN, HX_OUT), never from their text.
-const IWORK: Record<HxModernType, { app: string; as: string; from: string }> = {
-  xlsx: { app: "Numbers", as: "Microsoft Excel", from: "numbers" },
-  docx: { app: "Pages", as: "Microsoft Word", from: "pages" },
-  pptx: { app: "Keynote", as: "Microsoft PowerPoint", from: "key" },
+/**
+ * iWork on a Mac opens its own files and the old Office ones, and exports the modern Office format.
+ * Not sandboxed against a script the way Office is: on a real Mac (v1.7.4) Numbers and Pages converted
+ * a copy in the temporary folder where Excel and Word could not open it.
+ */
+const IWORK: Record<HxModernType, { app: string; as: string; opens: readonly string[] }> = {
+  xlsx: { app: "Numbers", as: "Microsoft Excel", opens: ["numbers", "xls", "csv"] },
+  docx: { app: "Pages", as: "Microsoft Word", opens: ["pages", "doc", "rtf"] },
+  pptx: { app: "Keynote", as: "Microsoft PowerPoint", opens: ["key", "ppt"] },
 };
+
+/** The types macOS's own `textutil` converts to .docx: no app, no window, nothing to grant. */
+const TEXTUTIL_OPENS = ["doc", "rtf", "odt"];
+
+/** Whether a Mac app is installed (in /Applications or ~/Applications). */
+async function macAppInstalled(host: HxAppRouteHost, app: string): Promise<boolean> {
+  const home = host.env?.HOME ?? homedir();
+  for (const folder of ["/Applications", join(home, "Applications")]) {
+    const path = join(folder, `${app}.app`);
+    if (
+      host.exists
+        ? await host.exists(path)
+        : await stat(path).then(
+            () => true,
+            () => false,
+          )
+    )
+      return true;
+  }
+  return false;
+}
+
+/**
+ * Lines that open the copy as `theDoc`: an app may answer “missing value” while it still imports an old
+ * format (Keynote with a .pptx, found on a real Mac), so then the script waits for the new document
+ * (at most 20 s) and takes the front one.
+ */
+const OPEN_DOCUMENT = [
+  "set countBefore to count of documents",
+  "try",
+  "  set theDoc to open (POSIX file inPath as alias)",
+  "on error",
+  "  set theDoc to missing value",
+  "end try",
+  "if theDoc is missing value then",
+  "  repeat 100 times",
+  "    if (count of documents) > countBefore then exit repeat",
+  "    delay 0.2",
+  "  end repeat",
+  '  if (count of documents) is not greater than countBefore then error "The file did not open." number -43',
+  "  set theDoc to front document",
+  "end if",
+];
 
 /**
  * The lines after the work of a Mac app: an app that HXBot started is quit again when no document is
@@ -127,7 +175,7 @@ function iworkScript(app: string, as: string): string {
     `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
     "  try",
-    "    set theDoc to open (POSIX file inPath as alias)",
+    ...OPEN_DOCUMENT.map((line) => `    ${line}`),
     `    export theDoc to (POSIX file outPath) as ${as}`,
     "    close theDoc saving no",
     "  on error errMsg number errNum",
@@ -354,15 +402,29 @@ export async function hxConvertWithApp(
   const output = join(folder, `converted.${to}`);
   const env = { HX_IN: input, HX_OUT: output };
   if (host.platform === "darwin") {
+    // LibreOffice (above), then iWork, then textutil, then Office: Office for Mac is sandboxed and on a
+    // real Mac could not open a copy that a script gave it, so it comes last.
     const iwork = IWORK[to];
-    const attempts = extension === iwork.from ? [{ app: iwork.app, script: iworkScript(iwork.app, iwork.as) }] : [];
+    const attempts: { app: string; script: string | null }[] = [];
+    if (iwork.opens.includes(extension) && (await macAppInstalled(host, iwork.app)))
+      attempts.push({ app: iwork.app, script: iworkScript(iwork.app, iwork.as) });
+    if (to === "docx" && TEXTUTIL_OPENS.includes(extension)) attempts.push({ app: "textutil", script: null });
     attempts.push(MAC_OFFICE[to]);
     for (const attempt of attempts) {
+      if (attempt.script === null) {
+        const result = await host.run("/usr/bin/textutil", ["-convert", "docx", "-output", output, input], {
+          timeoutMs: TIMEOUT_MS,
+        });
+        if (hxRunOk(result) && (await fileThere(host, output))) return { ok: true, app: "textutil", path: output };
+        reasons.push(hxRunFailure("textutil", result));
+        continue;
+      }
+      const script = attempt.script;
       const office = attempt.app.startsWith("Microsoft ") ? await officeFolder(host) : null;
       try {
         const here = office ? { HX_IN: join(office, basename(input)), HX_OUT: join(office, basename(output)) } : env;
         if (office) await copyFile(input, here.HX_IN);
-        const result = await osascript(host, attempt.script, here);
+        const result = await osascript(host, script, here);
         if (hxRunOk(result) && (await fileThere(host, here.HX_OUT))) {
           if (office) await copyFile(here.HX_OUT, output);
           return { ok: true, app: attempt.app, path: output };

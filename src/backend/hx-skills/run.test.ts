@@ -728,6 +728,64 @@ describe("computer_skill: old formats go through an app on a copy (CU-07 app rou
     expect(await leftWork()).toEqual([]);
   });
 
+  it("on a Mac, iWork comes before Office, then textutil for a .doc; Office is the last (found on a real Mac)", async () => {
+    // A Mac with Numbers and Pages: an .xls goes to Numbers, and Excel is never asked.
+    const { app, calls } = fakeApp("darwin", async (call) => {
+      if (call.command === "osascript") await writeFile(call.env.HX_OUT ?? "", book());
+      return { code: 0 };
+    });
+    const withIwork = {
+      ...app,
+      exists: async (path: string) => /\/(Numbers|Pages)\.app$/u.test(path) || (await app.exists(path)),
+    };
+    const s = await setup({ host: { app: withIwork } });
+    const xls = join(s.work, "表.xls");
+    await writeFile(xls, "legacy");
+    const answer = await s.run({ skill: "sheet", action: "read", files: [xls] });
+    expect(answer.answer.convertedBy, JSON.stringify(answer.answer)).toBe("Numbers");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.args.join(" ")).toContain('tell application "Numbers"');
+    // Keynote may answer “missing value” while it imports: the script waits for the document.
+    expect(calls[0]?.args.join(" ")).toContain("if theDoc is missing value then");
+    // No Pages: a .doc goes to textutil (no app, no window), and Word is not asked when that works.
+    const textutil = fakeApp("darwin", async (call) => {
+      if (call.command === "/usr/bin/textutil") {
+        const output = call.args[call.args.indexOf("-output") + 1] ?? "";
+        await writeFile(output, docxFixture([{ runs: ["旧文档的一段。"] }]));
+      }
+      return { code: call.command === "/usr/bin/textutil" ? 0 : 1 };
+    });
+    const t = await setup({ host: { app: textutil.app } });
+    const doc = join(t.work, "旧.doc");
+    await writeFile(doc, "legacy");
+    const read = await t.run({ skill: "document", action: "read", files: [doc] });
+    expect(read.answer.convertedBy, JSON.stringify(read.answer)).toBe("textutil");
+    expect(JSON.stringify(read.answer)).toContain("旧文档的一段。");
+    expect(textutil.calls.map((call) => call.command)).toEqual(["/usr/bin/textutil"]);
+    // Nothing converts: every way was tried, in order, and the answer says which.
+    const none = fakeApp("darwin", async () => ({ code: 1 }));
+    const n = await setup({
+      host: {
+        app: {
+          ...none.app,
+          exists: async (path: string) => /\/Pages\.app$/u.test(path) || (await none.app.exists(path)),
+        },
+      },
+    });
+    const rtf = join(n.work, "说明.rtf");
+    await writeFile(rtf, "{\\rtf1 x}");
+    const failed = await n.run({ skill: "document", action: "read", files: [rtf] });
+    expect(failed.answer.code).toBe("no-app");
+    expect(
+      none.calls.map((call) =>
+        call.command === "osascript"
+          ? (/tell application "([^"]+)"/u.exec(call.args.join(" "))?.[1] ?? "")
+          : call.command,
+      ),
+    ).toEqual(["Pages", "/usr/bin/textutil", "Microsoft Word"]);
+    expect(await leftWork()).toEqual([]);
+  });
+
   it("on Windows it tries Excel, then WPS; with no app it says how to go on, and changes nothing", async () => {
     const { app, calls } = fakeApp("win32", async () => ({ code: 1 }));
     const s = await setup({ host: { app } });
