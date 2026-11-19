@@ -63,10 +63,90 @@ interface Shot {
 /** Newest first. One HOT and one NEW in all. */
 export const SHOTS: Shot[] = [
   {
+    id: "skills-change",
+    story: "hxbot-highlights--skills-change",
+    version: "0.67.14",
+    tag: "new",
+    title: {
+      zh: "助手直接改表格、文档、演示和 PDF，改之前先留一份",
+      en: "Agents edit spreadsheets, documents, slides and PDFs, and keep a copy first",
+    },
+    lead: {
+      zh: "改之前 HXBot 先留一份修改前的文件；改完从磁盘读回核对。对话里的卡片列出改了哪些格子、段落或页，点“恢复到修改前”就回去。.xls、.doc、.ppt 这类老格式由电脑上的应用在副本上转换，你开着的文档不动。",
+      en: "Before a change, HXBot keeps a copy of the file; after it, it reads the file back from the disk. The card in the chat lists the cells, paragraphs or slides that changed, and Restore puts the file back. Old formats such as .xls, .doc and .ppt are converted on a copy by an app of this computer; the documents you have open stay as they are.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 720,
+    callouts: [
+      {
+        css: ".hx-file-change-head",
+        badge: "end",
+        label: { zh: "读回核对过", en: "Read back and checked" },
+        note: { zh: "改之前留了一份修改前的文件", en: "A copy of the file before the change is kept" },
+      },
+      {
+        css: ".hx-file-change-lines",
+        badge: "end",
+        label: { zh: "改了哪些格子", en: "The cells that changed" },
+        note: { zh: "段落、页、表单字段也一样列出", en: "Paragraphs, slides and form fields too" },
+      },
+      {
+        text: { zh: "恢复到修改前", en: "Restore to before the change" },
+        exact: true,
+        closest: "button",
+        badge: "end",
+        label: { zh: "一键回去", en: "One click back" },
+        note: {
+          zh: "留版本的空间在“设置 → Computer Use”里改",
+          en: "The space for copies is in Settings › Computer Use",
+        },
+      },
+    ],
+  },
+  {
+    id: "team-queue",
+    story: "hxbot-highlights--team-queue",
+    version: "0.67.14",
+    title: { zh: "排队看得见，团队可以调先后", en: "See the queue, and put a team first" },
+    lead: {
+      zh: "团队的进度卡每个成员一行：在做什么、排第几位、大约还要几分钟、在等什么。点“更急 / 普通 / 不急”调这个团队和别的团队的先后。模型服务商忙时，同时发出的请求自动减半，你自己发的消息照样先试。",
+      en: "A team's card has a line for each member: what it does, its place in the queue, about how long, what it waits for. Urgent, normal or not urgent puts this team before or after the others. When a model's provider is busy, HXBot sends half as many requests at once, and your own message still goes first.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 720,
+    callouts: [
+      {
+        text: {
+          zh: "研究员 2：排队（第 3 位，约 2 分钟）",
+          en: "Researcher 2: queued (place 3, about 2 min)",
+        },
+        closest: "li",
+        badge: "end",
+        label: { zh: "排第几位、约几分钟", en: "Place and about how long" },
+        note: { zh: "每 5 秒更新", en: "Updated every 5 seconds" },
+      },
+      {
+        text: {
+          zh: "研究员 3：等模型服务商（第 1 位，约 1 分钟）",
+          en: "Researcher 3: waits for its model's provider (place 1, about 1 min)",
+        },
+        closest: "li",
+        badge: "end",
+        label: { zh: "服务商忙时先缓一缓", en: "Eases off a busy provider" },
+        note: { zh: "限速后请求减半、暂停一会儿", en: "Half the requests and a pause after a throttle" },
+      },
+      {
+        css: ".hx-team-priority",
+        badge: "end",
+        label: { zh: "调先后", en: "Put it first" },
+        note: { zh: "也可以在对话里说“这件更急”", en: "Or say “more urgent” in the chat" },
+      },
+    ],
+  },
+  {
     id: "computer-lanes",
     story: "hxbot-highlights--computer-lanes",
     version: "0.67.12",
-    tag: "new",
     title: { zh: "几个助手同时用电脑，你在用时让开", en: "Agents share the computer and step aside for you" },
     lead: {
       zh: "每个应用一次一个助手，最多三个应用同时在后台做；你在打字、动鼠标时，要用键盘、鼠标的那一步先停放，你停手 5 秒后自动接着做。每一步都核对，核对过的才算完成。",

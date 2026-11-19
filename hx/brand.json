@@ -2,7 +2,7 @@
   "_comment": "HXBot 的品牌与域名配置（2026-11-12 起品牌统一为 HXBot，中英文同名）。改这里后，对一份全新的 OpenBot 源码重新运行 python3 hx/rebrand.py 即可。",
   "productName": "HXBot",
   "artifactPrefix": "HXBot",
-  "versions": { "desktop": "0.67.13", "mobile": "1.5.0" },
+  "versions": { "desktop": "0.67.14", "mobile": "1.5.0" },
   "_versions": "客户端的版本号（安装包名、关于页、手机端的功能开关和“有新版本”提示都按它）；每次发布研究版时加一",
   "appId": "com.hxallai.bot",
   "androidPackage": "com.hxallai.bot",

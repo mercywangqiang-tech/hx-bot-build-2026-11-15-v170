@@ -13,6 +13,8 @@ import type { UiConfirmBlock as UiConfirmSpec } from "@hxbot/contracts/ui-blocks
 import { SwitchField, Text } from "@hxbot/ui";
 import { type AgentStep, AgentStepsDisclosure } from "@hxbot/ui/features/conversation/AgentSteps";
 import { ChatActionMarker } from "@hxbot/ui/features/conversation/ChatActionMarker";
+import { HxFileChangeCard } from "@hxbot/ui/features/conversation/HxFileChangeCard";
+import { HxTeamPriorityBar } from "@hxbot/ui/features/conversation/HxTeamPriorityBar";
 import { MarkdownMessageText } from "@hxbot/ui/features/conversation/MarkdownMessageText";
 import { TaskList } from "@hxbot/ui/features/conversation/TaskList";
 import { UiConfirmBlock } from "@hxbot/ui/features/conversation/ui-blocks/UiConfirmBlock";
@@ -893,6 +895,108 @@ export const ComputerLanes: Story = {
             label={t("settings.hxComputer.autoResume.title")}
             description={t("settings.hxComputer.autoResume.description")}
           />
+        </div>
+      </main>
+    );
+  },
+};
+
+// ---------------------------------------------------------------- v1.7.4: app skills, the queue in sight
+
+/** v1.7.4: an agent changed a workbook; the card lists the cells, and Restore puts the file back. */
+export const SkillsChange: Story = {
+  render: () => {
+    const { t } = useI18n();
+    const chinese = zh();
+    const file = chinese ? "销售.xlsx" : "Sales.xlsx";
+    const sheet = chinese ? "明细" : "Details";
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="message-markdown">
+          <MarkdownMessageText
+            body={
+              chinese
+                ? "把销售表里张三的金额改成 150，在 D 列标上“已核对”，再按部门汇总到一张新表。"
+                : "In the sales workbook, set Zhang's amount to 150, mark column D “Checked”, and sum by department on a new sheet."
+            }
+            agents={[]}
+            onSelectAgent={fn()}
+            onOpenLink={fn()}
+          />
+        </div>
+        <div class="hx-highlight-wide">
+          <HxFileChangeCard
+            title={t("status.agent.hxSkill.change.counts", { file, changed: 2, added: 1, removed: 0 })}
+            note={t("status.agent.hxSkill.change.checked")}
+            file={chinese ? "~/文稿/销售/销售.xlsx" : "~/Documents/Sales/Sales.xlsx"}
+            lines={[
+              `+ [${chinese ? "明细 汇总" : "Details summary"}]`,
+              `${sheet}!C2: 120 → 150`,
+              `${sheet}!D2: — → ${chinese ? "已核对" : "Checked"}`,
+            ]}
+            restored={false}
+            restoring={false}
+            message={null}
+            failed={false}
+            onRestore={fn()}
+            defaultOpen={true}
+          />
+        </div>
+      </main>
+    );
+  },
+};
+
+/** v1.7.4: a team's card says what each member does or waits for, and the switch puts it first. */
+export const TeamQueue: Story = {
+  render: () => {
+    const { t } = useI18n();
+    const chinese = zh();
+    const steps = chinese
+      ? ["定方案 · 方案老李", "调研三家竞品 · 研究员 1～3", "整理成表 · 数据小陈", "写对比结论并检查 · 方案老李"]
+      : [
+          "Make the plan · Leo",
+          "Research three rivals · Researchers 1-3",
+          "Put it in a table · Chen",
+          "Write and check · Leo",
+        ];
+    const names = chinese
+      ? ["研究员 1", "研究员 2", "研究员 3", "数据小陈"]
+      : ["Researcher 1", "Researcher 2", "Researcher 3", "Chen"];
+    const members = [
+      {
+        label: t("status.agent.hxTeam.member.doing", {
+          name: names[0] ?? "",
+          what: chinese ? "调研甲公司的定价" : "Research the prices of Company A",
+        }),
+        state: "active" as const,
+      },
+      {
+        label: t("status.agent.hxTeam.member.queued", { name: names[1] ?? "", position: 3, minutes: 2 }),
+        state: "pending" as const,
+      },
+      {
+        label: t("status.agent.hxTeam.member.provider", { name: names[2] ?? "", position: 1, minutes: 1 }),
+        state: "pending" as const,
+      },
+      { label: t("status.agent.hxTeam.member.after", { name: names[3] ?? "" }), state: "pending" as const },
+    ];
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="hx-highlight-wide">
+          <TaskList
+            title={t("status.agent.hxTeam.progressOpen", { count: 6, minutes: 9 })}
+            items={[
+              ...steps.map((label, index) => ({
+                id: `s${index}`,
+                label,
+                state: index < 1 ? ("done" as const) : index === 1 ? ("active" as const) : ("pending" as const),
+              })),
+              { id: "urgent", label: t("status.agent.hxTeam.card.urgent"), state: "pending" as const },
+              ...members.map((member, index) => ({ id: `m${index}`, ...member })),
+            ]}
+          />
+          <HxTeamPriorityBar value="urgent" disabled={false} message={null} failed={false} onChange={fn()} />
         </div>
       </main>
     );
