@@ -112,57 +112,102 @@ const IWORK: Record<HxModernType, { app: string; as: string; from: string }> = {
   pptx: { app: "Keynote", as: "Microsoft PowerPoint", from: "key" },
 };
 
+/**
+ * The lines after the work of a Mac app: an app that HXBot started is quit again when no document is
+ * left in it; an app that the user had open keeps running, with only HXBot's own document closed.
+ */
+function macQuitIfOurs(documents: string): string {
+  return `  if not wasRunning and (count of ${documents}) is 0 then quit saving no`;
+}
+
 function iworkScript(app: string, as: string): string {
   return [
     'set inPath to system attribute "HX_IN"',
     'set outPath to system attribute "HX_OUT"',
+    `set wasRunning to application "${app}" is running`,
     `tell application "${app}"`,
-    "  set theDoc to open (POSIX file inPath as alias)",
-    `  export theDoc to (POSIX file outPath) as ${as}`,
-    "  close theDoc saving no",
+    "  try",
+    "    set theDoc to open (POSIX file inPath as alias)",
+    `    export theDoc to (POSIX file outPath) as ${as}`,
+    "    close theDoc saving no",
+    "  on error errMsg number errNum",
+    "    try",
+    "      close theDoc saving no",
+    "    end try",
+    `  ${macQuitIfOurs("documents")}`,
+    "    error errMsg number errNum",
+    "  end try",
+    macQuitIfOurs("documents"),
     "end tell",
   ].join("\n");
 }
 
-/** Microsoft Office for Mac, through its AppleScript dictionaries. */
+/**
+ * Microsoft Office for Mac, through its AppleScript dictionaries. AppleScript reaches the instance the
+ * user may have open: HXBot opens its copy read-only, closes only that document, puts back the alerts
+ * setting it changed, and quits only an app that it started itself.
+ */
+function macOfficeScript(app: string, documents: string, work: readonly string[], close: string): string {
+  return [
+    'set inPath to system attribute "HX_IN"',
+    'set outPath to system attribute "HX_OUT"',
+    `set wasRunning to application "${app}" is running`,
+    `tell application "${app}"`,
+    ...(app === "Microsoft Excel" ? ["  set oldAlerts to display alerts", "  set display alerts to false"] : []),
+    "  try",
+    ...work.map((line) => `    ${line}`),
+    `    ${close}`,
+    "  on error errMsg number errNum",
+    "    try",
+    `      ${close}`,
+    "    end try",
+    ...(app === "Microsoft Excel" ? ["    set display alerts to oldAlerts"] : []),
+    `  ${macQuitIfOurs(documents)}`,
+    "    error errMsg number errNum",
+    "  end try",
+    ...(app === "Microsoft Excel" ? ["  set display alerts to oldAlerts"] : []),
+    macQuitIfOurs(documents),
+    "end tell",
+  ].join("\n");
+}
+
 const MAC_OFFICE: Record<HxModernType, { app: string; script: string }> = {
   xlsx: {
     app: "Microsoft Excel",
-    script: [
-      'set inPath to system attribute "HX_IN"',
-      'set outPath to system attribute "HX_OUT"',
-      'tell application "Microsoft Excel"',
-      "  set display alerts to false",
-      "  set wb to open workbook workbook file name (POSIX file inPath as text) read only true",
-      "  save workbook as wb filename (POSIX file outPath as text) file format Excel XML file format",
-      "  close wb saving no",
-      "end tell",
-    ].join("\n"),
+    script: macOfficeScript(
+      "Microsoft Excel",
+      "workbooks",
+      [
+        "set wb to open workbook workbook file name (POSIX file inPath as text) read only true",
+        "save workbook as wb filename (POSIX file outPath as text) file format Excel XML file format",
+      ],
+      "close wb saving no",
+    ),
   },
   docx: {
     app: "Microsoft Word",
-    script: [
-      'set inPath to system attribute "HX_IN"',
-      'set outPath to system attribute "HX_OUT"',
-      'tell application "Microsoft Word"',
-      "  set theDoc to open file name (POSIX file inPath as text) with read only",
-      "  save as theDoc file name (POSIX file outPath as text) file format format document",
-      "  close theDoc saving no",
-      "end tell",
-    ].join("\n"),
+    script: macOfficeScript(
+      "Microsoft Word",
+      "documents",
+      [
+        "set theDoc to open file name (POSIX file inPath as text) with read only",
+        "save as theDoc file name (POSIX file outPath as text) file format format document",
+      ],
+      "close theDoc saving no",
+    ),
   },
   pptx: {
     app: "Microsoft PowerPoint",
-    script: [
-      'set inPath to system attribute "HX_IN"',
-      'set outPath to system attribute "HX_OUT"',
-      'tell application "Microsoft PowerPoint"',
-      "  open (POSIX file inPath as alias)",
-      "  set thePres to active presentation",
-      "  save thePres in (POSIX file outPath as text) as save as Open XML presentation",
-      "  close thePres saving no",
-      "end tell",
-    ].join("\n"),
+    script: macOfficeScript(
+      "Microsoft PowerPoint",
+      "presentations",
+      [
+        "open (POSIX file inPath as alias)",
+        "set thePres to active presentation",
+        "save thePres in (POSIX file outPath as text) as save as Open XML presentation",
+      ],
+      "close thePres saving no",
+    ),
   },
 };
 
@@ -173,41 +218,73 @@ const WINDOWS_APPS: Record<HxModernType, string[]> = {
   pptx: ["PowerPoint.Application", "Kwpp.Application", "KWPP.Application"],
 };
 
+/** The open documents of an Office or WPS app, by the format it saves. */
+const WINDOWS_DOCUMENTS: Record<HxModernType, string> = {
+  xlsx: "Workbooks",
+  docx: "Documents",
+  pptx: "Presentations",
+};
+
 /**
- * One PowerShell script for all three: open read-only with no window, no alerts and no macros, save
- * as the modern format, close, quit. The app is always quit in `finally`, also after an error.
+ * A PowerShell script around `body`, which opens the copy as `$doc`. Office may hand out the instance
+ * that the user has open (PowerPoint and WPS do): that one is the user's. It is not hidden and not
+ * quit, only HXBot's document is closed (also after an error), and the alerts and macro settings
+ * HXBot changed are put back. Only an instance that nobody sees and that has no document (one HXBot
+ * started) is quit at the end.
  */
+function windowsScript(to: HxModernType, body: readonly string[]): string {
+  const documents = WINDOWS_DOCUMENTS[to];
+  const close = to === "pptx" ? "$doc.Close()" : "$doc.Close($false)";
+  return [
+    "$ErrorActionPreference = 'Stop'",
+    "$app = New-Object -ComObject $env:HX_APP",
+    "$own = $false",
+    `try { $own = (-not $app.Visible) -and ($app.${documents}.Count -eq 0) } catch {}`,
+    "$alerts = $null",
+    "$security = $null",
+    "try { $alerts = $app.DisplayAlerts } catch {}",
+    "try { $security = $app.AutomationSecurity } catch {}",
+    "$doc = $null",
+    "try {",
+    ...body.map((line) => `  ${line}`),
+    "} finally {",
+    `  if ($null -ne $doc) { try { ${close} } catch {} }`,
+    "  if ($own) { try { $app.Quit() } catch {} } else {",
+    "    if ($null -ne $alerts) { try { $app.DisplayAlerts = $alerts } catch {} }",
+    "    if ($null -ne $security) { try { $app.AutomationSecurity = $security } catch {} }",
+    "  }",
+    "  [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($app)",
+    "}",
+  ].join("\n");
+}
+
+/** Open read-only with no window, no alerts and no macros, save as the modern format, close. */
 function windowsConvertScript(to: HxModernType): string {
-  const body: Record<HxModernType, string> = {
+  const body: Record<HxModernType, string[]> = {
     xlsx: [
       "$app.DisplayAlerts = $false",
       "try { $app.AutomationSecurity = 3 } catch {}",
       "$doc = $app.Workbooks.Open($env:HX_IN, 0, $true)",
       "$doc.SaveAs($env:HX_OUT, 51)",
       "$doc.Close($false)",
-    ].join("\n"),
+      "$doc = $null",
+    ],
     docx: [
       "$app.DisplayAlerts = 0",
       "try { $app.AutomationSecurity = 3 } catch {}",
       "$doc = $app.Documents.Open($env:HX_IN, $false, $true)",
       "try { $doc.SaveAs2($env:HX_OUT, 16) } catch { $doc.SaveAs($env:HX_OUT, 16) }",
       "$doc.Close($false)",
-    ].join("\n"),
-    pptx: ["$doc = $app.Presentations.Open($env:HX_IN, -1, 0, 0)", "$doc.SaveAs($env:HX_OUT, 24)", "$doc.Close()"].join(
-      "\n",
-    ),
+      "$doc = $null",
+    ],
+    pptx: [
+      "$doc = $app.Presentations.Open($env:HX_IN, -1, 0, 0)",
+      "$doc.SaveAs($env:HX_OUT, 24)",
+      "$doc.Close()",
+      "$doc = $null",
+    ],
   };
-  return [
-    "$ErrorActionPreference = 'Stop'",
-    "$app = New-Object -ComObject $env:HX_APP",
-    "try {",
-    "  try { $app.Visible = $false } catch {}",
-    body[to],
-    "} finally {",
-    "  try { $app.Quit() } catch {}",
-    "  [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($app)",
-    "}",
-  ].join("\n");
+  return windowsScript(to, body[to]);
 }
 
 async function osascript(host: HxAppRouteHost, script: string, env: Readonly<Record<string, string>>) {
@@ -296,31 +373,26 @@ export async function hxLivePivot(
     })),
   });
   const script = [
-    "$ErrorActionPreference = 'Stop'",
     "$spec = $env:HX_SPEC | ConvertFrom-Json",
-    "$app = New-Object -ComObject $env:HX_APP",
-    "try {",
-    "  try { $app.Visible = $false } catch {}",
-    "  $app.DisplayAlerts = $false",
-    "  try { $app.AutomationSecurity = 3 } catch {}",
-    "  $wb = $app.Workbooks.Open($env:HX_IN)",
-    "  if ($spec.sheet) { $ws = $wb.Worksheets.Item($spec.sheet) } else { $ws = $wb.Worksheets.Item(1) }",
-    "  $source = $ws.Range($spec.range)",
-    "  $target = $wb.Worksheets.Add([Type]::Missing, $wb.Worksheets.Item($wb.Worksheets.Count))",
-    "  $base = 'Pivot'; $name = $base; $n = 2",
-    '  while ($true) { $taken = $false; foreach ($s in $wb.Worksheets) { if ($s.Name -eq $name) { $taken = $true } }; if (-not $taken) { break }; $name = "$base $n"; $n++ }',
-    "  $target.Name = $name",
-    "  $cache = $wb.PivotCaches().Create(1, $source)",
-    "  $pivot = $cache.CreatePivotTable($target.Range('A3'), 'HXBotPivot')",
-    "  foreach ($row in $spec.rows) { $pivot.PivotFields($row).Orientation = 1 }",
-    "  foreach ($value in $spec.values) { [void]$pivot.AddDataField($pivot.PivotFields($value.column), $value.caption, $value.fn) }",
-    "  $wb.Save()",
-    "  $wb.Close($false)",
-    '  Write-Output "HXSHEET:$name"',
-    "} finally {",
-    "  try { $app.Quit() } catch {}",
-    "  [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($app)",
-    "}",
+    windowsScript("xlsx", [
+      "$app.DisplayAlerts = $false",
+      "try { $app.AutomationSecurity = 3 } catch {}",
+      "$doc = $app.Workbooks.Open($env:HX_IN)",
+      "if ($spec.sheet) { $ws = $doc.Worksheets.Item($spec.sheet) } else { $ws = $doc.Worksheets.Item(1) }",
+      "$source = $ws.Range($spec.range)",
+      "$target = $doc.Worksheets.Add([Type]::Missing, $doc.Worksheets.Item($doc.Worksheets.Count))",
+      "$base = 'Pivot'; $name = $base; $n = 2",
+      'while ($true) { $taken = $false; foreach ($s in $doc.Worksheets) { if ($s.Name -eq $name) { $taken = $true } }; if (-not $taken) { break }; $name = "$base $n"; $n++ }',
+      "$target.Name = $name",
+      "$cache = $doc.PivotCaches().Create(1, $source)",
+      "$pivot = $cache.CreatePivotTable($target.Range('A3'), 'HXBotPivot')",
+      "foreach ($row in $spec.rows) { $pivot.PivotFields($row).Orientation = 1 }",
+      "foreach ($value in $spec.values) { [void]$pivot.AddDataField($pivot.PivotFields($value.column), $value.caption, $value.fn) }",
+      "$doc.Save()",
+      "$doc.Close($false)",
+      "$doc = $null",
+      'Write-Output "HXSHEET:$name"',
+    ]),
   ].join("\n");
   const reasons: string[] = [];
   for (const app of WINDOWS_APPS.xlsx) {

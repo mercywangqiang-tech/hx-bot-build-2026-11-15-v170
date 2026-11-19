@@ -65,7 +65,7 @@ def check_xlsx(path: Path, expect: dict, c: Checks) -> None:
     cached = openpyxl.load_workbook(path, data_only=True)
     if "sheets" in expect:
         c.eq("表", book.sheetnames, expect["sheets"])
-    sheet = expect.get("sheet")
+    sheet = expect.get("sheet") or (book.sheetnames[0] if expect.get("firstSheet") else None)
     if not sheet:
         if "chartContains" in expect:
             with zipfile.ZipFile(path) as archive:
@@ -155,6 +155,8 @@ def check_pptx(path: Path, expect: dict, c: Checks) -> None:
 
     if "titles" in expect:
         c.eq("每页标题", [title(s) for s in slides], expect["titles"])
+    for number, text in expect.get("titleOf", {}).items():
+        c.eq(f"第 {number} 页标题", title(slides[int(number) - 1]) if int(number) <= len(slides) else None, text)
     for number, wanted in expect.get("texts", {}).items():
         slide = slides[int(number) - 1] if int(number) <= len(slides) else None
         lines = []

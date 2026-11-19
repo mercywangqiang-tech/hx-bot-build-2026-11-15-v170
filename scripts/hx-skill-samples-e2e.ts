@@ -5,6 +5,9 @@
 //   bun scripts/hx-skill-samples-e2e.ts [--label=<名字>] [--world=mac|windows] [--settings-changes] [--only=sheet-01,pdf-03]
 //       --settings-changes  允许改系统设置再改回去：只在 GitHub 用完即毁的机器上、或替身上用。
 //       没有它时，会改设置的两条（settings-03、settings-04）记“跳过”。
+//   --apps  再跑应用路线的 9 条（apps-*，不算在 60 条里）：老格式经这台电脑的 LibreOffice、iWork、Office、WPS，
+//       Mac 上 Keynote 改 .key、Numbers 和 Pages 读自己的文件，Windows 上的实时数据透视表。用户开着的应用照样开着，
+//       HXBot 自己打开的应用用完关掉，每条都核对。夹具在 hx/computer-check/fixtures（打包时放在程序旁边的 fixtures/）。
 //   打成一个文件（Mac、Windows 上只用 Node 或 Bun 运行）：bash hx/scripts/skill-samples-bundle.sh
 //
 // 写到 .hxbot-build/hx-skill-samples/<label>/（或 --out 给的文件夹）：
@@ -13,9 +16,11 @@
 //   manifest.json  交给 hx/computer-check/skills_crosscheck.py 用别人的库再读一遍
 //   work/          每条任务的文件（夹具和结果），留着给 skills_crosscheck.py 读
 // 一致的比例低于 90% 时退出码是 1。
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import type { HxComputerPlatform } from "@hxbot/contracts/hx-computer";
 import { HxComputerActions } from "../src/backend/hx-computer/actions";
@@ -33,12 +38,14 @@ const { values } = parseArgs({
     world: { type: "string" },
     "settings-changes": { type: "boolean" },
     only: { type: "string" },
+    apps: { type: "boolean" },
+    fixtures: { type: "string" },
     help: { type: "boolean" },
   },
 });
 if (values.help) {
   process.stdout.write(
-    "bun scripts/hx-skill-samples-e2e.ts [--label=<name>] [--out=<folder>] [--world=mac|windows] [--settings-changes] [--only=<ids>]\n",
+    "bun scripts/hx-skill-samples-e2e.ts [--label=<name>] [--out=<folder>] [--world=mac|windows] [--settings-changes] [--apps] [--fixtures=<folder>] [--only=<ids>]\n",
   );
   process.exit(0);
 }
@@ -88,6 +95,39 @@ async function settingsHost() {
   return new HxComputerActions(catalog, run, wait);
 }
 
+/** The fixtures of the app tasks: beside the bundled program, or in the repository. */
+function fixturesFolder(): string | null {
+  if (values.fixtures) return resolve(values.fixtures);
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const folder of [join(here, "fixtures"), join(here, "..", "hx", "computer-check", "fixtures")])
+    if (existsSync(join(folder, "名单.xls"))) return folder;
+  return null;
+}
+
+/** Whether an app runs now: by its process name, without asking AppleScript (which may start it). */
+async function appRunning(app: string): Promise<boolean | null> {
+  if (process.platform === "darwin")
+    return (await hxRun("/usr/bin/pgrep", ["-x", app], { timeoutMs: 10_000 })).code === 0;
+  if (process.platform === "win32") {
+    const listed = await hxRun("tasklist", ["/FI", `IMAGENAME eq ${app}.EXE`, "/NH"], { timeoutMs: 30_000 });
+    return listed.stdout.toUpperCase().includes(`${app.toUpperCase()}.EXE`);
+  }
+  return null;
+}
+
+async function appInstalled(app: string): Promise<boolean> {
+  if (process.platform !== "darwin") return false;
+  return [join("/Applications", `${app}.app`), join(homedir(), "Applications", `${app}.app`)].some((path) =>
+    existsSync(path),
+  );
+}
+
+const fixtures = values.apps ? fixturesFolder() : null;
+if (values.apps && !fixtures) {
+  process.stderr.write("没找到应用路线的夹具（hx/computer-check/fixtures）。用 --fixtures=<文件夹> 指定。\n");
+  process.exit(2);
+}
+
 const report = await hxRunSkillSamples({
   platform,
   machine,
@@ -95,6 +135,7 @@ const report = await hxRunSkillSamples({
   data,
   settings: await settingsHost(),
   settingsChanges: world !== null || values["settings-changes"] === true,
+  ...(fixtures ? { apps: { run: hxRun, platform: process.platform }, fixtures, appRunning, appInstalled } : {}),
   ...(values.only ? { only: values.only.split(",").map((id) => id.trim()) } : {}),
   log: (line) => process.stdout.write(`${line}\n`),
 });

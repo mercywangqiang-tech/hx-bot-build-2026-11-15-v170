@@ -5,7 +5,7 @@
 // 读回和期望一致才算“一致”；技能说做了但读回对不上的，标“待核实”。
 // 系统设置的改动只在 settingsChanges 为真时做（GitHub 用完即毁的机器、或本机的假电脑），用户的电脑上只读和打开。
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, stat, utimes, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, stat, utimes, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
 import type { HxSettingValues } from "@hxbot/contracts/hx-computer";
@@ -17,6 +17,7 @@ import { HxPresentation } from "../hx-files/pptx";
 import { HxFileVersions } from "../hx-files/versions";
 import { HxWorkbook } from "../hx-files/xlsx";
 import { crc32, HxZip } from "../hx-files/zip";
+import type { HxAppRouteHost } from "./app-route";
 import type { HxSkillName } from "./declarations";
 import type { HxJson, HxSkillArgs } from "./operations";
 import { type HxSkillAnswer, HxSkillRequests, HxSkillRunner } from "./run";
@@ -26,6 +27,8 @@ export type HxSampleStatus = "一致" | "待核实" | "出错" | "跳过";
 
 export interface HxSampleResult {
   id: string;
+  /** One of the 60 (the release gate), or a task of the app route (counted apart). */
+  group: "samples" | "apps";
   skill: HxSkillName;
   title: string;
   status: HxSampleStatus;
@@ -69,6 +72,17 @@ export interface HxSampleHost {
   settings: HxSettingsHost | null;
   /** May change settings (and change them back): only on throwaway machines and stand-ins. */
   settingsChanges: boolean;
+  /**
+   * The apps of this computer for the old formats (apps-* tasks, apart from the 60): LibreOffice, iWork,
+   * Office or WPS. Null: those tasks are skipped.
+   */
+  apps?: HxAppRouteHost | null;
+  /** The folder with the files of the apps-* tasks (hx/computer-check/fixtures). */
+  fixtures?: string;
+  /** Whether an app runs now (by its name on this system), to check that a task leaves it as it was. */
+  appRunning?: (app: string) => Promise<boolean | null>;
+  /** Whether an app is installed (Keynote, Numbers, Pages on a Mac). */
+  appInstalled?: (app: string) => Promise<boolean>;
   /** Only these tasks (by id). */
   only?: readonly string[];
   log?: (line: string) => void;
@@ -87,6 +101,9 @@ interface Context {
   shared: Record<string, HxJson>;
   settings: HxSettingsHost | null;
   platform: HxSampleHost["platform"];
+  apps: HxAppRouteHost | null;
+  fixtures: string;
+  appRunning: (app: string) => Promise<boolean | null>;
 }
 
 interface Check {
@@ -108,6 +125,8 @@ interface Sample {
   changesSetting?: boolean;
   /** It needs the settings of a real (or stand-in) Mac or Windows. */
   needsSettings?: boolean;
+  /** It needs an app of this computer: any (old formats), or one named (Keynote, Numbers, Pages on a Mac; Excel or WPS on Windows). */
+  needsApp?: { platform?: "mac" | "windows"; app?: string };
 }
 
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
@@ -1766,7 +1785,259 @@ const SETTINGS: Sample[] = [
   },
 ];
 
+// -------------------------------------------------------------------------------------- app route
+
+/** Copies a fixture of hx/computer-check/fixtures into the task's folder. */
+async function fixture(c: Context, name: string, as = name): Promise<void> {
+  await copyFile(join(c.fixtures, name), c.file(as));
+}
+
+/** The app that the route of this file type tries first on this system, to see that it stays as it was. */
+function routeApp(c: Context, type: "xlsx" | "docx" | "pptx"): string | null {
+  if (c.platform === "mac")
+    return { xlsx: "Microsoft Excel", docx: "Microsoft Word", pptx: "Microsoft PowerPoint" }[type];
+  if (c.platform === "windows") return { xlsx: "EXCEL", docx: "WINWORD", pptx: "POWERPNT" }[type];
+  return null;
+}
+
+async function rememberApp(c: Context, app: string | null): Promise<void> {
+  if (app) c.note.appBefore = await c.appRunning(app);
+}
+async function appAsBefore(c: Context, app: string | null): Promise<Check> {
+  if (!app || typeof c.note.appBefore !== "boolean") return { pass: true, detail: "（这台电脑不看应用是否在运行）" };
+  const now = await c.appRunning(app);
+  return is(`${app} 运行着`, now, c.note.appBefore);
+}
+
+/** Saves a modern file as Keynote, Numbers or Pages does (a Mac with the app): the fixture of an iWork task. */
+async function iworkCopy(c: Context, app: string, from: string, to: string): Promise<void> {
+  const run = c.apps?.run;
+  if (!run) throw new Error("没有可以用的应用。");
+  const script = [
+    'set inPath to system attribute "HX_IN"',
+    'set outPath to system attribute "HX_OUT"',
+    `set wasRunning to application "${app}" is running`,
+    `tell application "${app}"`,
+    "  set theDoc to open (POSIX file inPath as alias)",
+    "  save theDoc in (POSIX file outPath)",
+    "  close theDoc saving no",
+    "  if not wasRunning and (count of documents) is 0 then quit saving no",
+    "end tell",
+  ].join("\n");
+  await copyFile(join(c.fixtures, from), c.file(from));
+  const result = await run("osascript", ["-e", script], {
+    timeoutMs: 180_000,
+    env: { HX_IN: c.file(from), HX_OUT: c.file(to) },
+  });
+  if (result.code !== 0 || !(await exists(c.file(to))))
+    throw new Error(`${app} 没能存出 ${to}：${result.stderr.slice(0, 200)}`);
+}
+
+const APPS: Sample[] = [
+  {
+    id: "apps-01",
+    skill: "sheet",
+    title: "读 .csv（经这台电脑的应用转换）",
+    needsApp: {},
+    setup: async (c) => {
+      await fixture(c, "名单.csv");
+      await rememberApp(c, routeApp(c, "xlsx"));
+    },
+    args: (c) => ({ action: "read", files: [c.relFile("名单.csv")], params: {} }),
+    check: async (c, answer) =>
+      all(
+        yes("读到“张三”和 90", text(answer).includes("张三") && text(answer).includes("90")),
+        yes("写明哪个应用转的", typeof field(answer, "convertedBy") === "string"),
+        await appAsBefore(c, routeApp(c, "xlsx")),
+      ),
+  },
+  {
+    id: "apps-02",
+    skill: "sheet",
+    title: "改 .xls 的一格：改到新的 .xlsx，原文件不动",
+    needsApp: {},
+    setup: async (c) => {
+      await fixture(c, "名单.xls");
+      c.note.sha = await shaOf(c.file("名单.xls"));
+      await rememberApp(c, routeApp(c, "xlsx"));
+    },
+    args: (c) => ({ action: "write", files: [c.relFile("名单.xls")], params: { cells: { B3: 88 } } }),
+    check: async (c) =>
+      all(
+        is("原 .xls 没变", await shaOf(c.file("名单.xls")), c.note.sha),
+        is("新 .xlsx 的 B3", await cellText(c.file("名单.xlsx"), null, "B3"), "88"),
+        is("新 .xlsx 的 A2", await cellText(c.file("名单.xlsx"), null, "A2"), "张三"),
+        await appAsBefore(c, routeApp(c, "xlsx")),
+      ),
+    manifest: (c) => [
+      {
+        id: "apps-02",
+        kind: "xlsx",
+        path: c.relFile("名单.xlsx"),
+        expect: { cells: { B3: 88, A2: "张三" }, firstSheet: true },
+      },
+    ],
+  },
+  {
+    id: "apps-03",
+    skill: "document",
+    title: "改 .doc 的一段：改到新的 .docx，原文件不动",
+    needsApp: {},
+    setup: async (c) => {
+      await fixture(c, "通知.doc");
+      c.note.sha = await shaOf(c.file("通知.doc"));
+      await rememberApp(c, routeApp(c, "docx"));
+    },
+    args: (c) => ({
+      action: "replace",
+      files: [c.relFile("通知.doc")],
+      params: { find: "周五下午三点", replace: "周四上午十点" },
+    }),
+    check: async (c) => {
+      const list = await paragraphs(c.file("通知.docx"));
+      return all(
+        is("原 .doc 没变", await shaOf(c.file("通知.doc")), c.note.sha),
+        yes("新 .docx 里是“周四上午十点开会。”", list.includes("周四上午十点开会。")),
+        yes("别的段落还在", list.includes("会议通知") && list.includes("请准时参加。")),
+        await appAsBefore(c, routeApp(c, "docx")),
+      );
+    },
+    manifest: (c) => [
+      {
+        id: "apps-03",
+        kind: "docx",
+        path: c.relFile("通知.docx"),
+        expect: { absent: ["周五下午三点"], count: { 周四上午十点: 1 } },
+      },
+    ],
+  },
+  {
+    id: "apps-04",
+    skill: "slides",
+    title: "改 .ppt 的标题：改到新的 .pptx，原文件不动",
+    needsApp: {},
+    setup: async (c) => {
+      await fixture(c, "汇报.ppt");
+      c.note.sha = await shaOf(c.file("汇报.ppt"));
+      await rememberApp(c, routeApp(c, "pptx"));
+    },
+    args: (c) => ({
+      action: "text",
+      files: [c.relFile("汇报.ppt")],
+      params: { slide: 2, target: "title", text: "年度回顾" },
+    }),
+    check: async (c) =>
+      all(
+        is("原 .ppt 没变", await shaOf(c.file("汇报.ppt")), c.note.sha),
+        is("新 .pptx 第 2 页标题", (await slideTitles(c.file("汇报.pptx")))[1], "年度回顾"),
+        await appAsBefore(c, routeApp(c, "pptx")),
+      ),
+    manifest: (c) => [
+      { id: "apps-04", kind: "pptx", path: c.relFile("汇报.pptx"), expect: { titleOf: { "2": "年度回顾" } } },
+    ],
+  },
+  {
+    id: "apps-05",
+    skill: "document",
+    title: "读 .rtf",
+    needsApp: {},
+    setup: async (c) => {
+      await fixture(c, "通知.rtf");
+      await rememberApp(c, routeApp(c, "docx"));
+    },
+    args: (c) => ({ action: "read", files: [c.relFile("通知.rtf")], params: {} }),
+    check: async (c, answer) =>
+      all(
+        yes("读到“周五下午三点开会。”", text(answer).includes("周五下午三点开会。")),
+        await appAsBefore(c, routeApp(c, "docx")),
+      ),
+  },
+  {
+    id: "apps-06",
+    skill: "slides",
+    title: "Keynote：改 .key 第 2 页的标题（Keynote 在文件本身上改）",
+    needsApp: { platform: "mac", app: "Keynote" },
+    setup: async (c) => {
+      c.note.appBefore = await c.appRunning("Keynote");
+      await iworkCopy(c, "Keynote", "汇报.pptx", "汇报.key");
+    },
+    args: (c) => ({
+      action: "text",
+      files: [c.relFile("汇报.key")],
+      params: { slide: 2, target: "title", text: "年度回顾" },
+    }),
+    check: async (c, answer) =>
+      all(
+        yes(
+          "Keynote 自己改的（没有另存 .pptx）",
+          !(await exists(c.file("汇报 (2).pptx"))) && !(await exists(c.file("汇报.pptx.pptx"))),
+        ),
+        yes("技能读回对上了", field(answer, "verified") === true),
+        kept(answer),
+        await appAsBefore(c, "Keynote"),
+      ),
+  },
+  {
+    id: "apps-07",
+    skill: "sheet",
+    title: "Numbers：读 .numbers",
+    needsApp: { platform: "mac", app: "Numbers" },
+    setup: async (c) => {
+      c.note.appBefore = await c.appRunning("Numbers");
+      await iworkCopy(c, "Numbers", "名单.xlsx", "名单.numbers");
+    },
+    args: (c) => ({ action: "read", files: [c.relFile("名单.numbers")], params: {} }),
+    check: async (c, answer) =>
+      all(
+        yes("读到“李四”和 85", text(answer).includes("李四") && text(answer).includes("85")),
+        await appAsBefore(c, "Numbers"),
+      ),
+  },
+  {
+    id: "apps-08",
+    skill: "document",
+    title: "Pages：读 .pages",
+    needsApp: { platform: "mac", app: "Pages" },
+    setup: async (c) => {
+      c.note.appBefore = await c.appRunning("Pages");
+      await iworkCopy(c, "Pages", "通知.docx", "通知.pages");
+    },
+    args: (c) => ({ action: "read", files: [c.relFile("通知.pages")], params: {} }),
+    check: async (c, answer) =>
+      all(yes("读到“请准时参加。”", text(answer).includes("请准时参加。")), await appAsBefore(c, "Pages")),
+  },
+  {
+    id: "apps-09",
+    skill: "sheet",
+    title: "实时数据透视表（Windows 上的 Excel 或 WPS 表格）",
+    needsApp: { platform: "windows" },
+    setup: async (c) => {
+      await writeFile(c.file("销售.xlsx"), salesBook());
+      await rememberApp(c, routeApp(c, "xlsx"));
+    },
+    args: (c) => ({
+      action: "pivot",
+      files: [c.relFile("销售.xlsx")],
+      params: { range: "A1:D6", rows: ["部门"], values: [{ column: "金额", fn: "sum" }] },
+    }),
+    check: async (c, answer) => {
+      const zip = HxZip.read(await readFile(c.file("销售.xlsx")));
+      return all(
+        yes(
+          "文件里有透视表",
+          zip.names().some((name) => /^xl\/pivotTables\/pivotTable\d+\.xml$/u.test(name)),
+        ),
+        kept(answer),
+        await appAsBefore(c, routeApp(c, "xlsx")),
+      );
+    },
+  },
+];
+
 export const HX_SKILL_SAMPLES: readonly Sample[] = [...SHEET, ...DOCUMENT, ...SLIDES, ...PDF, ...FILES, ...SETTINGS];
+
+/** The tasks of the app route, apart from the 60: they need the apps of the computer. */
+export const HX_APP_SAMPLES: readonly Sample[] = APPS;
 
 // ------------------------------------------------------------------------------------------ runner
 
@@ -1782,10 +2053,29 @@ function rates(results: readonly HxSampleResult[]): HxSampleReport["rates"] {
     out[key] = entry;
   };
   for (const result of results) {
+    if (result.group === "apps") {
+      add("apps", result);
+      continue;
+    }
     add(result.skill, result);
     add("all", result);
   }
   return out;
+}
+
+/** Why a task does not run on this computer, or null. */
+async function skipReason(sample: Sample, host: HxSampleHost): Promise<string | null> {
+  if (sample.needsSettings && (host.settings === null || host.platform === "linux"))
+    return "这台电脑没有可用的系统设置（只在 macOS、Windows 上）";
+  if (sample.changesSetting && !host.settingsChanges) return "会改这台电脑的系统设置：只在 GitHub 的检查机和替身上跑";
+  const needs = sample.needsApp;
+  if (!needs) return null;
+  if (!host.apps || !host.fixtures) return "这次没有用这台电脑的应用（加 --apps）";
+  // The apps are the real computer's, also when the settings come from a stand-in.
+  const real = host.apps.platform === "darwin" ? "mac" : host.apps.platform === "win32" ? "windows" : "linux";
+  if (needs.platform && needs.platform !== real) return needs.platform === "mac" ? "只在 Mac 上" : "只在 Windows 上";
+  if (needs.app && host.appInstalled && !(await host.appInstalled(needs.app))) return `这台电脑没有装 ${needs.app}`;
+  return null;
 }
 
 /** Runs the samples one by one, each in a folder of its own, and reads every result back. */
@@ -1796,7 +2086,7 @@ export async function hxRunSkillSamples(host: HxSampleHost): Promise<HxSampleRep
     versions,
     record: () => {},
     askSpaceFull: null,
-    app: null,
+    app: host.apps ?? null,
     settings: host.settings,
     protectedRoots: [host.data],
     requests: new HxSkillRequests(),
@@ -1813,7 +2103,11 @@ export async function hxRunSkillSamples(host: HxSampleHost): Promise<HxSampleRep
       if (read.status === "value") before.set(`setting:${key}`, read.value);
     }
   }
-  for (const sample of HX_SKILL_SAMPLES) {
+  const samples = [
+    ...HX_SKILL_SAMPLES.map((sample) => ({ sample, group: "samples" as const })),
+    ...APPS.map((sample) => ({ sample, group: "apps" as const })),
+  ];
+  for (const { sample, group } of samples) {
     if (host.only && !host.only.includes(sample.id)) continue;
     const dir = join(host.work, sample.id);
     await mkdir(dir, { recursive: true });
@@ -1826,14 +2120,12 @@ export async function hxRunSkillSamples(host: HxSampleHost): Promise<HxSampleRep
       shared,
       settings: host.settings,
       platform: host.platform,
+      apps: host.apps ?? null,
+      fixtures: host.fixtures ?? "",
+      appRunning: host.appRunning ?? (async () => null),
     };
-    const base = { id: sample.id, skill: sample.skill, title: sample.title };
-    const skip =
-      sample.needsSettings && (host.settings === null || host.platform === "linux")
-        ? "这台电脑没有可用的系统设置（只在 macOS、Windows 上）"
-        : sample.changesSetting && !host.settingsChanges
-          ? "会改这台电脑的系统设置：只在 GitHub 的检查机和替身上跑"
-          : null;
+    const base = { id: sample.id, group, skill: sample.skill, title: sample.title };
+    const skip = await skipReason(sample, host);
     if (skip) {
       results.push({
         ...base,
@@ -1926,9 +2218,12 @@ export function hxSamplesMarkdown(report: HxSampleReport): string {
     "| 技能 | 一致 / 计数 | 比例 |",
     "| --- | --- | --- |",
     ...Object.entries(report.rates)
-      .filter(([key]) => key !== "all")
+      .filter(([key]) => key !== "all" && key !== "apps")
       .map(([key, rate]) => `| ${key} | ${rate.consistent} / ${rate.counted} | ${(rate.rate * 100).toFixed(0)}% |`),
     "",
+    ...(report.rates.apps
+      ? [`应用路线（不算在 60 条里）：一致 ${report.rates.apps.consistent} / ${report.rates.apps.counted}。`, ""]
+      : []),
     "| 编号 | 任务 | 结果 | 技能自己的读回 | 从磁盘读回 | 用时 |",
     "| --- | --- | --- | --- | --- | --- |",
     ...report.results.map(

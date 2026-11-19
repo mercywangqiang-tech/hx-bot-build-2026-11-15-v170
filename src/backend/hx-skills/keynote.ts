@@ -83,6 +83,8 @@ const SCRIPT = [
   'set act to system attribute "HX_ACTION"',
   'set n1 to (system attribute "HX_N1") as integer',
   'set n2 to (system attribute "HX_N2") as integer',
+  // Keynote that HXBot started is quit again when no document is left; the user's Keynote keeps running.
+  'set wasRunning to application "Keynote" is running',
   'tell application "Keynote"',
   "  set theDoc to open (POSIX file inPath)",
   "  try",
@@ -120,8 +122,10 @@ const SCRIPT = [
   "    try",
   "      close theDoc saving no",
   "    end try",
+  "    if not wasRunning and (count of documents) is 0 then quit saving no",
   "    error errMsg number errNum",
   "  end try",
+  "  if not wasRunning and (count of documents) is 0 then quit saving no",
   "end tell",
 ].join("\n");
 

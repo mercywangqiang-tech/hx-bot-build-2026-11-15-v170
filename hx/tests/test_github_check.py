@@ -281,6 +281,8 @@ class SkillSamples(unittest.TestCase):
         step = machine[machine.index("name: Run the skill samples") : machine.index("name: Upload the results")]
         self.assertIn("if: always()", step)
         self.assertIn('node skill-samples/hx-skill-samples.mjs --out out/skills --machine "$MACHINE" --settings-changes', step)
+        # The machines have no Office, iWork or LibreOffice: the app tasks run on the user's computer.
+        self.assertNotIn("--apps", step)
         self.assertIn("skills_crosscheck.py out/skills", step)
         self.assertIn('exit "$code"', step)
         # The results go up with the machine's results (path: out), under a name the merge does not read.
@@ -293,6 +295,11 @@ class SkillSamples(unittest.TestCase):
         self.assertIn("bun build scripts/hx-skill-samples-e2e.ts --target=node --format=esm --external=pdfjs-dist", text)
         self.assertIn("grep -v -E 'from \"(node:|pdfjs-dist)'", text)
         self.assertIn('cp "$ROOT/hx/computer-check/skills_crosscheck.py" "$OUT/"', text)
+        self.assertIn('cp -R "$ROOT/hx/computer-check/fixtures" "$OUT/fixtures"', text)
+        # The fixtures of the app tasks are there, each one a file the readme names.
+        fixtures = ROOT / "hx/computer-check/fixtures"
+        for name in ("名单.xls", "名单.csv", "名单.xlsx", "通知.doc", "通知.rtf", "通知.docx", "汇报.ppt", "汇报.pptx"):
+            self.assertTrue((fixtures / name).is_file(), name)
 
     def test_the_samples_change_settings_only_when_told_and_the_app_does_not_use_them(self):
         entry = read("scripts/hx-skill-samples-e2e.ts")

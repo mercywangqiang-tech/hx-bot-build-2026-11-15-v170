@@ -4,6 +4,7 @@
 #   <输出文件夹>/hx-skill-samples.mjs            程序本身
 #   <输出文件夹>/node_modules/pdfjs-dist/        取 PDF 文字用的 pdf.js（只留运行时要的部分）
 #   <输出文件夹>/skills_crosscheck.py            用别人的库再读一遍（要 pip install openpyxl python-docx python-pptx pypdf）
+#   <输出文件夹>/fixtures/                       应用路线（--apps）的夹具：老格式的表格、文档、演示
 #   bash hx/scripts/skill-samples-bundle.sh [输出文件夹，默认 dist-skill-samples]
 # 要先装好依赖（bun install）。
 set -euo pipefail
@@ -30,4 +31,6 @@ for folder in cmaps standard_fonts wasm iccs; do
   if [ -d "$PDFJS/$folder" ]; then cp -R "$PDFJS/$folder" "$DEST/$folder"; fi
 done
 cp "$ROOT/hx/computer-check/skills_crosscheck.py" "$OUT/"
+rm -rf "$OUT/fixtures"
+cp -R "$ROOT/hx/computer-check/fixtures" "$OUT/fixtures"
 echo "$OUT（$(du -sh "$OUT" | cut -f1)）"
