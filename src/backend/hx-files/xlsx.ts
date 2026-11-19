@@ -355,6 +355,14 @@ export interface HxFilterColumn {
 }
 
 export type HxSummaryFunction = "sum" | "count" | "average" | "min" | "max";
+/** What Chinese Excel and WPS call the value fields of a PivotTable. */
+const SUMMARY_ZH: Readonly<Record<HxSummaryFunction, string>> = {
+  sum: "求和项",
+  count: "计数项",
+  average: "平均值项",
+  min: "最小值项",
+  max: "最大值项",
+};
 
 /** A workbook read from its bytes. */
 export class HxWorkbook {
@@ -1233,13 +1241,23 @@ export class HxWorkbook {
       }
       return 0;
     });
-    const name = this.addSheet(options.target ?? `${source.info.name} summary`);
+    const rowTitles = rows.map(
+      (column, index) =>
+        this.#readSlot(source, cellName({ row: target.start.row, col: rowCols[index] ?? 1 })).text || column,
+    );
+    // The new sheet and its titles follow the language of the data: a Chinese table gets the names that
+    // Chinese Excel and WPS give a PivotTable (“求和项:金额”), not English ones.
+    const chinese = [source.info.name, ...rowTitles, ...values.map((value) => value.column)].some((text) =>
+      /[\u3400-\u9fff]/u.test(text),
+    );
+    const name = this.addSheet(options.target ?? `${source.info.name} ${chinese ? "汇总" : "summary"}`);
     const header: HxCellInput[] = [
-      ...rows.map(
-        (column, index) =>
-          this.#readSlot(source, cellName({ row: target.start.row, col: rowCols[index] ?? 1 })).text || column,
+      ...rowTitles,
+      ...values.map(
+        (value) =>
+          value.label ??
+          (chinese ? `${SUMMARY_ZH[value.fn]}:${value.column}` : `${value.fn.toUpperCase()}(${value.column})`),
       ),
-      ...values.map((value) => value.label ?? `${value.fn.toUpperCase()}(${value.column})`),
     ];
     const updates: { ref: string; input: HxCellInput }[] = [];
     header.forEach((input, index) => {

@@ -5,6 +5,7 @@
 # 流程：prepare（Linux）跑电脑操控的单元测试和这份工作流的检查，把检查程序打成一个文件
 # hx-computer-check.mjs → machine（每台 Mac、Windows 机器一格，只用 Node 运行这个文件）→
 # summary（合并成绩单；有失败的项、或有机器没交回结果时整次运行标红）。
+# v1.7.4 起每台机器再跑六个技能的 60 条样例任务（hx-skill-samples.mjs），结果在 out/skills/。
 # 公开仓库里不计费的版本见 hx/computer-check/public-workflow.yml。
 name: HXBot computer check
 
@@ -86,6 +87,14 @@ jobs:
           path: dist-check/hx-computer-check.mjs
           if-no-files-found: error
           retention-days: 7
+      - name: Bundle the skill samples (v1.7.4, CU-07)
+        run: bash hx/scripts/skill-samples-bundle.sh dist-skill-samples
+      - uses: actions/upload-artifact@v7
+        with:
+          name: hxbot-skill-samples-program
+          path: dist-skill-samples
+          if-no-files-found: error
+          retention-days: 7
 
   machine:
     name: ${{ matrix.machine }}
@@ -123,6 +132,28 @@ jobs:
           else
             echo "检查程序没有写出成绩单。" >> "$GITHUB_STEP_SUMMARY"
           fi
+      # v1.7.4 (CU-07): the six skills, 10 sample tasks each, read back by HXBot and by other libraries.
+      # It changes the dark mode and changes it back (--settings-changes): only on these throwaway machines.
+      - uses: actions/download-artifact@v8
+        if: always()
+        with:
+          name: hxbot-skill-samples-program
+          path: skill-samples
+      - name: Run the skill samples
+        if: always()
+        shell: bash
+        env:
+          MACHINE: ${{ matrix.machine }}
+        run: |
+          code=0
+          node skill-samples/hx-skill-samples.mjs --out out/skills --machine "$MACHINE" --settings-changes || code=$?
+          python="$(command -v python3 || command -v python)"
+          "$python" -m pip install --quiet openpyxl python-docx python-pptx pypdf || code=1
+          "$python" skill-samples/skills_crosscheck.py out/skills || code=1
+          for file in out/skills/summary.md out/skills/crosscheck.md; do
+            if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+          exit "$code"
       - name: Upload the results
         if: always()
         uses: actions/upload-artifact@v7

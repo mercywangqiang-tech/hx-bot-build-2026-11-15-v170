@@ -267,5 +267,47 @@ class Public(unittest.TestCase):
             self.assertNotRegex(read(name), r"47\.119\.|hxallai", name)
 
 
+class SkillSamples(unittest.TestCase):
+    """v1.7.4 (CU-07): the 60 sample tasks of the six skills run on every machine of the check."""
+
+    def setUp(self):
+        self.text = read(".github/workflows/hx-computer-check.yml")
+
+    def test_prepare_bundles_the_samples_and_every_machine_runs_them_whatever_the_check_did(self):
+        prepare = job(self.text, "prepare")
+        self.assertIn("bash hx/scripts/skill-samples-bundle.sh dist-skill-samples", prepare)
+        self.assertLess(prepare.index("hxbot-computer-check-program"), prepare.index("hxbot-skill-samples-program"))
+        machine = job(self.text, "machine")
+        step = machine[machine.index("name: Run the skill samples") : machine.index("name: Upload the results")]
+        self.assertIn("if: always()", step)
+        self.assertIn('node skill-samples/hx-skill-samples.mjs --out out/skills --machine "$MACHINE" --settings-changes', step)
+        self.assertIn("skills_crosscheck.py out/skills", step)
+        self.assertIn('exit "$code"', step)
+        # The results go up with the machine's results (path: out), under a name the merge does not read.
+        self.assertLess(machine.index("name: Run the skill samples"), machine.index("name: Upload the results"))
+        self.assertFalse("hxbot-skill-samples-program".startswith("hxbot-check-"))
+        self.assertEqual(self.text.count("name: hxbot-skill-samples-program"), 2)
+
+    def test_the_bundle_needs_only_node_and_the_pdf_reader_beside_it(self):
+        text = read("hx/scripts/skill-samples-bundle.sh")
+        self.assertIn("bun build scripts/hx-skill-samples-e2e.ts --target=node --format=esm --external=pdfjs-dist", text)
+        self.assertIn("grep -v -E 'from \"(node:|pdfjs-dist)'", text)
+        self.assertIn('cp "$ROOT/hx/computer-check/skills_crosscheck.py" "$OUT/"', text)
+
+    def test_the_samples_change_settings_only_when_told_and_the_app_does_not_use_them(self):
+        entry = read("scripts/hx-skill-samples-e2e.ts")
+        self.assertIn('settingsChanges: world !== null || values["settings-changes"] === true', entry)
+        samples = read("src/backend/hx-skills/samples.ts")
+        self.assertIn("sample.changesSetting && !host.settingsChanges", samples)
+        # Whatever was changed is put back at the end.
+        self.assertIn("改回 ${id} = ${value}", samples)
+        for folder in ("src", "packages", "apps"):
+            for path in (ROOT / folder).rglob("*.ts*"):
+                if "node_modules" in path.parts or path.name == "samples.ts":
+                    continue
+                text = path.read_text(encoding="utf-8", errors="ignore")
+                self.assertNotRegex(text, r'from "[^"]*hx-skills/samples"', path.as_posix())
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

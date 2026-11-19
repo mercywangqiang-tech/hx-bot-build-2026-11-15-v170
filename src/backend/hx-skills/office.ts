@@ -283,13 +283,10 @@ export function hxSheetChange(
     }
     case "summary": {
       const input = SHEET_PARAMS.summary.parse(params ?? {});
-      const made = book.summarize(
-        input.sheet ?? null,
-        input.range,
-        input.rows,
-        input.values,
-        input.totalLabel ? { totalLabel: input.totalLabel } : {},
-      );
+      const made = book.summarize(input.sheet ?? null, input.range, input.rows, input.values, {
+        ...(input.totalLabel ? { totalLabel: input.totalLabel } : {}),
+        ...(input.name ? { target: input.name } : {}),
+      });
       return {
         bytes: book.toBytes(),
         done: `summary of ${input.range} by ${input.rows.join(", ")} on the new sheet ${made.sheet} (${made.groups} groups)`,

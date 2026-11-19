@@ -5,7 +5,7 @@
 //    → 写回（核对哈希没被别人改过）→ 从磁盘读回逐项核对 → 出差异（ART-05）。给了 output 就另存，原文件不动。
 // 4. 新文件（抽页、拆分、合并、老格式转换后的结果）从不覆盖已有文件；一个失败，这次新写的全部拿走。
 // 结果给模型的是短的 JSON：做了什么、读回核对、差异摘要；完整差异交给对话卡片（#54）。
-import { readFile, realpath, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, rmdir, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, extname, isAbsolute, join, relative, sep } from "node:path";
 import { z } from "zod";
@@ -1049,8 +1049,22 @@ export class HxSkillRunner {
     }
     if (args.action !== "split" && hxExtension(target) !== "pdf")
       throw new SkillRefusal("invalid", "output must end in .pdf.");
-    if (args.action === "split" && !(await stat(target).catch(() => null))?.isDirectory())
-      throw new SkillRefusal("invalid", `${target} is not a folder; split puts its parts into a folder.`);
+    // split: the parts go into a folder; a folder that does not exist yet is made (one level, in a
+    // folder that exists), right before the first part is written, and taken away again on a failure.
+    let newFolder = false;
+    if (args.action === "split") {
+      const info = await stat(target).catch(() => null);
+      if (info && !info.isDirectory())
+        throw new SkillRefusal("invalid", `${target} is not a folder; split puts its parts into a folder.`);
+      if (!info) {
+        if (!(await stat(dirname(target)).catch(() => null))?.isDirectory())
+          throw new SkillRefusal(
+            "invalid",
+            `${dirname(target)} does not exist; split makes at most one new folder for its parts.`,
+          );
+        newFolder = true;
+      }
+    }
     const inputs = [];
     let total = 0;
     for (const file of files) {
@@ -1065,15 +1079,22 @@ export class HxSkillRunner {
         throw new SkillRefusal("invalid", `${file.path} exists already; HXBot never replaces it. Give another output.`);
     }
     const written: string[] = [];
+    let madeFolder = false;
     try {
       for (const file of made.files) {
         this.#beforeCommit();
+        if (newFolder && !madeFolder) {
+          // Not recursive: if someone made the folder in the meantime, this fails and nothing is written.
+          await mkdir(target);
+          madeFolder = true;
+        }
         await hxCreateFile(file.path, file.bytes);
         written.push(file.path);
       }
     } catch (error) {
-      // All or nothing: the files this call made go again.
+      // All or nothing: the files (and the folder) this call made go again.
       for (const path of written) await unlink(path).catch(() => undefined);
+      if (madeFolder) await rmdir(target).catch(() => undefined);
       throw error;
     }
     const saved = new Map<string, Uint8Array>();

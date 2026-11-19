@@ -105,6 +105,7 @@ export const SHEET_PARAMS = {
       .min(1)
       .max(20),
     totalLabel: z.string().max(100).optional(),
+    name: sheetName.optional(),
   }),
   chart: z.strictObject({
     sheet: sheetName.optional(),
@@ -281,7 +282,7 @@ const SHEET: HxSkillDeclaration = {
       idempotent: false,
       readback: "the new sheet read back, its total row checked against the source",
       usage:
-        'sheet?; range; rows: ["Region"]; values: [{"column": "Sales", "fn": sum|count|average|min|max, "label"?}]',
+        'sheet?; range; rows: ["Region"]; values: [{"column": "Sales", "fn": sum|count|average|min|max, "label"?}]; totalLabel?; name? (of the new sheet)',
       params: SHEET_PARAMS.summary,
     },
     chart: {
@@ -529,7 +530,8 @@ const PDF: HxSkillDeclaration = {
       changes: true,
       idempotent: true,
       readback: "each part's page count",
-      usage: 'every? (pages per part) or ranges? (["1-3","4-"]); output is the folder for the parts',
+      usage:
+        'every? (pages per part) or ranges? (["1-3","4-"]); output is the folder for the parts (made when it does not exist)',
       params: PDF_PARAMS.split,
     },
     merge: {
