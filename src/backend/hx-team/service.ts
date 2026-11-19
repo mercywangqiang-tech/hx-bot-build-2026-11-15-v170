@@ -15,7 +15,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { HxAutoModelSettings, HxDifficulty, HxModelRef, HxNeed, HxWorkType } from "@hxbot/contracts/hx-auto-model";
-import type { HxProgressCard } from "@hxbot/contracts/hx-progress";
+import { type HxProgressCard, type HxProgressStep, hxProgressText } from "@hxbot/contracts/hx-progress";
 import {
   AVATAR_HUES,
   CHANNEL_CHANGE_ITEM_TYPE,
@@ -26,6 +26,8 @@ import {
 import { isDynamicRecord } from "@hxbot/contracts/runtime-values";
 import { sourceText } from "@hxbot/i18n";
 import { z } from "zod";
+import { hxComputerLanes } from "../hx-computer/lanes";
+import { hxParkedSteps } from "../hx-computer/parked";
 import { type HxFlowTeamTask, hxFlow } from "../hx-flow/ledger";
 import { HX_FLOW_RELAXED_WEIGHT, HX_FLOW_URGENT_WEIGHT, HxFlowDifficultyTimes } from "../hx-flow/order";
 import type { HxProgressWriter } from "../hx-progress/progress";
@@ -239,6 +241,9 @@ const STOPPED_KEYS = {
 const ACTIVE = new Set(["queued", "running", "waiting"]);
 /** A dependency in one of these states lets the work that waits for it start. */
 const SETTLED = new Set(["completed", "failed", "cancelled"]);
+/** v1.7.4 (CONC-09): how often a running team's card is read again, and the most lines it shows. */
+const HX_TEAM_CARD_REFRESH_MS = 5_000;
+const HX_TEAM_CARD_LINES = 30;
 /** v1.7.1: how often the guards look at the running teams. */
 const HX_TEAM_TICK_MS = 15_000;
 /** The most files the progress check of a team folder reads (v1.7.3). */
@@ -295,6 +300,9 @@ export class HxTeams {
   #ticker: ReturnType<typeof setInterval> | null = null;
   /** v1.7.1: the tasks of each room, read again after each change of the room. */
   readonly #taskCache = new Map<string, ChannelTask[]>();
+  /** v1.7.4 (CONC-09): the text of each team's card as written last, and the timer that refreshes them. */
+  readonly #cardTexts = new Map<string, string>();
+  #cardTimer: ReturnType<typeof setInterval> | null = null;
   #timesFile: string | null = null;
   #spendReading = false;
   readonly #chains = new Map<string, Promise<void>>();
@@ -310,6 +318,19 @@ export class HxTeams {
     this.#port = port;
     // v1.7.1: the ledger reads the team rooms and their work (src/backend/hx-flow).
     hxFlow.attachTeams(port ? this.#flowView() : null);
+    // v1.7.4 (CONC-09): each member's line moves with the queue, so a running team's card is written
+    // again when its text changed.
+    if (this.#cardTimer) clearInterval(this.#cardTimer);
+    this.#cardTimer = null;
+    if (port) {
+      this.#cardTimer = setInterval(() => this.refreshCards(), HX_TEAM_CARD_REFRESH_MS);
+      this.#cardTimer.unref?.();
+    }
+  }
+
+  /** v1.7.4 (CONC-09): writes the card of each running team whose text changed. It never throws. */
+  refreshCards(): void {
+    for (const team of this.store.running()) this.#writeCard(team);
   }
 
   /**
@@ -851,6 +872,11 @@ export class HxTeams {
   /** Saves the team and writes its progress card again (v1.6.7). It never throws. */
   #save(team: HxTeamRecord): void {
     this.store.save(team);
+    this.#writeCard(team, true);
+  }
+
+  /** Writes the progress card of the team when its text changed, or always with `force`. It never throws. */
+  #writeCard(team: HxTeamRecord, force = false): void {
     const port = this.#port;
     if (!port) return;
     try {
@@ -858,15 +884,72 @@ export class HxTeams {
         0,
         Math.round(((team.endedAt ? Date.parse(team.endedAt) : this.#now()) - Date.parse(team.createdAt)) / 60_000),
       );
+      const running = team.state !== "done" && team.state !== "stopped" && team.state !== "failed";
+      const card = hxTeamCard(team, this.#handoffs(team), minutes, running ? this.#memberLines(port, team) : []);
+      const text = hxProgressText(card);
+      if (!force && this.#cardTexts.get(team.id) === text) return;
+      this.#cardTexts.set(team.id, text);
+      if (!running) this.#cardTexts.delete(team.id);
       port.progress(
         team.starterAgentId,
         hxTeamCardId(team.id),
-        hxTeamCard(team, this.#handoffs(team), minutes),
+        card,
         team.state === "stopped" || team.state === "failed",
       );
     } catch (error) {
       port.error("hx_team_card_failed", error);
     }
+  }
+
+  /**
+   * v1.7.4 (CONC-09): one line for each member, what it does or what it waits for: the screen, the
+   * user to stop using the computer, a reply, its place in the queue with about how long, the work it
+   * depends on. The time of a place is the ledger's: place × the recent turn time ÷ the places.
+   */
+  #memberLines(port: HxTeamPort, team: HxTeamRecord): HxProgressStep[] {
+    const tasks = this.#tasks(port, team.channelId);
+    const states = new Map(tasks.map((task) => [task.id, task.state]));
+    const screen = hxComputerLanes.waitingAgents();
+    const line = (text: string, state: HxProgressStep["state"] = "pending"): HxProgressStep => ({ text, state });
+    const lines: HxProgressStep[] = [];
+    if (team.guard?.paused)
+      lines.push(line(sourceText("status.agent.hxTeam.card.paused", { reason: team.guard.paused.reason })));
+    if (team.weight === "urgent") lines.push(line(sourceText("status.agent.hxTeam.card.urgent")));
+    if (team.weight === "relaxed") lines.push(line(sourceText("status.agent.hxTeam.card.relaxed")));
+    for (const member of team.members) {
+      if (member.left) continue;
+      const name = member.name;
+      const own = tasks.filter((task) => task.ownerAgentId === member.agentId && !SETTLED.has(task.state));
+      const running = own.find((task) => task.state === "running");
+      if (hxParkedSteps.get(member.agentId))
+        lines.push(line(sourceText("status.agent.hxTeam.member.yourTurn", { name })));
+      else if (screen.has(member.agentId)) lines.push(line(sourceText("status.agent.hxTeam.member.screen", { name })));
+      else if (running) {
+        // The lead's own task is the whole team's: its instruction is the brief, so the goal stands for it.
+        const goal =
+          running.parentTaskId === null ? team.goal : (hxReadForm(running.instruction).goal ?? running.instruction);
+        lines.push(line(sourceText("status.agent.hxTeam.member.doing", { name, what: hxOneLine(goal, 60) }), "active"));
+      } else if (own.some((task) => task.state === "waiting"))
+        lines.push(line(sourceText("status.agent.hxTeam.member.reply", { name })));
+      else {
+        const queued = own.find((task) => task.state === "queued");
+        const ready = queued?.dependencies.every((id) => SETTLED.has(states.get(id) ?? "")) ?? false;
+        const place = queued && ready ? hxFlow.queuePlace(queued.id) : null;
+        if (place)
+          lines.push(
+            line(
+              sourceText("status.agent.hxTeam.member.queued", {
+                name,
+                position: place.place,
+                minutes: place.minutes,
+              }),
+            ),
+          );
+        else if (queued) lines.push(line(sourceText("status.agent.hxTeam.member.after", { name })));
+        else lines.push(line(sourceText("status.agent.hxTeam.member.free", { name })));
+      }
+    }
+    return lines;
   }
 
   /** The handoffs so far: each task below a request, and each change of owner. */
@@ -1635,17 +1718,29 @@ export function hxTeamCardId(teamId: string): string {
  * step with the member that does it. A blocked step says that it waits; a finished team has every
  * step done; a paused team says that it waits for the user.
  */
-export function hxTeamCard(team: HxTeamRecord, handoffs: number, minutes: number): HxProgressCard {
+export function hxTeamCard(
+  team: HxTeamRecord,
+  handoffs: number,
+  minutes: number,
+  members: readonly HxProgressStep[] = [],
+): HxProgressCard {
   const who = (role: string) => team.members.find((member) => member.role === role && !member.left)?.name ?? role;
   const stuck = team.language === "zh" ? "（等待中）" : " (waiting)";
   return {
     title: team.guard?.paused
       ? sourceText("status.agent.hxTeam.progressPaused", { count: handoffs, minutes })
       : sourceText("status.agent.hxTeam.progressOpen", { count: handoffs, minutes }),
-    steps: team.steps.map((step) => ({
-      text: `${step.title} · ${who(step.role)}${step.state === "blocked" ? stuck : ""}`,
-      state: team.state === "done" || step.state === "done" ? "done" : step.state === "doing" ? "active" : "pending",
-    })),
+    // v1.7.4 (CONC-09): the steps, then one line for each member (a card shows 30 lines).
+    steps: [
+      ...team.steps.map(
+        (step): HxProgressStep => ({
+          text: `${step.title} · ${who(step.role)}${step.state === "blocked" ? stuck : ""}`,
+          state:
+            team.state === "done" || step.state === "done" ? "done" : step.state === "doing" ? "active" : "pending",
+        }),
+      ),
+      ...members,
+    ].slice(0, HX_TEAM_CARD_LINES),
   };
 }
 

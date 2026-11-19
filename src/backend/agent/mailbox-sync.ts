@@ -9,6 +9,7 @@ import type {
 } from "@hxbot/contracts/ipc";
 import { Effect, type Scope } from "effect";
 import { isMailboxMessageCopy } from "../conversation-snapshots";
+import { hxHoldDetails } from "../hx-flow/hold-detail";
 import type { HxBotDatabase } from "../hxbot-database";
 import type { MailboxStore } from "../mailbox-store";
 import type { ConversationRuntime } from "./conversation-runtime";
@@ -55,6 +56,8 @@ export class MailboxSync {
     this.#routines = options.routines;
     this.#scope = options.scope;
     this.#hooks = options.hooks;
+    // HXBot (v1.7.4, CONC-09): a wait whose place or time moved reaches the chat.
+    hxHoldDetails.attach("queue", (agentId) => this.emitQueue(agentId));
   }
 
   syncDeliveryMessage(snapshot: ConversationSnapshot, deliveryId: string): void {
@@ -169,7 +172,9 @@ export class MailboxSync {
     const queue = this.#mailbox.listQueue(agentId);
     if (!queue.deliveries.some((delivery) => delivery.status === "queued")) return queue;
     const hold = this.#hooks.queueHold(agentId);
-    return hold ? { ...queue, hold } : queue;
+    // HXBot (v1.7.4, CONC-09): the place and the time of a wait for the computer or the provider.
+    const holdDetail = hxHoldDetails.of(agentId);
+    return { ...queue, ...(hold ? { hold } : {}), ...(holdDetail ? { holdDetail } : {}) };
   }
 
   emitQueue(agentId: string): void {

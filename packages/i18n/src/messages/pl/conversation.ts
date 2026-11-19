@@ -202,4 +202,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Czeka na twoje zatwierdzenie",
   "conversation.tasks.state.waitingAnswer": "Czeka na ciebie",
   "conversation.tasks.title": "Zadania",
+  "conversation.hx.hold.place": "W kolejce (miejsce {position}, około {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "W kolejce (miejsce {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} min",
+  "conversation.hx.hold.underMinute": "mniej niż minuta",
+  "conversation.hx.hold.machine": "Ten komputer wykonuje teraz tyle tur, ile może.",
+  "conversation.hx.hold.provider":
+    "Dostawca modelu nie przyjmuje teraz więcej żądań albo wstrzymał się po limicie szybkości.",
+  "conversation.hx.hold.screen": "Inny agent używa ekranu.",
+  "conversation.hx.hold.userActive": "Używasz komputera.",
+  "conversation.hx.hold.teamQueue": "Praca zespołu czeka na miejsce.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -199,4 +199,13 @@ export const messages = defineMessages("conversation", {
   "conversation.tasks.state.waitingApproval": "Waiting for your approval",
   "conversation.tasks.state.waitingAnswer": "Waits for you",
   "conversation.tasks.title": "Tasks",
+  "conversation.hx.hold.place": "Queued (place {position}, about {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "Queued (place {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} min",
+  "conversation.hx.hold.underMinute": "under a minute",
+  "conversation.hx.hold.machine": "This computer runs as many turns as it can now.",
+  "conversation.hx.hold.provider": "The model's provider takes no more requests now, or pauses after a rate limit.",
+  "conversation.hx.hold.screen": "Another agent uses the screen.",
+  "conversation.hx.hold.userActive": "You are using the computer.",
+  "conversation.hx.hold.teamQueue": "The team's work waits for a place.",
 });

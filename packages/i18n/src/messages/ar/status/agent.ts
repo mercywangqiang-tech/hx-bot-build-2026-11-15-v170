@@ -187,4 +187,14 @@ export const messages = {
     "(أرسله HXBot) توقف المستخدم، و{app} في المقدمة: تابع الخطوة المؤجلة. انظر إلى النافذة أولًا، ثم نفّذ الخطوات المتبقية وعددها {count}. اسأل المستخدم قبل أي إرسال أو دفع أو حذف، كالعادة.",
   "status.agent.hxUpdate.resume":
     "(أرسله HXBot) أُعيد تشغيل HXBot لتثبيت تحديث، وهو الآن الإصدار {version}. قطعت إعادة التشغيل دورك الأخير: تحقّق أولًا من المدى الذي وصل إليه العمل، ولا تكرّر خطوة غيّرت شيئًا بالفعل، ثم أكمل الباقي.",
+  "status.agent.hxTeam.card.paused": "متوقف مؤقتًا: {reason}",
+  "status.agent.hxTeam.card.urgent": "أكثر إلحاحًا: يسبق الفرق الأخرى. قل «غير عاجل» لتغييره.",
+  "status.agent.hxTeam.card.relaxed": "غير عاجل: تبدأ الفرق الأخرى أولًا. قل «عاجل» لتغييره.",
+  "status.agent.hxTeam.member.doing": "{name}: يعمل على «{what}»",
+  "status.agent.hxTeam.member.queued": "{name}: في الانتظار (الترتيب {position}، نحو {minutes} دقيقة)",
+  "status.agent.hxTeam.member.after": "{name}: يبدأ عندما ينتهي العمل الذي يحتاج إليه",
+  "status.agent.hxTeam.member.reply": "{name}: ينتظر ردًا",
+  "status.agent.hxTeam.member.screen": "{name}: ينتظر الشاشة",
+  "status.agent.hxTeam.member.yourTurn": "{name}: ينتظر حتى تتوقف عن استخدام الحاسوب",
+  "status.agent.hxTeam.member.free": "{name}: متاح",
 } as const satisfies PartialTranslation<typeof source>;

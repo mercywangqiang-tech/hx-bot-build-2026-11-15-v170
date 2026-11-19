@@ -49,6 +49,7 @@ import { ComposerVoiceControls, type VoicePhase } from "@hxbot/ui/features/conve
 import { type TextValue, useText } from "@hxbot/ui/text";
 import type { JSX } from "@solidjs/web";
 import { children, createEffect, createMemo, createSignal, For, onCleanup, onSettled, Show, untrack } from "solid-js";
+import { hxHoldDetailText } from "../hx-hold-text";
 import { type AgentThreadBranchSource, BranchDivider } from "./BranchDivider";
 
 const HOLD_TEXT = {
@@ -85,6 +86,8 @@ export function agentThreadHoldText(task: AgentTask, limit: number, t: TextValue
   if (task.state !== "queued") return null;
   if (task.hold === "task-limit" || task.hold === null)
     return t("conversation.threads.hold.threadLimit", { count: limit });
+  // HXBot (v1.7.4, CONC-09): a wait for the computer or the provider says its place and about how long.
+  if (task.hold === "server-busy" && task.holdDetail) return hxHoldDetailText(task.holdDetail, t);
   return t(HOLD_TEXT[task.hold]);
 }
 

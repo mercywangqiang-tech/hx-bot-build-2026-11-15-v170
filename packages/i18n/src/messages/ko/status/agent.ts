@@ -158,4 +158,14 @@ export const messages = {
     "(HXBot이 자동으로 보냄) 사용자가 손을 멈췄고 {app}이(가) 맨 앞에 있습니다. 보류한 단계를 이어서 하세요. 먼저 창을 확인한 다음 남은 {count}개 단계를 하세요. 보내기, 결제, 삭제 전에는 언제나처럼 사용자에게 먼저 물어보세요.",
   "status.agent.hxUpdate.resume":
     "(HXBot이 자동으로 보냄) HXBot이 업데이트를 설치하려고 다시 시작했고, 지금은 {version} 버전입니다. 다시 시작하면서 지난 턴이 중단되었습니다. 먼저 작업이 어디까지 진행됐는지 확인하고, 이미 무언가를 바꾼 단계는 반복하지 말고 나머지를 끝내세요.",
+  "status.agent.hxTeam.card.paused": "일시 중지됨: {reason}",
+  "status.agent.hxTeam.card.urgent": "더 급함: 다른 팀보다 먼저 진행합니다. 바꾸려면 「급하지 않음」이라고 말하세요.",
+  "status.agent.hxTeam.card.relaxed": "급하지 않음: 다른 팀이 먼저 진행합니다. 바꾸려면 「급함」이라고 말하세요.",
+  "status.agent.hxTeam.member.doing": "{name}: 「{what}」 작업 중",
+  "status.agent.hxTeam.member.queued": "{name}: 대기 중 ({position}번째, 약 {minutes}분)",
+  "status.agent.hxTeam.member.after": "{name}: 필요한 작업이 끝나면 시작합니다",
+  "status.agent.hxTeam.member.reply": "{name}: 답장을 기다리는 중",
+  "status.agent.hxTeam.member.screen": "{name}: 화면을 기다리는 중",
+  "status.agent.hxTeam.member.yourTurn": "{name}: 컴퓨터 사용을 멈출 때까지 기다리는 중",
+  "status.agent.hxTeam.member.free": "{name}: 비어 있음",
 } as const satisfies PartialTranslation<typeof source>;

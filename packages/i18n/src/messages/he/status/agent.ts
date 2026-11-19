@@ -181,4 +181,14 @@ export const messages = {
     "(נשלח על ידי HXBot) המשתמש הפסיק, ו-{app} בחזית: המשך את השלב שהושהה. הסתכל קודם על החלון, ואז בצע את {count} השלבים שנותרו. שאל את המשתמש לפני שליחה, תשלום או מחיקה, כרגיל.",
   "status.agent.hxUpdate.resume":
     "(נשלח על ידי HXBot) HXBot הופעל מחדש כדי להתקין עדכון, ועכשיו זו גרסה {version}. ההפעלה מחדש קטעה את הסבב האחרון שלך: בדוק קודם עד היכן הגיעה העבודה, אל תחזור על שלב שכבר שינה משהו, ואז סיים את השאר.",
+  "status.agent.hxTeam.card.paused": "מושהה: {reason}",
+  "status.agent.hxTeam.card.urgent": "דחוף יותר: הוא לפני צוותים אחרים. אמרו «לא דחוף» כדי לשנות.",
+  "status.agent.hxTeam.card.relaxed": "לא דחוף: צוותים אחרים קודם. אמרו «דחוף» כדי לשנות.",
+  "status.agent.hxTeam.member.doing": "{name}: עובד על «{what}»",
+  "status.agent.hxTeam.member.queued": "{name}: בתור (מקום {position}, בערך {minutes} דק׳)",
+  "status.agent.hxTeam.member.after": "{name}: יתחיל כשהעבודה שהוא צריך תסתיים",
+  "status.agent.hxTeam.member.reply": "{name}: מחכה לתשובה",
+  "status.agent.hxTeam.member.screen": "{name}: מחכה למסך",
+  "status.agent.hxTeam.member.yourTurn": "{name}: מחכה שתפסיקו להשתמש במחשב",
+  "status.agent.hxTeam.member.free": "{name}: פנוי",
 } as const satisfies PartialTranslation<typeof source>;

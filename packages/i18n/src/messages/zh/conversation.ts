@@ -197,4 +197,13 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "等待你批准",
   "conversation.tasks.state.waitingAnswer": "等待你",
   "conversation.tasks.title": "任务",
+  "conversation.hx.hold.place": "排队（第 {position} 位，约 {time}）。{reason}",
+  "conversation.hx.hold.placeOnly": "排队（第 {position} 位）。{reason}",
+  "conversation.hx.hold.minutes": "{count} 分钟",
+  "conversation.hx.hold.underMinute": "不到 1 分钟",
+  "conversation.hx.hold.machine": "这台电脑能同时运行的轮次已满。",
+  "conversation.hx.hold.provider": "模型服务商现在不再接更多请求，或限速后在暂停。",
+  "conversation.hx.hold.screen": "另一个助手正在用屏幕。",
+  "conversation.hx.hold.userActive": "你正在用电脑。",
+  "conversation.hx.hold.teamQueue": "团队的工作在排队。",
 } as const satisfies PartialTranslation<typeof source>;

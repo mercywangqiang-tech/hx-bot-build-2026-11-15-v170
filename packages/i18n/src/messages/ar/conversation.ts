@@ -211,4 +211,13 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "بانتظار موافقتك",
   "conversation.tasks.state.waitingAnswer": "تنتظرك",
   "conversation.tasks.title": "المهام",
+  "conversation.hx.hold.place": "في الانتظار (الترتيب {position}، نحو {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "في الانتظار (الترتيب {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} د",
+  "conversation.hx.hold.underMinute": "أقل من دقيقة",
+  "conversation.hx.hold.machine": "يشغّل هذا الحاسوب الآن أكبر عدد ممكن من الأدوار.",
+  "conversation.hx.hold.provider": "لا يقبل مزوّد النموذج طلبات أخرى الآن، أو أنه متوقف بعد تجاوز حدّ المعدّل.",
+  "conversation.hx.hold.screen": "وكيل آخر يستخدم الشاشة.",
+  "conversation.hx.hold.userActive": "أنت تستخدم الحاسوب.",
+  "conversation.hx.hold.teamQueue": "عمل الفريق ينتظر مكانًا.",
 } as const satisfies PartialTranslation<typeof source>;

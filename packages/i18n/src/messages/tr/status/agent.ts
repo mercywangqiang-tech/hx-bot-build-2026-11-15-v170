@@ -152,4 +152,14 @@ export const messages = {
     "(HXBot tarafından gönderildi) Kullanıcı durdu ve {app} önde: bekletilen adıma devam et. Önce pencereye bak, sonra kalan {count} adımı yap. Göndermeden, ödemeden veya silmeden önce her zamanki gibi kullanıcıya sor.",
   "status.agent.hxUpdate.resume":
     "(HXBot tarafından gönderildi) HXBot bir güncellemeyi yüklemek için yeniden başladı ve şimdi {version} sürümünde. Yeniden başlatma son turunu yarıda kesti: önce işin nereye kadar geldiğine bak, bir şeyi zaten değiştirmiş bir adımı tekrarlama, sonra kalanını bitir.",
+  "status.agent.hxTeam.card.paused": "Duraklatıldı: {reason}",
+  "status.agent.hxTeam.card.urgent": "Daha acil: diğer ekiplerden önce gelir. Değiştirmek için «acil değil» deyin.",
+  "status.agent.hxTeam.card.relaxed": "Acil değil: önce diğer ekipler gelir. Değiştirmek için «acil» deyin.",
+  "status.agent.hxTeam.member.doing": "{name}: «{what}» üzerinde çalışıyor",
+  "status.agent.hxTeam.member.queued": "{name}: sırada ({position}. sıra, yaklaşık {minutes} dk)",
+  "status.agent.hxTeam.member.after": "{name}: ihtiyaç duyduğu iş bitince başlar",
+  "status.agent.hxTeam.member.reply": "{name}: yanıt bekliyor",
+  "status.agent.hxTeam.member.screen": "{name}: ekranı bekliyor",
+  "status.agent.hxTeam.member.yourTurn": "{name}: bilgisayarı kullanmayı bırakmanızı bekliyor",
+  "status.agent.hxTeam.member.free": "{name}: boşta",
 } as const satisfies PartialTranslation<typeof source>;

@@ -202,4 +202,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Onayınızı bekliyor",
   "conversation.tasks.state.waitingAnswer": "Sizi bekliyor",
   "conversation.tasks.title": "Görevler",
+  "conversation.hx.hold.place": "Sırada ({position}. sıra, yaklaşık {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "Sırada ({position}. sıra). {reason}",
+  "conversation.hx.hold.minutes": "{count} dk",
+  "conversation.hx.hold.underMinute": "bir dakikadan az",
+  "conversation.hx.hold.machine": "Bu bilgisayar şu anda yapabildiği kadar tur çalıştırıyor.",
+  "conversation.hx.hold.provider":
+    "Modelin sağlayıcısı şu anda başka istek almıyor veya bir hız sınırından sonra duraklıyor.",
+  "conversation.hx.hold.screen": "Ekranı başka bir ajan kullanıyor.",
+  "conversation.hx.hold.userActive": "Bilgisayarı siz kullanıyorsunuz.",
+  "conversation.hx.hold.teamQueue": "Ekibin işi bir yer bekliyor.",
 } as const satisfies PartialTranslation<typeof source>;

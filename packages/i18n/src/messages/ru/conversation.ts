@@ -203,4 +203,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Ждёт вашего подтверждения",
   "conversation.tasks.state.waitingAnswer": "Ждёт вас",
   "conversation.tasks.title": "Задачи",
+  "conversation.hx.hold.place": "В очереди (место {position}, около {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "В очереди (место {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} мин",
+  "conversation.hx.hold.underMinute": "меньше минуты",
+  "conversation.hx.hold.machine": "Этот компьютер уже выполняет столько ходов, сколько может.",
+  "conversation.hx.hold.provider":
+    "Поставщик модели сейчас не принимает новые запросы или делает паузу после ограничения частоты.",
+  "conversation.hx.hold.screen": "Экраном пользуется другой агент.",
+  "conversation.hx.hold.userActive": "Вы пользуетесь компьютером.",
+  "conversation.hx.hold.teamQueue": "Работа команды ждёт места.",
 } as const satisfies PartialTranslation<typeof source>;

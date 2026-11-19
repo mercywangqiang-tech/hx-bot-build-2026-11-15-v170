@@ -184,4 +184,14 @@ export const messages = defineMessages("status.agent", {
     "(Sent by HXBot) The user has stopped, and {app} is in front: continue the parked step. Look at the window first, then do the {count} remaining steps. Ask the user before a send, a payment or a deletion, as always.",
   "status.agent.hxUpdate.resume":
     "(Sent by HXBot) HXBot restarted to install an update and is now version {version}. The restart cut off your last turn: first check how far the work got, do not repeat a step that already changed something, then finish the rest.",
+  "status.agent.hxTeam.card.paused": "Paused: {reason}",
+  "status.agent.hxTeam.card.urgent": "More urgent: it goes before other teams. Say “not urgent” to change it.",
+  "status.agent.hxTeam.card.relaxed": "Not urgent: other teams go first. Say “urgent” to change it.",
+  "status.agent.hxTeam.member.doing": "{name}: doing “{what}”",
+  "status.agent.hxTeam.member.queued": "{name}: queued (place {position}, about {minutes} min)",
+  "status.agent.hxTeam.member.after": "{name}: starts when the work it needs is done",
+  "status.agent.hxTeam.member.reply": "{name}: waits for a reply",
+  "status.agent.hxTeam.member.screen": "{name}: waits for the screen",
+  "status.agent.hxTeam.member.yourTurn": "{name}: waits until you stop using the computer",
+  "status.agent.hxTeam.member.free": "{name}: free",
 });

@@ -7,7 +7,7 @@ import {
   isConversationReadState,
   isConversationSnapshot,
 } from "./ipc-conversations";
-import { isQueueDelivery, type QueueDelivery } from "./ipc-queue";
+import { type HxHoldDetail, isHxHoldDetail, isQueueDelivery, type QueueDelivery } from "./ipc-queue";
 import { isDynamicRecord, isOneOf } from "./runtime-values";
 
 /** The most tasks of one agent that run a turn at the same time, next to the agent's own chat. */
@@ -106,6 +106,8 @@ export interface AgentTask {
    * never sent on the frozen `agent-tasks-v1` routes.
    */
   routineId?: string | null;
+  /** HXBot (v1.7.4, CONC-09): the place and the time of a `server-busy` wait. Absent on the Team API. */
+  holdDetail?: HxHoldDetail;
 }
 
 /** Where a branch was copied from. */
@@ -242,7 +244,8 @@ export function isAgentTask(value: unknown): value is AgentTask {
     isBoundedString(value.updatedAt, 160) &&
     (value.closedAt === null || isBoundedString(value.closedAt, 160)) &&
     (value.branch === undefined || value.branch === null || isAgentTaskBranch(value.branch)) &&
-    (value.routineId === undefined || value.routineId === null || isIdentifier(value.routineId))
+    (value.routineId === undefined || value.routineId === null || isIdentifier(value.routineId)) &&
+    (value.holdDetail === undefined || isHxHoldDetail(value.holdDetail))
   );
 }
 

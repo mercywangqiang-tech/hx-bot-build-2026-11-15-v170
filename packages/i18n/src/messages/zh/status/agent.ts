@@ -171,4 +171,14 @@ export const messages = {
     "（HXBot 自动发送）用户已停手，{app} 在最前面：请接着做停放的那一步。先看一下窗口，再做剩下的 {count} 步；发送、付款、删除这类步骤照样先问用户。",
   "status.agent.hxUpdate.resume":
     "（HXBot 自动发送）HXBot 为安装更新重启了，现在是 {version} 版。重启打断了你上一轮的工作：先看清做到了哪一步，已经改动过东西的步骤不要重复，再把剩下的做完。",
+  "status.agent.hxTeam.card.paused": "已暂停：{reason}",
+  "status.agent.hxTeam.card.urgent": "这件更急：排在别的团队前面。说“不急”可以改回。",
+  "status.agent.hxTeam.card.relaxed": "这件不急：别的团队先做。说“更急”可以改回。",
+  "status.agent.hxTeam.member.doing": "{name}：在做“{what}”",
+  "status.agent.hxTeam.member.queued": "{name}：排队（第 {position} 位，约 {minutes} 分钟）",
+  "status.agent.hxTeam.member.after": "{name}：等它需要的工作做完再开始",
+  "status.agent.hxTeam.member.reply": "{name}：等回复",
+  "status.agent.hxTeam.member.screen": "{name}：等屏幕",
+  "status.agent.hxTeam.member.yourTurn": "{name}：等你停手再用电脑",
+  "status.agent.hxTeam.member.free": "{name}：空闲",
 } as const satisfies PartialTranslation<typeof source>;

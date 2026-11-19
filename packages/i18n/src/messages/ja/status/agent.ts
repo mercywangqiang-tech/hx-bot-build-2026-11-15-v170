@@ -150,4 +150,14 @@ export const messages = {
     "（HXBot が自動送信）ユーザーが操作をやめ、{app} が最前面にあります。保留中の手順を続けてください。まずウィンドウを確認し、残りの {count} 個の手順を行ってください。送信、支払い、削除の前には、いつもどおりユーザーに確認してください。",
   "status.agent.hxUpdate.resume":
     "（HXBot が自動送信）HXBot は更新をインストールするために再起動し、現在はバージョン {version} です。再起動で前回のターンが中断されました。まず作業がどこまで進んだかを確認し、すでに何かを変更した手順は繰り返さずに、残りを終わらせてください。",
+  "status.agent.hxTeam.card.paused": "一時停止中：{reason}",
+  "status.agent.hxTeam.card.urgent": "より急ぎ：ほかのチームより先に進みます。「急がない」と言うと戻せます。",
+  "status.agent.hxTeam.card.relaxed": "急がない：ほかのチームが先です。「急ぎ」と言うと戻せます。",
+  "status.agent.hxTeam.member.doing": "{name}：「{what}」を実行中",
+  "status.agent.hxTeam.member.queued": "{name}：順番待ち（{position} 番目、約 {minutes} 分）",
+  "status.agent.hxTeam.member.after": "{name}：必要な作業が終わってから始めます",
+  "status.agent.hxTeam.member.reply": "{name}：返事を待っています",
+  "status.agent.hxTeam.member.screen": "{name}：画面が空くのを待っています",
+  "status.agent.hxTeam.member.yourTurn": "{name}：あなたがコンピューターの操作を止めるのを待っています",
+  "status.agent.hxTeam.member.free": "{name}：空き",
 } as const satisfies PartialTranslation<typeof source>;

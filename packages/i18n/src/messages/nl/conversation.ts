@@ -201,4 +201,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Wacht op je goedkeuring",
   "conversation.tasks.state.waitingAnswer": "Wacht op jou",
   "conversation.tasks.title": "Taken",
+  "conversation.hx.hold.place": "In de wachtrij (plaats {position}, ongeveer {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "In de wachtrij (plaats {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} min",
+  "conversation.hx.hold.underMinute": "minder dan een minuut",
+  "conversation.hx.hold.machine": "Deze computer voert nu zoveel beurten uit als hij kan.",
+  "conversation.hx.hold.provider":
+    "De aanbieder van het model neemt nu geen verzoeken meer aan, of pauzeert na een snelheidslimiet.",
+  "conversation.hx.hold.screen": "Een andere agent gebruikt het scherm.",
+  "conversation.hx.hold.userActive": "Je gebruikt de computer.",
+  "conversation.hx.hold.teamQueue": "Het werk van het team wacht op een plaats.",
 } as const satisfies PartialTranslation<typeof source>;

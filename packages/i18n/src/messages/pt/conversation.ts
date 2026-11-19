@@ -200,4 +200,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Aguardando sua aprovação",
   "conversation.tasks.state.waitingAnswer": "Aguardando você",
   "conversation.tasks.title": "Tarefas",
+  "conversation.hx.hold.place": "Na fila (lugar {position}, cerca de {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "Na fila (lugar {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} min",
+  "conversation.hx.hold.underMinute": "menos de um minuto",
+  "conversation.hx.hold.machine": "Este computador já executa todos os turnos que pode.",
+  "conversation.hx.hold.provider":
+    "O provedor do modelo não aceita mais pedidos agora, ou está em pausa após um limite de taxa.",
+  "conversation.hx.hold.screen": "Outro agente está usando a tela.",
+  "conversation.hx.hold.userActive": "Você está usando o computador.",
+  "conversation.hx.hold.teamQueue": "O trabalho da equipe espera um lugar.",
 } as const satisfies PartialTranslation<typeof source>;

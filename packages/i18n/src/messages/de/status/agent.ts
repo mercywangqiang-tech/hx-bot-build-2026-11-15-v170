@@ -158,4 +158,14 @@ export const messages = {
     "(Von HXBot gesendet) Der Benutzer hat aufgehört, und {app} ist vorne: Setze den geparkten Schritt fort. Sieh dir zuerst das Fenster an, dann erledige die {count} restlichen Schritte. Frage den Benutzer wie immer vor einem Senden, einer Zahlung oder einem Löschen.",
   "status.agent.hxUpdate.resume":
     "(Von HXBot gesendet) HXBot wurde neu gestartet, um ein Update zu installieren, und ist jetzt Version {version}. Der Neustart hat deinen letzten Durchlauf unterbrochen: Prüfe zuerst, wie weit die Arbeit gekommen ist, wiederhole keinen Schritt, der schon etwas geändert hat, und erledige dann den Rest.",
+  "status.agent.hxTeam.card.paused": "Pausiert: {reason}",
+  "status.agent.hxTeam.card.urgent": "Dringender: Es kommt vor anderen Teams. Sag „nicht dringend“, um das zu ändern.",
+  "status.agent.hxTeam.card.relaxed": "Nicht dringend: Andere Teams kommen zuerst. Sag „dringend“, um das zu ändern.",
+  "status.agent.hxTeam.member.doing": "{name}: arbeitet an „{what}“",
+  "status.agent.hxTeam.member.queued": "{name}: in der Warteschlange (Platz {position}, etwa {minutes} Min.)",
+  "status.agent.hxTeam.member.after": "{name}: beginnt, wenn die Arbeit fertig ist, die es braucht",
+  "status.agent.hxTeam.member.reply": "{name}: wartet auf eine Antwort",
+  "status.agent.hxTeam.member.screen": "{name}: wartet auf den Bildschirm",
+  "status.agent.hxTeam.member.yourTurn": "{name}: wartet, bis du den Computer nicht mehr benutzt",
+  "status.agent.hxTeam.member.free": "{name}: frei",
 } as const satisfies PartialTranslation<typeof source>;

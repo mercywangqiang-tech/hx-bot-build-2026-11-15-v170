@@ -204,4 +204,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "Wartet auf deine Genehmigung",
   "conversation.tasks.state.waitingAnswer": "Wartet auf dich",
   "conversation.tasks.title": "Aufgaben",
+  "conversation.hx.hold.place": "In der Warteschlange (Platz {position}, etwa {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "In der Warteschlange (Platz {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} Min.",
+  "conversation.hx.hold.underMinute": "weniger als eine Minute",
+  "conversation.hx.hold.machine": "Dieser Computer führt gerade so viele Durchgänge aus, wie er kann.",
+  "conversation.hx.hold.provider":
+    "Der Anbieter des Modells nimmt gerade keine weiteren Anfragen an oder pausiert nach einer Ratenbegrenzung.",
+  "conversation.hx.hold.screen": "Ein anderer Agent benutzt den Bildschirm.",
+  "conversation.hx.hold.userActive": "Du benutzt den Computer.",
+  "conversation.hx.hold.teamQueue": "Die Arbeit des Teams wartet auf einen Platz.",
 } as const satisfies PartialTranslation<typeof source>;

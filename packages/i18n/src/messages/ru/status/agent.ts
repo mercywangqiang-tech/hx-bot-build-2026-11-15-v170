@@ -155,4 +155,14 @@ export const messages = {
     "(Отправлено HXBot) Пользователь остановился, и {app} впереди: продолжи отложенный шаг. Сначала посмотри на окно, затем выполни оставшиеся шаги ({count}). Как всегда, спроси пользователя перед отправкой, оплатой или удалением.",
   "status.agent.hxUpdate.resume":
     "(Отправлено HXBot) HXBot перезапустился, чтобы установить обновление, и теперь работает версия {version}. Перезапуск прервал твой последний ход: сначала проверь, докуда дошла работа, не повторяй шаг, который уже что-то изменил, а затем доделай остальное.",
+  "status.agent.hxTeam.card.paused": "Приостановлено: {reason}",
+  "status.agent.hxTeam.card.urgent": "Срочнее: идёт раньше других команд. Скажите «не срочно», чтобы изменить.",
+  "status.agent.hxTeam.card.relaxed": "Не срочно: другие команды идут первыми. Скажите «срочно», чтобы изменить.",
+  "status.agent.hxTeam.member.doing": "{name}: делает «{what}»",
+  "status.agent.hxTeam.member.queued": "{name}: в очереди (место {position}, около {minutes} мин)",
+  "status.agent.hxTeam.member.after": "{name}: начнёт, когда закончится нужная ему работа",
+  "status.agent.hxTeam.member.reply": "{name}: ждёт ответа",
+  "status.agent.hxTeam.member.screen": "{name}: ждёт экран",
+  "status.agent.hxTeam.member.yourTurn": "{name}: ждёт, пока вы перестанете пользоваться компьютером",
+  "status.agent.hxTeam.member.free": "{name}: свободен",
 } as const satisfies PartialTranslation<typeof source>;

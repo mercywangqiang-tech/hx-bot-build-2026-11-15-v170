@@ -199,4 +199,14 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "承認を待っています",
   "conversation.tasks.state.waitingAnswer": "あなたを待っています",
   "conversation.tasks.title": "タスク",
+  "conversation.hx.hold.place": "順番待ち（{position} 番目、約 {time}）。{reason}",
+  "conversation.hx.hold.placeOnly": "順番待ち（{position} 番目）。{reason}",
+  "conversation.hx.hold.minutes": "{count} 分",
+  "conversation.hx.hold.underMinute": "1 分未満",
+  "conversation.hx.hold.machine": "このコンピューターは同時に実行できる最大のターンを実行中です。",
+  "conversation.hx.hold.provider":
+    "モデルのプロバイダーが現在これ以上のリクエストを受け付けていないか、レート制限のあと一時停止しています。",
+  "conversation.hx.hold.screen": "別のエージェントが画面を使っています。",
+  "conversation.hx.hold.userActive": "あなたがコンピューターを使っています。",
+  "conversation.hx.hold.teamQueue": "チームの作業が空きを待っています。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -29,6 +29,7 @@ import {
   type AgentThreadStore,
   copyBranchMessages,
 } from "../agent-threads/agent-thread-store";
+import { hxHoldDetails, hxTaskHoldDetail } from "../hx-flow/hold-detail";
 import type { MailboxStore } from "../mailbox-store";
 import type { DynamicToolCallParams } from "../protocol";
 import { storedSync } from "../stored-state-effects";
@@ -122,6 +123,8 @@ export class AgentTasks implements TaskLanes {
     this.#mailbox = options.mailbox;
     this.#conversation = options.conversation;
     this.#hooks = options.hooks;
+    // HXBot (v1.7.4, CONC-09): a wait whose place or time moved reaches the task list.
+    hxHoldDetails.attach("tasks", (agentId) => this.changed(agentId));
   }
 
   threadId(taskId: string): string | null {
@@ -710,6 +713,8 @@ export class AgentTasks implements TaskLanes {
       closedAt: task.closedAt,
       branch: this.#publicBranch(task),
       routineId: task.routineId,
+      // HXBot (v1.7.4, CONC-09): the place and the time of a wait for the computer or the provider.
+      ...hxTaskHoldDetail(hold, task.agentId, task.taskId),
     };
   }
 

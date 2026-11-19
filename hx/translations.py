@@ -1085,7 +1085,8 @@ def check_placeholders() -> list[str]:
                 problems.append(f"{locale}: {phrase} missing")
                 continue
             names = set(re.findall(r"\{(\w+)\}", value))
-            expected = V173_HOTFIX_PLACEHOLDERS.get(phrase, set()) if phrase in V173_HOTFIX_KEYS.values() else \
+            expected = V174_PLACEHOLDERS.get(phrase, set()) if phrase in V174_KEYS.values() else \
+                V173_HOTFIX_PLACEHOLDERS.get(phrase, set()) if phrase in V173_HOTFIX_KEYS.values() else \
                 V173_PLACEHOLDERS.get(phrase, set()) if phrase in V173_KEYS.values() else \
                 V171_PLACEHOLDERS.get(phrase, set()) if phrase in V171_KEYS.values() else \
                 V167_PLACEHOLDERS.get(phrase, set()) if phrase in V167_KEYS.values() else \
@@ -1436,3 +1437,11 @@ from translations_v173_hotfix import PLACEHOLDERS as V173_HOTFIX_PLACEHOLDERS  #
 KEYS.update(V173_HOTFIX_KEYS)
 for _locale in LOCALES:
     PHRASES[_locale].update(_V173_HOTFIX_NEW[_locale])
+
+# v1.7.4：并发（二）等待看得见、团队进度卡每个成员一行（hx/flow_v174.py）
+from translations_v174 import NEW as _V174_NEW, NEW_KEYS as V174_KEYS  # noqa: E402
+from translations_v174 import PLACEHOLDERS as V174_PLACEHOLDERS  # noqa: E402
+
+KEYS.update(V174_KEYS)
+for _locale in LOCALES:
+    PHRASES[_locale].update(_V174_NEW[_locale])

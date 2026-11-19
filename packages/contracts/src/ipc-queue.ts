@@ -156,6 +156,38 @@ export function isQueueHold(value: unknown): value is QueueHold {
   );
 }
 
+/**
+ * HXBot (v1.7.4, CONC-09): what a wait waits for, its place and about how long. The hold reasons stay
+ * as they are; this optional field carries the detail, and a released decoder ignores it.
+ * - `machine`: this computer runs as many turns as it can;
+ * - `provider`: the model's provider is at its limit or paused after a throttle;
+ * - `screen`: the screen is used by another agent; `user-active`: the user uses it;
+ * - `team-queue`: the team's work waits for a place.
+ * `position` 1 is next; `etaSeconds` is an estimate (place × the recent turn time ÷ the places).
+ */
+export const HX_HOLD_KINDS = ["machine", "provider", "screen", "user-active", "team-queue"] as const;
+export type HxHoldKind = (typeof HX_HOLD_KINDS)[number];
+
+export interface HxHoldDetail {
+  kind: HxHoldKind;
+  position: number | null;
+  etaSeconds: number | null;
+}
+
+/** The most a place or an estimate can be: a larger value is not a wait that a person reads. */
+const HX_HOLD_MAX = 1_000_000;
+
+export function isHxHoldDetail(value: unknown): value is HxHoldDetail {
+  const count = (item: unknown, least: number) =>
+    item === null || (typeof item === "number" && Number.isSafeInteger(item) && item >= least && item <= HX_HOLD_MAX);
+  return (
+    isDynamicRecord(value) &&
+    isOneOf(HX_HOLD_KINDS, value.kind) &&
+    count(value.position, 1) &&
+    count(value.etaSeconds, 0)
+  );
+}
+
 export interface QueueSnapshot {
   agentId: string;
   deliveries: QueueDelivery[];
@@ -164,6 +196,8 @@ export interface QueueSnapshot {
    * key list, so a remote server drops this field instead of reporting it.
    */
   hold?: QueueHold | null;
+  /** HXBot (v1.7.4, CONC-09): why the queued messages wait, when the computer or the provider holds them. */
+  holdDetail?: HxHoldDetail;
 }
 
 export function isQueueSnapshot(value: unknown): value is QueueSnapshot {
@@ -172,7 +206,8 @@ export function isQueueSnapshot(value: unknown): value is QueueSnapshot {
     isIdentifier(value.agentId) &&
     Array.isArray(value.deliveries) &&
     value.deliveries.every(isQueueDelivery) &&
-    (value.hold === undefined || value.hold === null || isQueueHold(value.hold))
+    (value.hold === undefined || value.hold === null || isQueueHold(value.hold)) &&
+    (value.holdDetail === undefined || isHxHoldDetail(value.holdDetail))
   );
 }
 

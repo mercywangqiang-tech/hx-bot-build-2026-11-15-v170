@@ -137,6 +137,16 @@ export class HxFlowLedger {
     if (view.screenBusy) this.#screenBusy = view.screenBusy;
   }
 
+  /** HXBot (v1.7.4, CONC-09): the order of the waiting lanes, for the place that a wait shows. */
+  orderContext(now: number = this.#now()): HxFlowOrderContext {
+    return this.#context(now);
+  }
+
+  /** HXBot (v1.7.4, CONC-09): the recent time of one turn, for the time that a wait shows. */
+  turnMs(): number {
+    return this.#turnMs;
+  }
+
   #context(now: number): HxFlowOrderContext {
     return {
       now,

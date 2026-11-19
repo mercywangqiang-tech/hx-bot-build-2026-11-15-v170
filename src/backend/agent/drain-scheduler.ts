@@ -8,6 +8,7 @@ import type { AgentStore } from "../agent-store";
 import type { ChannelService } from "../channel-service";
 import { causeHelpers } from "../effect-boundary";
 import { hxApprovalPolicy } from "../hx-access/hub";
+import { hxHoldDetails } from "../hx-flow/hold-detail";
 import { hxFlow, hxTickMemo } from "../hx-flow/ledger";
 import { hxProviderGate } from "../hx-flow/provider-gate";
 import { hxProviderModelOf } from "../hx-flow/provider-model";
@@ -290,6 +291,18 @@ export class DrainScheduler {
     hxProviderGate.attach({
       modelOf: (agentId) => hxModels().get(agentId) ?? null,
       wake: () => this.retrySlotWaiters(),
+    });
+    // HXBot (v1.7.4, CONC-09): the lanes that wait for a slot or their provider, for the place a wait shows.
+    hxHoldDetails.attachDrain({
+      waiting: () =>
+        [...this.#slotWaiters].flatMap((key) => {
+          const lane = laneOf(key);
+          const head = this.#mailbox.nextQueued(lane.agentId, lane.taskId)?.delivery;
+          if (!head) return [];
+          const assignment = this.#channels?.store.assignmentForDelivery(head.id) ?? null;
+          return [{ lane: key, candidate: hxFlow.rank(key, head, assignment) }];
+        }),
+      limit: () => this.#memory.turnLimit(),
     });
   }
 

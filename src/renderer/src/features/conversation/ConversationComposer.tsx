@@ -517,6 +517,7 @@ export function ConversationComposer() {
                       // the activity line above already shows it working, and naming it twice reads as
                       // two different waits.
                       hold={props.queue?.hold?.agentId === props.agent?.id ? null : props.queue?.hold}
+                      holdDetail={props.queue?.holdDetail}
                       agents={props.agents}
                       skills={installedSkills()}
                       editingDeliveryId={editingDeliveryId()}

@@ -200,4 +200,13 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "승인 대기 중",
   "conversation.tasks.state.waitingAnswer": "내 응답 대기 중",
   "conversation.tasks.title": "작업",
+  "conversation.hx.hold.place": "대기 중 ({position}번째, 약 {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "대기 중 ({position}번째). {reason}",
+  "conversation.hx.hold.minutes": "{count}분",
+  "conversation.hx.hold.underMinute": "1분 미만",
+  "conversation.hx.hold.machine": "이 컴퓨터는 지금 동시에 실행할 수 있는 만큼 턴을 실행하고 있습니다.",
+  "conversation.hx.hold.provider": "모델 제공업체가 지금 요청을 더 받지 않거나, 속도 제한 후 일시 중지했습니다.",
+  "conversation.hx.hold.screen": "다른 에이전트가 화면을 사용하고 있습니다.",
+  "conversation.hx.hold.userActive": "컴퓨터를 사용하고 있습니다.",
+  "conversation.hx.hold.teamQueue": "팀의 작업이 자리를 기다리고 있습니다.",
 } as const satisfies PartialTranslation<typeof source>;

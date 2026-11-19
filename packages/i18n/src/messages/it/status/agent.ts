@@ -156,4 +156,14 @@ export const messages = {
     "(Inviato da HXBot) L’utente si è fermato e {app} è in primo piano: continua il passaggio in sospeso. Guarda prima la finestra, poi fai i {count} passaggi rimasti. Chiedi all’utente prima di un invio, un pagamento o un’eliminazione, come sempre.",
   "status.agent.hxUpdate.resume":
     "(Inviato da HXBot) HXBot si è riavviato per installare un aggiornamento e ora è alla versione {version}. Il riavvio ha interrotto il tuo ultimo turno: controlla prima fin dove è arrivato il lavoro, non ripetere un passaggio che ha già cambiato qualcosa, poi completa il resto.",
+  "status.agent.hxTeam.card.paused": "In pausa: {reason}",
+  "status.agent.hxTeam.card.urgent": "Più urgente: passa prima degli altri team. Di' «non urgente» per cambiarlo.",
+  "status.agent.hxTeam.card.relaxed": "Non urgente: gli altri team vanno prima. Di' «urgente» per cambiarlo.",
+  "status.agent.hxTeam.member.doing": "{name}: sta facendo «{what}»",
+  "status.agent.hxTeam.member.queued": "{name}: in coda (posto {position}, circa {minutes} min)",
+  "status.agent.hxTeam.member.after": "{name}: inizia quando il lavoro che gli serve è finito",
+  "status.agent.hxTeam.member.reply": "{name}: aspetta una risposta",
+  "status.agent.hxTeam.member.screen": "{name}: aspetta lo schermo",
+  "status.agent.hxTeam.member.yourTurn": "{name}: aspetta che tu smetta di usare il computer",
+  "status.agent.hxTeam.member.free": "{name}: libero",
 } as const satisfies PartialTranslation<typeof source>;

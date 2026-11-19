@@ -205,4 +205,13 @@ export const messages = {
   "conversation.tasks.state.waitingApproval": "ממתין לאישור שלך",
   "conversation.tasks.state.waitingAnswer": "ממתין לך",
   "conversation.tasks.title": "משימות",
+  "conversation.hx.hold.place": "בתור (מקום {position}, בערך {time}). {reason}",
+  "conversation.hx.hold.placeOnly": "בתור (מקום {position}). {reason}",
+  "conversation.hx.hold.minutes": "{count} דק׳",
+  "conversation.hx.hold.underMinute": "פחות מדקה",
+  "conversation.hx.hold.machine": "המחשב הזה מריץ עכשיו כמה סבבים שהוא יכול.",
+  "conversation.hx.hold.provider": "ספק המודל לא מקבל עכשיו בקשות נוספות, או מושהה אחרי מגבלת קצב.",
+  "conversation.hx.hold.screen": "סוכן אחר משתמש במסך.",
+  "conversation.hx.hold.userActive": "אתם משתמשים במחשב.",
+  "conversation.hx.hold.teamQueue": "העבודה של הצוות מחכה למקום.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -1,5 +1,5 @@
 import { expandChatTagReferences } from "@hxbot/contracts/chat-tag-references";
-import type { QueueDelivery, QueueHold, QueueSteerFallback } from "@hxbot/contracts/ipc";
+import type { HxHoldDetail, QueueDelivery, QueueHold, QueueSteerFallback } from "@hxbot/contracts/ipc";
 import type { AppTextKey } from "@hxbot/i18n";
 import { Button, ConfirmDialog, LabelTooltip, LabelTooltipTrigger, Plus } from "@hxbot/ui";
 import { prefersReducedMotion } from "@hxbot/ui/utils";
@@ -10,11 +10,14 @@ import { useText } from "../../text";
 import { fileBadge } from "./AttachmentCards";
 import { EditIcon, QueueIcon, SteerIcon, TrashIcon } from "./ConversationIcons";
 import { createSmoothHeightResize } from "./createSmoothHeightResize";
+import { hxHoldDetailText } from "./hx-hold-text";
 
 interface QueuePanelProps {
   deliveries: QueueDelivery[];
   /** Why the queue is waiting, when the cause is not a turn this conversation can show. */
   hold?: QueueHold | null | undefined;
+  /** HXBot (v1.7.4, CONC-09): what the queued messages wait for, their place and about how long. */
+  holdDetail?: HxHoldDetail | null | undefined;
   agents?: ComposerAgent[];
   skills?: ComposerSkill[] | undefined;
   editingDeliveryId?: string | null | undefined;
@@ -412,6 +415,13 @@ export function QueuePanel(props: QueuePanelProps) {
           {(hold) => (
             <p class="agent-queue-hold" role="status">
               {holdText(hold())}
+            </p>
+          )}
+        </Show>
+        <Show when={props.holdDetail}>
+          {(detail) => (
+            <p class="agent-queue-hold" role="status">
+              {hxHoldDetailText(detail(), t)}
             </p>
           )}
         </Show>

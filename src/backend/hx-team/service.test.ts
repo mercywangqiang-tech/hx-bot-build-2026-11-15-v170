@@ -409,10 +409,18 @@ describe("the watcher", () => {
     expect(running?.card.title).toBe("Team · 1 handoffs · 0 min");
     expect(running?.card.steps.map((step) => step.state)).toContain("active");
     // The lead's step and the writer's step both run now; each names its member.
-    expect(running?.card.steps.filter((step) => step.state === "active").map((step) => step.text)).toEqual([
-      "定方案 · 方案老李",
-      "写文章 · 文案小王",
-    ]);
+    const stepLines = (steps: readonly { text: string; state: string }[] | undefined) =>
+      (steps ?? []).filter((step) => step.text.includes(" · "));
+    expect(
+      stepLines(running?.card.steps)
+        .filter((step) => step.state === "active")
+        .map((step) => step.text),
+    ).toEqual(["定方案 · 方案老李", "写文章 · 文案小王"]);
+    // v1.7.4 (CONC-09): after the steps, one line for each member; the lead's work is the team's goal.
+    const members = (running?.card.steps ?? []).filter((step) => !step.text.includes(" · ")).map((step) => step.text);
+    expect(members).toContain("文案小王: doing “写摘要”");
+    expect(members.some((line) => line.startsWith("方案老李: doing “") && !line.includes("【协作任务】"))).toBe(true);
+    expect(members.filter((line) => line.endsWith(": free"))).toHaveLength(members.length - 2);
     room.tasks[1] = { ...task("sub-1", "root-1", "w", "completed") };
     teams.changed(id);
     expect(port.cards.at(-1)?.card.steps.filter((step) => step.state === "done")).toHaveLength(1);
@@ -430,6 +438,22 @@ describe("the watcher", () => {
       }),
     ).board;
     expect(board?.steps.map((step) => step.state)).toEqual(["doing", "done", "todo"]);
+  });
+
+  it("shows each member's place in the queue with about how long (v1.7.4, CONC-09-A2)", async () => {
+    const { id, room } = await started();
+    // Two pieces of the lead wait before the writer's: the writer is third.
+    room.tasks.push(task("sub-a", "root-1", "p", "queued"), task("sub-b", "root-1", "p", "queued"));
+    room.tasks.push(task("sub-c", "root-1", "w", "queued"));
+    teams.changed(id);
+    teams.refreshCards();
+    const lines = (port.cards.at(-1)?.card.steps ?? []).map((step) => step.text);
+    // place × the recent turn time (2 min before any turn ended) ÷ the places (1 with no machine limit).
+    expect(lines).toContain("文案小王: queued (place 3, about 6 min)");
+    // Nothing moved: the card is not written again.
+    const written = port.cards.length;
+    teams.refreshCards();
+    expect(port.cards.length).toBe(written);
   });
 
   it("finishes with the lead's last answer when every task ended without team_done, and hides the members it made", async () => {

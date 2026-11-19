@@ -192,4 +192,14 @@ export const messages = {
     "(Verzonden door HXBot) De gebruiker is gestopt en {app} staat vooraan: ga verder met de geparkeerde stap. Kijk eerst naar het venster en doe dan de {count} resterende stappen. Vraag het de gebruiker zoals altijd vóór verzenden, betalen of verwijderen.",
   "status.agent.hxUpdate.resume":
     "(Verzonden door HXBot) HXBot is opnieuw gestart om een update te installeren en is nu versie {version}. De herstart heeft je laatste beurt onderbroken: kijk eerst hoe ver het werk was, herhaal geen stap die al iets heeft veranderd en maak daarna de rest af.",
+  "status.agent.hxTeam.card.paused": "Gepauzeerd: {reason}",
+  "status.agent.hxTeam.card.urgent": "Dringender: het gaat voor andere teams. Zeg „niet dringend” om het te wijzigen.",
+  "status.agent.hxTeam.card.relaxed": "Niet dringend: andere teams gaan eerst. Zeg „dringend” om het te wijzigen.",
+  "status.agent.hxTeam.member.doing": "{name}: bezig met „{what}”",
+  "status.agent.hxTeam.member.queued": "{name}: in de wachtrij (plaats {position}, ongeveer {minutes} min)",
+  "status.agent.hxTeam.member.after": "{name}: begint als het werk klaar is dat het nodig heeft",
+  "status.agent.hxTeam.member.reply": "{name}: wacht op een antwoord",
+  "status.agent.hxTeam.member.screen": "{name}: wacht op het scherm",
+  "status.agent.hxTeam.member.yourTurn": "{name}: wacht tot je de computer niet meer gebruikt",
+  "status.agent.hxTeam.member.free": "{name}: vrij",
 } as const satisfies PartialTranslation<typeof source>;

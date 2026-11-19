@@ -82,6 +82,11 @@ export class HxComputerLanes {
     return this.#waiting.some((waiter) => waiter.lane === lane && waiter.holder.tier < tier);
   }
 
+  /** HXBot (v1.7.4, CONC-09): the agents that wait for a lane of the screen now, for the team's card. */
+  waitingAgents(): ReadonlySet<string> {
+    return new Set(this.#waiting.map((waiter) => waiter.holder.agentId));
+  }
+
   /** Whether anybody waits for a lane, or holds `focus` (the presence check runs only then). */
   active(): boolean {
     return this.#waiting.length > 0 || this.#held.has("focus");
