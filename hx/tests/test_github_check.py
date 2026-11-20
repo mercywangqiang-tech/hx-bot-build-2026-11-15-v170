@@ -301,6 +301,9 @@ class SkillSamples(unittest.TestCase):
         build = read(".github/workflows/hx-build.yml")
         draft = build[build.index("  draft-release:") :]
         self.assertIn("pattern: hxbot-{mac-arm64,windows-x64,android}", draft)
+        # The packages of an earlier run can go into the draft without building them again.
+        self.assertIn("run-id: ${{ inputs.draft_release_from_run || github.run_id }}", draft)
+        self.assertIn("actions: read", draft)
 
     def test_the_bundle_needs_only_node_and_the_pdf_reader_beside_it(self):
         text = read("hx/scripts/skill-samples-bundle.sh")

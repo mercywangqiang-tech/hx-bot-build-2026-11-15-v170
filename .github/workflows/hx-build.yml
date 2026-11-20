@@ -29,6 +29,9 @@ on:
       desktop_check_baseline:
         description: "对比用的上一版：本仓库里草稿 Release 的名字（空着不比）"
         default: "v1.7.3.1-0.67.13"
+      draft_release_from_run:
+        description: "v1.7.4：草稿 Release 用另一次运行打好的包（填那次运行的编号；平台填 none 就不重新打包）。空着用这一次的"
+        default: ""
 
 permissions:
   contents: read
@@ -285,6 +288,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # The artifacts of another run (draft_release_from_run).
+      actions: read
     steps:
       # Only the packages: the checks upload their own programs and results (folders) to the same run.
       - uses: actions/download-artifact@v8
@@ -292,14 +297,22 @@ jobs:
           pattern: hxbot-{mac-arm64,windows-x64,android}
           path: dist
           merge-multiple: true
+          run-id: ${{ inputs.draft_release_from_run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Put the packages into a draft release
         env:
           GH_TOKEN: ${{ github.token }}
           NAME: ${{ inputs.draft_release }}
+          FROM_RUN: ${{ inputs.draft_release_from_run }}
         run: |
           cd dist
           ls -l
+          sha=$GITHUB_SHA
+          # Packages of another run: the release points at the commit that run built.
+          if [ -n "$FROM_RUN" ]; then
+            sha="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$FROM_RUN" --jq .head_sha)"
+          fi
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          gh release create "$NAME" ./* --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
-            --title "HXBot $NAME" --notes "GitHub Actions 打出的安装包（提交 $GITHUB_SHA），校验和见 SHA256SUMS.txt。草稿，不公开。"
+          gh release create "$NAME" ./* --repo "$GITHUB_REPOSITORY" --draft --target "$sha" \
+            --title "HXBot $NAME" --notes "GitHub Actions 打出的安装包（提交 $sha${FROM_RUN:+，运行 $FROM_RUN}），校验和见 SHA256SUMS.txt。草稿，不公开。"
