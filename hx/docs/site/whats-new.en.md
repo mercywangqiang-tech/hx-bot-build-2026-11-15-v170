@@ -14,7 +14,7 @@ November 20, 2026 · Desktop and web 0.67.15 · Mobile 1.5.1 (Android; no iOS up
 
 > **Highlights**
 > 1. {NEW} A start film: the giraffe comes with balloons and becomes the HXBot logo. It plays on the first start and the first start after each update, in the film for the window's shape, and never cuts the logo or the name. {on:Desktop, web, Android}
-> 2. Routines have a time zone and show their next three runs (local time and UTC, with the daylight saving change); missed runs show how many and when, and follow your choice: skip all or run once. {on:Desktop}
+> 2. Routines have a time zone and show their next three runs (local time and UTC, with the daylight saving change); missed runs show how many and when, and follow your setting: skip them or run once. {on:Desktop}
 > 3. A catch-up that sends, posts, pays or deletes asks you first; every run has a result: succeeded, no update, not verified or failed. {on:Desktop}
 > 4. More capable workflows: app skill, Computer Use and team steps; save a turn of a chat as a workflow; a failed run continues from the failed step, and external actions already done are not done again. {on:Desktop}
 > 5. A deleted agent no longer comes back, and it leaves the web client and phones at once. {on:Desktop, web, mobile}
@@ -35,14 +35,14 @@ November 20, 2026 · Desktop and web 0.67.15 · Mobile 1.5.1 (Android; no iOS up
 
 - **A time zone is required:** a new routine needs a time zone, and the one you registered comes first; an agent that makes a routine asks you once too. Routines from before the update ask once to confirm their time zone, and run in their old one until then.
 - **The next three runs:** the editor and the chat card show the next three runs in local time, UTC and offset. A time that a clock change skips runs at the first minute after the gap; a repeated time runs once.
-- **Missed runs:** runs missed while HXBot was closed or the computer slept show in the list and the history: how many, from when to when, and what happened, by your choice: skip all or run once.
+- **Missed runs:** runs missed while HXBot was closed or the computer slept show in the list and the history: how many, from when to when, and what happened, by your setting for “If HXBot was closed at the scheduled time”: skip them or run once.
 - **Spread out:** routines due in the same minute start a few seconds apart, in order. A trigger that comes while the last run still runs is recorded as skipped, with the reason; after a pause, the editor shows that no trigger is queued.
 
 ### Sending asks first, and every run has a result {#desktop-0-67-15-confirm}
 
-![A catch-up would send an email: it asks first, and runs only after “Run this once”](/hx-portal/whats-new/routine-confirm.en.jpg)
+![A catch-up would send an email: it asks first, and runs only after “Run this time”](/hx-portal/whats-new/routine-confirm.en.jpg)
 
-- **It asks first:** when a catch-up would send, post, pay or delete, the chat asks you; it runs only after Run this once, and Skip this time or no answer before the next run skips it. A routine whose instruction does such things (routines from before the update are marked by themselves) can ask before each run.
+- **It asks first:** when a catch-up would send, post, pay or delete, the chat asks you; it runs only after Run this time, and Skip this time or no answer before the next run skips it. A routine whose instruction does such things (routines from before the update are marked by themselves) can ask before each run.
 - **Results:** each run says succeeded, no update, not verified or failed. A result that is not verified (for example, a file it said it saved is not there) shows in the chat and as a notification; no update does not disturb you.
 
 ### Workflows {#desktop-0-67-15-workflows}

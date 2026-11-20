@@ -136,8 +136,8 @@ export const SHOTS: Shot[] = [
       en: "Missed runs are spelled out, and sending asks you first",
     },
     lead: {
-      zh: "HXBot 关着或电脑睡眠时错过的，写明错过几次、从几点到几点，按你选的“全部跳过”或“补跑一次”处理。补跑会发送、发布、付款或删除时，先在对话里问你，你点“运行这一次”才做。每次运行都有结果：成功、无更新、结果未核实、失败。",
-      en: "Runs missed while HXBot was closed or the computer slept show how many and from when to when, and follow your choice: skip all or run once. When the catch-up would send, post, pay or delete, the chat asks you first, and it runs only after Run this once. Every run has a result: succeeded, no update, not verified or failed.",
+      zh: "HXBot 关着或电脑睡眠时错过的，写明错过几次、从几点到几点，按你的设置跳过或补跑一次。补跑会发送、发布、付款或删除时，先在对话里问你，你点“运行这一次”才做。每次运行都有结果：成功、无更新、结果未核实、失败。",
+      en: "Runs missed while HXBot was closed or the computer slept show how many and from when to when, and follow your setting: skip or run once. When the catch-up would send, post, pay or delete, the chat asks you first, and it runs only after Run this time. Every run has a result: succeeded, no update, not verified or failed.",
     },
     crop: ".hx-highlight-frame",
     width: 620,
