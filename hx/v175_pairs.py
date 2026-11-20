@@ -469,6 +469,16 @@ FILES = [
     ('src/backend/agent-thread-migration.test.ts', [
     ], [
         (
+         '    agent_usage_skill_loads: _skillLoads,\n',
+         '    agent_usage_skill_loads: _skillLoads,\n'
+         '    // HXBot (v1.7.5, MIG-03): migration 59 adds the HXBot tables of routines and runs after it.\n'
+         '    hx_routine_detail: _hxRoutines,\n'
+         '    hx_run_detail: _hxRuns,\n'
+         '    hx_routine_confirmations: _hxConfirmations,\n'
+         '    hx_external_actions: _hxActions,\n'
+         '    hx_meta: _hxMeta,\n',
+        ),
+        (
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
         ),
@@ -911,6 +921,14 @@ FILES = [
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
         ),
+        (
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n',
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 20");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 20");\n',
+        ),
     ]),
     ('src/backend/browser-profile-migration.test.ts', [
     ], [
@@ -1263,6 +1281,14 @@ FILES = [
         (
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
+        ),
+        (
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n',
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 20");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 20");\n',
         ),
     ]),
     ('src/backend/hxbot-database-events-migration.test.ts', [
@@ -1747,6 +1773,14 @@ FILES = [
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
         ),
+        (
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n',
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 20");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 20");\n',
+        ),
     ]),
     ('src/backend/routine-result-migration.test.ts', [
     ], [
@@ -1777,6 +1811,34 @@ FILES = [
         (
          '      expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '      expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
+        ),
+        (
+         '    seedRoutines(db, 32);\n'
+         '    const before = rows(db);\n'
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n'
+         '    expect(() => migrateOpenBotDatabase(db)).toThrow("newer than this application supports");\n',
+         '    seedRoutines(db, 32);\n'
+         '    const before = rows(db);\n'
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n'
+         '    expect(() => migrateOpenBotDatabase(db)).toThrow("newer than this application supports");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 27");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 27");\n',
+        ),
+        (
+         '    seedRoutines(db, 34);\n'
+         '    const before = rows(db);\n'
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n'
+         '    expect(() => migrateOpenBotDatabase(db)).toThrow("newer than this application supports");\n',
+         '    seedRoutines(db, 34);\n'
+         '    const before = rows(db);\n'
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n'
+         '    expect(() => migrateOpenBotDatabase(db)).toThrow("newer than this application supports");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 33");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 33");\n',
         ),
     ]),
     ('src/backend/routine-run-place-migration.test.ts', [
@@ -2041,6 +2103,14 @@ FILES = [
         (
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });\n',
          '  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });\n',
+        ),
+        (
+         '    db.exec("INSERT INTO schema_migrations VALUES(59, \'now\')");\n',
+         '    db.exec("INSERT INTO schema_migrations VALUES(60, \'now\')");\n',
+        ),
+        (
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 59; DELETE FROM schema_migrations WHERE version = 38");\n',
+         '    db.exec("DELETE FROM schema_migrations WHERE version = 60; DELETE FROM schema_migrations WHERE version = 38");\n',
         ),
     ]),
     ('src/backend/workflow-migration.test.ts', [
@@ -3566,9 +3636,9 @@ FILES = [
          '          const toolRequest = { ...request, params };\n',
          '          const toolRequest = { ...request, params };\n'
          '          // HXBot (v1.7.5, RTN-11): a turn keeps its Computer Use calls, for "save as a workflow".\n'
-         '          if (HX_COMPUTER_TOOL_NAMES.has(toolRequest.params.tool)) {\n'
-         '            const hxOwner = this.#conversation.agentForThread(toolRequest.params.threadId);\n'
-         '            if (hxOwner) hxTurnTools.expect(toolRequest.params, hxOwner, toolRequest.params.turnId);\n'
+         '          if (HX_COMPUTER_TOOL_NAMES.has(params.tool)) {\n'
+         '            const hxOwner = this.#conversation.agentForThread(params.threadId);\n'
+         '            if (hxOwner) hxTurnTools.expect(params, hxOwner, params.turnId);\n'
          '          }\n',
         ),
     ]),

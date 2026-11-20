@@ -131,6 +131,12 @@ function withoutTasks(rows: Record<string, unknown[]>): Record<string, unknown[]
     browser_proxies: _proxies,
     browser_profile_proxies: _profileProxies,
     agent_usage_skill_loads: _skillLoads,
+    // HXBot (v1.7.5, MIG-03): migration 59 adds the HXBot tables of routines and runs after it.
+    hx_routine_detail: _hxRoutines,
+    hx_run_detail: _hxRuns,
+    hx_routine_confirmations: _hxConfirmations,
+    hx_external_actions: _hxActions,
+    hx_meta: _hxMeta,
     ...kept
   } = rows;
   return kept;

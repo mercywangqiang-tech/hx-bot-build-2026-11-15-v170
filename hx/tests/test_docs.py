@@ -100,12 +100,15 @@ class Docs(unittest.TestCase):
     def test_installer_names_match_the_versions(self):
         desktop = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
         mobile = json.loads((ROOT / "apps/mobile/app.json").read_text(encoding="utf-8"))["expo"]["version"]
+        # v1.7.5：iPhone 可以晚于安卓发包（没有邓白氏码时），它的版本是 hx/brand.json 的 versions.mobileIos
+        versions = json.loads((ROOT / "hx/brand.json").read_text(encoding="utf-8"))["versions"]
+        ios = versions.get("mobileIos", mobile)
         for name in ("上线操作手册", "客户端构建"):
             text = read(name)
             for found in re.findall(r"HXBot-([0-9.]+[0-9])-(?:arm64|x64)", text):
                 self.assertEqual(found, desktop, name)
-            for found in re.findall(r"HXBot-([0-9.]+[0-9])-(?:android|ios)", text):
-                if found != mobile:
+            for found, platform in re.findall(r"HXBot-([0-9.]+[0-9])-(android|ios)", text):
+                if found != mobile and not (platform == "ios" and found == ios):
                     # 只能以“上一版的安装包”出现（例如核对签名时拿来比较的旧 APK）
                     self.assertRegex(text, rf"上一版[^\n]*HXBot-{re.escape(found)}-", name)
 

@@ -10,7 +10,7 @@ This page lists the new features and highlights of HXBot by version, newest firs
 
 ## Desktop 0.67.15 · Mobile 1.5.1: a start film, and more reliable routines and workflows {#desktop-0-67-15}
 
-November 20, 2026 · Desktop and web 0.67.15 · Android 1.5.1 (no iOS update this time; it stays 1.5.0)
+November 20, 2026 · Desktop and web 0.67.15 · Mobile 1.5.1 (Android; no iOS update this time, it stays 1.5.0)
 
 > **Highlights**
 > 1. {NEW} A start film: the giraffe comes with balloons and becomes the HXBot logo. It plays on the first start and the first start after each update, in the film for the window's shape, and never cuts the logo or the name. {on:Desktop, web, Android}
