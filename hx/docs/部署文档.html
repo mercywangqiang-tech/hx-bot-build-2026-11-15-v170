@@ -507,8 +507,8 @@ brew install cocoapods</code></pre></div>
       <p><strong>第 6 步：登记至少一台 iPhone 或 iPad。这一步不能省</strong>：开发者账号里一台设备都没有时，Xcode 生成不了签名用的描述文件，打包会失败（报 <code>Your team has no devices</code>）。走路线 B 的，把要安装的每一台设备都在这里登记。</p>
       <ol><li>取设备编号（UDID）：用数据线把 iPhone 连到 Mac，手机上点“信任”。打开“访达”，在左边栏点这台 iPhone，再点设备名称下面那一行灰色小字（型号、容量那一行），点到显示 UDID 为止，在上面点右键 →“拷贝 UDID”。</li><li>在浏览器打开 <a href="https://developer.apple.com/account/resources/devices/list" target="_blank" rel="noopener">https://developer.apple.com/<wbr>account/<wbr>resources/<wbr>devices/<wbr>list</a> ，点“Devices”旁边的 <code>+</code>。</li><li>Platform 选 iOS, iPadOS, tvOS, watchOS, visionOS；Device Name 填一个认得出的名字（如“张三的 iPhone”）；Device ID (UDID) 粘贴刚才拷贝的编号。</li><li>点 Continue，再点 Register。</li></ol>
       <p>用户不在身边、手边也没有 Mac 时，让他在 Windows 电脑上装 iTunes，连上手机后点设备图标，在“摘要”页点“序列号”那一行，它会变成 UDID，右键拷贝后发给你。</p>
-      <p><strong>第 7 步：解压源码并检查环境。</strong>把源码包 <code>hxbot-source-v1.7.3.zip</code> 拷到 Mac 上，在终端里进入它所在的文件夹：</p>
-      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip hxbot-source-v1.7.3.zip
+      <p><strong>第 7 步：解压源码并检查环境。</strong>把源码包 <code>hxbot-source-v1.7.4.zip</code> 拷到 Mac 上，在终端里进入它所在的文件夹：</p>
+      <div class="code"><div class="code__bar"><span>终端命令</span><button class="copy" type="button" data-copy aria-label="复制终端命令">复制</button></div><pre><code>unzip hxbot-source-v1.7.4.zip
 cd hx-bot
 bash hx/scripts/build-ios.sh --check</code></pre></div>
       <p>每一行都是 <code>[通过]</code> 才算准备好。出现 <code>[缺少]</code> 的，照它下面“处理”一行做完，再运行一次。全部通过时屏幕显示：</p>
