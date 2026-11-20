@@ -42,7 +42,7 @@ November 20, 2026 · Desktop and web 0.67.15 · Mobile 1.5.1 (Android; no iOS up
 
 ![A catch-up would send an email: it asks first, and runs only after “Run this time”](/hx-portal/whats-new/routine-confirm.en.jpg)
 
-- **It asks first:** when a catch-up would send, post, pay or delete, the chat asks you; it runs only after Run this time, and Skip this time or no answer before the next run skips it. A routine whose instruction does such things (routines from before the update are marked by themselves) can ask before each run.
+- **It asks first:** when a catch-up would send, post, pay or delete, the chat asks you; it runs only after Run this time, and Skip this time or no answer before the next run skips it. A routine from before the update whose instruction does such things now asks before each run (it shows Asks before each run).
 - **Results:** each run says succeeded, no update, not verified or failed. A result that is not verified (for example, a file it said it saved is not there) shows in the chat and as a notification; no update does not disturb you.
 
 ### Workflows {#desktop-0-67-15-workflows}
