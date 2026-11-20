@@ -308,11 +308,15 @@ jobs:
           cd dist
           ls -l
           sha=$GITHUB_SHA
-          # Packages of another run: the release points at the commit that run built.
+          target=(--target "$GITHUB_SHA")
+          # Packages of another run: the notes name the commit that run built. The token of this run may
+          # not point a release at another commit (GitHub answered 403), so the draft keeps the default
+          # branch as its target; it is never published, so no tag is made.
           if [ -n "$FROM_RUN" ]; then
             sha="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$FROM_RUN" --jq .head_sha)"
+            target=()
           fi
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          gh release create "$NAME" ./* --repo "$GITHUB_REPOSITORY" --draft --target "$sha" \
+          gh release create "$NAME" ./* --repo "$GITHUB_REPOSITORY" --draft "${target[@]}" \
             --title "HXBot $NAME" --notes "GitHub Actions 打出的安装包（提交 $sha${FROM_RUN:+，运行 $FROM_RUN}），校验和见 SHA256SUMS.txt。草稿，不公开。"
