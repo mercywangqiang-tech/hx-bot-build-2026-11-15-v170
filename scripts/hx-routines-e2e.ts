@@ -1,6 +1,7 @@
-// HXBot v1.7.5: RTN-01, RTN-02, RTN-03, RTN-06, MIG-03 and CONC-14 on the real scheduler, SQLite stores
-// and mailbox. Each pass of the scheduler gets an explicit clock; no provider, account, network or model
-// is started. The staggered starts of CONC-14 wait for real timers, at most one minute.
+// HXBot v1.7.5: RTN-01, RTN-02, RTN-03, RTN-04, RTN-06, MIG-03 and CONC-14 on the real scheduler, SQLite
+// stores, mailbox and the results service that judges a run when its turn ends. Each pass of the scheduler
+// gets an explicit clock; no provider, account, network or model is started. The staggered starts of
+// CONC-14 wait for real timers, at most one minute.
 //
 // Run: bun scripts/hx-routines-e2e.ts
 // It writes .hxbot-build/hx-routines-e2e/report.json and exits non-zero on a failure.
@@ -12,6 +13,7 @@ import type { HxRoutineConfirmCard } from "@hxbot/contracts/hx-routine-confirm";
 import type { Routine, RoutineSchedule } from "@hxbot/contracts/ipc";
 import { Effect } from "effect";
 import { ConversationRuntime } from "../src/backend/agent/conversation-runtime";
+import { isNoUpdateAnswer } from "../src/backend/agent/routine-quiet-runs";
 import { RoutineScheduler } from "../src/backend/agent/routine-scheduler";
 import { AgentRoutineStore } from "../src/backend/agent-routine-store";
 import { AgentStore } from "../src/backend/agent-store";
@@ -25,6 +27,7 @@ import { runCauseEffect } from "../src/backend/effect-boundary";
 import { hxAttachChannelConfirm } from "../src/backend/hx-routines/channel";
 import { hxChannelRoutineConfirm, hxRoutineConfirm } from "../src/backend/hx-routines/confirm";
 import { hxRunDetailsOf, hxWriteRoutineDetail } from "../src/backend/hx-routines/detail";
+import { hxRoutineResults } from "../src/backend/hx-routines/results-service";
 import { hxUpgradeAfterMigrations } from "../src/backend/hx-routines/upgrade";
 import { hxRoutineZones } from "../src/backend/hx-routines/zone";
 import { HxBotDatabase } from "../src/backend/hxbot-database";
@@ -461,6 +464,114 @@ await check("CONC-14-A1 six routines of one minute start spread over 60 seconds,
       "They start in the order they came due.",
     );
     return { startsMs: values };
+  }),
+);
+
+interface ResultWatch {
+  lines: string[];
+  notes: Array<{ title: string; body: string }>;
+}
+
+/** The results service with the host that the agent service gives it, but lines and notes kept here. */
+function watchResults(fixture: Fixture, workspace: string): ResultWatch {
+  const watch: ResultWatch = { lines: [], notes: [] };
+  hxRoutineResults.attach({
+    connection: () => fixture.database.connection,
+    runForDelivery: (deliveryId) => fixture.scheduler.runForDelivery(deliveryId),
+    workspaceOf: () => workspace,
+    appendLine: (_agentId, text) => watch.lines.push(text),
+    notify: (_agentId, title, body) => watch.notes.push({ title, body }),
+  });
+  return watch;
+}
+
+/** One due run of the routine that ends with this answer, judged as the end of its turn judges it. */
+async function runAndAnswer(fixture: Fixture, routine: Routine, now: Date, answer: string) {
+  await pass(fixture, now);
+  const run = fixture.runs.activeRuns(fixture.agentId, routine.id).find((item) => item.deliveryId);
+  assert.ok(run?.deliveryId, "The due time starts a run.");
+  const delivery = fixture.mailbox.getDelivery(run.deliveryId)?.delivery;
+  assert.ok(delivery, "The run has its delivery.");
+  const judged = hxRoutineResults.judgeTurn({
+    agentId: fixture.agentId,
+    turnId: `turn-${run.deliveryId}`,
+    outcome: "completed",
+    reportedFailure: undefined,
+    // As the end of the turn: the no-update marker as the whole answer means nothing to report.
+    noUpdate: isNoUpdateAnswer(answer),
+    answer,
+    messages: [],
+    deliveries: [delivery],
+  });
+  await finish(fixture, run.deliveryId);
+  const row = records(fixture, routine).find((item) => item.run.id === run.id);
+  return { run: row?.run, kind: judged.get(run.id)?.kind, stored: row?.detail?.result?.kind };
+}
+
+await check("RTN-04-A1 the answer says done but the file it saved is not there: result not verified", () =>
+  withFixture(async (fixture, root) => {
+    const workspace = join(root, "workspace");
+    await mkdir(workspace, { recursive: true });
+    const watch = watchResults(fixture, workspace);
+    try {
+      const routine = create(
+        fixture,
+        "Sales report",
+        { kind: "daily", time: "09:00" },
+        {
+          instruction: "每天把销售数据汇总，保存到 report.txt。",
+        },
+      );
+      const first = new Date(Date.parse(routine.trigger.nextRunAt) + 1_000);
+      const missing = await runAndAnswer(fixture, routine, first, "已完成，汇总已保存到 report.txt。");
+      // The released status is what released clients and the frozen Team API read; HXBot keeps its result apart.
+      assert.equal(missing.run?.status, "succeeded", "The released status of the run is unchanged.");
+      assert.equal(missing.kind, "unverified", "The run is not a success: the file is not there.");
+      assert.equal(missing.stored, "unverified", "The result is kept for the list and the history.");
+      assert.equal(watch.lines.length, 1, "One line in the chat.");
+      assert.match(watch.lines[0] ?? "", /report\.txt/u, "The line names the file.");
+      assert.equal(watch.notes.length, 1, "One notification.");
+      // The next day the same answer is true: the file is there, so the run succeeds and says nothing.
+      await writeFile(join(workspace, "report.txt"), "sales\n");
+      const second = new Date(first.getTime() + 24 * HOUR);
+      const present = await runAndAnswer(fixture, routine, second, "已完成，汇总已保存到 report.txt。");
+      assert.equal(present.kind, "succeeded", "With the file there, the run succeeds.");
+      assert.equal(present.stored, "succeeded");
+      assert.equal(watch.lines.length, 1, "No new line.");
+      assert.equal(watch.notes.length, 1, "No new notification.");
+      return { missing, present, lines: watch.lines, notes: watch.notes };
+    } finally {
+      hxRoutineResults.detach();
+    }
+  }),
+);
+
+await check("RTN-04-A2 a daily report with no change records no update and sends no notification", () =>
+  withFixture(async (fixture, root) => {
+    const watch = watchResults(fixture, join(root, "workspace"));
+    try {
+      const routine = create(
+        fixture,
+        "News digest",
+        { kind: "daily", time: "08:00" },
+        {
+          instruction: "每天看一遍行业新闻，有新内容就写摘要。",
+        },
+      );
+      const quiet = await runAndAnswer(
+        fixture,
+        routine,
+        new Date(Date.parse(routine.trigger.nextRunAt) + 1_000),
+        "[[no-update]]",
+      );
+      assert.equal(quiet.kind, "no-update", "Nothing changed: no update.");
+      assert.equal(quiet.stored, "no-update", "The history keeps it as no update.");
+      assert.equal(watch.lines.length, 0, "No line in the chat.");
+      assert.equal(watch.notes.length, 0, "No notification.");
+      return { quiet };
+    } finally {
+      hxRoutineResults.detach();
+    }
   }),
 );
 
