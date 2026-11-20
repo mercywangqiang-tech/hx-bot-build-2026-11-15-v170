@@ -70,4 +70,19 @@ export const messages = {
   "error.workflow.githubUncertain":
     "変更が途中で止まりました。GitHub にすでに反映されている可能性があります。ステップを再実行する前に GitHub を確認してください。",
   "error.workflow.githubNoEvent": "このトリガーが開始する Issue またはプルリクエストが GitHub にありません。",
+  "error.workflow.hxStepNoAgent": "このステップのエージェントを選んでください。",
+  "error.workflow.hxStepInvalid": "このステップの設定が合っていません：{reason}",
+  "error.workflow.hxStepUnavailable": "HXBot はまだ起動中です。少ししてからもう一度ステップを実行してください。",
+  "error.workflow.hxStepComputerUseOff":
+    "{agent} の Computer Use がオフです。エージェントの設定でオンにしてから続けてください。",
+  "error.workflow.hxActionUnknown":
+    "HXBot が {action} の途中で止まったため、結果がわかりません。先に確認してください。「このステップから続ける」を押すともう一度実行します。",
+  "error.workflow.hxActionFailed": "呼び出し {action} がうまくいきませんでした：{reason}",
+  "error.workflow.hxTeamFailed": "チームが最後まで終わりませんでした：{reason}",
+  "error.workflow.hxConnectionOff": "この出力のメッセージ接続がオフです。オンにしてから続けてください。",
+  "error.workflow.hxLimitLoops": "上限を超えました：ループが {count} 回実行されたため、実行を止めました。",
+  "error.workflow.hxLimitSteps": "上限を超えました：実行が {count} ステップに達したため、止めました。",
+  "error.workflow.hxLimitSeconds": "上限を超えました：ループが {count} 秒を超えて続いたため、実行を止めました。",
+  "error.workflow.hxTurnNothing":
+    "このターンには、保存できる Computer Use、アプリスキル、チームのステップがありません。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -288,4 +288,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "أدخل البريد الإلكتروني لهذا الحساب.",
   "mobile.settings.hxDelete.incorrectPassword": "كلمة المرور غير صحيحة.",
   "mobile.settings.hxDelete.failed": "تعذّر حذف الحساب. حاول مرة أخرى لاحقًا.",
+  "mobile.settings.appearance.hxBootSound": "صوت فيلم البدء",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "يُعرض الفيلم عند أول بدء وعند أول بدء بعد كل تحديث. عند الإيقاف: يُعرض بلا صوت.",
 } as const satisfies PartialTranslation<typeof source>;

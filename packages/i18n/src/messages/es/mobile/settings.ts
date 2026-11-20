@@ -293,4 +293,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Introduce el correo de esta cuenta.",
   "mobile.settings.hxDelete.incorrectPassword": "La contraseña no es correcta.",
   "mobile.settings.hxDelete.failed": "No se pudo eliminar la cuenta. Inténtalo de nuevo más tarde.",
+  "mobile.settings.appearance.hxBootSound": "Sonido de la película de inicio",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "La película se reproduce en el primer inicio y en el primer inicio después de cada actualización. Desactivado: se reproduce sin sonido.",
 } as const satisfies PartialTranslation<typeof source>;

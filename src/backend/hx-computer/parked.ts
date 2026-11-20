@@ -41,7 +41,15 @@ export interface HxParkHost {
   autoResume(agentId: string): boolean;
   /** A line in the agent's chat after 30 minutes. */
   remind?(work: HxParkedWork): void;
+  /**
+   * HXBot (v1.7.5, CONC-13): the user used the computer again within 3 seconds after this work went on
+   * by itself: HXBot went on too early (hx-flow/learned.ts makes the pause longer when it happens often).
+   */
+  wentOnTooEarly?(work: HxParkedWork): void;
 }
+
+/** HXBot (v1.7.5, CONC-13): an input of the user this soon after HXBot went on means it went on too early. */
+const HX_WENT_ON_AGAIN_MS = 3_000;
 
 /** After this long, a parked step is told once in the chat (the record stays). */
 export const HX_PARK_REMIND_MS = 30 * 60_000;
@@ -78,6 +86,8 @@ export class HxParkedSteps {
   #host: HxParkHost | null = null;
   #timer: ReturnType<typeof setInterval> | null = null;
   #checking = false;
+  /** HXBot (v1.7.5, CONC-13): work that went on by itself in the last 3 seconds, and when. */
+  #wentOn: Array<{ work: HxParkedWork; at: number }> = [];
   /** When the watch last read the front window. */
   #frontReadAt = Number.NEGATIVE_INFINITY;
   readonly #now: () => number;
@@ -153,7 +163,7 @@ export class HxParkedSteps {
   }
 
   #arm(): void {
-    const need = this.#work.size > 0 && this.#host !== null;
+    const need = (this.#work.size > 0 || this.#wentOn.length > 0) && this.#host !== null;
     if (need && !this.#timer) {
       this.#timer = this.#every(() => void this.check(), HX_PARK_CHECK_MS);
       this.#timer.unref();
@@ -166,7 +176,11 @@ export class HxParkedSteps {
   /** One look: resumes the parked work whose window is in front while the user rests. */
   async check(): Promise<void> {
     const host = this.#host;
-    if (!host || this.#checking || this.#work.size === 0) return;
+    if (host) this.#watchWentOn(host);
+    if (!host || this.#checking || this.#work.size === 0) {
+      this.#arm();
+      return;
+    }
     this.#checking = true;
     try {
       const now = this.#now();
@@ -197,11 +211,36 @@ export class HxParkedSteps {
         if (!host.autoResume(work.agentId)) continue;
         this.#work.delete(work.agentId);
         await host.resume(work).catch(() => undefined);
+        if (host.wentOnTooEarly) this.#wentOn.push({ work, at: this.#now() });
       }
     } finally {
       this.#checking = false;
       this.#arm();
     }
+  }
+
+  /** CONC-13: for each work that went on in the last 3 seconds, whether the user used the computer since. */
+  #watchWentOn(host: HxParkHost): void {
+    if (this.#wentOn.length === 0) return;
+    const now = this.#now();
+    let lastInput = Number.NEGATIVE_INFINITY;
+    try {
+      const idle = host.userIdleMs();
+      if (Number.isFinite(idle)) lastInput = now - idle;
+    } catch {
+      // No reading this time: the next look decides.
+    }
+    this.#wentOn = this.#wentOn.filter(({ work, at }) => {
+      if (lastInput > at && lastInput <= at + HX_WENT_ON_AGAIN_MS) {
+        try {
+          host.wentOnTooEarly?.(work);
+        } catch {
+          // A learned pause is not worth stopping the watch for.
+        }
+        return false;
+      }
+      return now - at <= HX_WENT_ON_AGAIN_MS;
+    });
   }
 }
 

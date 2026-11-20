@@ -62,4 +62,18 @@ export const messages = defineMessages("error.workflow", {
   "error.workflow.githubUncertain":
     "The change stopped on its way. It can be on GitHub. Look there before you run the step again.",
   "error.workflow.githubNoEvent": "GitHub has no issue or pull request that this trigger starts on.",
+  "error.workflow.hxStepNoAgent": "Choose the agent of this step.",
+  "error.workflow.hxStepInvalid": "The settings of this step do not fit: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot is still starting. Run the step again in a moment.",
+  "error.workflow.hxStepComputerUseOff":
+    "Computer Use is off for {agent}. Turn it on in the agent's settings, then continue.",
+  "error.workflow.hxActionUnknown":
+    "HXBot stopped while it did {action}, so its result is not known. Check it first: Continue from this step does it again.",
+  "error.workflow.hxActionFailed": "The call {action} did not work: {reason}",
+  "error.workflow.hxTeamFailed": "The team did not finish: {reason}",
+  "error.workflow.hxConnectionOff": "The messaging connection of this output is off. Turn it on, then continue.",
+  "error.workflow.hxLimitLoops": "Over the limit: a loop ran {count} times, so the run stopped.",
+  "error.workflow.hxLimitSteps": "Over the limit: the run reached {count} steps, so it stopped.",
+  "error.workflow.hxLimitSeconds": "Over the limit: its loops ran longer than {count} seconds, so the run stopped.",
+  "error.workflow.hxTurnNothing": "This turn has no Computer Use, app skill or team step to save.",
 });

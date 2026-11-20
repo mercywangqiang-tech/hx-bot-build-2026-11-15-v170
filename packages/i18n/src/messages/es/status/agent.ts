@@ -209,4 +209,55 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "La versión de antes de este cambio ya no se conserva.",
   "status.agent.hxSkill.restore.spaceFull":
     "No hay espacio para guardar el archivo tal como está ahora antes de restaurarlo. Libera espacio en el disco o amplía el espacio en Ajustes → Uso del equipo.",
+  "status.agent.hxRoutineConfirm.title": "La rutina «{name}» espera tu sí antes de ejecutarse",
+  "status.agent.hxRoutineConfirm.titleMany": "{count} rutinas esperan tu sí antes de ejecutarse",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "Se perdió {count} veces ({from} – {until}) mientras HXBot estaba cerrado o el ordenador dormía. Se ejecuta una vez por todas ellas.",
+  "status.agent.hxRoutineConfirm.noteLate": "Esta ejecución recupera una hora perdida.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "Desde la actualización a v1.7.5 pregunta antes de cada ejecución, porque envía, publica, paga o elimina.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "Esta ejecución envía mensajes o correos. No se envía nada antes de que digas que sí.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "Esta ejecución publica. No se publica nada antes de que digas que sí.",
+  "status.agent.hxRoutineConfirm.actions.pay":
+    "Esta ejecución paga o compra. No se paga nada antes de que digas que sí.",
+  "status.agent.hxRoutineConfirm.actions.delete":
+    "Esta ejecución elimina. No se elimina nada antes de que digas que sí.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "Esta ejecución envía, publica, paga o elimina. No pasa nada antes de que digas que sí.",
+  "status.agent.hxRoutineConfirm.actions.each": "Esta rutina pregunta antes de cada ejecución.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Dijiste que sí: se ejecuta ahora.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Dijiste que no: se omite esta vez.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Sin respuesta antes de su siguiente hora: se omite esta vez.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Resultado de la rutina sin verificar",
+  "status.agent.hxRoutineResult.missingFile":
+    "La ejecución de «{name}» dice que guardó {files}, pero HXBot no lo encontró allí. Revisa el resultado antes de fiarte de él.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "La ejecución de «{name}» cambió un archivo que HXBot no pudo volver a leer. Revisa el resultado antes de fiarte de él.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "La ejecución de «{name}» envió, publicó, pagó o eliminó algo, y HXBot no sabe el resultado. Revísalo antes de fiarte de él.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "La ejecución de «{name}» debía enviar, publicar, pagar o eliminar, pero terminó sin ningún paso así. Revisa el resultado antes de fiarte de él.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "La rutina está en pausa: esta vez no se ejecuta.",
+  "status.agent.hxLearned.teamProgress":
+    "Equipo · Como elegiste la última vez, el próximo aviso llega tras {minutes} minutos sin avances.",
+  "status.agent.hxLearned.workProgress":
+    "Equipo · Como elegiste, el trabajo de este tipo ahora se avisa tras {minutes} minutos sin avances.",
+  "status.agent.hxLearned.yield":
+    "Uso del equipo · Volviste a usar el ordenador justo después de que HXBot siguiera, así que ahora espera {seconds} segundos después de que pares.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Equipo · El juez dice que puede seguir: {reason} Como lo configuraste, no se detuvo a preguntarte.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Equipo · Ya siguió dos veces por esta causa según dijo el juez, así que esta vez te pregunta.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Equipo · Dos veces paraste un equipo después de que el juez lo dejara seguir, así que en casos así se te vuelve a preguntar cada vez.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Equipo · A partir de ahora, en casos así ({cause}) se hace lo que diga el juez, solo en este ordenador.",
+  "status.agent.hxTeam.judgeAuto.off": "Equipo · En casos así ({cause}) se te vuelve a preguntar cada vez.",
+  "status.agent.hxTeam.card.judgeOffer": "La opinión del juez coincidió con tu elección {count} veces seguidas.",
+  "status.agent.hxTeam.card.judgeWent": "El juez lo dejó seguir: {reason}",
+  "status.agent.hxTeam.cause.G1": "sin avances durante un rato",
+  "status.agent.hxTeam.cause.G2": "trabajo que da vueltas en círculo",
+  "status.agent.hxTeam.cause.G3": "trabajo que se dispersa demasiado",
 } as const satisfies PartialTranslation<typeof source>;

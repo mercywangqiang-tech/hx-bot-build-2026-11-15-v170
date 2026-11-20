@@ -1,5 +1,6 @@
 import { WORKFLOWS_CAPABILITY } from "@hxbot/contracts/team-protocol/workflows-v1";
 import { WorkflowCanvas } from "@hxbot/ui/features/workflows/WorkflowCanvas";
+import type { HxWorkflowLimitsPort } from "@hxbot/ui/features/workflows/WorkflowHxLimits";
 import {
   WORKFLOW_FEATURES_V1,
   type WorkflowCatalogs,
@@ -45,14 +46,24 @@ export function WorkflowsPage(props: { serverId: string }) {
       }
     >
       {(serverId) => (
-        <WorkflowsCanvas host={desktopWorkflowHost(serverId, server)} admin={serverRoleCanAdminister(server())} />
+        <WorkflowsCanvas
+          host={desktopWorkflowHost(serverId, server)}
+          admin={serverRoleCanAdminister(server())}
+          local={server()?.kind !== "remote"}
+        />
       )}
     </Show>
   );
 }
 
 /** `admin`: an owner or admin of the server, who may make a webhook secret. The host checks it again. */
-function WorkflowsCanvas(props: { host: WorkflowHost; admin: boolean }) {
+/** HXBot (v1.7.5, RTN-07): the run limits that this computer keeps for its own workflows. */
+const HX_LOCAL_LIMITS: HxWorkflowLimitsPort = {
+  load: (workflowId) => window.hxbot.auth.hxWorkflowLimits(workflowId),
+  save: (workflowId, limits) => window.hxbot.auth.hxSetWorkflowLimits({ workflowId, limits }),
+};
+
+function WorkflowsCanvas(props: { host: WorkflowHost; admin: boolean; local: boolean }) {
   const { agentList, agentStatus, modelOptions } = useAgents();
   const { signedInAccount } = useAuth();
   // The keyed parent mounts a new canvas for each server, so the host does not change.
@@ -128,6 +139,7 @@ function WorkflowsCanvas(props: { host: WorkflowHost; admin: boolean }) {
           readOnly={workflows.readOnly()}
           {...workflows.props}
           onRotateWebhookSecret={props.admin ? workflows.props.onRotateWebhookSecret : undefined}
+          hxLimits={props.local && !workflows.readOnly() ? HX_LOCAL_LIMITS : undefined}
         />
       )}
     </Show>

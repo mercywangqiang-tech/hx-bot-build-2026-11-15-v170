@@ -1,3 +1,4 @@
+import type { HxRoutineFlags } from "./ipc-routines";
 import {
   isRoutineRunFields,
   isRoutineSchedule,
@@ -74,6 +75,8 @@ export interface EventRoutine {
   runIn?: RoutineRunPlace;
   createdAt: string;
   updatedAt: string;
+  /** HXBot (v1.7.5): only from this computer's host. */
+  hx?: HxRoutineFlags;
 }
 
 export interface SaveEventRoutineInput {

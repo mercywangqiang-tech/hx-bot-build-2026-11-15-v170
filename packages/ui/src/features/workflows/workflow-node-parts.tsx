@@ -54,6 +54,7 @@ import {
   type WfnPortType,
   type WfnResult,
 } from "./workflow-board";
+import { HxUnsupportedBadge } from "./workflow-hx-badge";
 import type { WorkflowPlace } from "./workflow-model";
 
 /* ------------------------------------------------------------ Providers */
@@ -444,6 +445,8 @@ export function NodeShell(props: ShellProps) {
               <Lock />
             </span>
           </Show>
+          {/* HXBot (v1.7.5, RTN-08): a node that this version cannot run says so. */}
+          <HxUnsupportedBadge id={props.id} kind={props.kind} />
           <RunTime id={props.id} />
         </span>
         <div class="wfn-card-frame">

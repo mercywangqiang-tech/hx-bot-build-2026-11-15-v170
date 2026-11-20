@@ -19,6 +19,7 @@ import { BROWSER_PROXY_SCHEMA_SQL } from "./browser-profiles/browser-proxy-schem
 import { CHANNEL_SCHEMA_SQL, CHANNEL_SETTINGS_SCHEMA_SQL } from "./channel-schema";
 import { AGENT_SKILL_LOADS_SCHEMA_SQL } from "./database/agent-skill-loads-schema";
 import { DELETED_THREAD_MESSAGES_SCHEMA_SQL } from "./database/deleted-thread-messages-schema";
+import { HX_ROUTINE_DETAIL_SCHEMA_SQL, migrateHxRoutineDetail } from "./database/hx-routine-detail-schema";
 import { PROVIDER_HISTORY_SCHEMA_SQL } from "./database/provider-history-schema";
 import { MCP_SERVERS_SCHEMA_SQL } from "./mcp-schema";
 import {
@@ -631,7 +632,8 @@ const LATEST_SCHEMA_SQL =
   MESSAGING_ALLOWED_SENDERS_SCHEMA_SQL +
   DELETED_THREAD_MESSAGES_SCHEMA_SQL +
   BROWSER_PROXY_SCHEMA_SQL +
-  AGENT_SKILL_LOADS_SCHEMA_SQL;
+  AGENT_SKILL_LOADS_SCHEMA_SQL +
+  HX_ROUTINE_DETAIL_SCHEMA_SQL;
 
 /** The end of the thread message table with the migration 40 columns before its PRIMARY KEY constraint. */
 function withThreadMessageOrderColumns(tableEnd: string): string {
@@ -979,6 +981,12 @@ const MIGRATIONS: readonly HxBotMigration[] = [
     // Only creates a table and its indexes, so no foreign-key pause and no vacuum. No skill load was
     // recorded before it, so the table starts empty and no usage row changes.
     up: (db) => db.exec(AGENT_SKILL_LOADS_SCHEMA_SQL),
+  },
+  {
+    version: 59,
+    // HXBot (v1.7.5): only creates tables, indexes and triggers, so no foreign-key pause and no vacuum. No
+    // row of another table changes; the tables start empty (database/hx-routine-detail-schema.ts).
+    up: migrateHxRoutineDetail,
   },
 ];
 

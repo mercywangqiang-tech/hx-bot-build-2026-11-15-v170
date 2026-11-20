@@ -210,4 +210,53 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "Версия до этого изменения больше не хранится.",
   "status.agent.hxSkill.restore.spaceFull":
     "Нет места, чтобы перед восстановлением сохранить текущий файл. Освободите место на диске или увеличьте место в разделе Настройки → Управление ПК.",
+  "status.agent.hxRoutineConfirm.title": "Регулярная задача «{name}» ждёт вашего согласия перед запуском",
+  "status.agent.hxRoutineConfirm.titleMany": "Регулярные задачи ждут вашего согласия перед запуском: {count}",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "Пропущено запусков: {count} ({from} – {until}), пока HXBot был закрыт или компьютер спал. Она запустится один раз за все.",
+  "status.agent.hxRoutineConfirm.noteLate": "Этот запуск восполняет пропущенное время.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "После обновления до v1.7.5 она спрашивает перед каждым запуском, потому что отправляет, публикует, платит или удаляет.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "Этот запуск отправляет сообщения или письма. До вашего согласия ничего не отправляется.",
+  "status.agent.hxRoutineConfirm.actions.publish": "Этот запуск публикует. До вашего согласия ничего не публикуется.",
+  "status.agent.hxRoutineConfirm.actions.pay":
+    "Этот запуск платит или покупает. До вашего согласия ничего не оплачивается.",
+  "status.agent.hxRoutineConfirm.actions.delete": "Этот запуск удаляет. До вашего согласия ничего не удаляется.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "Этот запуск отправляет, публикует, платит или удаляет. До вашего согласия ничего не происходит.",
+  "status.agent.hxRoutineConfirm.actions.each": "Эта регулярная задача спрашивает перед каждым запуском.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Вы согласились: она запускается сейчас.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Вы отказались: на этот раз пропущено.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Нет ответа до следующего времени: на этот раз пропущено.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Результат регулярной задачи не проверен",
+  "status.agent.hxRoutineResult.missingFile":
+    "Запуск «{name}» сообщает, что сохранил {files}, но HXBot там этого не нашёл. Проверьте результат, прежде чем на него полагаться.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "Запуск «{name}» изменил файл, который HXBot не смог прочитать обратно. Проверьте результат, прежде чем на него полагаться.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "Запуск «{name}» что-то отправил, опубликовал, оплатил или удалил, и HXBot не знает результат. Проверьте его, прежде чем на него полагаться.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "Запуск «{name}» должен был отправить, опубликовать, оплатить или удалить, но закончился без такого шага. Проверьте результат, прежде чем на него полагаться.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "Регулярная задача приостановлена: это время не выполняется.",
+  "status.agent.hxLearned.teamProgress":
+    "Команда · Как вы выбрали в прошлый раз, следующее напоминание придёт после {minutes} мин без продвижения.",
+  "status.agent.hxLearned.workProgress":
+    "Команда · Как вы выбрали, о такой работе теперь напоминание придёт после {minutes} мин без продвижения.",
+  "status.agent.hxLearned.yield":
+    "Управление ПК · Вы снова воспользовались компьютером сразу после того, как HXBot продолжил, поэтому теперь он ждёт {seconds} с после того, как вы остановитесь.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Команда · Судья считает, что можно продолжать: {reason} Как вы настроили, работа не остановилась, чтобы спросить вас.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Команда · По этой причине работа уже дважды шла дальше по слову судьи, поэтому на этот раз спрашивают вас.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Команда · Вы дважды останавливали команду после того, как судья позволял ей продолжить, поэтому в таких случаях вас снова будут спрашивать каждый раз.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Команда · Теперь в таких случаях ({cause}) решает судья, только на этом компьютере.",
+  "status.agent.hxTeam.judgeAuto.off": "Команда · В таких случаях ({cause}) вас снова будут спрашивать каждый раз.",
+  "status.agent.hxTeam.card.judgeOffer": "Мнение судьи совпало с вашим выбором столько раз подряд: {count}.",
+  "status.agent.hxTeam.card.judgeWent": "Судья позволил продолжить: {reason}",
+  "status.agent.hxTeam.cause.G1": "какое-то время нет продвижения",
+  "status.agent.hxTeam.cause.G2": "работа ходит по кругу",
+  "status.agent.hxTeam.cause.G3": "работа расползается слишком широко",
 } as const satisfies PartialTranslation<typeof source>;

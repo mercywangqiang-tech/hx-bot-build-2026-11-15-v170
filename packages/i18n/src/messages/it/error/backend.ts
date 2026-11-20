@@ -407,4 +407,7 @@ export const messages = {
     "HXBot non è riuscito ad avviare l'attività. Esegui invece il lavoro in questo turno.",
   "error.backend.hxAskOwnerOnly":
     "Solo il proprietario di questo HXBot può scegliere questa opzione. Chiunque può annullare la modifica.",
+  "error.backend.hxRoutineZoneUnknown":
+    "«{zone}» non è un fuso orario che questo computer conosce. Scegli un fuso dall’elenco, ad esempio Asia/Shanghai.",
+  "error.backend.hxRoutineConfirmGone": "Questa domanda non è più aperta.",
 } as const satisfies PartialTranslation<typeof source>;

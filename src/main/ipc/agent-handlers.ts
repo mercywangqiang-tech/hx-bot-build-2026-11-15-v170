@@ -109,6 +109,7 @@ import type { AgentService } from "../../backend/agent-service";
 import { runCauseEffect } from "../../backend/effect-boundary";
 import type { SidebarLayoutStore } from "../../backend/sidebar-layout-store";
 import type { HostService } from "../host-service";
+import { hxAgentDeletes } from "../hx-agent-deletes";
 import { runMessageDelete } from "../message-delete-refusal";
 import { type MessageLinkRelay, openHttpLink } from "../message-link-relay";
 import type { ModelVisibility } from "../model-visibility";
@@ -141,6 +142,7 @@ import type { RemoteServerManager } from "../remote-server-manager";
 import { OWNER_PIN_KEY, type SidebarPinStore } from "../sidebar-pin-store";
 import type { SkillMarketplaceService } from "../skill-marketplace-service";
 import {
+  agentRequest,
   parseAcknowledgeFailedTurn,
   parseAgentId,
   parseAgentTask,
@@ -180,7 +182,7 @@ import {
   parseUpdateAgent,
   parseUpdateQueuedMessage,
 } from "./agent-inputs";
-import { type IpcGroupHandlers, payloadHandler } from "./define-ipc-group";
+import { eventPayloadHandler, type IpcGroupHandlers, payloadHandler } from "./define-ipc-group";
 import { scopedHandler, scopedQueryHandler } from "./scoped-handler";
 
 /** Its lines also go to the provider log. See `PROVIDER_LOG_PREFIXES`. */
@@ -252,6 +254,19 @@ export function agentIpcHandlers({
   openExternal,
   modelVisibility,
 }: AgentIpcDependencies): Pick<IpcGroupHandlers, "agent"> {
+  hxAgentDeletes.attach({
+    service,
+    sidebarLayout,
+    remote: {
+      list: () => remoteServers.list(),
+      deleteAgent: (serverId, agentId) =>
+        remoteServers.request(serverId, TEAM_API_ROUTES.agent.one(agentId), decodeVoid, { method: "DELETE" }),
+      agentIds: (serverId) =>
+        remoteServers
+          .request(serverId, TEAM_API_ROUTES.agents.all, decodeAgentSummaries)
+          .pipe(Effect.map((agents) => agents.map((agent) => agent.id))),
+    },
+  });
   const remoteTaskRequest = <T>(serverId: string, path: string, decoder: ResponseDecoder<T>, body: RemoteTaskBody) => {
     if (!remoteServers.supportsCapability(serverId, AGENT_TASKS_CAPABILITY)) taskRemoteUnsupported();
     // `agent-tasks-v1` carries text only; a host with `agent-thread-files-v1` takes files on its own routes.
@@ -796,17 +811,16 @@ export function agentIpcHandlers({
         remote: (parsed, serverId) =>
           runCauseEffect(remoteServers.setAgentAvatar(parsed.agentId, parsed.image, serverId)),
       }),
-      deleteAgent: scopedHandler(parseAgentId, {
-        local: async (agentId) => {
-          await runCauseEffect(service.deleteAgent(agentId));
-          await runCauseEffect(sidebarLayout.removeAgent(agentId));
-        },
-        remote: async (agentId, serverId) => {
-          await runCauseEffect(
-            remoteServers.request(serverId, TEAM_API_ROUTES.agent.one(agentId), decodeVoid, { method: "DELETE" }),
-          );
-        },
-      }),
+      // HXBot (v1.7.5 fix): the delete, its hold while the undo time runs, and Undo (hx-agent-deletes.ts).
+      deleteAgent: payloadHandler(agentRequest(parseAgentId), ({ serverId, payload }) =>
+        hxAgentDeletes.commit(serverId, payload),
+      ),
+      holdAgentDelete: eventPayloadHandler(agentRequest(parseAgentId), (event, { serverId, payload }) =>
+        hxAgentDeletes.hold(serverId, payload, event.sender),
+      ),
+      releaseAgentDelete: payloadHandler(agentRequest(parseAgentId), ({ serverId, payload }) =>
+        hxAgentDeletes.release(serverId, payload),
+      ),
       readConversation: scopedHandler(parseAgentId, {
         local: (agentId) => runCauseEffect(host.readAgentConversation(agentId)),
         remote: (agentId, serverId) => runCauseEffect(remoteServers.readAgentConversation(agentId, serverId)),

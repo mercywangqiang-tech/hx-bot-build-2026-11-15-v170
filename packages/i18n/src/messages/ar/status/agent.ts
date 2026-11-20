@@ -238,4 +238,48 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "لم تعد النسخة السابقة لهذا التغيير محفوظة.",
   "status.agent.hxSkill.restore.spaceFull":
     "لا توجد مساحة للاحتفاظ بالملف كما هو الآن قبل الاستعادة. حرّر مساحة على القرص، أو كبّر المساحة في الإعدادات ← التحكم في الحاسوب.",
+  "status.agent.hxRoutineConfirm.title": "المهمة الدورية «{name}» تنتظر موافقتك قبل التشغيل",
+  "status.agent.hxRoutineConfirm.titleMany": "مهام دورية تنتظر موافقتك قبل التشغيل: {count}",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "فاتت مرات عددها {count} ({from} – {until}) بينما كان HXBot مغلقًا أو الحاسوب نائمًا. تعمل مرة واحدة عنها كلها.",
+  "status.agent.hxRoutineConfirm.noteLate": "هذا التشغيل يعوّض موعدًا فائتًا.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "منذ التحديث إلى v1.7.5 تسأل قبل كل تشغيل، لأنها ترسل أو تنشر أو تدفع أو تحذف.",
+  "status.agent.hxRoutineConfirm.actions.send": "هذا التشغيل يرسل رسائل أو بريدًا. لا يُرسَل شيء قبل موافقتك.",
+  "status.agent.hxRoutineConfirm.actions.publish": "هذا التشغيل ينشر. لا يُنشَر شيء قبل موافقتك.",
+  "status.agent.hxRoutineConfirm.actions.pay": "هذا التشغيل يدفع أو يشتري. لا يُدفَع شيء قبل موافقتك.",
+  "status.agent.hxRoutineConfirm.actions.delete": "هذا التشغيل يحذف. لا يُحذَف شيء قبل موافقتك.",
+  "status.agent.hxRoutineConfirm.actions.several": "هذا التشغيل يرسل أو ينشر أو يدفع أو يحذف. لا يحدث شيء قبل موافقتك.",
+  "status.agent.hxRoutineConfirm.actions.each": "هذه المهمة الدورية تسأل قبل كل تشغيل.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "وافقت: تعمل الآن.",
+  "status.agent.hxRoutineConfirm.outcome.no": "رفضت: تم تخطيها هذه المرة.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "لا إجابة قبل موعدها التالي: تم تخطيها هذه المرة.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "نتيجة المهمة الدورية غير مؤكدة",
+  "status.agent.hxRoutineResult.missingFile":
+    "يقول تشغيل «{name}» إنه حفظ {files}، لكن HXBot لم يجده هناك. تحقّق من النتيجة قبل الاعتماد عليها.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "غيّر تشغيل «{name}» ملفًا لم يستطع HXBot قراءته مرة أخرى. تحقّق من النتيجة قبل الاعتماد عليها.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "أرسل تشغيل «{name}» شيئًا أو نشره أو دفعه أو حذفه، ولا يعرف HXBot النتيجة. تحقّق منها قبل الاعتماد عليها.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "كان على تشغيل «{name}» أن يرسل أو ينشر أو يدفع أو يحذف، لكنه انتهى دون أي خطوة كهذه. تحقّق من النتيجة قبل الاعتماد عليها.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "المهمة الدورية متوقفة مؤقتًا: لا يعمل هذا الموعد.",
+  "status.agent.hxLearned.teamProgress":
+    "الفريق · كما اخترت في المرة السابقة، يأتي التذكير التالي بعد {minutes} دقيقة بلا تقدّم.",
+  "status.agent.hxLearned.workProgress":
+    "الفريق · كما اخترت، صار التذكير بمثل هذا العمل يأتي بعد {minutes} دقيقة بلا تقدّم.",
+  "status.agent.hxLearned.yield":
+    "التحكم في الحاسوب · استخدمت الحاسوب مرة أخرى بعد أن تابع HXBot مباشرة، لذا ينتظر الآن {seconds} ثانية بعد أن تتوقف.",
+  "status.agent.hxTeam.judgeAuto.went": "الفريق · يقول الحَكَم إنه يمكن المتابعة: {reason} كما ضبطت، لم يتوقف ليسألك.",
+  "status.agent.hxTeam.judgeAuto.third": "الفريق · تابع مرتين من قبل لهذا السبب كما قال الحَكَم، لذا يسألك هذه المرة.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "الفريق · أوقفت فريقًا مرتين بعد أن تركه الحَكَم يتابع، لذا ستُسأل مجددًا في كل مرة في مثل هذه الحالات.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "الفريق · من الآن، تسير مثل هذه الحالات ({cause}) كما يقول الحَكَم، على هذا الحاسوب فقط.",
+  "status.agent.hxTeam.judgeAuto.off": "الفريق · في مثل هذه الحالات ({cause}) ستُسأل مجددًا في كل مرة.",
+  "status.agent.hxTeam.card.judgeOffer": "وافق رأي الحَكَم اختيارك مرات متتالية عددها {count}.",
+  "status.agent.hxTeam.card.judgeWent": "ترك الحَكَم العمل يتابع: {reason}",
+  "status.agent.hxTeam.cause.G1": "لا تقدّم منذ مدة",
+  "status.agent.hxTeam.cause.G2": "عمل يدور في حلقة",
+  "status.agent.hxTeam.cause.G3": "عمل يتشعّب أكثر من اللازم",
 } as const satisfies PartialTranslation<typeof source>;

@@ -549,3 +549,84 @@ describe("CONC-11: the team's judge", () => {
     expect(Date.now() - started).toBeLessThan(5_000);
   });
 });
+
+describe("v1.7.5 RTN-11: a workflow step whose model is auto", () => {
+  const stepWork = (deliveryId: string, text: string): HxQueuedWork => ({
+    deliveryId,
+    taskId: null,
+    text,
+    attachments: [],
+    sender: "routine",
+  });
+
+  beforeEach(() => {
+    // The agent itself is not on auto: only the step asks for it.
+    store.setSettings("a1", { ...FREE_FIRST, enabled: false, judge: "rules" });
+  });
+
+  it("is not due without a wanting step, and is due for one", () => {
+    world.work = stepWork("d1", "Write a Python function that parses CSV files and add unit tests for it.");
+    expect(router.due("a1")).toBe(false);
+    const wanted = new Set(["d1"]);
+    router.setAutoWork({ wanted: (_agent, id) => wanted.has(id), done: (id) => wanted.delete(id) });
+    expect(router.due("a1")).toBe(true);
+    world.work = stepWork("d2", "Another step");
+    expect(router.due("a1")).toBe(false);
+  });
+
+  it("chooses the model of the step's work, then gives the agent its own model back after the turn", async () => {
+    const wanted = new Set(["d1"]);
+    router.setAutoWork({ wanted: (_agent, id) => wanted.has(id), done: (id) => wanted.delete(id) });
+    world.work = stepWork(
+      "d1",
+      "Refactor the whole repository: split the payment module, migrate the database layer and update every test.",
+    );
+    expect(router.due("a1")).toBe(true);
+    await router.follow("a1", NOW);
+    // The note is spent and the decision is kept, so the same delivery is not decided twice.
+    expect(wanted.has("d1")).toBe(false);
+    expect(router.due("a1")).toBe(false);
+    const movedTo = world.agent.model;
+    expect(world.moves.length).toBeGreaterThan(0);
+    expect(movedTo).not.toBe("opencode/glm-5.3-flash-free");
+    router.turnEnded("a1", "thread-1", "turn-1", "completed");
+    await Promise.resolve();
+    expect(world.agent.model).toBe("opencode/glm-5.3-flash-free");
+    expect(world.agent.reasoningEffort).toBe("medium");
+    // The next turn ends with nothing to give back.
+    const moves = world.moves.length;
+    router.turnEnded("a1", "thread-1", "turn-2", "completed");
+    await Promise.resolve();
+    expect(world.moves.length).toBe(moves);
+  });
+
+  it("does not give the model back when the person chose another model or turned auto on since", async () => {
+    const wanted = new Set(["d1", "d2"]);
+    router.setAutoWork({ wanted: (_agent, id) => wanted.has(id), done: (id) => wanted.delete(id) });
+    world.work = stepWork("d1", "Look at this screenshot and describe the chart in it.");
+    world.work = { ...world.work, attachments: [{ name: "chart.png", size: 40_000 }] };
+    await router.follow("a1", NOW);
+    expect(world.moves.length).toBeGreaterThan(0);
+    // The person picks a model by hand.
+    world.agent = { ...world.agent, provider: "claude", model: "claude-sonnet-5-5" };
+    const moves = world.moves.length;
+    router.turnEnded("a1", "thread-1", "turn-1", "completed");
+    await Promise.resolve();
+    expect(world.moves.length).toBe(moves);
+    expect(world.agent.model).toBe("claude-sonnet-5-5");
+  });
+
+  it("a failed move leaves nothing to give back", async () => {
+    const wanted = new Set(["d1"]);
+    router.setAutoWork({ wanted: (_agent, id) => wanted.has(id), done: (id) => wanted.delete(id) });
+    world.failMove = true;
+    world.work = stepWork("d1", "Look at this screenshot and describe the chart in it.");
+    world.work = { ...world.work, attachments: [{ name: "chart.png", size: 40_000 }] };
+    await router.follow("a1", NOW);
+    world.failMove = false;
+    router.turnEnded("a1", "thread-1", "turn-1", "completed");
+    await Promise.resolve();
+    expect(world.moves).toEqual([]);
+    expect(world.agent.model).toBe("opencode/glm-5.3-flash-free");
+  });
+});

@@ -66,4 +66,21 @@ export const messages = {
   "error.workflow.githubUncertain":
     "La modifica si è fermata a metà. Può essere già su GitHub. Controlla lì prima di eseguire di nuovo il passaggio.",
   "error.workflow.githubNoEvent": "Su GitHub non c'è una issue o pull request da cui parte questo trigger.",
+  "error.workflow.hxStepNoAgent": "Scegli l’agente di questo passo.",
+  "error.workflow.hxStepInvalid": "Le impostazioni di questo passo non vanno bene: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot si sta ancora avviando. Esegui di nuovo il passo tra un momento.",
+  "error.workflow.hxStepComputerUseOff":
+    "Il controllo del computer è disattivato per {agent}. Attivalo nelle impostazioni dell’agente, poi continua.",
+  "error.workflow.hxActionUnknown":
+    "HXBot si è fermato mentre faceva {action}, quindi il risultato non è noto. Controllalo prima: «Riprendi da questo passo» lo rifà.",
+  "error.workflow.hxActionFailed": "La chiamata {action} non ha funzionato: {reason}",
+  "error.workflow.hxTeamFailed": "La squadra non ha finito: {reason}",
+  "error.workflow.hxConnectionOff":
+    "La connessione di messaggistica di questa uscita è disattivata. Attivala, poi continua.",
+  "error.workflow.hxLimitLoops":
+    "Oltre il limite: un ciclo è stato ripetuto {count} volte, quindi l’esecuzione si è fermata.",
+  "error.workflow.hxLimitSteps": "Oltre il limite: l’esecuzione ha raggiunto {count} passi, quindi si è fermata.",
+  "error.workflow.hxLimitSeconds":
+    "Oltre il limite: i suoi cicli sono durati più di {count} secondi, quindi l’esecuzione si è fermata.",
+  "error.workflow.hxTurnNothing": "Questo turno non ha passi di controllo PC, skill di app o squadra da salvare.",
 } as const satisfies PartialTranslation<typeof source>;

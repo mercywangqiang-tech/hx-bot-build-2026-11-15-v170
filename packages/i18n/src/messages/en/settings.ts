@@ -983,4 +983,15 @@ export const messages = defineMessages("settings", {
   "settings.hxComputer.versions.default": "{size} (default)",
   "settings.hxComputer.versions.git":
     "A coding agent that changes files with its own commands keeps no versions here. In a Git folder, Git can restore them.",
+  "settings.hxLearned.title": "Times HXBot learned from your choices",
+  "settings.hxLearned.description":
+    "Kept on this computer only. A team with no progress is reminded after {minutes} minutes by default (15 minutes to 2 hours); “Continue” gives that team twice the time, “Wrap up” or “Stop” makes work of that kind reminded sooner. HXBot goes on with your computer {seconds} seconds after you stop (3 to 15 seconds), longer when you come back right after it went on.",
+  "settings.hxLearned.changed": "Changed: {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Nothing changed yet.",
+  "settings.hxLearned.reset": "Use the defaults",
+  "settings.hxLearned.failed": "HXBot could not read or change the learned times.",
+  "settings.hxBoot.sound.title": "Sound of the start film",
+  "settings.hxBoot.sound.description":
+    "The film plays on the first start and the first start after each update. Off: it plays without sound.",
 });

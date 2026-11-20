@@ -38,3 +38,29 @@
 .hx-highlight-window .computer-use-help {
   height: auto;
 }
+
+/* The start film: its first frame and its last frame side by side (v1.7.5). */
+.hx-highlight-boot {
+  display: grid;
+  width: 560px;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--hxbot-space-3);
+}
+
+.hx-highlight-boot-frame {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-highlight-boot-frame img {
+  width: 100%;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-md);
+}
+
+.hx-highlight-boot-frame figcaption {
+  color: var(--hxbot-text-secondary);
+  font-size: var(--hxbot-text-sm);
+}

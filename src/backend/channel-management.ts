@@ -22,6 +22,8 @@ import {
   routineToolSchedule,
   routineToolString,
 } from "./agent/routine-tools";
+import { hxRoutineToolResult } from "./hx-routines/tool-result";
+import { hxRoutineZones } from "./hx-routines/zone";
 
 const ROUTINE_TOOLS: ReadonlySet<string> = new Set([
   "channel_list_routines",
@@ -212,15 +214,18 @@ export function channelRoutineTool(
         "A routine instruction is required.",
       ),
       active,
-      timezone:
+      // HXBot (v1.7.5, RTN-01): the registered zone or the zone of the call; with neither, the agent asks once.
+      timezone: hxRoutineZones.forNewRoutine(
         args.timezone === undefined
-          ? routines.timezone()
+          ? undefined
           : routineToolString(args.timezone, "timezone", 128, "A routine timezone is required."),
+        undefined,
+      ).zone,
       schedule: schedule(args.schedule),
       ...routineToolPolicies(args),
     });
     return {
-      result: routine,
+      result: hxRoutineToolResult(routine),
       note: (agent, person) =>
         sourceText("status.agent.channelRoutineCreated", { agent, routine: routine.name, person }),
     };

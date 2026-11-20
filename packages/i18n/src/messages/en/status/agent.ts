@@ -239,4 +239,51 @@ export const messages = defineMessages("status.agent", {
   "status.agent.hxSkill.restore.notKept": "The version from before this change is not kept any more.",
   "status.agent.hxSkill.restore.spaceFull":
     "There is no room to keep the file as it is now before the restore. Free up disk space, or make the space larger in Settings → Computer Use.",
+  "status.agent.hxRoutineConfirm.title": 'Routine "{name}" waits for your yes before it runs',
+  "status.agent.hxRoutineConfirm.titleMany": "{count} routines wait for your yes before they run",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "Missed {count} times ({from} – {until}) while HXBot was closed or the computer slept. It runs once for them.",
+  "status.agent.hxRoutineConfirm.noteLate": "This run makes up for a missed time.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "Since the upgrade to v1.7.5 it asks before each run, because it sends, posts, pays or deletes.",
+  "status.agent.hxRoutineConfirm.actions.send": "This run sends messages or mail. Nothing is sent before you say yes.",
+  "status.agent.hxRoutineConfirm.actions.publish": "This run posts or publishes. Nothing is posted before you say yes.",
+  "status.agent.hxRoutineConfirm.actions.pay": "This run pays or buys. Nothing is paid before you say yes.",
+  "status.agent.hxRoutineConfirm.actions.delete": "This run deletes. Nothing is deleted before you say yes.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "This run sends, posts, pays or deletes. Nothing happens before you say yes.",
+  "status.agent.hxRoutineConfirm.actions.each": "This routine asks before each run.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "You said yes: it runs now.",
+  "status.agent.hxRoutineConfirm.outcome.no": "You said no: skipped this time.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "No answer before its next time: skipped this time.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Routine result not verified",
+  "status.agent.hxRoutineResult.missingFile":
+    'The run of "{name}" says it saved {files}, but HXBot did not find it there. Check the result before you rely on it.',
+  "status.agent.hxRoutineResult.notReadBack":
+    'The run of "{name}" changed a file that HXBot could not read back. Check the result before you rely on it.',
+  "status.agent.hxRoutineResult.actionUnknown":
+    'The run of "{name}" sent, posted, paid or deleted something, and HXBot does not know the result. Check it before you rely on it.',
+  "status.agent.hxRoutineResult.noToolStep":
+    'The run of "{name}" should send, post, pay or delete, but it ended without one step. Check the result before you rely on it.',
+  "status.agent.hxRoutineConfirm.outcome.paused": "The routine is paused: this time does not run.",
+  "status.agent.hxLearned.teamProgress":
+    "Team · As you chose last time, the next reminder comes after {minutes} minutes with no progress.",
+  "status.agent.hxLearned.workProgress":
+    "Team · As you chose, work like this is now reminded after {minutes} minutes with no progress.",
+  "status.agent.hxLearned.yield":
+    "Computer Use · You used the computer again just after HXBot went on, so it now waits {seconds} seconds after you stop.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Team · The judge says it can go on: {reason} As you set, it did not stop to ask you.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Team · It went on twice already for this cause as the judge said, so this time it asks you.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Team · Twice you stopped a team after the judge let it go on, so cases like this ask you again each time.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Team · From now on, cases like this ({cause}) go as the judge says, on this computer only.",
+  "status.agent.hxTeam.judgeAuto.off": "Team · Cases like this ({cause}) ask you each time again.",
+  "status.agent.hxTeam.card.judgeOffer": "The judge's view agreed with your choice {count} times in a row.",
+  "status.agent.hxTeam.card.judgeWent": "The judge let it go on: {reason}",
+  "status.agent.hxTeam.cause.G1": "no progress for a while",
+  "status.agent.hxTeam.cause.G2": "work that goes round in circles",
+  "status.agent.hxTeam.cause.G3": "work that spreads too wide",
 });

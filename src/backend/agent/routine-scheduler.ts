@@ -22,12 +22,17 @@ import { routineConversationEventItemType, routineRunConversationEventItemType }
 import type { EventRoutine } from "@hxbot/contracts/ipc-events";
 import { type DynamicRecord, isBoolean } from "@hxbot/contracts/runtime-values";
 import { sourceText } from "@hxbot/i18n/source";
-import { collapseMissedOccurrences, RoutineInputError } from "@hxbot/team-client/routine-schedule";
+import { RoutineInputError } from "@hxbot/team-client/routine-schedule";
 import { Effect, Schema } from "effect";
 import { AgentRoutineStore } from "../agent-routine-store";
 import { AGENT_PREVIEW_MAX_LENGTH, type AgentStore } from "../agent-store";
 import type { AgentWaits } from "../agent-waits/agent-waits";
 import { causeHelpers } from "../effect-boundary";
+import { hxRoutineConfirm } from "../hx-routines/confirm";
+import { hxAgentDueOwner, hxApplyDue, hxDueFor, hxOnceNeedsYes } from "../hx-routines/due-apply";
+import { hxStaggerDelays } from "../hx-routines/stagger";
+import { hxRoutineToolResult } from "../hx-routines/tool-result";
+import { hxRoutineZones } from "../hx-routines/zone";
 import type { MailboxStore } from "../mailbox-store";
 import type { DynamicToolCallParams } from "../protocol";
 import { recordRestartActivity } from "../restart-activity";
@@ -185,6 +190,8 @@ export class RoutineScheduler implements RoutineDueSource {
    * restart, the preview keeps the task. Past the cap, the oldest entry goes.
    */
   readonly #previewsBeforeRun = new Map<string, RoutinePreviewBeforeRun & { agentId: string }>();
+  /** HXBot (v1.7.5, CONC-14): the timers of runs that start later in their minute. */
+  readonly #hxLater = new Set<ReturnType<typeof setTimeout>>();
 
   constructor(options: RoutineSchedulerOptions) {
     this.#store = options.store;
@@ -225,7 +232,32 @@ export class RoutineScheduler implements RoutineDueSource {
 
   list(agentId: string): Routine[] {
     this.#conversation.requireKnownAgent(agentId);
-    return this.#routines.list(agentId);
+    return this.#routines.list(agentId).map((routine) => this.#hxWithQueue(routine));
+  }
+
+  /** HXBot (v1.7.5, RTN-06): a routine read back with what it has waiting. */
+  #hxWithQueue<T extends { id: string; hx?: Routine["hx"] }>(routine: T & { agentId?: string; ownerId?: string }): T {
+    const agentId = routine.agentId ?? routine.ownerId;
+    if (!agentId) return routine;
+    try {
+      const { queued, running } = this.hxQueueReadback(agentId, routine.id);
+      const lastResult = this.#routines.listRuns(agentId, routine.id, 1)[0]?.hx?.result;
+      const waiting = hxRoutineConfirm.waitingCards(agentId, routine.id);
+      return {
+        ...routine,
+        hx: {
+          ...routine.hx,
+          ...(lastResult ? { lastResult } : {}),
+          ...(waiting.length > 0 ? { waiting } : {}),
+          queue: {
+            queued,
+            running: running ? { runId: running.id, status: running.status, deliveryId: running.deliveryId } : null,
+          },
+        },
+      };
+    } catch {
+      return routine;
+    }
   }
 
   /** Unchecked read for callers that already hold the agent, such as the duplication signature. */
@@ -305,6 +337,7 @@ export class RoutineScheduler implements RoutineDueSource {
 
   create(input: CreateRoutineInput, options: RoutineMutationOptions = {}): Routine {
     this.#conversation.requireKnownAgent(input.agentId);
+    input = { ...input, timezone: hxRoutineZones.checkSaved(input.timezone) };
     const routine =
       options.recordConversationEvent === false
         ? this.#routines.create(input)
@@ -324,6 +357,10 @@ export class RoutineScheduler implements RoutineDueSource {
 
   update(input: UpdateRoutineInput, options: RoutineMutationOptions = {}): Routine {
     this.#conversation.requireKnownAgent(input.agentId);
+    // HXBot (v1.7.5, RTN-06): a pause leaves nothing queued: the runs that did not start and the open
+    // questions are cancelled after the save. A run that already works goes on; the person stops it apart.
+    const hxPausing = input.active === false && this.#routines.get(input.agentId, input.routineId)?.active === true;
+    if (input.timezone !== undefined) input = { ...input, timezone: hxRoutineZones.checkSaved(input.timezone) };
     const routine =
       options.recordConversationEvent === false
         ? this.#routines.update(input)
@@ -336,6 +373,7 @@ export class RoutineScheduler implements RoutineDueSource {
             undefined,
             options.sideThreadId,
           );
+    if (hxPausing && !routine.active) this.#hxCancelQueued(routine.agentId, routine.id);
     this.stateChanged(input.agentId);
     this.arm();
     return routine;
@@ -344,7 +382,7 @@ export class RoutineScheduler implements RoutineDueSource {
   /** Routines of every trigger kind, for the events surface. */
   listRecords(agentId: string): OwnedRoutineRecord[] {
     this.#conversation.requireKnownAgent(agentId);
-    return this.#routines.listRecords(agentId);
+    return this.#routines.listRecords(agentId).map((routine) => this.#hxWithQueue(routine));
   }
 
   /** Unchecked read of every trigger kind, for callers that already hold the agent. */
@@ -363,6 +401,10 @@ export class RoutineScheduler implements RoutineDueSource {
    */
   saveRecord(agentId: string, routineId: string | undefined, input: RoutineRecordInput): OwnedRoutineRecord {
     this.#conversation.requireKnownAgent(agentId);
+    // HXBot (v1.7.5, RTN-06): see `update`.
+    const hxPausing =
+      routineId !== undefined && !input.active && this.#routines.getRecord(agentId, routineId)?.active === true;
+    if (input.trigger.kind === "schedule") input = { ...input, timezone: hxRoutineZones.checkSaved(input.timezone) };
     const routine =
       input.trigger.kind === "schedule"
         ? this.#mutateWithConversation(
@@ -372,6 +414,7 @@ export class RoutineScheduler implements RoutineDueSource {
             (saved) => saved,
           )
         : this.#routines.saveRecord(agentId, routineId, input);
+    if (hxPausing && !routine.active) this.#hxCancelQueued(agentId, routine.id);
     this.stateChanged(agentId);
     this.arm();
     return routine;
@@ -617,10 +660,15 @@ export class RoutineScheduler implements RoutineDueSource {
       const agentId = this.#toolAgentId(args, senderAgentId);
       const active = args.active === undefined ? true : args.active;
       if (!isBoolean(active)) throw new RoutineInputError("active must be a boolean.");
-      const timezone =
+      // HXBot (v1.7.5, RTN-01): the registered zone, or the zone of the call. With neither, the agent asks the
+      // user once; the host zone is never used silently. The sender's zone only helps the agent ask.
+      const zone = hxRoutineZones.forNewRoutine(
         args.timezone === undefined
-          ? (this.#turnSenderTimezone(senderAgentId, params.turnId) ?? this.#timezone())
-          : routineToolString(args.timezone, "timezone", 128, "A routine timezone is required.");
+          ? undefined
+          : routineToolString(args.timezone, "timezone", 128, "A routine timezone is required."),
+        this.#turnSenderTimezone(senderAgentId, params.turnId),
+      );
+      const timezone = zone.zone;
       const name = routineToolString(args.name, "name", INPUT_LIMITS.routineName, "A routine name is required.");
       const key = name.trim().toLowerCase();
       const existing = this.list(agentId).find((routine) => routine.name.trim().toLowerCase() === key);
@@ -647,7 +695,7 @@ export class RoutineScheduler implements RoutineDueSource {
         },
         this.#toolMutationOptions(agentId, senderAgentId, params),
       );
-      return hxBotToolResult(routine);
+      return hxBotToolResult(hxRoutineToolResult(routine, zone.source));
     }
 
     if (params.tool === CREATE_WEBHOOK_ROUTINE_TOOL) {
@@ -743,6 +791,7 @@ export class RoutineScheduler implements RoutineDueSource {
         "limitPolicy",
         "missedPolicy",
         "runIn",
+        "timezone",
       ]);
       const policies = { ...routineToolPolicies(args), ...routineToolRunPlace(args) };
       const input: UpdateRoutineInput = {
@@ -773,8 +822,17 @@ export class RoutineScheduler implements RoutineDueSource {
         input.schedule = routineToolSchedule(args.schedule);
         hasUpdate = true;
       }
+      // HXBot (v1.7.5, RTN-01): an update can move the routine to another zone.
+      if (args.timezone !== undefined) {
+        input.timezone = hxRoutineZones.forUpdate(
+          routineToolString(args.timezone, "timezone", 128, "A routine timezone is required."),
+        );
+        hasUpdate = true;
+      }
       if (!hasUpdate) throw new RoutineInputError("At least one routine update is required.");
-      return hxBotToolResult(this.update(input, this.#toolMutationOptions(input.agentId, senderAgentId, params)));
+      return hxBotToolResult(
+        hxRoutineToolResult(this.update(input, this.#toolMutationOptions(input.agentId, senderAgentId, params))),
+      );
     }
 
     if (params.tool === "delete_routine") {
@@ -870,7 +928,123 @@ export class RoutineScheduler implements RoutineDueSource {
 
   /** The earliest agent routine, for the shared timer to compare against the other owners. */
   nextDueAt(): string | null {
-    return this.#routines.nextDueAt(this.#hooks.excludedAgents());
+    // HXBot (v1.7.5, RTN-02): the timer also wakes when a question that waits for the yes expires.
+    const due = this.#routines.nextDueAt(this.#hooks.excludedAgents());
+    const expiry = hxRoutineConfirm.nextExpiry();
+    if (expiry === null) return due;
+    return due === null || Date.parse(expiry) < Date.parse(due) ? expiry : due;
+  }
+
+  /** HXBot (v1.7.5, RTN-02, MIG-03): the run of a yes, as the occurrence it was asked for. */
+  readonly hxStartConfirmedRun = Effect.fn("RoutineScheduler.hxStartConfirmedRun")(function* (
+    this: RoutineScheduler,
+    input: {
+      routine: Routine;
+      triggerId: string | null;
+      scheduledFor: string;
+      confirmationId: string;
+      catchUp: { total: number; from: Date; until: Date } | null;
+    },
+  ) {
+    const run = yield* routineStep(() => {
+      if (!this.#routines.getRecord(input.routine.agentId, input.routine.id)) {
+        throw new RoutineInputError(sourceText("error.backend.routineGone"));
+      }
+      const created = this.#routines.createRun(input.routine, input.triggerId, "scheduled", input.scheduledFor);
+      const at = new Date().toISOString();
+      const catchUp = input.catchUp;
+      this.#routines.hxNoteRun(created.id, input.routine.id, (detail) => ({
+        ...detail,
+        confirmed: { confirmationId: input.confirmationId, at },
+        ...(catchUp
+          ? { catchUp: { total: catchUp.total, from: catchUp.from.toISOString(), until: catchUp.until.toISOString() } }
+          : {}),
+      }));
+      return created;
+    });
+    if (!run.deliveryId) yield* this.#enqueueRunEffect(run);
+    yield* routineStep(() => this.stateChanged(input.routine.agentId));
+  });
+
+  /**
+   * HXBot (v1.7.5, CONC-14): starts a run after its share of the minute. The run row exists already, so a
+   * quit before the time leaves it queued without a delivery, and the next start runs it
+   * (`resumePendingRuns`).
+   */
+  #hxEnqueueLater(run: RoutineRun, delayMs: number): void {
+    const timer = setTimeout(() => {
+      this.#hxLater.delete(timer);
+      if (!this.#hooks.isRunning()) return;
+      // A pause, a deletion or a restart path may have settled the run while it waited.
+      const current = this.#routines.activeRuns(run.agentId, run.routineId).find((entry) => entry.id === run.id);
+      if (current?.status !== "queued" || current.deliveryId) return;
+      void Effect.runPromise(
+        this.#enqueueRunEffect(run).pipe(
+          Effect.catch((failure) =>
+            Effect.sync(() => this.#hooks.emitError("routine_delivery_failed", failure.cause, run.agentId)),
+          ),
+        ),
+      ).catch(() => undefined);
+    }, delayMs);
+    timer.unref?.();
+    this.#hxLater.add(timer);
+  }
+
+  /**
+   * HXBot (v1.7.5, RTN-06): cancels what a paused routine still has waiting: runs that did not start and
+   * open questions. A run that already works keeps working.
+   */
+  #hxCancelQueued(agentId: string, routineId: string): void {
+    for (const run of this.#routines.activeRuns(agentId, routineId)) {
+      if (run.status !== "queued") continue;
+      const delivery = run.deliveryId ? this.#mailbox.getDelivery(run.deliveryId)?.delivery : undefined;
+      if (delivery && delivery.status !== "queued") continue;
+      try {
+        if (delivery) this.#mailbox.cancelNow(agentId, delivery.id);
+        this.#routines.updateRunStatus(run.id, "cancelled");
+      } catch (error) {
+        this.#hooks.emitError("routine_pause_cancel_failed", error, agentId);
+      }
+    }
+    hxRoutineConfirm.cancelFor(agentId, routineId);
+    this.#hooks.emitQueue(agentId);
+  }
+
+  /**
+   * HXBot (v1.7.5, RTN-06): what a routine has waiting, read back from the stores: runs that did not
+   * start, questions that wait for the yes, and runs that wait for their share of the minute. The run
+   * that works now, if any, apart.
+   */
+  hxQueueReadback(agentId: string, routineId: string): { queued: number; running: RoutineRun | null } {
+    let queued = hxRoutineConfirm.waitingFor(agentId, routineId).length;
+    let running: RoutineRun | null = null;
+    for (const run of this.#routines.activeRuns(agentId, routineId)) {
+      const status = run.deliveryId ? this.#mailbox.getDelivery(run.deliveryId)?.delivery.status : undefined;
+      if (run.status === "queued" && (status === undefined || status === "queued")) queued += 1;
+      else running ??= run;
+    }
+    return { queued, running };
+  }
+
+  /** HXBot (v1.7.5, CONC-14): the runs that wait for their share of the minute. */
+  hxPendingStarts(): number {
+    return this.#hxLater.size;
+  }
+
+  /** HXBot (v1.7.5, RTN-02): an occurrence the person declined or did not answer, in the run history. */
+  hxRecordSkipped(input: {
+    routine: Routine;
+    triggerId: string | null;
+    scheduledFor: string;
+    reason: "declined" | "expired" | "cancelled";
+  }): void {
+    this.#routines.hxRecordNotRun(
+      input.routine,
+      input.triggerId,
+      { scheduledFor: input.scheduledFor, until: null, count: 1 },
+      { skip: { reason: input.reason, at: new Date().toISOString() } },
+    );
+    this.stateChanged(input.routine.agentId);
   }
 
   readonly processDue = Effect.fn("RoutineScheduler.processDue")(function* (
@@ -880,7 +1054,19 @@ export class RoutineScheduler implements RoutineDueSource {
   ) {
     const changedAgents = new Set<string>();
     yield* Effect.gen({ self: this }, function* () {
+      // HXBot (v1.7.5, RTN-02): a question nobody answered before its time is skipped first, so the next
+      // occurrence of the same routine can ask again.
+      yield* routineStep(() => hxRoutineConfirm.expire(now));
       const dueRoutines = yield* routineStep(() => this.#routines.due(now, this.#hooks.excludedAgents()));
+      // HXBot (v1.7.5, CONC-14): routines due in the same minute start spread over it, in order.
+      const hxDelays = hxStaggerDelays(
+        dueRoutines.map((due) => ({
+          routineId: due.routine.id,
+          nextRunAt: due.nextRunAt,
+          schedule: due.schedule,
+          timezone: due.routine.timezone,
+        })),
+      );
       for (const due of dueRoutines) {
         if (!active()) break;
         if (this.#hooks.excludedAgents().has(due.routine.agentId)) continue;
@@ -893,35 +1079,42 @@ export class RoutineScheduler implements RoutineDueSource {
           // A one-time trigger has no later run to make up for a dropped one, so it always queues.
           // A crash before it completes leaves the run, and `skipMissed` completes it on start.
           if (current.trigger.schedule.kind === "once") {
-            const queued = this.#routines.createRun(
+            // HXBot (v1.7.5, MIG-03): a one-time routine that asks before each run waits for the yes.
+            const queued = hxOnceNeedsYes(
+              hxAgentDueOwner(this.#routines),
+              this.#store.database.connection,
               current,
-              current.trigger.id,
-              "scheduled",
-              current.trigger.nextRunAt,
-            );
+              now,
+            )
+              ? null
+              : this.#routines.createRun(current, current.trigger.id, "scheduled", current.trigger.nextRunAt);
             this.#routines.completeTrigger(current.id, current.trigger.id, now);
             changedAgents.add(current.agentId);
             return queued;
           }
-          const { scheduledFor, nextRunAt } = collapseMissedOccurrences(
-            current.trigger.schedule,
-            current.timezone,
-            new Date(current.trigger.nextRunAt),
-            now,
-          );
           // A run that has not finished already does this routine's work. Another one would only
           // queue behind it, and after a sleep the queue drains as a burst of identical runs. A routine
           // set to skip drops the occurrence while a spent plan would only make it wait.
-          const queued =
-            this.#hasLiveRun(current.agentId, current.id) ||
-            (current.limitPolicy === "skip" && this.#hooks.usageLimited(current.agentId))
-              ? null
-              : this.#routines.createRun(current, current.trigger.id, "scheduled", scheduledFor.toISOString());
-          this.#routines.advanceTrigger(current.id, current.trigger.id, nextRunAt.toISOString());
+          // HXBot (v1.7.5, RTN-02, RTN-03, MIG-03): the dropped occurrence leaves a skipped record; the ones a
+          // sleep made late are counted and handled by the policy; a run that must ask waits for the yes.
+          const plan = hxDueFor(this.#store.database.connection, "agent", current, now, {
+            live: this.#hasLiveRun(current.agentId, current.id),
+            limited: current.limitPolicy === "skip" && this.#hooks.usageLimited(current.agentId),
+          });
+          const queued = hxApplyDue(
+            hxAgentDueOwner(this.#routines),
+            this.#store.database.connection,
+            current,
+            plan,
+            now,
+          );
+          this.#routines.advanceTrigger(current.id, current.trigger.id, plan.nextRunAt.toISOString());
           changedAgents.add(current.agentId);
           return queued;
         });
-        if (run && !run.deliveryId)
+        const hxStartAt = Date.parse(due.nextRunAt) + (hxDelays.get(due.routine.id) ?? 0);
+        if (run && !run.deliveryId && hxStartAt > now.getTime()) this.#hxEnqueueLater(run, hxStartAt - now.getTime());
+        else if (run && !run.deliveryId)
           yield* this.#enqueueRunEffect(run).pipe(
             Effect.catch((failure) =>
               Effect.sync(() => this.#hooks.emitError("routine_delivery_failed", failure.cause, due.routine.agentId)),

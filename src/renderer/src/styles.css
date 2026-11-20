@@ -17,6 +17,7 @@
 @import "@hxbot/ui/styles/sr-only.css";
 @import "@hxbot/ui/features/account/auth.css";
 @import "@hxbot/ui/features/account/app-loading-screen.css";
+@import "@hxbot/ui/features/account/hx-boot-screen.css";
 @import "@hxbot/ui/features/account/language-wheel.css";
 @import "./features/onboarding/onboarding.css";
 @import "@hxbot/ui/features/agents/first-agent-setup.css";

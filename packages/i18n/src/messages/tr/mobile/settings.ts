@@ -283,4 +283,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Bu hesabın e-postasını girin.",
   "mobile.settings.hxDelete.incorrectPassword": "Şifre yanlış.",
   "mobile.settings.hxDelete.failed": "Hesap silinemedi. Daha sonra tekrar deneyin.",
+  "mobile.settings.appearance.hxBootSound": "Açılış filminin sesi",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "Film ilk açılışta ve her güncellemeden sonraki ilk açılışta oynar. Kapalı: sessiz oynar.",
 } as const satisfies PartialTranslation<typeof source>;

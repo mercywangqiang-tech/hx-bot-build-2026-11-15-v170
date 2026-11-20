@@ -66,4 +66,19 @@ export const messages = {
   "error.workflow.githubUncertain":
     "Değişiklik yolda durdu. GitHub'da olabilir. Adımı yeniden çalıştırmadan önce orayı kontrol edin.",
   "error.workflow.githubNoEvent": "GitHub'da bu tetikleyicinin başladığı bir sorun veya çekme isteği yok.",
+  "error.workflow.hxStepNoAgent": "Bu adımın ajanını seçin.",
+  "error.workflow.hxStepInvalid": "Bu adımın ayarları uymuyor: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot hâlâ başlatılıyor. Adımı biraz sonra yeniden çalıştırın.",
+  "error.workflow.hxStepComputerUseOff":
+    "{agent} için Bilgisayar Kullanımı kapalı. Ajanın ayarlarından açın, sonra devam edin.",
+  "error.workflow.hxActionUnknown":
+    "HXBot şu işlemi yaparken durdu: {action}. Bu yüzden sonucu bilinmiyor. Önce kontrol edin: “Bu adımdan devam et” işlemi yeniden yapar.",
+  "error.workflow.hxActionFailed": "Şu çağrı işe yaramadı: {action}. Neden: {reason}",
+  "error.workflow.hxTeamFailed": "Ekip işi bitiremedi: {reason}",
+  "error.workflow.hxConnectionOff": "Bu çıktının mesajlaşma bağlantısı kapalı. Açın, sonra devam edin.",
+  "error.workflow.hxLimitLoops": "Sınır aşıldı: bir döngü {count} kez çalıştı, bu yüzden çalıştırma durdu.",
+  "error.workflow.hxLimitSteps": "Sınır aşıldı: çalıştırma {count} adıma ulaştı, bu yüzden durdu.",
+  "error.workflow.hxLimitSeconds": "Sınır aşıldı: döngüler {count} saniyeden uzun sürdü, bu yüzden çalıştırma durdu.",
+  "error.workflow.hxTurnNothing":
+    "Bu turda kaydedilecek bir Bilgisayar Kullanımı, uygulama becerisi veya ekip adımı yok.",
 } as const satisfies PartialTranslation<typeof source>;

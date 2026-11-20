@@ -402,4 +402,7 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "タスクは、このコンピューター上のエージェントでのみ利用できます。",
   "error.backend.taskStartFailed": "HXBot はタスクを開始できませんでした。代わりにこのターンで作業してください。",
   "error.backend.hxAskOwnerOnly": "これを選べるのはこの HXBot の所有者だけです。キャンセルは誰でもできます。",
+  "error.backend.hxRoutineZoneUnknown":
+    "「{zone}」はこのコンピューターが知らないタイムゾーンです。Asia/Shanghai など、一覧からタイムゾーンを選んでください。",
+  "error.backend.hxRoutineConfirmGone": "この質問はもう受け付けていません。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -1,0 +1,62 @@
+/*
+ * HXBot (v1.7.5, UI-27, SCR-00): the start screen. The film's own backdrop, full window, above the app
+ * that mounts behind it. The film, its first frame and its last frame (the logo) cover the window at
+ * their own proportions; the fade into the app is short (the skip must land within 300 ms).
+ */
+/* The backdrop of the films stays the same in both themes, as a QR code's does: the same token. */
+.hx-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow: hidden;
+  background: var(--hxbot-qr-background);
+  opacity: 1;
+  transition: opacity var(--hx-boot-fade, 120ms) ease-out;
+}
+
+.hx-boot[data-stage="leaving"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hx-boot-poster,
+.hx-boot-first,
+.hx-boot-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Where the window cuts the film, the logo and the name stay whole (hxBootFit). */
+  object-position: var(--hx-boot-position, center);
+  user-select: none;
+}
+
+.hx-boot-poster {
+  background: var(--hxbot-qr-background);
+}
+
+/* Until the film paints its first frame, its first frame as a picture shows through. */
+.hx-boot-film {
+  background: transparent;
+}
+
+.hx-boot-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(28vmin, 220px);
+  transform: translate(-50%, -50%);
+}
+
+.hx-boot-logo > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hx-boot {
+    transition: none;
+  }
+}

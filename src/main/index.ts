@@ -369,7 +369,8 @@ const appIconPath = resolveAppIconPath({
 protocol.registerSchemesAsPrivileged([
   {
     scheme: "openbot-app",
-    privileges: { standard: true, secure: true, supportFetchAPI: true },
+    // HXBot (v1.7.5, UI-27): `stream` too, so the start film plays from the app's own files.
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true },
   },
   // `stream` lets an <audio> or <video> element play a file from the scheme: without it the
   // element cannot make the range requests that playback needs.

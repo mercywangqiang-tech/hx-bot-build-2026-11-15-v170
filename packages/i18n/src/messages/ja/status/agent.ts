@@ -204,4 +204,51 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "この変更前のバージョンはもう残っていません。",
   "status.agent.hxSkill.restore.spaceFull":
     "復元の前に今のファイルを残す空きがありません。ディスクの空きを増やすか、「設定 → Computer Use」で保存領域を広げてください。",
+  "status.agent.hxRoutineConfirm.title": "ルーティン「{name}」は実行前に了承を待っています",
+  "status.agent.hxRoutineConfirm.titleMany": "{count} 件のルーティンが実行前に了承を待っています",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "HXBot が閉じていたかコンピューターがスリープしていた間に {count} 回逃しました（{from} – {until}）。まとめて 1 回だけ実行します。",
+  "status.agent.hxRoutineConfirm.noteLate": "この実行は逃した時刻の分を取り戻すものです。",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "v1.7.5 への更新以降、送信・投稿・支払い・削除をするため、毎回実行前に確認します。",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "この実行ではメッセージやメールを送ります。了承するまで何も送りません。",
+  "status.agent.hxRoutineConfirm.actions.publish": "この実行では投稿や公開をします。了承するまで何も投稿しません。",
+  "status.agent.hxRoutineConfirm.actions.pay": "この実行では支払いや購入をします。了承するまで何も支払いません。",
+  "status.agent.hxRoutineConfirm.actions.delete": "この実行では削除をします。了承するまで何も削除しません。",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "この実行では送信・投稿・支払い・削除をします。了承するまで何もしません。",
+  "status.agent.hxRoutineConfirm.actions.each": "このルーティンは毎回実行前に確認します。",
+  "status.agent.hxRoutineConfirm.outcome.yes": "了承しました：今から実行します。",
+  "status.agent.hxRoutineConfirm.outcome.no": "断りました：今回は飛ばします。",
+  "status.agent.hxRoutineConfirm.outcome.expired": "次の時刻までに回答がありませんでした：今回は飛ばします。",
+  "status.agent.hxRoutineResult.unverifiedTitle": "ルーティンの結果を確認できていません",
+  "status.agent.hxRoutineResult.missingFile":
+    "「{name}」の実行は {files} を保存したと言っていますが、HXBot はそこに見つけられませんでした。結果を当てにする前に確認してください。",
+  "status.agent.hxRoutineResult.notReadBack":
+    "「{name}」の実行が変更したファイルを、HXBot は読み返せませんでした。結果を当てにする前に確認してください。",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "「{name}」の実行が何かを送信・投稿・支払い・削除しましたが、HXBot はその結果を知りません。当てにする前に確認してください。",
+  "status.agent.hxRoutineResult.noToolStep":
+    "「{name}」の実行は送信・投稿・支払い・削除をするはずでしたが、そのステップがないまま終わりました。結果を当てにする前に確認してください。",
+  "status.agent.hxRoutineConfirm.outcome.paused": "ルーティンは一時停止中です：今回は実行しません。",
+  "status.agent.hxLearned.teamProgress":
+    "チーム · 前回の選択に合わせて、次のお知らせは進みがないまま {minutes} 分たってからにします。",
+  "status.agent.hxLearned.workProgress":
+    "チーム · 選択に合わせて、この種類の作業は進みがないまま {minutes} 分たったらお知らせします。",
+  "status.agent.hxLearned.yield":
+    "Computer Use · HXBot が再開した直後にまたコンピューターを使われたので、今後は操作をやめてから {seconds} 秒待ちます。",
+  "status.agent.hxTeam.judgeAuto.went":
+    "チーム · 判定役は続けてよいと判断しました：{reason} 設定どおり、止まって確認はしませんでした。",
+  "status.agent.hxTeam.judgeAuto.third": "チーム · この理由ではすでに判定役の判断で 2 回続けたので、今回は確認します。",
+  "status.agent.hxTeam.judgeAuto.back":
+    "チーム · 判定役が続けさせたあとにチームを止めたことが 2 回あったので、こうした場合はまた毎回確認します。",
+  "status.agent.hxTeam.judgeAuto.on":
+    "チーム · これからはこうした場合（{cause}）、このコンピューターでだけ判定役の判断どおりに進めます。",
+  "status.agent.hxTeam.judgeAuto.off": "チーム · こうした場合（{cause}）は、また毎回確認します。",
+  "status.agent.hxTeam.card.judgeOffer": "判定役の見解があなたの選択と {count} 回続けて一致しました。",
+  "status.agent.hxTeam.card.judgeWent": "判定役が続けさせました：{reason}",
+  "status.agent.hxTeam.cause.G1": "しばらく進みがない",
+  "status.agent.hxTeam.cause.G2": "同じところを堂々巡りしている作業",
+  "status.agent.hxTeam.cause.G3": "広がりすぎている作業",
 } as const satisfies PartialTranslation<typeof source>;

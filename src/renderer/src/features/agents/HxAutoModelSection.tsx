@@ -6,7 +6,6 @@ import type {
   HxAutoPreference,
   HxModelRef,
   HxProposalMode,
-  HxWorkType,
 } from "@hxbot/contracts/hx-auto-model";
 import { HX_TEAM_TEMPORARY, HX_WORK_TYPES, type HxTeamTemporary } from "@hxbot/contracts/hx-auto-model";
 import type { AppTextKey } from "@hxbot/i18n";
@@ -15,6 +14,7 @@ import { SettingsLinkGroup } from "@hxbot/ui/components/SettingsPanel";
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { useI18n } from "../../i18n-context";
 import { accountPort } from "../account/account-port";
+import { HX_WORK_LABEL } from "./hx-work-labels";
 
 /** What the section asks of the main process. A test or a story gives its own. */
 export interface HxAutoModelCalls {
@@ -51,17 +51,6 @@ const PROPOSAL_LABEL: Record<HxProposalMode, AppTextKey> = {
 const TEMPORARY_LABEL: Record<HxTeamTemporary, AppTextKey> = {
   collapse: "settings.hxAutoModel.team.temporary.collapse",
   keep: "settings.hxAutoModel.team.temporary.keep",
-};
-const WORK_LABEL: Record<HxWorkType, AppTextKey> = {
-  chat: "settings.hxAutoModel.work.chat",
-  writing: "settings.hxAutoModel.work.writing",
-  "code-small": "settings.hxAutoModel.work.codeSmall",
-  "code-large": "settings.hxAutoModel.work.codeLarge",
-  data: "settings.hxAutoModel.work.data",
-  vision: "settings.hxAutoModel.work.vision",
-  "long-context": "settings.hxAutoModel.work.longContext",
-  reasoning: "settings.hxAutoModel.work.reasoning",
-  computer: "settings.hxAutoModel.work.computer",
 };
 const COST_LABEL: Record<HxAutoModelEntry["cost"], AppTextKey> = {
   free: "settings.hxAutoModel.cost.free",
@@ -255,7 +244,7 @@ export function HxAutoModelSection(props: { agentId: string; calls?: HxAutoModel
                 {(work, index) => (
                   <span>
                     {index() > 0 ? " · " : ""}
-                    {t(WORK_LABEL[work])} → {current().preview[work]?.name}
+                    {t(HX_WORK_LABEL[work])} → {current().preview[work]?.name}
                   </span>
                 )}
               </For>
@@ -314,7 +303,7 @@ export function HxAutoModelSection(props: { agentId: string; calls?: HxAutoModel
                 <For each={current().decisions.slice(0, 10)}>
                   {(decision) => (
                     <Text as="p" class="agent-settings-runtime-note" variant="caption" tone="muted">
-                      {time(decision.at)} · {t(WORK_LABEL[decision.work])} ·{" "}
+                      {time(decision.at)} · {t(HX_WORK_LABEL[decision.work])} ·{" "}
                       {t(decision.kept ? "settings.hxAutoModel.recent.kept" : "settings.hxAutoModel.recent.switched", {
                         model: decision.chosen.name,
                       })}

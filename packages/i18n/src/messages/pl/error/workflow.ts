@@ -65,4 +65,23 @@ export const messages = {
   "error.workflow.githubUncertain":
     "Zmiana zatrzymała się w drodze. Może już być w GitHub. Sprawdź tam, zanim ponownie uruchomisz krok.",
   "error.workflow.githubNoEvent": "W GitHub nie ma zgłoszenia ani pull requestu, dla którego startuje ten wyzwalacz.",
+  "error.workflow.hxStepNoAgent": "Wybierz agenta tego kroku.",
+  "error.workflow.hxStepInvalid": "Ustawienia tego kroku nie pasują: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot jeszcze się uruchamia. Za chwilę uruchom krok ponownie.",
+  "error.workflow.hxStepComputerUseOff":
+    "Sterowanie komputerem jest wyłączone dla {agent}. Włącz je w ustawieniach agenta, a potem kontynuuj.",
+  "error.workflow.hxActionUnknown":
+    "HXBot zatrzymał się w trakcie {action}, więc wynik nie jest znany. Najpierw to sprawdź: „Kontynuuj od tego kroku” wykona to ponownie.",
+  "error.workflow.hxActionFailed": "Wywołanie {action} nie zadziałało: {reason}",
+  "error.workflow.hxTeamFailed": "Zespół nie skończył: {reason}",
+  "error.workflow.hxConnectionOff":
+    "Połączenie z komunikatorem dla tego wyjścia jest wyłączone. Włącz je, a potem kontynuuj.",
+  "error.workflow.hxLimitLoops":
+    "Przekroczony limit: pętla wykonała się tyle razy: {count}, więc uruchomienie zostało zatrzymane.",
+  "error.workflow.hxLimitSteps":
+    "Przekroczony limit: uruchomienie doszło do liczby kroków {count}, więc zostało zatrzymane.",
+  "error.workflow.hxLimitSeconds":
+    "Przekroczony limit: pętle trwały dłużej niż {count} s, więc uruchomienie zostało zatrzymane.",
+  "error.workflow.hxTurnNothing":
+    "Ta tura nie ma kroku sterowania PC, umiejętności aplikacji ani zespołu do zapisania.",
 } as const satisfies PartialTranslation<typeof source>;

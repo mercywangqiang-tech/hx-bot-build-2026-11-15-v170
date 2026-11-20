@@ -2595,6 +2595,9 @@ export function createMockHxBot(options: MockHxBotOptions = {}): MockHxBotContro
         emitAgentEvent({ type: "agents-changed", agents });
         return clone(updated);
       },
+      // HXBot (v1.7.5 fix): the preview has one window and no other device, so a held delete changes nothing here.
+      holdAgentDelete: async () => undefined,
+      releaseAgentDelete: async () => undefined,
       deleteAgent: async (agentId) => {
         agents = agents.filter((agent) => agent.id !== agentId);
         queues.delete(agentId);

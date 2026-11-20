@@ -68,6 +68,11 @@ function withBranchLink(
     browser_proxies: [],
     browser_profile_proxies: [],
     agent_usage_skill_loads: [],
+    hx_external_actions: [],
+    hx_meta: [],
+    hx_routine_confirmations: [],
+    hx_routine_detail: [],
+    hx_run_detail: [],
     projection_agent_threads: (before.projection_agent_threads ?? []).map((row) => ({
       ...row,
       branch_source_thread_id: null,
@@ -87,7 +92,7 @@ function threadColumns(db: DatabaseSync): string[] {
 }
 
 function expectHealthy(db: DatabaseSync): void {
-  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });
+  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });
   expect(db.prepare("PRAGMA foreign_keys").get()).toEqual({ foreign_keys: 1 });
   expect(db.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   expect(db.prepare("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
@@ -158,9 +163,9 @@ describe("agent thread branch migration", () => {
     seed(db);
     const before = contents(db);
     const columnsBefore = threadColumns(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=46");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=46");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 46");
     expect(contents(db)).toEqual(before);
     expect(threadColumns(db)).toEqual(columnsBefore);
@@ -172,7 +177,7 @@ describe("agent thread branch migration", () => {
     migrateHxBotDatabase(db);
     const after = contents(db);
     // An application one release older knows versions up to 47: version 48 is newer than it supports.
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
     expect(contents(db)).toEqual(after);
   });

@@ -18,7 +18,7 @@ import { markRemoteSync } from "@hxbot/team-client/sync-profile";
 import { classifyFailure } from "@hxbot/telemetry";
 import { NotificationObserver, Toaster, toast } from "@hxbot/ui";
 import { AccountLogin } from "@hxbot/ui/features/account/AccountLogin";
-import { AppLoadingScreen } from "@hxbot/ui/features/account/AppLoadingScreen";
+import { HxBootScreen } from "@hxbot/ui/features/account/HxBootScreen";
 import { currentText } from "@hxbot/ui/text";
 import { Dynamic } from "@solidjs/web";
 import { createEffect, createSignal, createStore, onSettled, Show } from "solid-js";
@@ -37,6 +37,7 @@ import { StaticI18nProvider } from "../../i18n-context";
 import { AnalyticsConsentRow, ConsentNotice } from "../onboarding/AnalyticsConsent";
 import { createOnboardingTeam, onboardingSessionSeed } from "../onboarding/onboarding-avatars";
 import { deleteRemoteWorkspaceFrames } from "../servers/remote-workspace-frame";
+import { HX_WEB_BOOT_SOURCES, HX_WEB_BOOT_START_MS, hxWebBootFull, hxWebBootPlayed } from "./hx-web-boot";
 import type { WebWorkspace } from "./WebWorkspace";
 import { createWebAccountCalls } from "./web-account";
 import { createWebAppearancePreference } from "./web-appearance-preference";
@@ -599,9 +600,15 @@ export function WebApp(props: { createRuntime?: WebRuntimeFactory } = {}) {
               )}
             </Show>
           </Show>
+          {/* HXBot (v1.7.5, UI-27): the start film, at most once in 30 days in this browser (hx-web-boot.ts). */}
           <Show when={loadingShown()}>
-            <AppLoadingScreen
+            <HxBootScreen
+              sources={HX_WEB_BOOT_SOURCES}
+              full={hxWebBootFull()}
+              startWithinMs={HX_WEB_BOOT_START_MS}
+              sound={false}
               ready={state.loaded}
+              onPlayed={() => hxWebBootPlayed()}
               onExited={() => {
                 setLoadingShown(false);
                 void loadWorkspace().catch(() => undefined);

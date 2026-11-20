@@ -507,7 +507,7 @@ export const HXBOT_TOOL_DEFINITIONS: readonly HxBotToolDefinition[] = [
   {
     name: "create_routine",
     description:
-      "Create a scheduled routine, one agent's instruction, for this agent or for another local agent when agentId is provided. For several steps in one graph, use edit_workflow. It is active by default. Without a timezone, it uses the timezone of the person whose message this turn answers, or the server timezone when that is unknown. Interval, advanced-every, and custom schedules must not run more often than every 3 minutes. For a one-time reminder or task, use a once schedule: it runs one time and then pauses the routine.",
+      "Create a scheduled routine, one agent's instruction, for this agent or for another local agent when agentId is provided. For several steps in one graph, use edit_workflow. It is active by default. Default timezone: the user's registered one; if none, the call fails: ask the user once. Interval, advanced-every, and custom schedules must not run more often than every 3 minutes. For a one-time reminder or task, use a once schedule: it runs once, then pauses the routine.",
     shape: {
       agentId: z.string().min(1).max(INPUT_LIMITS.identifier).optional(),
       name: z.string().min(1).max(INPUT_LIMITS.routineName),
@@ -516,7 +516,7 @@ export const HXBOT_TOOL_DEFINITIONS: readonly HxBotToolDefinition[] = [
         "Routine schedule. Interval, advanced-every, and custom schedules must not run more often than every 3 minutes.",
       ),
       active: z.boolean().optional(),
-      timezone: z.string().min(1).max(128).describe("IANA timezone such as Europe/Warsaw.").optional(),
+      timezone: z.string().min(1).max(128).describe("IANA timezone.").optional(),
       limitPolicy: routineLimitPolicyZodSchema.optional(),
       missedPolicy: routineMissedPolicyZodSchema.optional(),
       runIn: routineRunPlaceZodSchema.optional(),
@@ -568,13 +568,13 @@ export const HXBOT_TOOL_DEFINITIONS: readonly HxBotToolDefinition[] = [
       routineId: z.string().min(1).max(INPUT_LIMITS.identifier),
       name: z.string().min(1).max(INPUT_LIMITS.routineName).optional(),
       instruction: routineInstructionZodSchema.optional(),
-      schedule: routineScheduleZodSchema
-        .describe("Routine schedule. Must not run more often than every 3 minutes.")
-        .optional(),
+      // HXBot (v1.7.5, RTN-01): the 3-minute rule is in the tool's description; its repeat here made room for timezone.
+      schedule: routineScheduleZodSchema.describe("Routine schedule.").optional(),
       active: z.boolean().optional(),
       limitPolicy: routineLimitPolicyZodSchema.optional(),
       missedPolicy: routineMissedPolicyZodSchema.optional(),
       runIn: routineRunPlaceZodSchema.optional(),
+      timezone: z.string().optional(),
     },
   },
   {

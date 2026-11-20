@@ -67,4 +67,19 @@ export const messages = {
   "error.workflow.githubUncertain":
     "Изменение остановилось на полпути. Оно может уже быть на GitHub. Проверьте там, прежде чем запускать шаг снова.",
   "error.workflow.githubNoEvent": "На GitHub нет задачи или пул-реквеста, на которых запускается этот триггер.",
+  "error.workflow.hxStepNoAgent": "Выберите агента для этого шага.",
+  "error.workflow.hxStepInvalid": "Настройки этого шага не подходят: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot ещё запускается. Запустите шаг снова через минуту.",
+  "error.workflow.hxStepComputerUseOff":
+    "Управление компьютером выключено для {agent}. Включите его в настройках агента и продолжите.",
+  "error.workflow.hxActionUnknown":
+    "HXBot остановился во время действия {action}, поэтому результат неизвестен. Сначала проверьте его: «Продолжить с этого шага» выполнит его снова.",
+  "error.workflow.hxActionFailed": "Вызов {action} не сработал: {reason}",
+  "error.workflow.hxTeamFailed": "Команда не закончила работу: {reason}",
+  "error.workflow.hxConnectionOff": "Подключение к мессенджеру для этого выхода выключено. Включите его и продолжите.",
+  "error.workflow.hxLimitLoops": "Превышен предел: число повторов цикла достигло {count}, поэтому запуск остановлен.",
+  "error.workflow.hxLimitSteps": "Превышен предел: число шагов запуска достигло {count}, поэтому он остановлен.",
+  "error.workflow.hxLimitSeconds": "Превышен предел: циклы шли дольше {count} с, поэтому запуск остановлен.",
+  "error.workflow.hxTurnNothing":
+    "В этом ходе нет шага управления ПК, навыка приложения или команды, который можно сохранить.",
 } as const satisfies PartialTranslation<typeof source>;

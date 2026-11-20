@@ -1,4 +1,5 @@
 import type { RoutineFields, RoutineSchedule } from "@hxbot/contracts/ipc";
+import { HxRoutineUpcoming } from "@hxbot/ui/features/conversation/HxRoutineUpcoming";
 import { RoutineScheduleCard } from "@hxbot/ui/features/conversation/RoutineScheduleCard";
 import type { RoutineScheduleDraft } from "@hxbot/ui/features/conversation/routine-schedule-draft";
 import {
@@ -129,6 +130,15 @@ export function RoutineChatCard(props: RoutineChatCardProps) {
         saveSchedule(schedule);
       }}
       onOpenRoutine={() => props.onOpenRoutine({ routineId: routine().id, name: routine().name })}
+      // HXBot (v1.7.5, RTN-01): a routine made in one sentence shows its next three runs too.
+      upcoming={
+        <HxRoutineUpcoming
+          density="card"
+          schedule={routine().trigger.schedule}
+          timezone={knownTimeZone(routine().timezone) ?? ""}
+          active={routine().active}
+        />
+      }
     />
   );
 }

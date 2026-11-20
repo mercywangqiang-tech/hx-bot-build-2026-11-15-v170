@@ -7,7 +7,7 @@
  * workflow. Version history opens a saved version of the canvas to look at, read-only.
  */
 
-import { Check, ChevronRight, CopyPlus, DropdownMenu, History, Pencil, Plus, Trash2 } from "@hxbot/ui";
+import { Check, ChevronRight, CopyPlus, DropdownMenu, Gauge, History, Pencil, Plus, Trash2 } from "@hxbot/ui";
 import { For, Show } from "solid-js";
 import { useText } from "../../text";
 
@@ -18,6 +18,7 @@ export type SwitcherAction =
   | "duplicate"
   | "delete"
   | "live"
+  | "hx-limits"
   | `open:${string}`
   | `version:${string}`;
 
@@ -47,6 +48,8 @@ export function WorkflowSwitcher(props: {
   versionsDisabled: boolean;
   /** A read-only canvas shows the list only. */
   readOnly: boolean;
+  /** HXBot (v1.7.5, RTN-07): the host keeps run limits: the menu offers them. */
+  hxLimits?: boolean;
   onAction: (action: SwitcherAction) => void;
 }) {
   const { t } = useText();
@@ -116,6 +119,13 @@ export function WorkflowSwitcher(props: {
               </DropdownMenu.SubContent>
             </DropdownMenu.Portal>
           </DropdownMenu.Sub>
+        </Show>
+        {/* HXBot (v1.7.5, RTN-07): the run limits open a dialog, so they open after the menu closes. */}
+        <Show when={props.hxLimits}>
+          <DropdownMenu.Item onSelectAfterClose={() => props.onAction("hx-limits")}>
+            <Gauge class="agent-context-icon" aria-hidden="true" />
+            <span>{t("workflow.hx.limits.menu")}</span>
+          </DropdownMenu.Item>
         </Show>
         {/* Rename moves the focus to the name field, so it runs after the menu closes. */}
         <DropdownMenu.Item onSelectAfterClose={() => props.onAction("rename")}>

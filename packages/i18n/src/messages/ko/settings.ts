@@ -901,4 +901,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size}(기본값)",
   "settings.hxComputer.versions.git":
     "자체 명령으로 파일을 바꾸는 코딩 에이전트는 여기에 버전을 남기지 않습니다. Git 폴더에서는 Git으로 되돌릴 수 있습니다.",
+  "settings.hxLearned.title": "HXBot이 선택에서 배운 시간",
+  "settings.hxLearned.description":
+    "이 컴퓨터에만 저장됩니다. 진행이 없는 팀은 기본적으로 {minutes}분 뒤에 알려 드립니다(15분~2시간). “계속”을 고르면 그 팀의 시간이 두 배가 되고, “마무리”나 “중지”를 고르면 그런 작업은 더 일찍 알려 드립니다. HXBot은 사용을 멈춘 뒤 {seconds}초가 지나면 컴퓨터에서 하던 일을 이어 갑니다(3초~15초). 이어 간 직후에 돌아오시면 더 오래 기다립니다.",
+  "settings.hxLearned.changed": "바뀜: {list}",
+  "settings.hxLearned.work": "{work} {minutes}분",
+  "settings.hxLearned.none": "아직 바뀐 것이 없습니다.",
+  "settings.hxLearned.reset": "기본값 사용",
+  "settings.hxLearned.failed": "HXBot이 배운 시간을 읽거나 바꾸지 못했습니다.",
+  "settings.hxBoot.sound.title": "시작 영상 소리",
+  "settings.hxBoot.sound.description":
+    "영상은 처음 시작할 때와 업데이트할 때마다 처음 시작할 때 재생됩니다. 끄면 소리 없이 재생됩니다.",
 } as const satisfies PartialTranslation<typeof source>;

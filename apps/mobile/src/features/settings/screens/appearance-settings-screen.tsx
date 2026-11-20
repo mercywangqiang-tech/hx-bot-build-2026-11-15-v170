@@ -1,6 +1,7 @@
 import { Typography } from "heroui-native";
 import { useState } from "react";
 import { useUniwind } from "uniwind";
+import { saveHxBootSound, useHxBoot } from "@/features/boot/model/hx-boot";
 import { SettingsContent, SettingsRow, SettingsSection } from "@/features/settings/components/settings-content";
 import { SettingsPicker, SettingsSwitch } from "@/features/settings/components/settings-controls";
 import { saveAppearance, useAppearance } from "@/features/settings/model/appearance";
@@ -15,6 +16,8 @@ export function AppearanceSettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const agentColorMessages = useAgentColorMessages();
   const [agentColorError, setAgentColorError] = useState<string | null>(null);
+  const boot = useHxBoot();
+  const [bootError, setBootError] = useState<string | null>(null);
   return (
     <SettingsContent>
       <SettingsSection footer={error || t("mobile.settings.appearance.footer")}>
@@ -55,6 +58,24 @@ export function AppearanceSettingsScreen() {
               setAgentColorError(null);
               void saveAgentColorMessages(enabled).catch(() => {
                 setAgentColorError(t("mobile.settings.saveFailed"));
+                void haptics.notification("error");
+              });
+            }}
+          />
+        </SettingsRow>
+      </SettingsSection>
+      {/* HXBot (v1.7.5, UI-27): the sound of the start film, off by default. */}
+      <SettingsSection footer={bootError ?? t("mobile.settings.appearance.hxBootSoundFooter")}>
+        <SettingsRow>
+          <SettingsSwitch
+            value={boot.sound}
+            disabled={!boot.ready || boot.saving}
+            label={t("mobile.settings.appearance.hxBootSound")}
+            dark={theme === "dark"}
+            onValueChange={(on) => {
+              setBootError(null);
+              void saveHxBootSound(on).catch(() => {
+                setBootError(t("mobile.settings.saveFailed"));
                 void haptics.notification("error");
               });
             }}

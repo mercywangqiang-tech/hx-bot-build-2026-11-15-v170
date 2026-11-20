@@ -233,9 +233,11 @@ def own_commit_check(r) -> None:
 # computer_do 的 type 多了 by（直接赋值或打字），computer_look 多了 screenshot（截图），只在工具目录里。
 # v1.7.4：应用技能（CU-07）computer_skill 只在工具目录里（说明和参数已压到最短）；每次对话只多一句
 # “Office 文件、PDF 和移动文件先用 computer_skill”（63 字节），tool_search 列出的工具名多了它。
+# v1.7.5：create_routine、channel_create_routine 写明默认时区（登记的，没有就失败、问用户一次），update_routine 多了
+# timezone；其余说明压短，两项上限都比 v1.7.4 低。
 AGENT_CONTEXT_BYTES = {
-    "catalog.descriptions": 45392,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作；v1.7.4 computer_skill
-    "catalog.schemas": 82321,  # 上游 70274；v1.7.1 limits 与 team 的新字段；v1.7.3 by、screenshot；v1.7.4 computer_skill（含幂等键 requestId）
+    "catalog.descriptions": 45381,  # 上游 40370；v1.6.9 加 computer_app、computer_run；v1.7.1 team 的新动作；v1.7.4 computer_skill；v1.7.5 定时任务的时区一句（别处压短）
+    "catalog.schemas": 82260,  # 上游 70274；v1.7.1 limits 与 team 的新字段；v1.7.3 by、screenshot；v1.7.4 computer_skill（含幂等键 requestId）；v1.7.5 update_routine 的 timezone
     "guidance": 21879,  # 上游 22043
     "instructions.claude": 16655,  # 上游 14897；v1.7.4 computer_skill 一句
     "instructions.codex": 16725,  # 上游 14969；v1.7.4 computer_skill 一句
@@ -312,7 +314,10 @@ def unused_exports(r) -> None:
               '    // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).\n'
               '    "tasklist.exe",\n'
               '    // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.\n'
-              '    "charmap.exe",\n')
+              '    "charmap.exe",\n'
+              '    // HXBot (v1.7.5): the start film check reads each film frame by frame (scripts/hx-boot-film-check.ts).\n'
+              '    "ffmpeg",\n'
+              '    "ffprobe",\n')
     entries = "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in LEFT_AS_UPSTREAM.items())
     entries += "    // HXBot (v1.7.4): whole copies of released decoders, which a test reads new messages with.\n"
     entries += "".join(f'    "{path}": {json.dumps(kinds)},\n' for path, kinds in FROZEN_COPIES.items())

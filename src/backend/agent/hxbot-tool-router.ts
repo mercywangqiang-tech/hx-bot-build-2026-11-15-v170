@@ -50,6 +50,7 @@ import { hxComputer } from "../hx-computer/computer";
 import { HX_COMPUTER_TOOL_NAMES } from "../hx-computer/tools";
 import { hxTeams } from "../hx-team/service";
 import { HX_TEAM_TOOL_NAMES } from "../hx-team/tools";
+import { hxTurnTools } from "../hx-workflows/turn-tools";
 import {
   ACKNOWLEDGE_REQUEST_ACTIONS,
   acknowledgeRequestToolSchema,
@@ -519,6 +520,11 @@ export class HxBotToolRouter {
           }
           // Keep the transport identifiers and abort signal; enter the original dispatch below.
           const toolRequest = { ...request, params };
+          // HXBot (v1.7.5, RTN-11): a turn keeps its Computer Use calls, for "save as a workflow".
+          if (HX_COMPUTER_TOOL_NAMES.has(toolRequest.params.tool)) {
+            const hxOwner = this.#conversation.agentForThread(toolRequest.params.threadId);
+            if (hxOwner) hxTurnTools.expect(toolRequest.params, hxOwner, toolRequest.params.turnId);
+          }
           if (toolRequest.params.namespace === HXBOT_BROWSER_NAMESPACE) {
             const agentId = this.#conversation.agentForThread(toolRequest.params.threadId);
             if (!agentId) throw new Error("The browsing HXBot agent is unknown.");

@@ -210,4 +210,55 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "Wersja sprzed tej zmiany nie jest już przechowywana.",
   "status.agent.hxSkill.restore.spaceFull":
     "Brak miejsca, by przed przywróceniem zachować plik w obecnym stanie. Zwolnij miejsce na dysku albo zwiększ miejsce w Ustawienia → Sterowanie PC.",
+  "status.agent.hxRoutineConfirm.title": "Rutyna „{name}” czeka na twoje „tak” przed uruchomieniem",
+  "status.agent.hxRoutineConfirm.titleMany": "Rutyny czekające na twoje „tak” przed uruchomieniem: {count}",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "Pominięte terminy: {count} ({from} – {until}), gdy HXBot był zamknięty albo komputer spał. Uruchomi się raz za wszystkie.",
+  "status.agent.hxRoutineConfirm.noteLate": "To uruchomienie nadrabia pominięty termin.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "Od aktualizacji do v1.7.5 pyta przed każdym uruchomieniem, bo wysyła, publikuje, płaci albo usuwa.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "To uruchomienie wysyła wiadomości lub pocztę. Nic nie zostanie wysłane, zanim powiesz „tak”.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "To uruchomienie publikuje. Nic nie zostanie opublikowane, zanim powiesz „tak”.",
+  "status.agent.hxRoutineConfirm.actions.pay":
+    "To uruchomienie płaci lub kupuje. Nic nie zostanie zapłacone, zanim powiesz „tak”.",
+  "status.agent.hxRoutineConfirm.actions.delete":
+    "To uruchomienie usuwa. Nic nie zostanie usunięte, zanim powiesz „tak”.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "To uruchomienie wysyła, publikuje, płaci albo usuwa. Nic się nie stanie, zanim powiesz „tak”.",
+  "status.agent.hxRoutineConfirm.actions.each": "Ta rutyna pyta przed każdym uruchomieniem.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Powiedziałeś „tak”: uruchamia się teraz.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Powiedziałeś „nie”: tym razem pominięta.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Brak odpowiedzi przed następnym terminem: tym razem pominięta.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Wynik rutyny niesprawdzony",
+  "status.agent.hxRoutineResult.missingFile":
+    "Uruchomienie „{name}” podaje, że zapisało {files}, ale HXBot tego tam nie znalazł. Sprawdź wynik, zanim na nim polegasz.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "Uruchomienie „{name}” zmieniło plik, którego HXBot nie mógł odczytać z powrotem. Sprawdź wynik, zanim na nim polegasz.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "Uruchomienie „{name}” coś wysłało, opublikowało, zapłaciło albo usunęło, a HXBot nie zna wyniku. Sprawdź go, zanim na nim polegasz.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "Uruchomienie „{name}” miało wysłać, opublikować, zapłacić albo usunąć, ale skończyło się bez takiego kroku. Sprawdź wynik, zanim na nim polegasz.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "Rutyna jest wstrzymana: ten termin się nie uruchomi.",
+  "status.agent.hxLearned.teamProgress":
+    "Zespół · Tak jak wybrałeś ostatnio, następne przypomnienie przyjdzie po {minutes} min bez postępu.",
+  "status.agent.hxLearned.workProgress":
+    "Zespół · Tak jak wybrałeś, o pracy tego rodzaju przypomnienie przyjdzie teraz po {minutes} min bez postępu.",
+  "status.agent.hxLearned.yield":
+    "Sterowanie PC · Znów użyłeś komputera zaraz po tym, jak HXBot wznowił pracę, więc teraz czeka {seconds} s od chwili, gdy przestaniesz.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Zespół · Sędzia uznał, że można kontynuować: {reason} Tak jak ustawiłeś, praca nie zatrzymała się, by cię pytać.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Zespół · Z tego powodu praca już dwa razy szła dalej za radą sędziego, więc tym razem pyta ciebie.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Zespół · Dwa razy zatrzymałeś zespół po tym, jak sędzia pozwolił mu kontynuować, więc w takich przypadkach znów będziesz pytany za każdym razem.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Zespół · Od teraz w takich przypadkach ({cause}) decyduje sędzia, tylko na tym komputerze.",
+  "status.agent.hxTeam.judgeAuto.off": "Zespół · W takich przypadkach ({cause}) znów będziesz pytany za każdym razem.",
+  "status.agent.hxTeam.card.judgeOffer": "Opinia sędziego zgodziła się z twoim wyborem kolejno tyle razy: {count}.",
+  "status.agent.hxTeam.card.judgeWent": "Sędzia pozwolił kontynuować: {reason}",
+  "status.agent.hxTeam.cause.G1": "od pewnego czasu brak postępu",
+  "status.agent.hxTeam.cause.G2": "praca, która kręci się w kółko",
+  "status.agent.hxTeam.cause.G3": "praca, która rozchodzi się zbyt szeroko",
 } as const satisfies PartialTranslation<typeof source>;

@@ -22,6 +22,8 @@ const HX_GUARD_UNANSWERED = 10;
 /** A tick of real work counts at most this long: a longer gap is sleep. */
 const HX_GUARD_TICK_MAX_MS = 30_000;
 export const HX_SPEND_GAP_MS = 15 * 60_000;
+/** v1.7.5 (CONC-16): the counts and window of G2 and G3, for the checks that come sooner. */
+export const HX_GUARD_COUNTS = { loop: HX_GUARD_LOOP_COUNT, spread: HX_GUARD_SPREAD_WINDOW } as const;
 /** Pay as you go: a reminder at about each ¥20. */
 const HX_SPEND_API_YUAN = 20;
 /** A plan: a reminder at 25, 50 and 80 % of the period. */
@@ -69,10 +71,24 @@ export interface HxTeamGuardState {
     guard: HxGuardId;
     at: string;
     reason: string;
-    view?: { verdict: "continue" | "remind" | "ask"; reason: string };
+    view?: {
+      verdict: "continue" | "remind" | "ask";
+      reason: string;
+      /** v1.7.5 (CONC-16): the model that judged, for the pass list. */
+      model?: { provider: string; model: string };
+    };
   } | null;
-  /** v1.7.4 (CONC-11): when the judge was called (the last hour counts), and the causes the lead was reminded of. */
-  judge?: { times: number[]; reminded: string[] };
+  /**
+   * v1.7.4 (CONC-11): when the judge was called (the last hour counts), and the causes the lead was
+   * reminded of. v1.7.5 (CONC-16): how often each cause went on without asking, and the last time.
+   */
+  judge?: {
+    times: number[];
+    reminded: string[];
+    passes?: Partial<Record<"G1" | "G2" | "G3", number>>;
+    /** `open`: its line with "Wrap up" and "Stop" is on the card, until the next pause or answer. */
+    lastPass?: { cause: "G1" | "G2" | "G3"; reason: string; at: string; open?: boolean };
+  };
   /** The user asked to wrap up: no new work, the lead finishes. */
   wrapUp: boolean;
 }
@@ -95,7 +111,12 @@ export function hxGuardState(previous?: Partial<HxTeamGuardState>): HxTeamGuardS
       unanswered: previous?.spend?.unanswered ?? 0,
     },
     paused: previous?.paused ?? null,
-    judge: { times: previous?.judge?.times ?? [], reminded: previous?.judge?.reminded ?? [] },
+    judge: {
+      times: previous?.judge?.times ?? [],
+      reminded: previous?.judge?.reminded ?? [],
+      ...(previous?.judge?.passes ? { passes: previous.judge.passes } : {}),
+      ...(previous?.judge?.lastPass ? { lastPass: previous.judge.lastPass } : {}),
+    },
     wrapUp: previous?.wrapUp ?? false,
   };
 }
@@ -129,7 +150,13 @@ export function hxGoalOverlap(left: string, right: string): number {
  * rework: the shared folder or the open items of its form changed between two changes, which resets
  * the count (the code check).
  */
-export function hxLoopMove(state: HxTeamGuardState, taskId: string, folderHash: string | null, open: number): boolean {
+export function hxLoopMove(
+  state: HxTeamGuardState,
+  taskId: string,
+  folderHash: string | null,
+  open: number,
+  times: number = HX_GUARD_LOOP_COUNT,
+): boolean {
   const previous = state.moves[taskId];
   if (previous && (previous.folderHash !== folderHash || open < previous.open)) {
     state.moves[taskId] = { count: 1, folderHash, open };
@@ -137,28 +164,48 @@ export function hxLoopMove(state: HxTeamGuardState, taskId: string, folderHash: 
   }
   const count = (previous?.count ?? 0) + 1;
   state.moves[taskId] = { count, folderHash, open };
-  return count >= HX_GUARD_LOOP_COUNT;
+  return count >= times;
 }
 
 /** G2, a new piece of work for a member. True when it got nearly the same goal 3 times. */
-export function hxLoopReceive(state: HxTeamGuardState, memberId: string, goal: string): boolean {
+export function hxLoopReceive(
+  state: HxTeamGuardState,
+  memberId: string,
+  goal: string,
+  times: number = HX_GUARD_LOOP_COUNT,
+): boolean {
   const list = [...(state.received[memberId] ?? []), goal].slice(-5);
   state.received[memberId] = list;
-  return list.filter((item) => hxGoalOverlap(item, goal) >= HX_GUARD_SAME_GOAL).length >= HX_GUARD_LOOP_COUNT;
+  return list.filter((item) => hxGoalOverlap(item, goal) >= HX_GUARD_SAME_GOAL).length >= times;
 }
 
 /** G3: a handoff. True when the last 20 open 3 times as many pieces of work as they finish, or work is too deep. */
-export function hxSpread(state: HxTeamGuardState, event: "open" | "done", depth: number): boolean {
+export function hxSpread(
+  state: HxTeamGuardState,
+  event: "open" | "done",
+  depth: number,
+  window: number = HX_GUARD_SPREAD_WINDOW,
+): boolean {
   state.handoffs = [...state.handoffs, event].slice(-HX_GUARD_SPREAD_WINDOW);
   if (depth > HX_GUARD_DEPTH) return true;
-  if (state.handoffs.length < HX_GUARD_SPREAD_WINDOW) return false;
+  if (state.handoffs.length < window) return false;
+  // v1.7.5 (CONC-16): after the judge let the team go on, the next check looks at fewer handoffs.
+  const recent = state.handoffs.slice(-window);
+  const openedRecent = recent.filter((item) => item === "open").length;
+  if (window < HX_GUARD_SPREAD_WINDOW)
+    return openedRecent >= HX_GUARD_SPREAD_RATIO * Math.max(1, recent.length - openedRecent);
   const opened = state.handoffs.filter((item) => item === "open").length;
   const done = state.handoffs.length - opened;
   return opened >= HX_GUARD_SPREAD_RATIO * Math.max(1, done);
 }
 
 /** The time of real work, G1 and G8. Returns the guard that triggers, if any. */
-export function hxWorkTick(state: HxTeamGuardState, now: number, working: boolean): "G1" | "G8" | null {
+export function hxWorkTick(
+  state: HxTeamGuardState,
+  now: number,
+  working: boolean,
+  progressMs: number = HX_GUARD_PROGRESS_MS,
+): "G1" | "G8" | null {
   const last = state.lastTickAt;
   state.lastTickAt = now;
   if (last === null || !working) return null;
@@ -166,7 +213,7 @@ export function hxWorkTick(state: HxTeamGuardState, now: number, working: boolea
   state.activeMs += elapsed;
   state.sinceProgressMs += elapsed;
   if (state.activeMs >= HX_GUARD_FUSE_MS) return "G8";
-  if (state.sinceProgressMs >= HX_GUARD_PROGRESS_MS) return "G1";
+  if (state.sinceProgressMs >= progressMs) return "G1";
   return null;
 }
 

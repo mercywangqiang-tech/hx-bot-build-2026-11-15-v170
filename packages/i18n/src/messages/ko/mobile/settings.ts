@@ -284,4 +284,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "이 계정의 이메일을 입력하세요.",
   "mobile.settings.hxDelete.incorrectPassword": "비밀번호가 올바르지 않습니다.",
   "mobile.settings.hxDelete.failed": "계정을 삭제하지 못했습니다. 나중에 다시 시도하세요.",
+  "mobile.settings.appearance.hxBootSound": "시작 영상 소리",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "영상은 처음 시작할 때와 업데이트할 때마다 처음 시작할 때 재생됩니다. 끄면 소리 없이 재생됩니다.",
 } as const satisfies PartialTranslation<typeof source>;

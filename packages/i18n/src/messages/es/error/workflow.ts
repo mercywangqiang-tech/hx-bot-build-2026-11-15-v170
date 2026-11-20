@@ -68,4 +68,22 @@ export const messages = {
     "El cambio se detuvo a medio camino. Puede que ya esté en GitHub. Revísalo antes de ejecutar el paso de nuevo.",
   "error.workflow.githubNoEvent":
     "GitHub no tiene ninguna incidencia ni pull request con la que se inicie este activador.",
+  "error.workflow.hxStepNoAgent": "Elige el agente de este paso.",
+  "error.workflow.hxStepInvalid": "Los ajustes de este paso no encajan: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot todavía se está iniciando. Vuelve a ejecutar el paso en un momento.",
+  "error.workflow.hxStepComputerUseOff":
+    "El uso del equipo está desactivado para {agent}. Actívalo en los ajustes del agente y luego continúa.",
+  "error.workflow.hxActionUnknown":
+    "HXBot se detuvo mientras hacía {action}, así que no se sabe el resultado. Compruébalo primero: «Continuar desde este paso» lo vuelve a hacer.",
+  "error.workflow.hxActionFailed": "La llamada {action} no funcionó: {reason}",
+  "error.workflow.hxTeamFailed": "El equipo no terminó: {reason}",
+  "error.workflow.hxConnectionOff":
+    "La conexión de mensajería de esta salida está desactivada. Actívala y luego continúa.",
+  "error.workflow.hxLimitLoops":
+    "Por encima del límite: un bucle se repitió {count} veces, así que la ejecución se detuvo.",
+  "error.workflow.hxLimitSteps": "Por encima del límite: la ejecución llegó a {count} pasos, así que se detuvo.",
+  "error.workflow.hxLimitSeconds":
+    "Por encima del límite: sus bucles duraron más de {count} segundos, así que la ejecución se detuvo.",
+  "error.workflow.hxTurnNothing":
+    "Este turno no tiene ningún paso de uso del equipo, habilidad de app o equipo que guardar.",
 } as const satisfies PartialTranslation<typeof source>;

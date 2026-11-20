@@ -73,7 +73,8 @@ const cases: ScheduleCase[] = [
     name: "ny-daily-second-occurrence",
     timezone: "America/New_York",
     after: "2026-11-01T05:30:00.000Z",
-    expected: "2026-11-01T06:20:00.000Z",
+    // HXBot (v1.7.5, RTN-01): a repeated time of day runs once, at its first instant, so the next run is tomorrow.
+    expected: "2026-11-02T06:20:00.000Z",
     schedule: { kind: "daily", time: "01:20" },
   },
   {
@@ -94,7 +95,8 @@ const cases: ScheduleCase[] = [
     name: "ny-spring-missing-daily-time",
     timezone: "America/New_York",
     after: "2026-03-08T05:00:00.000Z",
-    expected: "2026-03-09T06:20:00.000Z",
+    // HXBot (v1.7.5, RTN-01): a time in the spring gap runs at the first minute after it, 03:00 EDT.
+    expected: "2026-03-08T07:00:00.000Z",
     schedule: { kind: "daily", time: "02:20" },
   },
   {
@@ -136,7 +138,8 @@ const cases: ScheduleCase[] = [
     name: "casey-earlier-wall-hour",
     timezone: "Antarctica/Casey",
     after: "2023-03-08T15:50:00.000Z",
-    expected: "2023-03-08T16:20:00.000Z",
+    // HXBot (v1.7.5, RTN-01): 00:20 repeats on this day and ran at its first instant (13:20Z); the next run is the next day.
+    expected: "2023-03-09T16:20:00.000Z",
     schedule: { kind: "daily", time: "00:20" },
   },
   {

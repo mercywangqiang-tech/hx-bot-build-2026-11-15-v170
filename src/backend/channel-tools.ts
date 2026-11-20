@@ -102,13 +102,13 @@ export const CHANNEL_TOOL_DEFINITIONS: readonly { name: string; description: str
   },
   {
     name: "channel_create_routine",
-    description: `Create a scheduled routine that sends its instruction to this channel. It is active by default. Without a timezone, it uses the server timezone. Interval, advanced-every, and custom schedules must not run more often than every 3 minutes. ${PERSON_ONLY}`,
+    description: `Create a scheduled routine that sends its instruction to this channel. It is active by default. Default timezone: the user's registered one; if none, the call fails: ask the user once. Interval, advanced-every, and custom schedules must not run more often than every 3 minutes. ${PERSON_ONLY}`,
     shape: {
       name: z.string().min(1).max(INPUT_LIMITS.routineName),
       instruction: routineInstructionZodSchema,
       schedule: routineScheduleZodSchema,
       active: z.boolean().optional(),
-      timezone: z.string().min(1).max(128).describe("IANA timezone such as Europe/Warsaw.").optional(),
+      timezone: z.string().min(1).max(128).describe("IANA timezone.").optional(),
       limitPolicy: routineLimitPolicyZodSchema.optional(),
       missedPolicy: routineMissedPolicyZodSchema.optional(),
     },

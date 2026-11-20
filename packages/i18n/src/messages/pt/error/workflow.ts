@@ -68,4 +68,20 @@ export const messages = {
   "error.workflow.githubUncertain":
     "A alteração parou no caminho. Ela pode já estar no GitHub. Verifique lá antes de executar a etapa novamente.",
   "error.workflow.githubNoEvent": "O GitHub não tem issue nem pull request para este gatilho iniciar.",
+  "error.workflow.hxStepNoAgent": "Escolha o agente desta etapa.",
+  "error.workflow.hxStepInvalid": "As configurações desta etapa não servem: {reason}",
+  "error.workflow.hxStepUnavailable": "O HXBot ainda está iniciando. Execute a etapa de novo daqui a pouco.",
+  "error.workflow.hxStepComputerUseOff":
+    "O uso do computador está desligado para {agent}. Ligue-o nas configurações do agente e depois continue.",
+  "error.workflow.hxActionUnknown":
+    "O HXBot parou enquanto fazia {action}, então o resultado não é conhecido. Confira primeiro: “Continuar desta etapa” faz de novo.",
+  "error.workflow.hxActionFailed": "A chamada {action} não funcionou: {reason}",
+  "error.workflow.hxTeamFailed": "A equipe não terminou: {reason}",
+  "error.workflow.hxConnectionOff": "A conexão de mensagens desta saída está desligada. Ligue-a e depois continue.",
+  "error.workflow.hxLimitLoops": "Acima do limite: um loop rodou {count} vezes, então a execução parou.",
+  "error.workflow.hxLimitSteps": "Acima do limite: a execução chegou a {count} etapas, então parou.",
+  "error.workflow.hxLimitSeconds":
+    "Acima do limite: os loops duraram mais de {count} segundos, então a execução parou.",
+  "error.workflow.hxTurnNothing":
+    "Este turno não tem etapa de uso do computador, habilidade de app ou equipe para salvar.",
 } as const satisfies PartialTranslation<typeof source>;

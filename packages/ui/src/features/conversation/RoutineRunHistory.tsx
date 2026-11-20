@@ -12,6 +12,8 @@ import type { AppMessages, AppTextKey } from "@hxbot/i18n";
 import { Button, Check, CirclePause, Clock3, Minus, Text, TriangleAlert, X } from "@hxbot/ui";
 import { createEffect, createSignal, createUniqueId, For, Match, Show, Switch, untrack } from "solid-js";
 import { type TextValue, useText } from "../../text";
+import { HxRunFilterSelect } from "./HxRunFilterSelect";
+import { type HxRunFilter, hxRunMatches, hxRunNote, hxSkippedNote } from "./hx-run-notes";
 
 /** The webhook activity of an event routine. Its ignored requests join the runs. */
 interface RoutineHistoryActivity {
@@ -34,10 +36,24 @@ interface RoutineRunHistoryProps {
 
 type HistoryEntry =
   | { kind: "run"; at: string; run: RoutineRunFields }
-  | { kind: "skipped"; at: string; missed: RoutineMissedRuns }
+  | { kind: "skipped"; at: string; missed: RoutineMissedRuns; run?: RoutineRunFields }
   | { kind: "ignored"; at: string; item: EventActivity };
 
 const VISIBLE_ENTRIES = 10;
+/** HXBot (v1.7.5): the fields a filter reads of a record that came without its run. */
+const EMPTY_RECORD: RoutineRunFields = {
+  id: "",
+  routineId: "",
+  triggerId: null,
+  kind: "scheduled",
+  scheduledFor: "",
+  routineName: "",
+  instruction: "",
+  status: "cancelled",
+  error: null,
+  createdAt: "",
+  updatedAt: "",
+};
 const ACTIVITY_LIMIT = 50;
 /** A scheduled run that started this long after its time ran late: HXBot was closed or asleep. */
 const LATE_RUN_MS = 60_000;
@@ -94,12 +110,14 @@ export function RoutineRunHistory(props: RoutineRunHistoryProps) {
     await props.deliveries?.onResend(runId);
   };
 
+  // HXBot (v1.7.5, RTN-03, RTN-04): the list shows one kind of result, or all of them.
+  const [hxFilter, setHxFilter] = createSignal<HxRunFilter>("all");
   const entries = (): HistoryEntry[] =>
     [
       ...props.runs.map(
         (run): HistoryEntry =>
           run.missed
-            ? { kind: "skipped", at: run.scheduledFor, missed: run.missed }
+            ? { kind: "skipped", at: run.scheduledFor, missed: run.missed, run }
             : { kind: "run", at: run.scheduledFor, run },
       ),
       // A started request already shows as its run. The history adds only the requests that did not start a run.
@@ -107,12 +125,23 @@ export function RoutineRunHistory(props: RoutineRunHistoryProps) {
         .filter((item) => item.status === "ignored")
         .map((item): HistoryEntry => ({ kind: "ignored", at: item.occurredAt, item })),
     ]
+      .filter((entry) =>
+        entry.kind === "ignored"
+          ? hxFilter() === "all"
+          : hxRunMatches(
+              entry.kind === "run" ? entry.run : (entry.run ?? { ...EMPTY_RECORD, missed: entry.missed }),
+              hxFilter(),
+            ),
+      )
       .sort((left, right) => Date.parse(right.at) - Date.parse(left.at))
       .slice(0, VISIBLE_ENTRIES);
 
   return (
     <section class="agent-routine-history" aria-labelledby="routine-history-heading">
       <h3 id="routine-history-heading">{t("routine.history.title")}</h3>
+      <Show when={props.runs.length > 0}>
+        <HxRunFilterSelect value={hxFilter()} onChange={setHxFilter} />
+      </Show>
       <Show when={error()}>
         {(message) => (
           <Text variant="caption" tone="danger" role="alert" class="agent-routine-history-error">
@@ -145,7 +174,9 @@ export function RoutineRunHistory(props: RoutineRunHistoryProps) {
                     <div class="agent-routine-run-row">
                       <span class="agent-routine-run-text">
                         <span>{formatRoutineRunTime(skipped().at, text, skipped().missed.until)}</span>
-                        <span class="agent-routine-run-note">{skippedNote(skipped().missed, text)}</span>
+                        <span class="agent-routine-run-note">
+                          {hxSkippedNote(skipped().run, text) ?? skippedNote(skipped().missed, text)}
+                        </span>
                       </span>
                       {/* The note already says "Skipped", so the icon has no label of its own. */}
                       <span class="agent-routine-run-icon agent-routine-run-icon-ignored" aria-hidden="true">
@@ -189,11 +220,13 @@ function RunRow(props: { run: RoutineRunFields; onOpenRun?: ((messageId: string)
   };
   const late = () => lateStart(props.run);
   const failure = () => (props.run.status === "failed" && props.run.error ? text.sourceText(props.run.error) : null);
+  // HXBot (v1.7.5, RTN-04): a result that is not verified, no update, a catch-up.
+  const hxNote = () => hxRunNote(props.run, text);
   // The link's label replaces its text, so a screen reader gets the reason as the description.
   const reasonId = createUniqueId();
   const content = (
     <>
-      <Show when={late() || failure()} fallback={<span>{label()}</span>}>
+      <Show when={late() || failure() || hxNote()} fallback={<span>{label()}</span>}>
         <span class="agent-routine-run-text">
           <span>{label()}</span>
           <Show when={late()}>
@@ -207,6 +240,13 @@ function RunRow(props: { run: RoutineRunFields; onOpenRun?: ((messageId: string)
             {(reason) => (
               <span id={reasonId} class="agent-routine-run-note" title={reason()}>
                 {reason()}
+              </span>
+            )}
+          </Show>
+          <Show when={hxNote()}>
+            {(note) => (
+              <span class="agent-routine-run-note hx-routine-run-note" data-hx-result={props.run.hx?.result}>
+                {note()}
               </span>
             )}
           </Show>

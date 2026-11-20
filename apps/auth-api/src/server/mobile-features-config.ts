@@ -13,8 +13,8 @@ export const MOBILE_FEATURE_CONFIG: MobileFeatureConfig = {
     android: { upTo: "0" },
   },
   browser: {
-    ios: { upTo: "1.5.0" },
-    android: { upTo: "1.5.0" },
+    ios: { upTo: "1.5.1" },
+    android: { upTo: "1.5.1" },
   },
 };
 
@@ -25,5 +25,5 @@ export const MOBILE_FEATURE_CONFIG: MobileFeatureConfig = {
  */
 export const MOBILE_LATEST_VERSIONS: MobileLatestVersions = {
   ios: "1.5.0",
-  android: "1.5.0",
+  android: "1.5.1",
 };

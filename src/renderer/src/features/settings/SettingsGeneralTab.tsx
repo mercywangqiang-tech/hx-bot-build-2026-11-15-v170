@@ -38,6 +38,7 @@ import { useI18n } from "../../i18n-context";
 import { useInterfaceSizeChoice } from "../../interface-size";
 import { useLogoColorChoice } from "../../logo-color";
 import { ExternalLinkSelect } from "./ExternalLinkSelect";
+import { HxBootSoundSwitch } from "./HxBootSoundSwitch";
 
 const interfaceSizeOptions = [...APP_INTERFACE_SIZES];
 const quitGuardOptions = [...QUIT_GUARDS];
@@ -177,6 +178,8 @@ export function SettingsGeneralTab(props: SettingsGeneralTabProps) {
               />
             </ItemActions>
           </Item>
+          {/* HXBot (v1.7.5, UI-27): the sound of the start film, off by default. */}
+          <HxBootSoundSwitch />
         </ItemGroup>
       </SettingsSection>
 

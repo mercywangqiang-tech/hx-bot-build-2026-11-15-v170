@@ -1,6 +1,7 @@
 // HXBot：设置 → Computer Use 里的“这台电脑上的应用和设置”（HxComputerPanel.tsx）。
 import type { HxComputerStatus, HxSelfTestReport } from "@hxbot/contracts/hx-computer";
 import type { HxFileVersionsView } from "@hxbot/contracts/hx-file-change";
+import type { HxLearnedView } from "@hxbot/contracts/hx-learned";
 import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { flush } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
@@ -286,5 +287,45 @@ describe("HxComputerPanel", () => {
     expect(summary()).toBe("120 apps, 42 settings pages, 12 settings (11 can be changed directly)");
     expect(document.querySelector('[data-hx-computer="versions"]')).toBeNull();
     expect(screen.queryByRole("button", { name: /default/u })).toBeNull();
+  });
+
+  it("shows the times learned from your choices and puts the defaults back (v1.7.5, CONC-13)", async () => {
+    const learned: HxLearnedView = {
+      progressDefaultMs: 30 * 60_000,
+      progressByWork: { writing: 22.5 * 60_000 },
+      yieldMs: 7_000,
+      limits: { progress: [15 * 60_000, 120 * 60_000], yield: [3_000, 15_000] },
+    };
+    const shown = calls({
+      learned: vi.fn(() => Promise.resolve(learned)),
+      resetLearned: vi.fn(() => Promise.resolve({ ...learned, progressByWork: {}, yieldMs: 5_000 })),
+    });
+    render(() => <HxComputerPanel visible calls={shown} />);
+    await settle();
+    const changed = () => document.querySelector('[data-hx-learned="changed"]')?.textContent ?? "";
+    expect(changed()).toBe("Changed: Writing 23 min");
+    expect(document.body.textContent).toContain("HXBot goes on with your computer 7 seconds after you stop");
+    fireEvent.click(button("Use the defaults"));
+    await settle();
+    expect(shown.resetLearned).toHaveBeenCalledTimes(1);
+    expect(changed()).toBe("Nothing changed yet.");
+    expect(document.body.textContent).toContain("5 seconds after you stop");
+  });
+
+  it("without the learned times the row is not there", async () => {
+    render(() => <HxComputerPanel visible calls={calls()} />);
+    await settle();
+    expect(screen.queryByRole("button", { name: "Use the defaults" })).toBeNull();
+  });
+
+  it("a failed read of the learned times says so", async () => {
+    render(() => (
+      <HxComputerPanel
+        visible
+        calls={calls({ learned: vi.fn(() => Promise.reject(new Error("no"))), resetLearned: vi.fn() })}
+      />
+    ));
+    await settle();
+    expect(document.body.textContent).toContain("HXBot could not read or change the learned times.");
   });
 });

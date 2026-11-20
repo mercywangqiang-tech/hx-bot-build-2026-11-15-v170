@@ -925,4 +925,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (ברירת מחדל)",
   "settings.hxComputer.versions.git":
     "סוכן קוד שמשנה קבצים בפקודות שלו לא שומר כאן גרסאות. בתיקיית Git, ‏Git יכול לשחזר אותם.",
+  "settings.hxLearned.title": "זמנים ש־HXBot למד מהבחירות שלך",
+  "settings.hxLearned.description":
+    "נשמר רק במחשב הזה. כברירת מחדל, על צוות בלי התקדמות מגיעה תזכורת אחרי {minutes} דקות (מ־15 דקות עד שעתיים); ״להמשיך״ נותן לצוות הזה פי שניים זמן, ״לסכם״ או ״לעצור״ גורמים לכך שעל עבודה מהסוג הזה תגיע תזכורת מוקדם יותר. HXBot ממשיך במחשב {seconds} שניות אחרי שמפסיקים להשתמש בו (מ־3 עד 15 שניות), ויותר אם חוזרים מיד אחרי שהוא המשיך.",
+  "settings.hxLearned.changed": "שונה: {list}",
+  "settings.hxLearned.work": "{work} {minutes} דק׳",
+  "settings.hxLearned.none": "עדיין לא השתנה דבר.",
+  "settings.hxLearned.reset": "שימוש בברירות המחדל",
+  "settings.hxLearned.failed": "HXBot לא הצליח לקרוא או לשנות את הזמנים שנלמדו.",
+  "settings.hxBoot.sound.title": "צליל סרט הפתיחה",
+  "settings.hxBoot.sound.description":
+    "הסרט מוצג בפתיחה הראשונה ובפתיחה הראשונה אחרי כל עדכון. כבוי: הוא מוצג בלי צליל.",
 } as const satisfies PartialTranslation<typeof source>;

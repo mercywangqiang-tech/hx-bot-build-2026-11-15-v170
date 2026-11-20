@@ -391,4 +391,7 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "Zadania są dostępne tylko dla agentów na tym komputerze.",
   "error.backend.taskStartFailed": "HXBot nie może rozpocząć zadania. Zamiast tego wykonaj pracę w tej turze.",
   "error.backend.hxAskOwnerOnly": "Tylko właściciel tego HXBot może to wybrać. Każdy może anulować zmianę.",
+  "error.backend.hxRoutineZoneUnknown":
+    "„{zone}” nie jest strefą czasową znaną temu komputerowi. Wybierz strefę z listy, na przykład Asia/Shanghai.",
+  "error.backend.hxRoutineConfirmGone": "To pytanie nie jest już otwarte.",
 } as const satisfies PartialTranslation<typeof source>;

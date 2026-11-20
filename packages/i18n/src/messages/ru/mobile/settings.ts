@@ -292,4 +292,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Введите адрес эл. почты этого аккаунта.",
   "mobile.settings.hxDelete.incorrectPassword": "Неверный пароль.",
   "mobile.settings.hxDelete.failed": "Не удалось удалить аккаунт. Повторите попытку позже.",
+  "mobile.settings.appearance.hxBootSound": "Звук заставки",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "Заставка показывается при первом запуске и при первом запуске после каждого обновления. Выключено: она идёт без звука.",
 } as const satisfies PartialTranslation<typeof source>;

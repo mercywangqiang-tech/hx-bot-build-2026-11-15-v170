@@ -961,4 +961,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (domyślnie)",
   "settings.hxComputer.versions.git":
     "Agent programistyczny, który zmienia pliki własnymi poleceniami, nie zachowuje tu wersji. W folderze Git przywrócić je może Git.",
+  "settings.hxLearned.title": "Czasy, których HXBot nauczył się z twoich wyborów",
+  "settings.hxLearned.description":
+    "Przechowywane tylko na tym komputerze. Domyślnie przypomnienie o zespole bez postępu przychodzi po {minutes} min (od 15 minut do 2 godzin); „Kontynuuj” daje temu zespołowi dwa razy więcej czasu, „Zakończ” lub „Zatrzymaj” sprawia, że o pracy tego rodzaju przypomnienie przyjdzie wcześniej. HXBot wraca do pracy na twoim komputerze {seconds} s po tym, jak przestaniesz (od 3 do 15 s), dłużej, gdy wracasz zaraz po wznowieniu.",
+  "settings.hxLearned.changed": "Zmienione: {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Jeszcze nic nie zmieniono.",
+  "settings.hxLearned.reset": "Użyj wartości domyślnych",
+  "settings.hxLearned.failed": "HXBot nie mógł odczytać ani zmienić nauczonych czasów.",
+  "settings.hxBoot.sound.title": "Dźwięk filmu startowego",
+  "settings.hxBoot.sound.description":
+    "Film odtwarza się przy pierwszym uruchomieniu i przy pierwszym uruchomieniu po każdej aktualizacji. Wyłączone: odtwarza się bez dźwięku.",
 } as const satisfies PartialTranslation<typeof source>;

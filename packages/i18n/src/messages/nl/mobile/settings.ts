@@ -209,4 +209,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Voer het e-mailadres van dit account in.",
   "mobile.settings.hxDelete.incorrectPassword": "Het wachtwoord is onjuist.",
   "mobile.settings.hxDelete.failed": "Het account kon niet worden verwijderd. Probeer het later opnieuw.",
+  "mobile.settings.appearance.hxBootSound": "Geluid van de startfilm",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "De film speelt bij de eerste start en bij de eerste start na elke update. Uit: hij speelt zonder geluid.",
 } as const satisfies PartialTranslation<typeof source>;

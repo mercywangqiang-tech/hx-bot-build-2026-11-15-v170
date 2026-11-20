@@ -23,9 +23,25 @@ const OWN_INPUT_TAIL_MS = 1_000;
 const OWN_INPUT_HEAD_MS = 250;
 const OWN_INPUT_KEEP_MS = 120_000;
 
+/**
+ * HXBot (v1.7.5, CONC-13): the pause for the user's own work, as it learned from the user (3 to 15
+ * seconds, 5 by default; hx-flow/learned.ts). computer.ts sets it; until then it is 5 seconds.
+ */
+let foregroundIdle: () => number = () => HX_USER_IDLE_MS;
+
+export function hxSetForegroundIdle(read: (() => number) | null): void {
+  foregroundIdle = read ?? (() => HX_USER_IDLE_MS);
+}
+
 /** The idle time the user must have for a foreground step of a turn of this tier. */
 export function hxIdleNeeded(tier: number) {
-  return tier >= 3 ? HX_BACKGROUND_IDLE_MS : HX_USER_IDLE_MS;
+  if (tier >= 3) return HX_BACKGROUND_IDLE_MS;
+  try {
+    const ms = foregroundIdle();
+    return Number.isFinite(ms) && ms > 0 ? ms : HX_USER_IDLE_MS;
+  } catch {
+    return HX_USER_IDLE_MS;
+  }
 }
 
 export class HxPresence {

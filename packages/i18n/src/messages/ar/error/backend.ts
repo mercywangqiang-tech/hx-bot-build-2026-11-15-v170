@@ -372,4 +372,7 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "المهام متاحة فقط للوكلاء على هذا الحاسوب.",
   "error.backend.taskStartFailed": "تعذّر على HXBot بدء المهمة. أنجز العمل في هذا الدور بدلًا من ذلك.",
   "error.backend.hxAskOwnerOnly": "لا يستطيع اختيار هذا إلا مالك HXBot هذا. يمكن لأي شخص إلغاء التغيير.",
+  "error.backend.hxRoutineZoneUnknown":
+    "«{zone}» ليست منطقة زمنية يعرفها هذا الحاسوب. اختر منطقة من القائمة، مثل Asia/Shanghai.",
+  "error.backend.hxRoutineConfirmGone": "لم يعد هذا السؤال مفتوحًا.",
 } as const satisfies PartialTranslation<typeof source>;

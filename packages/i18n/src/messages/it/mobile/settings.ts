@@ -292,4 +292,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Inserisci l'email di questo account.",
   "mobile.settings.hxDelete.incorrectPassword": "La password non è corretta.",
   "mobile.settings.hxDelete.failed": "Impossibile eliminare l'account. Riprova più tardi.",
+  "mobile.settings.appearance.hxBootSound": "Audio del filmato di avvio",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "Il filmato parte al primo avvio e al primo avvio dopo ogni aggiornamento. Disattivato: parte senza audio.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -5,6 +5,7 @@ import type {
   CreateChannelRoutineInput,
   UpdateChannelRoutineInput,
 } from "@hxbot/contracts/ipc";
+import type { HxRunDetail } from "./hx-routines/detail";
 import type { HxBotDatabase } from "./hxbot-database";
 import {
   type DueRoutine,
@@ -82,6 +83,21 @@ export class ChannelRoutineStore extends RoutineStore {
     scheduledFor: string,
   ): ChannelRoutineRun {
     return toChannelRun(this.createRunRow(runSource(routine), triggerId, start, scheduledFor));
+  }
+
+  /** HXBot (v1.7.5, RTN-02 / RTN-03): a record of occurrences that did not run. */
+  hxRecordNotRun(
+    routine: Pick<ChannelRoutine, "id" | "channelId" | "name" | "instruction">,
+    triggerId: string | null,
+    record: { scheduledFor: string; until: string | null; count: number },
+    detail: HxRunDetail,
+  ): void {
+    this.hxRecordNotRunRow(runSource(routine), triggerId, record, detail);
+  }
+
+  /** HXBot (v1.7.5): what HXBot records about a run. */
+  hxNoteRun(runId: string, routineId: string, change: (detail: HxRunDetail) => HxRunDetail): void {
+    this.hxNoteRunRow(runId, routineId, change);
   }
 
   receiveWebhook(

@@ -931,4 +931,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (varsayılan)",
   "settings.hxComputer.versions.git":
     "Dosyaları kendi komutlarıyla değiştiren bir kodlama ajanı burada sürüm saklamaz. Git klasöründe Git onları geri getirebilir.",
+  "settings.hxLearned.title": "HXBot'un seçimlerinizden öğrendiği süreler",
+  "settings.hxLearned.description":
+    "Yalnızca bu bilgisayarda tutulur. İlerlemeyen bir ekip için hatırlatma varsayılan olarak {minutes} dakika sonra gelir (15 dakika ile 2 saat arası); “Devam et” o ekibe iki kat süre verir, “Toparla” veya “Durdur” bu tür işler için hatırlatmanın daha erken gelmesini sağlar. HXBot siz bıraktıktan {seconds} saniye sonra bilgisayarınızda devam eder (3 ile 15 saniye arası); devam ettikten hemen sonra geri dönerseniz daha uzun bekler.",
+  "settings.hxLearned.changed": "Değişen: {list}",
+  "settings.hxLearned.work": "{work} {minutes} dk",
+  "settings.hxLearned.none": "Henüz hiçbir şey değişmedi.",
+  "settings.hxLearned.reset": "Varsayılanları kullan",
+  "settings.hxLearned.failed": "HXBot öğrenilen süreleri okuyamadı veya değiştiremedi.",
+  "settings.hxBoot.sound.title": "Açılış filminin sesi",
+  "settings.hxBoot.sound.description":
+    "Film ilk açılışta ve her güncellemeden sonraki ilk açılışta oynar. Kapalı: sessiz oynar.",
 } as const satisfies PartialTranslation<typeof source>;

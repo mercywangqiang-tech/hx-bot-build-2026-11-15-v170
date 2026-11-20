@@ -1,5 +1,6 @@
 import type { HxComputerStatus, HxSelfTestReport } from "@hxbot/contracts/hx-computer";
 import { HX_FILE_VERSION_CAPS, type HxFileVersionsView, hxByteSize } from "@hxbot/contracts/hx-file-change";
+import type { HxLearnedView } from "@hxbot/contracts/hx-learned";
 import {
   Button,
   Item,
@@ -20,6 +21,7 @@ import {
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { useI18n } from "../../i18n-context";
 import { accountPort } from "../account/account-port";
+import { HX_WORK_LABEL, isHxWorkType } from "../agents/hx-work-labels";
 
 /** A failed check shows this much of its detail; the saved report has all of it. */
 const PROBLEM_DETAIL_LIMIT = 300;
@@ -35,6 +37,9 @@ export interface HxComputerCalls {
   versions(): Promise<HxFileVersionsView>;
   /** HXBot (v1.7.4): sets that space; null goes back to the default. */
   setVersionsCap(bytes: number | null): Promise<HxFileVersionsView>;
+  /** HXBot (v1.7.5, CONC-13): the times learned from your choices, and the defaults back. */
+  learned?(): Promise<HxLearnedView>;
+  resetLearned?(): Promise<HxLearnedView>;
 }
 
 function portCalls(): HxComputerCalls {
@@ -46,6 +51,8 @@ function portCalls(): HxComputerCalls {
     setAutoResume: (on) => auth.hxComputerSetAutoResume(on),
     versions: () => auth.hxFileVersionsView(),
     setVersionsCap: (bytes) => auth.hxFileVersionsSetCap(bytes),
+    learned: () => auth.hxLearnedView(),
+    resetLearned: () => auth.hxLearnedReset(),
   };
 }
 
@@ -74,6 +81,8 @@ export function HxComputerPanel(props: {
   const [busy, setBusy] = createSignal<"rebuild" | "self-test" | null>(null);
   const [failed, setFailed] = createSignal(false);
   const [versions, setVersions] = createSignal<HxFileVersionsView | null>(null);
+  const [learned, setLearned] = createSignal<HxLearnedView | null>(null);
+  const [learnedFailed, setLearnedFailed] = createSignal(false);
 
   async function load() {
     try {
@@ -87,7 +96,41 @@ export function HxComputerPanel(props: {
     } catch {
       setVersions(null);
     }
+    await loadLearned();
   }
+
+  /** v1.7.5 (CONC-13). */
+  async function loadLearned() {
+    const read = calls().learned;
+    if (!read) return;
+    try {
+      setLearned(await read());
+      setLearnedFailed(false);
+    } catch {
+      setLearnedFailed(true);
+    }
+  }
+
+  async function resetLearned() {
+    const reset = calls().resetLearned;
+    if (!reset) return;
+    try {
+      setLearned(await reset());
+      setLearnedFailed(false);
+    } catch {
+      setLearnedFailed(true);
+    }
+  }
+
+  const learnedList = (view: HxLearnedView) =>
+    Object.entries(view.progressByWork)
+      .map(([work, ms]) =>
+        t("settings.hxLearned.work", {
+          work: isHxWorkType(work) ? t(HX_WORK_LABEL[work]) : work,
+          minutes: Math.round(ms / 60_000),
+        }),
+      )
+      .join(", ");
 
   /** v1.7.4: a smaller space deletes nothing; the next change asks when it is full. */
   async function setVersionsCap(bytes: number) {
@@ -261,6 +304,40 @@ export function HxComputerPanel(props: {
           label={t("settings.hxComputer.autoResume.title")}
           description={t("settings.hxComputer.autoResume.description")}
         />
+        <Show when={calls().learned}>
+          <Item data-settings-row="settings.hxLearned.title">
+            <ItemContent>
+              <ItemTitle>{t("settings.hxLearned.title")}</ItemTitle>
+              <Show when={learned()}>
+                {(view) => (
+                  <>
+                    <ItemDescription>
+                      {t("settings.hxLearned.description", {
+                        minutes: Math.round(view().progressDefaultMs / 60_000),
+                        seconds: Math.round(view().yieldMs / 1000),
+                      })}
+                    </ItemDescription>
+                    <ItemDescription data-hx-learned="changed">
+                      {Object.keys(view().progressByWork).length > 0
+                        ? t("settings.hxLearned.changed", { list: learnedList(view()) })
+                        : t("settings.hxLearned.none")}
+                    </ItemDescription>
+                  </>
+                )}
+              </Show>
+              <Show when={learnedFailed()}>
+                <Text variant="caption" tone="danger">
+                  {t("settings.hxLearned.failed")}
+                </Text>
+              </Show>
+            </ItemContent>
+            <ItemActions>
+              <Button type="button" variant="outline" size="sm" onClick={() => void resetLearned()}>
+                {t("settings.hxLearned.reset")}
+              </Button>
+            </ItemActions>
+          </Item>
+        </Show>
         <Item data-settings-row="settings.hxComputer.versions.title">
           <ItemContent>
             <ItemTitle>{t("settings.hxComputer.versions.title")}</ItemTitle>

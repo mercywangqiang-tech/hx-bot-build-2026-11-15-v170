@@ -1,4 +1,6 @@
 import { HX_AUTO_DEFAULTS, type HxAutoModelUpdate } from "@hxbot/contracts/hx-auto-model";
+import type { HxLearnedView } from "@hxbot/contracts/hx-learned";
+import { HX_WORKFLOW_DEFAULT_LIMITS } from "@hxbot/contracts/hx-workflows";
 import type {
   AccountSession,
   CentralAuthState,
@@ -8,6 +10,14 @@ import type {
   MobileConnectLink,
 } from "@hxbot/contracts/ipc";
 import { clone, type Listener, type MockRuntime } from "./mock-support";
+
+/** HXBot (v1.7.5, CONC-13): the learned times in the preview: writing reminded after 22 minutes. */
+const MOCK_LEARNED: HxLearnedView = {
+  progressDefaultMs: 30 * 60_000,
+  progressByWork: { writing: 22 * 60_000 },
+  yieldMs: 7_000,
+  limits: { progress: [15 * 60_000, 120 * 60_000], yield: [3_000, 15_000] },
+};
 
 /** HXBot (v1.7.4): the space for versions that the preview shows (Settings → Computer Use). */
 let mockFileVersions = {
@@ -252,6 +262,13 @@ export function createMockAuth(options: MockAuthOptions, { emit }: MockRuntime) 
       emitAuthState(authState);
       return clone(authState);
     },
+    hxAnswerRoutineConfirm: async () => ({ ran: 1, skipped: 0, settled: 0 }),
+    hxSaveTurnAsWorkflow: async () => ({ workflowId: "preview-workflow", title: "Preview workflow", steps: 2 }),
+    hxWorkflowLimits: async () => ({ ...HX_WORKFLOW_DEFAULT_LIMITS }),
+    hxSetWorkflowLimits: async (input) => input.limits ?? { ...HX_WORKFLOW_DEFAULT_LIMITS },
+    hxLearnedView: async () => ({ ...MOCK_LEARNED }),
+    hxLearnedReset: async () => ({ ...MOCK_LEARNED, progressByWork: {}, yieldMs: 5_000 }),
+    hxTeamCardAction: async () => ({ status: "done" }),
     openCompanySignIn: async () => clone(authState),
     getCompanySignIn: async () => clone(companySignIn),
     testCompanySignIn: async (input) => {

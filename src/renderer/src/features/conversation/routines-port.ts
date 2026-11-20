@@ -1,5 +1,6 @@
 // The routines twin of `memories-port.ts`: one settings panel, two owners.
 
+import type { HxAnswerRoutineConfirmResult } from "@hxbot/contracts/hx-routine-confirm";
 import type {
   HxBotDesktopApi,
   RoutineFields,
@@ -30,6 +31,11 @@ interface RoutineSaveInput {
   runIn?: RoutineRunPlace;
   /** Only the event API reads it. Schedule-only adapters save `schedule`. */
   trigger?: EventRoutineTriggerInput;
+  /**
+   * HXBot (v1.7.5, RTN-01): the person chose a zone for a saved routine. An adapter whose update
+   * carries no zone sends it only then.
+   */
+  zoneChanged?: boolean;
 }
 
 export type RoutineEditorRecord = RoutineFields | EventRoutine;
@@ -77,6 +83,17 @@ export interface RoutinesPort {
    * routes drop the field, so the remote adapters send it on that capability's routes.
    */
   runIn: boolean;
+  /**
+   * HXBot (v1.7.5, RTN-01): whether the host changes the zone of a saved routine: this computer's
+   * host, and any host through the event API. The released schedule routes keep it.
+   */
+  zoneOnUpdate?: boolean;
+  /** HXBot (v1.7.5, RTN-01): the registered zone, null when none is registered. Absent when unknown. */
+  registeredZone?: () => Promise<string | null>;
+  /** HXBot (v1.7.5, RTN-01): remembers the first zone a person saves, while none is registered. */
+  registerZone?: (zone: string) => Promise<void>;
+  /** HXBot (v1.7.5, RTN-02, MIG-03): answers a run that waits for the yes. Only this computer's host. */
+  answerConfirm?: (cardId: string, run: boolean) => Promise<HxAnswerRoutineConfirmResult>;
   list: () => Promise<RoutineEditorRecord[]>;
   listRuns: (routineId: string, limit: number) => Promise<RoutineRunFields[]>;
   save: (input: RoutineSaveInput) => Promise<RoutineSaveResult>;
@@ -124,11 +141,24 @@ export function agentRoutinesPort(
     runIn: runPlace,
     list: () => api.listRoutines(agentId),
     listRuns: (routineId, limit) => api.listRoutineRuns({ agentId, routineId, limit }),
-    save: ({ routineId, name, instruction, active, timezone, schedule, limitPolicy, missedPolicy, runIn }) => {
+    zoneOnUpdate: localHost,
+    save: ({
+      routineId,
+      name,
+      instruction,
+      active,
+      timezone,
+      schedule,
+      limitPolicy,
+      missedPolicy,
+      runIn,
+      zoneChanged,
+    }) => {
       const policy = {
         ...(localHost && limitPolicy ? { limitPolicy } : {}),
         ...(localHost && missedPolicy ? { missedPolicy } : {}),
         ...(runPlace && runIn ? { runIn } : {}),
+        ...(localHost && zoneChanged ? { timezone } : {}),
       };
       return (
         routineId
@@ -210,7 +240,16 @@ export function eventRoutinesPort(
   api: EventRoutinesApi,
   legacy: Pick<
     RoutinesPort,
-    "listRuns" | "subscribe" | "runCommand" | "missedPolicy" | "onceSchedule" | "runIn" | "results"
+    | "listRuns"
+    | "subscribe"
+    | "runCommand"
+    | "missedPolicy"
+    | "onceSchedule"
+    | "runIn"
+    | "results"
+    | "registeredZone"
+    | "registerZone"
+    | "answerConfirm"
   >,
 ): RoutinesPort {
   const { runCommand, results } = legacy;
@@ -223,6 +262,10 @@ export function eventRoutinesPort(
     missedPolicy: missedPolicyKept,
     onceSchedule: legacy.onceSchedule,
     runIn: legacy.runIn,
+    zoneOnUpdate: true,
+    ...(legacy.registeredZone ? { registeredZone: legacy.registeredZone } : {}),
+    ...(legacy.registerZone ? { registerZone: legacy.registerZone } : {}),
+    ...(legacy.answerConfirm ? { answerConfirm: legacy.answerConfirm } : {}),
     list: () => api.listRoutines({ owner }),
     // The released run routes leave out the records of missed occurrences.
     // An agent run names its agent so that the history opens the message the run posted.

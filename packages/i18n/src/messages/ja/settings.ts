@@ -918,4 +918,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size}（既定）",
   "settings.hxComputer.versions.git":
     "自分のコマンドでファイルを変更するコーディングエージェントは、ここにバージョンを残しません。Git のフォルダーでは Git で戻せます。",
+  "settings.hxLearned.title": "HXBot があなたの選択から学んだ時間",
+  "settings.hxLearned.description":
+    "このコンピューターにだけ保存されます。進みのないチームには、既定では {minutes} 分後にお知らせします（15 分から 2 時間）。「続ける」を選ぶとそのチームの時間は 2 倍に、「まとめる」か「止める」を選ぶとその種類の作業は早めにお知らせします。HXBot は操作をやめてから {seconds} 秒後にコンピューターでの作業を再開します（3 秒から 15 秒）。再開直後に戻ってきた場合は長めに待ちます。",
+  "settings.hxLearned.changed": "変更済み：{list}",
+  "settings.hxLearned.work": "{work} {minutes} 分",
+  "settings.hxLearned.none": "まだ何も変わっていません。",
+  "settings.hxLearned.reset": "既定値を使う",
+  "settings.hxLearned.failed": "HXBot は学んだ時間を読み込むことも変更することもできませんでした。",
+  "settings.hxBoot.sound.title": "起動ムービーの音",
+  "settings.hxBoot.sound.description":
+    "ムービーは最初の起動と、更新のたびに最初の起動で流れます。オフ：音なしで流れます。",
 } as const satisfies PartialTranslation<typeof source>;

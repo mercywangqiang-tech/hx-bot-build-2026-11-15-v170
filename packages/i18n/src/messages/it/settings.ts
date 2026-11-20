@@ -924,4 +924,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (predefinito)",
   "settings.hxComputer.versions.git":
     "Un agente di programmazione che modifica file con i propri comandi non tiene versioni qui. In una cartella Git, Git può ripristinarli.",
+  "settings.hxLearned.title": "Tempi che HXBot ha imparato dalle tue scelte",
+  "settings.hxLearned.description":
+    "Tenuti solo su questo computer. Per una squadra senza progressi il promemoria arriva dopo {minutes} minuti per impostazione predefinita (da 15 minuti a 2 ore); «Continua» dà a quella squadra il doppio del tempo, «Chiudi» o «Ferma» fa arrivare prima il promemoria per quel tipo di lavoro. HXBot riprende il tuo computer {seconds} secondi dopo che ti fermi (da 3 a 15 secondi), di più se torni subito dopo che è ripartito.",
+  "settings.hxLearned.changed": "Cambiato: {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Ancora nessuna modifica.",
+  "settings.hxLearned.reset": "Usa i valori predefiniti",
+  "settings.hxLearned.failed": "HXBot non è riuscito a leggere o cambiare i tempi imparati.",
+  "settings.hxBoot.sound.title": "Audio del filmato di avvio",
+  "settings.hxBoot.sound.description":
+    "Il filmato parte al primo avvio e al primo avvio dopo ogni aggiornamento. Disattivato: parte senza audio.",
 } as const satisfies PartialTranslation<typeof source>;

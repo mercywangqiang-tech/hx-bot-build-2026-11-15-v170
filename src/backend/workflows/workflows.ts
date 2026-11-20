@@ -28,6 +28,7 @@
  */
 
 import { isAgentProvider } from "@hxbot/contracts/agent-providers";
+import { HX_WORKFLOW_AUTO_MODEL, hxWorkflowStepOf } from "@hxbot/contracts/hx-workflows";
 import { INPUT_LIMITS } from "@hxbot/contracts/input-limits";
 import {
   type AgentEvent,
@@ -68,6 +69,10 @@ import { Cause, Context, Effect, Exit, Fiber, Layer, ManagedRuntime, Result, Sch
 import { isNoUpdateAnswer } from "../agent/routine-quiet-runs";
 import type { AgentProvider } from "../agent-client";
 import { coalescedPasses } from "../coalesced-passes";
+import { hxWorkflowAutoSteps } from "../hx-workflows/auto-model";
+import { hxGraphProblem, hxLimitText, hxRecheckNode } from "../hx-workflows/checks";
+import { hxLimitReached, hxWorkflowLimitsOf } from "../hx-workflows/limits";
+import { hxMarkUnknown, hxPassOf, hxStepScope, hxWorkflowSteps } from "../hx-workflows/steps";
 import type {
   MessagingDiscordMention,
   MessagingDiscordSend,
@@ -417,6 +422,41 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
         // The sweep and the steps call each other, so this type ends the loop of inferred types.
         const requestSweep = (): Effect.Effect<void> => Effect.forkIn(sweep(), scope).pipe(Effect.asVoid);
 
+        // HXBot (v1.7.5, RTN-11): the node of a step, from its run's graph or the workflow's.
+        const hxNodeOf = (step: StoredWorkflowStep): WorkflowNode | null => {
+          const run = step.runId ? runs.run(step.runId) : null;
+          const graph = run?.graph ?? store.detail(step.workflowId)?.graph;
+          return graph?.nodes.find((candidate) => candidate.id === step.nodeId) ?? null;
+        };
+        const hxRunOf = (step: StoredWorkflowStep) => ({
+          scope: hxStepScope(step),
+          stepId: step.id,
+          nodeId: step.nodeId,
+          attempt: step.attempt,
+          pass: hxPassOf(runs.hxConnection, step),
+        });
+
+        /** HXBot (v1.7.5, RTN-11): an app action, an app skill or a team, in a fiber of its own. */
+        const startHxStep = (step: StoredWorkflowStep, node: WorkflowNode): Effect.Effect<void> => {
+          const stop = new AbortController();
+          const work = Effect.gen(function* () {
+            const outcome = yield* Effect.promise(() =>
+              hxWorkflowSteps.run(node, { ...hxRunOf(step), input: step.input, signal: stop.signal }),
+            );
+            // A team works on: a later pass reads its result.
+            if (outcome.status === "done") settle(step, { status: "done", output: outcome.output });
+            else if (outcome.status === "failed") settle(step, { status: "failed", error: outcome.error });
+            yield* requestSweep();
+          }).pipe(
+            Effect.onInterrupt(() => Effect.sync(() => stop.abort())),
+            Effect.ensuring(Effect.sync(() => working.delete(step.id))),
+          );
+          return Effect.forkIn(work, scope).pipe(
+            Effect.tap((fiber) => Effect.sync(() => working.set(step.id, fiber))),
+            Effect.asVoid,
+          );
+        };
+
         // --- Steps ---------------------------------------------------------------------------------
 
         /**
@@ -429,6 +469,9 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
             return;
           }
           const run = step.runId ? runs.run(step.runId) : null;
+          // HXBot (v1.7.5, RTN-11): a step whose model is "auto" has its model chosen by its work.
+          if (hxNodeOf(step)?.fields.model === HX_WORKFLOW_AUTO_MODEL)
+            hxWorkflowAutoSteps.want({ runId: step.runId ?? step.id, workflowId: step.workflowId, text: step.input });
           const sent = yield* dependencies
             .sendHandoff({
               run: {
@@ -941,6 +984,17 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
             settle(step, { status: "failed", error: sourceText("error.workflow.nodeUnsupported") });
             return;
           }
+          // HXBot (v1.7.5, RTN-11): an app action, an app skill or a team does not message its agent. A step of
+          // a later version that this one does not know is refused like any node without a runner.
+          const hxUnknown = hxRecheckNode(node, null);
+          if (hxUnknown && !hxWorkflowStepOf(node)) {
+            settle(step, { status: "failed", error: hxUnknown });
+            return;
+          }
+          if (hxWorkflowStepOf(node)) {
+            yield* startHxStep(step, node);
+            return;
+          }
           switch (node.kind) {
             case "trigger":
               settle(step, { status: "done", output: run?.payload ?? "" });
@@ -1029,6 +1083,10 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
             );
           const fiber = working.get(step.id);
           if (fiber) yield* Fiber.interrupt(fiber);
+          // HXBot (v1.7.5, RTN-11): a team step stops its team.
+          const hxNode = step.kind === "agent" ? hxNodeOf(step) : null;
+          if (hxNode && hxWorkflowStepOf(hxNode) === "team")
+            yield* Effect.promise(() => hxWorkflowSteps.stop(hxNode, hxRunOf(step)));
           settle(step, { status: "stopped" });
           // A fiber interrupted before it starts never runs its own clean-up.
           working.delete(step.id);
@@ -1053,6 +1111,31 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
             new Set([...latest.values()].filter((step) => step.status === "done").map((step) => step.nodeId)),
           );
 
+        /**
+         * HXBot (v1.7.5, RTN-07): a run at its limit writes "over the limit", stops its open steps and starts
+         * no new one. A call outside HXBot that started and has no answer is not known (steps.ts).
+         */
+        const hxStopAtLimit = Effect.fn("Workflows.hxStopAtLimit")(function* (run: StoredWorkflowRun, error: string) {
+          if (!runs.setRunStatus(run.id, "stopping", error, now())) return;
+          changed(run.workflowId);
+          for (const step of runs.steps(run.id)) if (isOpenStep(step)) yield* stopNow(step);
+          hxMarkUnknown(runs.hxConnection, `workflow-run:${run.id}`);
+          const endedAt = now();
+          if (!runs.setRunStatus(run.id, "failed", error, endedAt)) return;
+          changed(run.workflowId);
+          rearm();
+          dependencies.runEnded?.({
+            runId: run.id,
+            status: "failed",
+            source: run.source,
+            startedAt: run.startedAt,
+            endedAt: endedAt.toISOString(),
+            stepKinds: [...latestSteps(run.id).values()]
+              .filter((step) => step.status !== "skipped")
+              .map((step) => step.kind),
+          });
+        });
+
         /** Starts every node of the run that can start now, then sets the run's status. */
         const advance = Effect.fn("Workflows.advance")(function* (runId: string) {
           const run = runs.run(runId);
@@ -1064,6 +1147,22 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
             for (;;) {
               const actions = nextActions(run.graph, scopeOf(run, latest).nodes, latest);
               if (actions.length === 0) break;
+              // HXBot (v1.7.5, RTN-07): a run stops before the step that would go over its limits.
+              const hxHit = hxLimitReached(
+                runs.hxConnection,
+                run,
+                hxWorkflowLimitsOf(runs.hxConnection, run.workflowId),
+                now().getTime(),
+                actions.map((action) => ({
+                  nodeId: action.nodeId,
+                  attempt: (latest.get(action.nodeId)?.attempt ?? 0) + 1,
+                  skip: action.action === "skip",
+                })),
+              );
+              if (hxHit) {
+                yield* hxStopAtLimit(run, hxLimitText(hxHit));
+                return;
+              }
               for (const action of actions) {
                 const node = nodes.get(action.nodeId);
                 if (!node) return;
@@ -1130,7 +1229,14 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
           for (const step of runs.openSteps()) {
             if (step.status !== "running") continue;
             let ended = false;
-            if (step.kind === "agent") {
+            const hxNode = step.kind === "agent" ? hxNodeOf(step) : null;
+            if (hxNode && hxWorkflowStepOf(hxNode)) {
+              // HXBot (v1.7.5, RTN-11): a team step reads its team; an app step without its fiber lost it.
+              if (working.has(step.id)) continue;
+              const outcome = hxWorkflowSteps.resume(hxNode, hxRunOf(step));
+              if (outcome.status === "done") ended = settle(step, { status: "done", output: outcome.output });
+              else if (outcome.status === "failed") ended = settle(step, { status: "failed", error: outcome.error });
+            } else if (step.kind === "agent") {
               // A step without a delivery lost its message to a restart between the two writes.
               if (!step.deliveryId) {
                 yield* sendAgentStep(step);
@@ -1195,6 +1301,9 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
         });
 
         const create = Effect.fn("Workflows.create")(function* (input: CreateWorkflowInput, agentId?: string) {
+          // HXBot (v1.7.5, RTN-08): a node with no runner is refused when it is saved, not only when it runs.
+          const hxProblem = input.graph ? hxGraphProblem(input.graph) : null;
+          if (hxProblem) return yield* refuse("refused", hxProblem);
           const detail = yield* attempt(() =>
             store.create(input.graph ? { ...input, graph: prepareGraph(input.graph) } : input, now()),
           );
@@ -1226,6 +1335,9 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
         });
 
         const saveGraph = Effect.fn("Workflows.saveGraph")(function* (input: SaveWorkflowGraphInput, agentId?: string) {
+          // HXBot (v1.7.5, RTN-08): see `create`.
+          const hxProblem = hxGraphProblem(input.graph);
+          if (hxProblem) return yield* refuse("refused", hxProblem);
           const result = yield* attempt(() =>
             store.saveGraph(input.workflowId, input.baseRevision, prepareGraph(input.graph), now()),
           );
@@ -1274,6 +1386,12 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
           const scope = runScope(detail.graph, start, new Set(answered.keys()));
           if (detail.graph.nodes.some((node) => scope.nodes.has(node.id) && unsupportedNode(node)))
             return yield* refuse("refused", sourceText("error.workflow.nodeUnsupported"));
+          // HXBot (v1.7.5, RTN-11): a step whose agent, Computer Use or settings do not fit now is refused first.
+          const hxBlocked = detail.graph.nodes
+            .filter((node) => scope.nodes.has(node.id) && !scope.reused.has(node.id))
+            .map((node) => hxRecheckNode(node, null))
+            .find((reason) => reason !== null);
+          if (hxBlocked) return yield* refuse("refused", hxBlocked);
           const started = yield* attempt(() =>
             runs.startRun(
               { workflowId, ...start, ...origin, revision: detail.revision, graph: detail.graph },
@@ -1763,6 +1881,9 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
               const node = detail.graph.nodes.find((candidate) => candidate.id === input.nodeId);
               if (!node) return yield* refuse("missing", sourceText("error.workflow.nodeMissing"));
               if (unsupportedNode(node)) return yield* refuse("refused", sourceText("error.workflow.nodeUnsupported"));
+              // HXBot (v1.7.5, RTN-11): see `begin`.
+              const hxBlocked = hxRecheckNode(node, null);
+              if (hxBlocked) return yield* refuse("refused", hxBlocked);
               const inputs = soloInputs(detail.graph, node.id, runs.latestDone(input.workflowId));
               const step = yield* attempt(() =>
                 runs.addStep(
@@ -1832,6 +1953,21 @@ class Workflows extends Context.Service<Workflows, WorkflowsShape>()("hxbot/back
                 current.nodes.find((candidate) => candidate.id === failed.nodeId && candidate.kind === failed.kind) ??
                 run?.graph.nodes.find((candidate) => candidate.id === failed.nodeId);
               if (!node) return yield* refuse("missing", sourceText("error.workflow.nodeMissing"));
+              // HXBot (v1.7.5, RTN-11): continuing reads the permissions and settings of now; RTN-07: and the
+              // run's limits, so a continue does not go past them.
+              if (unsupportedNode(node)) return yield* refuse("refused", sourceText("error.workflow.nodeUnsupported"));
+              const hxBlocked = hxRecheckNode(node, dependencies.connectionOn);
+              if (hxBlocked) return yield* refuse("refused", hxBlocked);
+              const hxHit = run
+                ? hxLimitReached(
+                    runs.hxConnection,
+                    run,
+                    hxWorkflowLimitsOf(runs.hxConnection, run.workflowId),
+                    now().getTime(),
+                    [{ nodeId: node.id, attempt: failed.attempt + 1, skip: false }],
+                  )
+                : null;
+              if (hxHit) return yield* refuse("refused", hxLimitText(hxHit));
               if (run && runs.reopenRun(run.id, now())) changed(run.workflowId);
               const step = yield* attempt(() =>
                 runs.addStep(

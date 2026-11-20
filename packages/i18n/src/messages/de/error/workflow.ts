@@ -69,4 +69,21 @@ export const messages = {
   "error.workflow.githubUncertain":
     "Die Änderung wurde unterwegs unterbrochen. Sie kann schon auf GitHub sein. Sieh dort nach, bevor du den Schritt erneut ausführst.",
   "error.workflow.githubNoEvent": "GitHub hat kein Issue und keinen Pull Request, bei dem dieser Auslöser startet.",
+  "error.workflow.hxStepNoAgent": "Wähle den Agenten für diesen Schritt.",
+  "error.workflow.hxStepInvalid": "Die Einstellungen dieses Schritts passen nicht: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot startet noch. Führe den Schritt gleich noch einmal aus.",
+  "error.workflow.hxStepComputerUseOff":
+    "Die Computersteuerung ist für {agent} aus. Schalte sie in den Einstellungen des Agenten ein und mach dann weiter.",
+  "error.workflow.hxActionUnknown":
+    "HXBot wurde während {action} beendet, daher ist das Ergebnis unbekannt. Prüfe es zuerst: „Ab diesem Schritt weitermachen“ führt es erneut aus.",
+  "error.workflow.hxActionFailed": "Der Aufruf {action} hat nicht funktioniert: {reason}",
+  "error.workflow.hxTeamFailed": "Das Team wurde nicht fertig: {reason}",
+  "error.workflow.hxConnectionOff":
+    "Die Nachrichtenverbindung dieser Ausgabe ist aus. Schalte sie ein und mach dann weiter.",
+  "error.workflow.hxLimitLoops": "Über dem Limit: Eine Schleife lief {count}-mal, daher wurde der Lauf beendet.",
+  "error.workflow.hxLimitSteps": "Über dem Limit: Der Lauf hat {count} Schritte erreicht und wurde beendet.",
+  "error.workflow.hxLimitSeconds":
+    "Über dem Limit: Die Schleifen liefen länger als {count} Sekunden, daher wurde der Lauf beendet.",
+  "error.workflow.hxTurnNothing":
+    "Diese Runde hat keinen Schritt mit PC-Steuerung, App-Skill oder Team, der gespeichert werden kann.",
 } as const satisfies PartialTranslation<typeof source>;

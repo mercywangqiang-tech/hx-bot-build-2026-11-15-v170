@@ -1,4 +1,4 @@
-import { AppLoadingScreen } from "@hxbot/ui/features/account/AppLoadingScreen";
+import { HxBootScreen } from "@hxbot/ui/features/account/HxBootScreen";
 import { useText } from "@hxbot/ui/text";
 import { createEffect, createMemo, createSignal, Loading, Show } from "solid-js";
 import { useAuth } from "./features/account/account-context";
@@ -12,6 +12,7 @@ import { useServerSelection } from "./features/servers/server-selection";
 import { useSettings } from "./features/settings/settings-context";
 import { WhatsNewOverlay } from "./features/updates/WhatsNewOverlay";
 import { QuitShortcutHint } from "./features/window/QuitShortcutHint";
+import { HX_BOOT_SOURCES, hxBootFull, hxBootPlayed, hxBootSound } from "./hx-boot";
 import { useI18n } from "./i18n-context";
 import { AccountLogin, FirstRunFlow, InitialSetup, LanguageStep } from "./lazy-views";
 import { usePlatform } from "./platform";
@@ -72,6 +73,15 @@ export function AppAccessGate() {
   const [splashShown, setSplashShown] = createSignal(!platform.landingPreview);
   // A chat window is a new page too, but it fades as soon as it is ready.
   const splashPlaysThrough = !startupSplashPlayed && platform.chatWindow === null;
+  // HXBot (v1.7.5, UI-27): the film plays only in the main window, on a real start, once per version.
+  const hxBootDecision = createMemo(() => {
+    const info = platform.appInfo();
+    if (!info) return null;
+    return {
+      version: info.version,
+      full: splashPlaysThrough && hxBootFull(info.version),
+    };
+  });
   // The splash lets the workspace mount its heavy views before the crew hop out.
   const [splashOpen, setSplashOpen] = createSignal(false);
   const splashMoving = () => splashShown() && !splashOpen();
@@ -215,19 +225,27 @@ export function AppAccessGate() {
       <QuitShortcutHint />
       <Show when={splashShown()}>
         {/*
-          The same pile as the loading screen of a server, so a server that is still loading continues it.
-          A start or a reload always shows the crew, also when the app is ready at once.
+          HXBot (v1.7.5, UI-27): the start screen is the film "长颈鹿与气球" on the first start and the first
+          after each upgrade, and the logo for 0.6 s on the other starts (hx-boot.ts). It waits, white, for
+          the version of the app; the views mount behind it at once.
         */}
-        <AppLoadingScreen
-          label={t("app.loading")}
-          ready={splashReady()}
-          quickExit={!splashPlaysThrough}
-          onMountViews={() => setSplashOpen(true)}
-          onExited={() => {
-            startupSplashPlayed = true;
-            setSplashShown(false);
-          }}
-        />
+        <Show when={hxBootDecision()} fallback={<div class="hx-boot" aria-hidden="true" />}>
+          {(decision) => (
+            <HxBootScreen
+              label={t("app.loading")}
+              sources={HX_BOOT_SOURCES}
+              full={decision().full}
+              sound={hxBootSound()}
+              ready={splashReady()}
+              onPlayed={() => hxBootPlayed(decision().version)}
+              onMountViews={() => setSplashOpen(true)}
+              onExited={() => {
+                startupSplashPlayed = true;
+                setSplashShown(false);
+              }}
+            />
+          )}
+        </Show>
       </Show>
     </>
   );

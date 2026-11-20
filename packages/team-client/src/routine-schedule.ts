@@ -31,6 +31,13 @@ interface CronSpec {
   month: CronField;
   weekday: CronField;
   exactTimes?: Set<string>;
+  /**
+   * HXBot (v1.7.5, RTN-01): the schedule names its hours, as a daily, weekly or monthly time does. A
+   * time of day in a spring gap then runs at the first minute after the gap, and a time that the fall
+   * repeats runs once, at its first instant. A schedule that runs every hour or every few minutes
+   * follows elapsed time instead: it runs in both copies of a repeated hour and skips the gap.
+   */
+  hxWallClock?: boolean;
 }
 
 /** A routine request the caller can correct. Other errors are faults. */
@@ -162,31 +169,27 @@ function scheduleCronSpec(schedule: Exclude<RoutineSchedule, { kind: "interval" 
       );
     case "daily": {
       const [hour, minute] = parseTime(schedule.time);
-      return cronSpec(field([minute]), field([hour]), wildcardField(1, 31), wildcardField(1, 12), wildcardField(0, 6));
+      return hxWall(
+        cronSpec(field([minute]), field([hour]), wildcardField(1, 31), wildcardField(1, 12), wildcardField(0, 6)),
+      );
     }
     case "weekdays": {
       const [hour, minute] = parseTime(schedule.time);
-      return cronSpec(
-        field([minute]),
-        field([hour]),
-        wildcardField(1, 31),
-        wildcardField(1, 12),
-        field([1, 2, 3, 4, 5]),
+      return hxWall(
+        cronSpec(field([minute]), field([hour]), wildcardField(1, 31), wildcardField(1, 12), field([1, 2, 3, 4, 5])),
       );
     }
     case "weekly": {
       const [hour, minute] = parseTime(schedule.time);
-      return cronSpec(
-        field([minute]),
-        field([hour]),
-        wildcardField(1, 31),
-        wildcardField(1, 12),
-        field([schedule.weekday]),
+      return hxWall(
+        cronSpec(field([minute]), field([hour]), wildcardField(1, 31), wildcardField(1, 12), field([schedule.weekday])),
       );
     }
     case "monthly": {
       const [hour, minute] = parseTime(schedule.time);
-      return cronSpec(field([minute]), field([hour]), field([schedule.day]), wildcardField(1, 12), wildcardField(0, 6));
+      return hxWall(
+        cronSpec(field([minute]), field([hour]), field([schedule.day]), wildcardField(1, 12), wildcardField(0, 6)),
+      );
     }
     case "advanced": {
       const day = schedule.days.kind === "days-of-month" ? field(schedule.days.days) : wildcardField(1, 31);
@@ -198,18 +201,26 @@ function scheduleCronSpec(schedule: Exclude<RoutineSchedule, { kind: "interval" 
         return cronSpec(field(minutes), field(hours), day, field(schedule.months), weekday);
       }
       const parsed = [parseTime(schedule.time.time)];
-      return cronSpec(
-        field([...new Set(parsed.map(([, minute]) => minute))]),
-        field([...new Set(parsed.map(([hour]) => hour))]),
-        day,
-        field(schedule.months),
-        weekday,
-        new Set(parsed.map(([hour, minute]) => `${hour}:${minute}`)),
+      return hxWall(
+        cronSpec(
+          field([...new Set(parsed.map(([, minute]) => minute))]),
+          field([...new Set(parsed.map(([hour]) => hour))]),
+          day,
+          field(schedule.months),
+          weekday,
+          new Set(parsed.map(([hour, minute]) => `${hour}:${minute}`)),
+        ),
       );
     }
     case "custom":
-      return parseCron(schedule.expression);
+      return hxCustomWallClock(parseCron(schedule.expression), schedule.expression);
   }
+}
+
+/** HXBot (v1.7.5, RTN-01): a cron line names its hours unless its hour field starts with `*`. */
+function hxCustomWallClock(spec: CronSpec, expression: string): CronSpec {
+  const hour = expression.trim().split(/\s+/)[1] ?? "*";
+  return hour.startsWith("*") ? spec : { ...spec, hxWallClock: true };
 }
 
 function cronSpec(
@@ -225,11 +236,43 @@ function cronSpec(
   return result;
 }
 
+/** HXBot (v1.7.5, RTN-01): see `CronSpec.hxWallClock`. */
+function hxWall(spec: CronSpec): CronSpec {
+  return { ...spec, hxWallClock: true };
+}
+
+/**
+ * HXBot (v1.7.5, RTN-01): the instant a named time of day runs at. A time in a spring gap runs at the
+ * first minute after the gap (02:30 on a day that jumps from 02:00 to 03:00 runs at 03:00); a time the
+ * fall repeats runs at its first instant only. `undefined` only past the longest gap there is.
+ */
+function hxWallClockInstant(parts: CalendarParts, timezone: string): Date | undefined {
+  const [first] = zonedDateTimeCandidates(parts, timezone);
+  if (first) return first;
+  const start = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+  for (let step = 1; step <= MAX_GAP_MINUTES; step += 1) {
+    const local = new Date(start + step * 60_000);
+    const [candidate] = zonedDateTimeCandidates(
+      {
+        year: local.getUTCFullYear(),
+        month: local.getUTCMonth() + 1,
+        day: local.getUTCDate(),
+        weekday: local.getUTCDay(),
+        hour: local.getUTCHours(),
+        minute: local.getUTCMinutes(),
+      },
+      timezone,
+    );
+    if (candidate) return candidate;
+  }
+  return undefined;
+}
+
 function nextCronOccurrence(spec: CronSpec, timezone: string, after: Date): Date {
   const start = zonedParts(after, timezone);
   const calendar = new Date(Date.UTC(start.year, start.month - 1, start.day));
   const exactTimes = spec.exactTimes;
-  const repeatedStart = zonedDateTimeCandidates(start, timezone).length > 1;
+  const repeatedStart = !spec.hxWallClock && zonedDateTimeCandidates(start, timezone).length > 1;
   for (let offset = 0; offset <= MAX_SEARCH_DAYS; offset += 1) {
     const current = new Date(calendar.getTime() + offset * 86_400_000);
     const year = current.getUTCFullYear();
@@ -254,6 +297,12 @@ function nextCronOccurrence(spec: CronSpec, timezone: string, after: Date): Date
       for (const minute of spec.minute.values) {
         if (exactTimes && !exactTimes.has(`${hour}:${minute}`)) continue;
         if (offset === 0 && (hour < start.hour || (hour === start.hour && minute < start.minute)) && !repeatedStart) {
+          continue;
+        }
+        if (spec.hxWallClock) {
+          // HXBot (v1.7.5, RTN-01): one instant for each named time, in wall-clock order.
+          const instant = hxWallClockInstant({ year, month, day, weekday, hour, minute }, timezone);
+          if (instant && instant.getTime() > after.getTime()) return instant;
           continue;
         }
         const candidates = zonedDateTimeCandidates({ year, month, day, weekday, hour, minute }, timezone);
@@ -466,4 +515,85 @@ export function collapseMissedOccurrences(
     nextRunAt = nextRoutineOccurrence(schedule, timezone, scheduledFor);
   }
   return { scheduledFor, nextRunAt };
+}
+
+/** HXBot (v1.7.5, RTN-01): one coming run of a routine, as a preview shows it. */
+export interface HxRoutineOccurrence {
+  /** The instant, in UTC. */
+  at: string;
+  /** The local date and time in the routine zone, `YYYY-MM-DD HH:mm`. */
+  local: string;
+  /** The zone's offset from UTC at that instant, in minutes (Shanghai: 480). */
+  offsetMinutes: number;
+  /** The named time of day (`HH:mm`) that a spring gap moved to this instant, or null. */
+  shiftedFrom: string | null;
+  /** The local time occurs twice that day (the clock goes back); the routine runs at the first one only. */
+  repeated: boolean;
+}
+
+/**
+ * HXBot (v1.7.5, RTN-01): the next `count` runs after `after`, with the local time, the UTC time and
+ * what a clock change did to each. Fewer when a one-time schedule has passed or has no more.
+ */
+export function hxRoutineUpcoming(
+  schedule: RoutineSchedule,
+  timezone: string,
+  after: Date,
+  count = 3,
+): HxRoutineOccurrence[] {
+  validateStoredRoutineSchedule(schedule, timezone);
+  const result: HxRoutineOccurrence[] = [];
+  let cursor = after;
+  for (let index = 0; index < Math.min(Math.max(count, 0), 10); index += 1) {
+    let next: Date;
+    try {
+      next = nextValidRoutineOccurrence(schedule, timezone, cursor);
+    } catch (error) {
+      if (error instanceof RoutineInputError) break;
+      throw error;
+    }
+    const parts = zonedParts(next, timezone);
+    const wall = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+    result.push({
+      at: next.toISOString(),
+      local: `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)} ${pad2(parts.hour)}:${pad2(parts.minute)}`,
+      offsetMinutes: Math.round((wall - Math.floor(next.getTime() / 60_000) * 60_000) / 60_000),
+      shiftedFrom: hxShiftedFrom(schedule, timezone, parts),
+      repeated: zonedDateTimeCandidates(parts, timezone).length > 1,
+    });
+    if (schedule.kind === "once") break;
+    cursor = next;
+  }
+  return result;
+}
+
+/** The named time of day before `parts` on the same day that has no instant: the one a gap moved. */
+function hxShiftedFrom(schedule: RoutineSchedule, timezone: string, parts: CalendarParts): string | null {
+  if (schedule.kind === "interval") return null;
+  const named: Array<[number, number]> = [];
+  if (schedule.kind === "once") {
+    named.push(parseTime(schedule.time));
+  } else {
+    const spec = scheduleCronSpec(schedule);
+    if (!spec.hxWallClock) return null;
+    for (const hour of spec.hour.values) {
+      for (const minute of spec.minute.values) {
+        if (!spec.exactTimes || spec.exactTimes.has(`${hour}:${minute}`)) named.push([hour, minute]);
+      }
+    }
+  }
+  if (named.some(([hour, minute]) => hour === parts.hour && minute === parts.minute)) return null;
+  const now = parts.hour * 60 + parts.minute;
+  let moved: [number, number] | null = null;
+  for (const [hour, minute] of named) {
+    const at = hour * 60 + minute;
+    if (at >= now || now - at > MAX_GAP_MINUTES) continue;
+    if (zonedDateTimeCandidates({ ...parts, hour, minute }, timezone).length > 0) continue;
+    if (!moved || at > moved[0] * 60 + moved[1]) moved = [hour, minute];
+  }
+  return moved ? `${pad2(moved[0])}:${pad2(moved[1])}` : null;
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
 }

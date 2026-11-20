@@ -920,4 +920,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (standaard)",
   "settings.hxComputer.versions.git":
     "Een programmeeragent die bestanden met eigen opdrachten wijzigt, bewaart hier geen versies. In een Git-map kan Git ze terugzetten.",
+  "settings.hxLearned.title": "Tijden die HXBot van je keuzes leerde",
+  "settings.hxLearned.description":
+    "Alleen op deze computer bewaard. Een team zonder voortgang krijgt standaard na {minutes} minuten een herinnering (15 minuten tot 2 uur); “Doorgaan” geeft dat team twee keer zoveel tijd, “Afronden” of “Stoppen” zorgt dat werk van dat soort eerder een herinnering krijgt. HXBot gaat {seconds} seconden nadat je stopt verder met je computer (3 tot 15 seconden), langer als je meteen nadat het verderging terugkomt.",
+  "settings.hxLearned.changed": "Gewijzigd: {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Nog niets gewijzigd.",
+  "settings.hxLearned.reset": "Standaardwaarden gebruiken",
+  "settings.hxLearned.failed": "HXBot kon de geleerde tijden niet lezen of wijzigen.",
+  "settings.hxBoot.sound.title": "Geluid van de startfilm",
+  "settings.hxBoot.sound.description":
+    "De film speelt bij de eerste start en bij de eerste start na elke update. Uit: hij speelt zonder geluid.",
 } as const satisfies PartialTranslation<typeof source>;

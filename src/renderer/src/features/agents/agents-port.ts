@@ -9,6 +9,8 @@ export interface AgentsPort {
     HxBotDesktopApi["agent"],
     | "createAgent"
     | "deleteAgent"
+    | "holdAgentDelete"
+    | "releaseAgentDelete"
     | "duplicateAgent"
     | "getAgentAdminSettings"
     | "getAgentHostSettings"

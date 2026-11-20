@@ -294,4 +294,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Wpisz adres e-mail tego konta.",
   "mobile.settings.hxDelete.incorrectPassword": "Hasło jest nieprawidłowe.",
   "mobile.settings.hxDelete.failed": "Nie udało się usunąć konta. Spróbuj ponownie później.",
+  "mobile.settings.appearance.hxBootSound": "Dźwięk filmu startowego",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "Film odtwarza się przy pierwszym uruchomieniu i przy pierwszym uruchomieniu po każdej aktualizacji. Wyłączone: odtwarza się bez dźwięku.",
 } as const satisfies PartialTranslation<typeof source>;

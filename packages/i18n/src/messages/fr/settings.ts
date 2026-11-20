@@ -947,4 +947,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (par défaut)",
   "settings.hxComputer.versions.git":
     "Un agent de code qui modifie des fichiers avec ses propres commandes ne garde pas de versions ici. Dans un dossier Git, Git peut les rétablir.",
+  "settings.hxLearned.title": "Délais que HXBot a appris de vos choix",
+  "settings.hxLearned.description":
+    "Gardés sur cet ordinateur uniquement. Une équipe sans progrès reçoit un rappel après {minutes} minutes par défaut (de 15 minutes à 2 heures) ; « Continuer » donne à cette équipe deux fois plus de temps, « Conclure » ou « Arrêter » fait rappeler plus tôt ce type de travail. HXBot reprend votre ordinateur {seconds} secondes après votre arrêt (de 3 à 15 secondes), plus longtemps quand vous revenez juste après sa reprise.",
+  "settings.hxLearned.changed": "Modifié : {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Rien n’a encore changé.",
+  "settings.hxLearned.reset": "Utiliser les valeurs par défaut",
+  "settings.hxLearned.failed": "HXBot n’a pas pu lire ni modifier les délais appris.",
+  "settings.hxBoot.sound.title": "Son du film de démarrage",
+  "settings.hxBoot.sound.description":
+    "Le film se lance au premier démarrage et au premier démarrage après chaque mise à jour. Désactivé : il se lance sans son.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -56,4 +56,16 @@ export const messages = {
   "error.workflow.githubUncertain":
     "更改在途中停止，可能已经出现在 GitHub 上。再次运行该步骤之前，先在 GitHub 上查看。",
   "error.workflow.githubNoEvent": "GitHub 上没有该触发器可以启动的议题或拉取请求。",
+  "error.workflow.hxStepNoAgent": "请选择这一步的智能体。",
+  "error.workflow.hxStepInvalid": "这一步的设置不对：{reason}",
+  "error.workflow.hxStepUnavailable": "HXBot 还在启动，请稍后再运行这一步。",
+  "error.workflow.hxStepComputerUseOff": "{agent} 的“电脑操控”是关着的。在智能体设置里打开后再继续。",
+  "error.workflow.hxActionUnknown": "HXBot 做“{action}”时停了，结果未知。请先核对：点“从这一步继续”会再做一次。",
+  "error.workflow.hxActionFailed": "调用“{action}”没有成功：{reason}",
+  "error.workflow.hxTeamFailed": "团队没有完成：{reason}",
+  "error.workflow.hxConnectionOff": "这个输出的消息连接已关闭，打开后再继续。",
+  "error.workflow.hxLimitLoops": "超出上限：循环已跑 {count} 次，运行已停止。",
+  "error.workflow.hxLimitSteps": "超出上限：这次运行已到 {count} 个步骤，已停止。",
+  "error.workflow.hxLimitSeconds": "超出上限：循环已超过 {count} 秒，运行已停止。",
+  "error.workflow.hxTurnNothing": "这一轮没有可以存下的电脑操作、应用技能或团队步骤。",
 } as const satisfies PartialTranslation<typeof source>;

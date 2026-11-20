@@ -19,6 +19,8 @@ import { AppLockOverlay } from "@/features/app-lock/components/app-lock-overlay"
 import { installAppLock } from "@/features/app-lock/model/app-lock";
 import { DevelopmentConnectLinkHandler } from "@/features/auth/components/development-connect-link-handler";
 import { MobileSessionProvider, useMobileSession } from "@/features/auth/context/mobile-session-context";
+import { HxBootFilm } from "@/features/boot/components/hx-boot-film";
+import { loadHxBoot } from "@/features/boot/model/hx-boot";
 import { loadOnboardingProgress } from "@/features/onboarding/model/onboarding-progress";
 import { resetNotificationAvatars } from "@/features/push-notifications/notification-avatars";
 import { installNotificationHandler } from "@/features/push-notifications/use-notification-taps";
@@ -180,6 +182,8 @@ function RootNavigator() {
           ) : null}
         </View>
         <BloubStage nativeSplashHidden={nativeHidden} onLayout={() => reportArtwork("stage")} />
+        {/* HXBot (v1.7.5, UI-27): the start film, on the first start and the first after each update. */}
+        <HxBootFilm />
         <AppLockOverlay />
       </View>
     </SplashContentReadyContext.Provider>
@@ -227,6 +231,7 @@ export default function RootLayout() {
         .catch(() => undefined)
         .then(() => offerLayoutRestart(splashColor.current, () => undefined));
       void loadOnboardingProgress().catch(() => undefined);
+      void loadHxBoot().catch(() => undefined);
     });
   }, []);
 

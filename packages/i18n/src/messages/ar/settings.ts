@@ -981,4 +981,14 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (افتراضي)",
   "settings.hxComputer.versions.git":
     "وكيل البرمجة الذي يغيّر الملفات بأوامره الخاصة لا يحتفظ بنسخ هنا. في مجلد Git، يمكن لـ Git استعادتها.",
+  "settings.hxLearned.title": "أوقات تعلّمها HXBot من اختياراتك",
+  "settings.hxLearned.description":
+    "تُحفظ على هذا الحاسوب فقط. افتراضيًا يأتي التذكير بالفريق الذي لا يتقدم بعد {minutes} دقيقة (من 15 دقيقة إلى ساعتين)؛ «متابعة» يمنح ذلك الفريق ضعف الوقت، و«اختتام» أو «إيقاف» يجعل التذكير بمثل هذا العمل يأتي أبكر. يتابع HXBot العمل على حاسوبك بعد {seconds} ثانية من توقفك (من 3 إلى 15 ثانية)، وأطول إذا عدت مباشرة بعد أن تابع.",
+  "settings.hxLearned.changed": "تغيّر: {list}",
+  "settings.hxLearned.work": "{work} {minutes} دقيقة",
+  "settings.hxLearned.none": "لم يتغيّر شيء بعد.",
+  "settings.hxLearned.reset": "استخدام القيم الافتراضية",
+  "settings.hxLearned.failed": "تعذّر على HXBot قراءة الأوقات المتعلَّمة أو تغييرها.",
+  "settings.hxBoot.sound.title": "صوت فيلم البدء",
+  "settings.hxBoot.sound.description": "يُعرض الفيلم عند أول بدء وعند أول بدء بعد كل تحديث. عند الإيقاف: يُعرض بلا صوت.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -68,4 +68,20 @@ export const messages = {
   "error.workflow.githubUncertain":
     "De wijziging is onderweg gestopt. Hij kan al op GitHub staan. Kijk daar voordat je de stap opnieuw uitvoert.",
   "error.workflow.githubNoEvent": "GitHub heeft geen issue of pull request waarop deze trigger start.",
+  "error.workflow.hxStepNoAgent": "Kies de agent van deze stap.",
+  "error.workflow.hxStepInvalid": "De instellingen van deze stap kloppen niet: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot start nog op. Voer de stap zo meteen opnieuw uit.",
+  "error.workflow.hxStepComputerUseOff":
+    "Computerbesturing staat uit voor {agent}. Zet het aan in de instellingen van de agent en ga dan verder.",
+  "error.workflow.hxActionUnknown":
+    "HXBot stopte terwijl het {action} deed, dus het resultaat is onbekend. Controleer het eerst: “Verdergaan vanaf deze stap” doet het opnieuw.",
+  "error.workflow.hxActionFailed": "De aanroep {action} werkte niet: {reason}",
+  "error.workflow.hxTeamFailed": "Het team is niet klaar gekomen: {reason}",
+  "error.workflow.hxConnectionOff": "De berichtenverbinding van deze uitvoer staat uit. Zet hem aan en ga dan verder.",
+  "error.workflow.hxLimitLoops": "Over de limiet: een lus liep {count} keer, dus de run is gestopt.",
+  "error.workflow.hxLimitSteps": "Over de limiet: de run bereikte {count} stappen, dus hij is gestopt.",
+  "error.workflow.hxLimitSeconds":
+    "Over de limiet: de lussen liepen langer dan {count} seconden, dus de run is gestopt.",
+  "error.workflow.hxTurnNothing":
+    "Deze beurt heeft geen stap met PC-besturing, app-vaardigheid of team om op te slaan.",
 } as const satisfies PartialTranslation<typeof source>;

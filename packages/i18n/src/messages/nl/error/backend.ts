@@ -408,4 +408,7 @@ export const messages = {
   "error.backend.taskStartFailed": "HXBot kon de taak niet starten. Doe het werk in plaats daarvan in deze beurt.",
   "error.backend.hxAskOwnerOnly":
     "Alleen de eigenaar van deze HXBot kan dit kiezen. Iedereen kan de wijziging annuleren.",
+  "error.backend.hxRoutineZoneUnknown":
+    "“{zone}” is geen tijdzone die deze computer kent. Kies een zone uit de lijst, zoals Asia/Shanghai.",
+  "error.backend.hxRoutineConfirmGone": "Deze vraag staat niet meer open.",
 } as const satisfies PartialTranslation<typeof source>;

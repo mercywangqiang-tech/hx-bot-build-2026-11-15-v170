@@ -249,4 +249,54 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "De versie van voor deze wijziging is niet meer bewaard.",
   "status.agent.hxSkill.restore.spaceFull":
     "Er is geen ruimte om het bestand zoals het nu is te bewaren voor het terugzetten. Maak schijfruimte vrij of vergroot de ruimte in Instellingen → PC-besturing.",
+  "status.agent.hxRoutineConfirm.title": "Routine “{name}” wacht op je ja voordat hij start",
+  "status.agent.hxRoutineConfirm.titleMany": "{count} routines wachten op je ja voordat ze starten",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "{count} keer gemist ({from} – {until}) terwijl HXBot dicht was of de computer sliep. Hij draait één keer voor allemaal.",
+  "status.agent.hxRoutineConfirm.noteLate": "Deze run haalt een gemist tijdstip in.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "Sinds de update naar v1.7.5 vraagt hij het voor elke run, omdat hij verstuurt, plaatst, betaalt of verwijdert.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "Deze run verstuurt berichten of mail. Er wordt niets verstuurd voordat je ja zegt.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "Deze run plaatst of publiceert. Er wordt niets geplaatst voordat je ja zegt.",
+  "status.agent.hxRoutineConfirm.actions.pay": "Deze run betaalt of koopt. Er wordt niets betaald voordat je ja zegt.",
+  "status.agent.hxRoutineConfirm.actions.delete": "Deze run verwijdert. Er wordt niets verwijderd voordat je ja zegt.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "Deze run verstuurt, plaatst, betaalt of verwijdert. Er gebeurt niets voordat je ja zegt.",
+  "status.agent.hxRoutineConfirm.actions.each": "Deze routine vraagt het voor elke run.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Je zei ja: hij draait nu.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Je zei nee: deze keer overgeslagen.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Geen antwoord vóór het volgende tijdstip: deze keer overgeslagen.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Resultaat van de routine niet gecontroleerd",
+  "status.agent.hxRoutineResult.missingFile":
+    "De run van “{name}” zegt dat hij {files} heeft opgeslagen, maar HXBot heeft het daar niet gevonden. Controleer het resultaat voordat je erop vertrouwt.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "De run van “{name}” wijzigde een bestand dat HXBot niet kon teruglezen. Controleer het resultaat voordat je erop vertrouwt.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "De run van “{name}” heeft iets verstuurd, geplaatst, betaald of verwijderd, en HXBot weet het resultaat niet. Controleer het voordat je erop vertrouwt.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "De run van “{name}” moest versturen, plaatsen, betalen of verwijderen, maar eindigde zonder zo’n stap. Controleer het resultaat voordat je erop vertrouwt.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "De routine is gepauzeerd: dit tijdstip draait niet.",
+  "status.agent.hxLearned.teamProgress":
+    "Team · Zoals je de vorige keer koos, komt de volgende herinnering na {minutes} minuten zonder voortgang.",
+  "status.agent.hxLearned.workProgress":
+    "Team · Zoals je koos, krijgt werk als dit nu een herinnering na {minutes} minuten zonder voortgang.",
+  "status.agent.hxLearned.yield":
+    "PC-besturing · Je gebruikte de computer weer vlak nadat HXBot verderging, dus nu wacht het {seconds} seconden nadat je stopt.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Team · De rechter zegt dat het verder kan: {reason} Zoals je hebt ingesteld, stopte het niet om het je te vragen.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Team · Het ging om deze reden al twee keer verder op advies van de rechter, dus deze keer vraagt het het jou.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Team · Je hebt twee keer een team gestopt nadat de rechter het liet doorgaan, dus in gevallen als deze wordt het je weer elke keer gevraagd.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Team · Vanaf nu gaan gevallen als deze ({cause}) zoals de rechter zegt, alleen op deze computer.",
+  "status.agent.hxTeam.judgeAuto.off": "Team · In gevallen als deze ({cause}) wordt het je weer elke keer gevraagd.",
+  "status.agent.hxTeam.card.judgeOffer":
+    "Het oordeel van de rechter kwam {count} keer achter elkaar overeen met je keuze.",
+  "status.agent.hxTeam.card.judgeWent": "De rechter liet het doorgaan: {reason}",
+  "status.agent.hxTeam.cause.G1": "een tijd geen voortgang",
+  "status.agent.hxTeam.cause.G2": "werk dat in kringetjes draait",
+  "status.agent.hxTeam.cause.G3": "werk dat te breed uitwaaiert",
 } as const satisfies PartialTranslation<typeof source>;

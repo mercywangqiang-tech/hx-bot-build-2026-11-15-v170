@@ -291,9 +291,16 @@ async function raceCase(fixture: Fixture, kind: ScheduleKind, mutation: Mutation
   assert.equal(deliveryCount(fixture, saved.changed), skipped ? 0 : 1, "The pass honors the current routine.");
   assert.equal(
     runCount(fixture, saved.changed),
-    skipped ? 0 : 1,
+    // HXBot (v1.7.5, RTN-03): an occurrence that a spent plan drops leaves one skipped record; it does not run.
+    mutation === "skip" ? 1 : skipped ? 0 : 1,
     "The current occurrence creates exactly the expected run rows.",
   );
+  if (mutation === "skip") {
+    const [record] = fixture.runs.listRuns(fixture.agentId, saved.changed.id, 50, true);
+    assert.equal(record?.status, "cancelled", "The dropped occurrence is a skipped record.");
+    assert.equal(record?.missed?.count, 1, "The skipped record names one occurrence.");
+    assert.equal(record?.deliveryId ?? null, null, "The skipped record started no work.");
+  }
   if (mutation === "edit") {
     const [run] = fixture.runs.listRuns(fixture.agentId, saved.changed.id);
     assert.equal(run?.instruction, "Current instruction");

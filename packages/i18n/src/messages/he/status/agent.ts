@@ -233,4 +233,49 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "הגרסה מלפני השינוי הזה כבר לא שמורה.",
   "status.agent.hxSkill.restore.spaceFull":
     "אין מקום לשמור את הקובץ כפי שהוא עכשיו לפני השחזור. פנה מקום בדיסק, או הגדל את המקום בהגדרות ← שליטה במחשב.",
+  "status.agent.hxRoutineConfirm.title": "השגרה ״{name}״ ממתינה לאישור לפני שהיא רצה",
+  "status.agent.hxRoutineConfirm.titleMany": "שגרות שממתינות לאישור לפני שהן רצות: {count}",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "הוחמצה {count} פעמים ({from} – {until}) בזמן ש־HXBot היה סגור או שהמחשב ישן. היא רצה פעם אחת עבור כולן.",
+  "status.agent.hxRoutineConfirm.noteLate": "ההרצה הזו משלימה מועד שהוחמץ.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "מאז העדכון ל־v1.7.5 היא שואלת לפני כל הרצה, כי היא שולחת, מפרסמת, משלמת או מוחקת.",
+  "status.agent.hxRoutineConfirm.actions.send": "ההרצה הזו שולחת הודעות או דואר. שום דבר לא נשלח לפני האישור.",
+  "status.agent.hxRoutineConfirm.actions.publish": "ההרצה הזו מפרסמת. שום דבר לא מתפרסם לפני האישור.",
+  "status.agent.hxRoutineConfirm.actions.pay": "ההרצה הזו משלמת או קונה. שום דבר לא משולם לפני האישור.",
+  "status.agent.hxRoutineConfirm.actions.delete": "ההרצה הזו מוחקת. שום דבר לא נמחק לפני האישור.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "ההרצה הזו שולחת, מפרסמת, משלמת או מוחקת. שום דבר לא קורה לפני האישור.",
+  "status.agent.hxRoutineConfirm.actions.each": "השגרה הזו שואלת לפני כל הרצה.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "אושר: היא רצה עכשיו.",
+  "status.agent.hxRoutineConfirm.outcome.no": "נדחה: דילגנו הפעם.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "לא התקבלה תשובה לפני המועד הבא: דילגנו הפעם.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "תוצאת השגרה לא אומתה",
+  "status.agent.hxRoutineResult.missingFile":
+    "ההרצה של ״{name}״ אומרת שהיא שמרה את {files}, אבל HXBot לא מצא את זה שם. כדאי לבדוק את התוצאה לפני שסומכים עליה.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "ההרצה של ״{name}״ שינתה קובץ ש־HXBot לא הצליח לקרוא בחזרה. כדאי לבדוק את התוצאה לפני שסומכים עליה.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "ההרצה של ״{name}״ שלחה, פרסמה, שילמה או מחקה משהו, ו־HXBot לא יודע מה התוצאה. כדאי לבדוק לפני שסומכים עליה.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "ההרצה של ״{name}״ הייתה אמורה לשלוח, לפרסם, לשלם או למחוק, אבל הסתיימה בלי שלב כזה. כדאי לבדוק את התוצאה לפני שסומכים עליה.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "השגרה מושהית: המועד הזה לא רץ.",
+  "status.agent.hxLearned.teamProgress":
+    "צוות · לפי הבחירה בפעם הקודמת, התזכורת הבאה תגיע אחרי {minutes} דקות בלי התקדמות.",
+  "status.agent.hxLearned.workProgress":
+    "צוות · לפי הבחירה, על עבודה מהסוג הזה תגיע עכשיו תזכורת אחרי {minutes} דקות בלי התקדמות.",
+  "status.agent.hxLearned.yield":
+    "שליטה במחשב · המחשב שוב היה בשימוש מיד אחרי ש־HXBot המשיך, ולכן עכשיו הוא ממתין {seconds} שניות אחרי שמפסיקים.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "צוות · השופט אומר שאפשר להמשיך: {reason} לפי ההגדרה, העבודה לא נעצרה כדי לשאול.",
+  "status.agent.hxTeam.judgeAuto.third": "צוות · מהסיבה הזו העבודה כבר המשיכה פעמיים לפי השופט, ולכן הפעם יש שאלה.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "צוות · פעמיים צוות נעצר אחרי שהשופט נתן לו להמשיך, ולכן במקרים כאלה תהיה שוב שאלה בכל פעם.",
+  "status.agent.hxTeam.judgeAuto.on": "צוות · מעכשיו, מקרים כאלה ({cause}) ממשיכים לפי השופט, רק במחשב הזה.",
+  "status.agent.hxTeam.judgeAuto.off": "צוות · במקרים כאלה ({cause}) תהיה שוב שאלה בכל פעם.",
+  "status.agent.hxTeam.card.judgeOffer": "דעת השופט התאימה לבחירה {count} פעמים ברצף.",
+  "status.agent.hxTeam.card.judgeWent": "השופט נתן להמשיך: {reason}",
+  "status.agent.hxTeam.cause.G1": "אין התקדמות כבר זמן מה",
+  "status.agent.hxTeam.cause.G2": "עבודה שמסתובבת במעגלים",
+  "status.agent.hxTeam.cause.G3": "עבודה שמתפזרת יותר מדי",
 } as const satisfies PartialTranslation<typeof source>;

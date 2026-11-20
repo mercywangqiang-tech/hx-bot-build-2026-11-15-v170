@@ -11,12 +11,16 @@ import type {
   UpdateChannelRoutineInput,
 } from "@hxbot/contracts/ipc";
 import { sourceText } from "@hxbot/i18n/source";
-import { collapseMissedOccurrences } from "@hxbot/team-client/routine-schedule";
 import { Effect, Result, Schema } from "effect";
 import type { RoutineTriggerAccess } from "./agent/routine-scheduler";
 import { ChannelRoutineStore } from "./channel-routine-store";
 import type { ChannelService } from "./channel-service";
 import { causeHelpers } from "./effect-boundary";
+import { hxChannelDueOwner, hxChannelStartConfirmed, hxChannelWithQueue } from "./hx-routines/channel";
+import { hxChannelRoutineConfirm } from "./hx-routines/confirm";
+import { hxApplyDue, hxDueFor, hxOnceNeedsYes } from "./hx-routines/due-apply";
+import { hxStaggerDelays } from "./hx-routines/stagger";
+import { hxRoutineZones } from "./hx-routines/zone";
 import { recordRestartActivity } from "./restart-activity";
 import type { OwnedRoutineRecord, ReceivedWebhookEvent, RoutineHoldWindow, RoutineRecordInput } from "./routine-store";
 import type { RoutineDueSource } from "./routine-timer";
@@ -112,7 +116,18 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
   }
 
   list(channelId: string): ChannelRoutine[] {
-    return this.#routines.list(this.#requireChannel(channelId));
+    return this.#routines.list(this.#requireChannel(channelId)).map((routine) => this.#hxWithQueue(routine));
+  }
+
+  /** HXBot (v1.7.5, RTN-06, RTN-02): a routine read back with what it has waiting and its open questions. */
+  #hxWithQueue<T extends { id: string; hx?: ChannelRoutine["hx"] }>(
+    routine: T & { channelId?: string; ownerId?: string },
+  ): T {
+    const channelId = routine.channelId ?? routine.ownerId;
+    if (!channelId) return routine;
+    return hxChannelWithQueue(routine, this.#routines.activeRuns(channelId, routine.id), () =>
+      hxChannelRoutineConfirm.waitingCards(channelId, routine.id),
+    );
   }
 
   /**
@@ -139,20 +154,24 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
   }
 
   create(input: CreateChannelRoutineInput): ChannelRoutine {
-    const routine = this.#routines.create({ ...input, channelId: this.#requireChannel(input.channelId) });
+    // HXBot (v1.7.5, RTN-01): an IANA zone. The editor registers the first one a person chooses.
+    const timezone = hxRoutineZones.checkSaved(input.timezone);
+    const routine = this.#routines.create({ ...input, timezone, channelId: this.#requireChannel(input.channelId) });
     this.#changed(routine.channelId);
     return routine;
   }
 
   update(input: UpdateChannelRoutineInput): ChannelRoutine {
     const routine = this.#routines.update({ ...input, channelId: this.#requireChannel(input.channelId) });
+    // HXBot (v1.7.5, RTN-06): a paused routine asks nothing more.
+    if (!routine.active) hxChannelRoutineConfirm.cancelFor(routine.channelId, routine.id);
     this.#changed(routine.channelId);
     return routine;
   }
 
   /** Routines of every trigger kind, for the events surface. */
   listRecords(channelId: string): OwnedRoutineRecord[] {
-    return this.#routines.listRecords(this.#requireChannel(channelId));
+    return this.#routines.listRecords(this.#requireChannel(channelId)).map((routine) => this.#hxWithQueue(routine));
   }
 
   getRecord(channelId: string, routineId: string): OwnedRoutineRecord | null {
@@ -160,7 +179,12 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
   }
 
   saveRecord(channelId: string, routineId: string | undefined, input: RoutineRecordInput): OwnedRoutineRecord {
-    const routine = this.#routines.saveRecord(this.#requireChannel(channelId), routineId, input);
+    // HXBot (v1.7.5, RTN-01): see `create`.
+    const checked =
+      input.trigger.kind === "schedule" ? { ...input, timezone: hxRoutineZones.checkSaved(input.timezone) } : input;
+    const routine = this.#routines.saveRecord(this.#requireChannel(channelId), routineId, checked);
+    // HXBot (v1.7.5, RTN-06): see `update`.
+    if (!routine.active) hxChannelRoutineConfirm.cancelFor(channelId, routine.id);
     this.#changed(channelId);
     return routine;
   }
@@ -255,7 +279,11 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
 
   /** The earliest channel routine, for the shared timer to compare against the other owners. */
   nextDueAt(): string | null {
-    return this.#routines.nextDueAt(this.#excluded());
+    const due = this.#routines.nextDueAt(this.#excluded());
+    // HXBot (v1.7.5, RTN-02): an unanswered question expires on time too.
+    const expiry = hxChannelRoutineConfirm.nextExpiry();
+    if (!expiry) return due;
+    return !due || Date.parse(expiry) < Date.parse(due) ? expiry : due;
   }
 
   readonly processDue = Effect.fn("ChannelRoutineScheduler.processDue")(function* (
@@ -265,31 +293,59 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
   ) {
     const changed = new Set<string>();
     yield* Effect.gen({ self: this }, function* () {
+      // HXBot (v1.7.5, RTN-02): a question nobody answered before its time is skipped first.
+      yield* channelRoutineStep(() => hxChannelRoutineConfirm.expire(now));
       const pending = yield* channelRoutineStep(() => this.#routines.due(now, this.#excluded()));
+      // HXBot (v1.7.5, CONC-14): routines due in the same minute start spread over it, in order.
+      const hxDelays = hxStaggerDelays(
+        pending.map((due) => ({
+          routineId: due.routine.id,
+          nextRunAt: due.nextRunAt,
+          schedule: due.schedule,
+          timezone: due.routine.timezone,
+        })),
+      );
       for (const due of pending) {
         if (!active()) break;
         if (this.#excluded().has(due.routine.channelId)) continue;
-        const scheduledFor = yield* channelRoutineStep(() => {
+        // HXBot (v1.7.5): the plan reads the trigger that came due.
+        const routine: ChannelRoutine = {
+          ...due.routine,
+          trigger: { ...due.routine.trigger, id: due.triggerId, nextRunAt: due.nextRunAt, schedule: due.schedule },
+        };
+        const owner = hxChannelDueOwner(this.#routines);
+        const connection = this.#channels.store.database.connection;
+        const run = yield* channelRoutineStep(() => {
           // A one-time trigger completes in the place of an advance, with the same at-most-once order.
           if (due.schedule.kind === "once") {
+            // HXBot (v1.7.5, MIG-03): a one-time routine that asks before each run waits for the yes.
+            const asks = hxOnceNeedsYes(owner, connection, routine, now);
             this.#routines.completeTrigger(due.routine.id, due.triggerId, now);
             changed.add(due.routine.channelId);
-            return due.nextRunAt;
+            // A routine set to skip drops the occurrence while a spent plan would only make it wait.
+            if (asks || (due.routine.limitPolicy === "skip" && this.#hooks.usageLimited(due.routine.channelId)))
+              return null;
+            return this.#routines.createRun(routine, due.triggerId, "scheduled", due.nextRunAt);
           }
-          const occurrence = collapseMissedOccurrences(
-            due.schedule,
-            due.routine.timezone,
-            new Date(due.nextRunAt),
-            now,
-          );
+          // HXBot (v1.7.5, RTN-02, RTN-03, MIG-03): one run at a time, and an occurrence dropped for a live
+          // run or a spent plan leaves a skipped record; the ones a sleep made late are counted and handled
+          // by the policy; a run that must ask waits for the yes.
+          const plan = hxDueFor(connection, "channel", routine, now, {
+            live: this.#routines
+              .activeRuns(due.routine.channelId, due.routine.id)
+              .some((entry) => entry.status === "queued" || entry.status === "running"),
+            limited: due.routine.limitPolicy === "skip" && this.#hooks.usageLimited(due.routine.channelId),
+          });
+          const created = hxApplyDue(owner, connection, routine, plan, now);
           // The trigger advances whether or not the fire succeeds, so a channel builds no backlog.
-          this.#routines.advanceTrigger(due.routine.id, due.triggerId, occurrence.nextRunAt.toISOString());
+          this.#routines.advanceTrigger(due.routine.id, due.triggerId, plan.nextRunAt.toISOString());
           changed.add(due.routine.channelId);
-          return occurrence.scheduledFor.toISOString();
+          return created;
         });
-        // A routine set to skip drops the occurrence while a spent plan would only make it wait.
-        if (due.routine.limitPolicy === "skip" && this.#hooks.usageLimited(due.routine.channelId)) continue;
-        yield* this.#fireEffect(due.routine, due.triggerId, scheduledFor);
+        if (!run) continue;
+        const startAt = Date.parse(due.nextRunAt) + (hxDelays.get(due.routine.id) ?? 0);
+        if (startAt > now.getTime()) this.#hxIssueLater(run, startAt - now.getTime());
+        else yield* this.#hxIssue(run);
       }
     }).pipe(
       Effect.ensuring(
@@ -299,6 +355,82 @@ export class ChannelRoutineScheduler implements RoutineDueSource {
       ),
     );
   });
+
+  /** HXBot (v1.7.5): issues a run row that the plan created. */
+  readonly #hxIssue = Effect.fn("ChannelRoutineScheduler.hxIssue")(function* (
+    this: ChannelRoutineScheduler,
+    run: ChannelRoutineRun,
+  ) {
+    const request = yield* channelRoutineStep(() =>
+      run.requestMessageId ? run : this.#routines.attachRequest(run.id, randomUUID()),
+    );
+    return yield* this.#issueEffect(request);
+  }, Effect.uninterruptible);
+
+  readonly #hxLater = new Set<ReturnType<typeof setTimeout>>();
+
+  /**
+   * HXBot (v1.7.5, CONC-14): issues a run after its share of the minute. The row exists without a
+   * request, so a quit before the time leaves it pending, and the next start issues it
+   * (`resumePendingRuns`).
+   */
+  #hxIssueLater(run: ChannelRoutineRun, delayMs: number): void {
+    const timer = setTimeout(() => {
+      this.#hxLater.delete(timer);
+      const current = this.#routines.activeRuns(run.channelId, run.routineId).find((entry) => entry.id === run.id);
+      if (current?.status !== "queued" || current.requestMessageId) return;
+      if (this.#excluded().has(run.channelId) || !this.#channels.store.exists(run.channelId)) return;
+      void Effect.runPromise(
+        this.#hxIssue(current).pipe(
+          Effect.catch((failure) =>
+            Effect.sync(() => this.#hooks.emitError("channel_routine_fire_failed", failure.cause)),
+          ),
+        ),
+      ).catch(() => undefined);
+    }, delayMs);
+    timer.unref?.();
+    this.#hxLater.add(timer);
+  }
+
+  /** HXBot (v1.7.5, CONC-14): the runs that wait for their share of the minute. */
+  hxPendingStarts(): number {
+    return this.#hxLater.size;
+  }
+
+  /** HXBot (v1.7.5, RTN-02, MIG-03): a channel routine of this computer, for its open questions. */
+  hxRoutine(channelId: string, routineId: string): ChannelRoutine | null {
+    if (!this.#channels.store.exists(channelId)) return null;
+    return this.#routines.get(channelId, routineId);
+  }
+
+  /** HXBot (v1.7.5, RTN-02, MIG-03): the run of a yes. It runs as the occurrence it was asked for. */
+  readonly hxStartConfirmedRun = Effect.fn("ChannelRoutineScheduler.hxStartConfirmedRun")(function* (
+    this: ChannelRoutineScheduler,
+    input: Parameters<typeof hxChannelStartConfirmed>[1],
+  ) {
+    const run = yield* channelRoutineStep(() => {
+      if (this.#excluded().has(input.routine.channelId)) throw new Error(sourceText("error.backend.routineGone"));
+      return hxChannelStartConfirmed(this.#routines, input);
+    });
+    yield* this.#hxIssue(run);
+    this.#changed(input.routine.channelId);
+  });
+
+  /** HXBot (v1.7.5, RTN-02): an occurrence the person declined or did not answer, in the run history. */
+  hxRecordSkipped(input: {
+    routine: ChannelRoutine;
+    triggerId: string | null;
+    scheduledFor: string;
+    reason: "declined" | "expired" | "cancelled";
+  }): void {
+    this.#routines.hxRecordNotRun(
+      input.routine,
+      input.triggerId,
+      { scheduledFor: input.scheduledFor, until: null, count: 1 },
+      { skip: { reason: input.reason, at: new Date().toISOString() } },
+    );
+    this.#changed(input.routine.channelId);
+  }
 
   /**
    * Repairs the crash window between minting a run and issuing its command. A run without a request

@@ -273,4 +273,6 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "请输入这个账号的邮箱。",
   "mobile.settings.hxDelete.incorrectPassword": "密码不正确。",
   "mobile.settings.hxDelete.failed": "没能注销账号，请稍后再试。",
+  "mobile.settings.appearance.hxBootSound": "开机视频的声音",
+  "mobile.settings.appearance.hxBootSoundFooter": "第一次打开和每次更新后第一次打开时播放开机视频。关着时没有声音。",
 } as const satisfies PartialTranslation<typeof source>;

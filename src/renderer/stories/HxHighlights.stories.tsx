@@ -14,6 +14,8 @@ import { SwitchField, Text } from "@hxbot/ui";
 import { type AgentStep, AgentStepsDisclosure } from "@hxbot/ui/features/conversation/AgentSteps";
 import { ChatActionMarker } from "@hxbot/ui/features/conversation/ChatActionMarker";
 import { HxFileChangeCard } from "@hxbot/ui/features/conversation/HxFileChangeCard";
+import { HxRoutineConfirmCard } from "@hxbot/ui/features/conversation/HxRoutineConfirmCard";
+import { HxRoutineUpcoming } from "@hxbot/ui/features/conversation/HxRoutineUpcoming";
 import { HxTeamPriorityBar } from "@hxbot/ui/features/conversation/HxTeamPriorityBar";
 import { MarkdownMessageText } from "@hxbot/ui/features/conversation/MarkdownMessageText";
 import { TaskList } from "@hxbot/ui/features/conversation/TaskList";
@@ -25,9 +27,12 @@ import type { Meta, StoryObj } from "storybook-solidjs-vite";
 import { HxAutoModelSection } from "../src/features/agents/HxAutoModelSection";
 import { ComputerUsePermissionHelp } from "../src/features/computer-use/ComputerUsePermissionHelp";
 import { ComputerUseSetup } from "../src/features/computer-use/ComputerUseSetup";
+import { HxRoutineZoneField } from "../src/features/conversation/HxRoutineZoneField";
 import { HxOpenCodeDialog } from "../src/features/hx-opencode/HxOpenCodeDialog";
 import type { HxOpenCodePort } from "../src/features/hx-opencode/hx-opencode-port";
+import { HxBootSoundSwitch } from "../src/features/settings/HxBootSoundSwitch";
 import { HxComputerPanel } from "../src/features/settings/HxComputerPanel";
+import { HX_BOOT_SOURCES } from "../src/hx-boot";
 import { useI18n } from "../src/i18n-context";
 import "./hx-highlights.css";
 import { createMockHxBot } from "./mock-hxbot";
@@ -997,6 +1002,91 @@ export const TeamQueue: Story = {
             ]}
           />
           <HxTeamPriorityBar value="urgent" disabled={false} message={null} failed={false} onChange={fn()} />
+        </div>
+      </main>
+    );
+  },
+};
+
+// ---------------------------------------------------------------- v1.7.5: start film and routines
+
+/** v1.7.5 (UI-27): the start film opens on the giraffe and ends on the logo; its sound is a setting. */
+export const BootFilm: Story = {
+  render: () => {
+    const chinese = zh();
+    const film = HX_BOOT_SOURCES["16x9"];
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="hx-highlight-boot">
+          <figure class="hx-highlight-boot-frame">
+            <img src={film.first} alt={chinese ? "开机动画的开头" : "The start of the film"} />
+            <figcaption>{chinese ? "开头：长颈鹿带着气球走来" : "Start: the giraffe comes with balloons"}</figcaption>
+          </figure>
+          <figure class="hx-highlight-boot-frame">
+            <img src={film.poster} alt={chinese ? "开机动画的结尾" : "The end of the film"} />
+            <figcaption>{chinese ? "结尾：变成 HXBot 标志" : "End: it becomes the HXBot logo"}</figcaption>
+          </figure>
+        </div>
+        <div class="hx-highlight-settings">
+          <HxBootSoundSwitch />
+        </div>
+      </main>
+    );
+  },
+};
+
+/** v1.7.5 (RTN-01): a routine's time zone is required, and its next three runs show the clock change. */
+export const RoutineZone: Story = {
+  render: () => (
+    <main class="foundation-story hx-highlight-frame">
+      <div class="hx-highlight-wide">
+        <HxRoutineZoneField
+          value="America/Los_Angeles"
+          registered="America/Los_Angeles"
+          editable={true}
+          showError={false}
+          onChange={fn()}
+        />
+        <HxRoutineUpcoming
+          schedule={{ kind: "daily", time: "09:00" }}
+          timezone="America/Los_Angeles"
+          active={true}
+          now={new Date("2027-03-12T18:00:00Z")}
+          density="editor"
+        />
+      </div>
+    </main>
+  ),
+};
+
+/** v1.7.5 (RTN-02): a catch-up run that sends asks first; it runs only after "Run this once". */
+export const RoutineConfirm: Story = {
+  render: () => {
+    const { t } = useI18n();
+    const chinese = zh();
+    const name = chinese ? "每天的销售日报" : "Daily sales report";
+    return (
+      <main class="foundation-story hx-highlight-frame">
+        <div class="hx-highlight-wide">
+          <HxRoutineConfirmCard
+            title={t("status.agent.hxRoutineConfirm.title", { name })}
+            note={t("status.agent.hxRoutineConfirm.noteCatchUp", {
+              count: "3",
+              from: chinese ? "11月17日 09:00" : "Nov 17 09:00",
+              until: chinese ? "11月19日 09:00" : "Nov 19 09:00",
+            })}
+            actions={t("status.agent.hxRoutineConfirm.actions.send")}
+            lines={[
+              chinese
+                ? `${name} · 每天 09:00 · 汇总昨天的销售，发邮件给销售团队`
+                : `${name} · Daily 09:00 · Sum up yesterday's sales and email the sales team`,
+            ]}
+            outcome={null}
+            busy={false}
+            message={null}
+            failed={false}
+            onAnswer={fn()}
+          />
         </div>
       </main>
     );

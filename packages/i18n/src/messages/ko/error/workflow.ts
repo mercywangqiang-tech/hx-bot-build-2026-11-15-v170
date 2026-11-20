@@ -64,4 +64,17 @@ export const messages = {
   "error.workflow.githubUncertain":
     "변경이 도중에 멈췄어요. GitHub에 이미 반영됐을 수 있어요. 단계를 다시 실행하기 전에 GitHub를 확인하세요.",
   "error.workflow.githubNoEvent": "이 트리거가 시작할 이슈나 풀 리퀘스트가 GitHub에 없어요.",
+  "error.workflow.hxStepNoAgent": "이 단계의 에이전트를 고르세요.",
+  "error.workflow.hxStepInvalid": "이 단계의 설정이 맞지 않습니다: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot이 아직 시작하는 중입니다. 잠시 후 단계를 다시 실행하세요.",
+  "error.workflow.hxStepComputerUseOff": "{agent}의 컴퓨터 제어가 꺼져 있습니다. 에이전트 설정에서 켠 다음 계속하세요.",
+  "error.workflow.hxActionUnknown":
+    "HXBot이 {action}을(를) 하는 도중에 멈춰서 결과를 알 수 없습니다. 먼저 확인하세요. “이 단계부터 계속”을 누르면 다시 실행합니다.",
+  "error.workflow.hxActionFailed": "{action} 호출이 되지 않았습니다: {reason}",
+  "error.workflow.hxTeamFailed": "팀이 끝내지 못했습니다: {reason}",
+  "error.workflow.hxConnectionOff": "이 출력의 메시지 연결이 꺼져 있습니다. 켠 다음 계속하세요.",
+  "error.workflow.hxLimitLoops": "한도 초과: 반복이 {count}번 실행되어 실행을 멈췄습니다.",
+  "error.workflow.hxLimitSteps": "한도 초과: 실행이 {count}단계에 이르러 멈췄습니다.",
+  "error.workflow.hxLimitSeconds": "한도 초과: 반복이 {count}초보다 오래 실행되어 실행을 멈췄습니다.",
+  "error.workflow.hxTurnNothing": "이번 턴에는 저장할 컴퓨터 제어, 앱 스킬, 팀 단계가 없습니다.",
 } as const satisfies PartialTranslation<typeof source>;

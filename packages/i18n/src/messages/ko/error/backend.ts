@@ -372,4 +372,7 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "작업은 이 컴퓨터의 에이전트에서만 사용할 수 있어요.",
   "error.backend.taskStartFailed": "HXBot이 작업을 시작할 수 없었어요. 대신 이 턴에서 작업을 처리하세요.",
   "error.backend.hxAskOwnerOnly": "이 항목은 이 HXBot의 소유자만 선택할 수 있습니다. 취소는 누구나 할 수 있습니다.",
+  "error.backend.hxRoutineZoneUnknown":
+    "“{zone}”은(는) 이 컴퓨터가 모르는 시간대입니다. Asia/Shanghai처럼 목록에서 시간대를 고르세요.",
+  "error.backend.hxRoutineConfirmGone": "이 질문은 더 이상 열려 있지 않습니다.",
 } as const satisfies PartialTranslation<typeof source>;

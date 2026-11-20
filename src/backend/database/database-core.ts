@@ -4,6 +4,7 @@ import { chmod, copyFile, mkdir, readFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { Effect, Result } from "effect";
+import { hxUpgradeAfterMigrations } from "../hx-routines/upgrade";
 import { migrateHxBotDatabase } from "../hxbot-database-schema";
 import { storedIO, storedSync } from "../stored-state-effects";
 import { databaseRow, errorCode, requiredNumberColumn, requiredStringColumn } from "./database-rows";
@@ -212,6 +213,8 @@ export class DatabaseCore {
 
   #migrate(closedCleanly: boolean): void {
     migrateHxBotDatabase(this.connection, { closedCleanly });
+    // HXBot (v1.7.5, MIG-03): once, the routines from before v1.7.5 get their zone and confirmation marks.
+    hxUpgradeAfterMigrations(this.connection);
   }
 }
 

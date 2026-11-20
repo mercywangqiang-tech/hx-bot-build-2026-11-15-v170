@@ -1,6 +1,7 @@
 /** An agent step: a task that one agent does, with the agent and its model. */
 
 import { ProviderLogo } from "@hxbot/brand";
+import { HX_WORKFLOW_AUTO_MODEL } from "@hxbot/contracts/hx-workflows";
 import type { AgentModelId } from "@hxbot/contracts/ipc";
 import { Bot, Button, buttonVariants, ChevronDown, DropdownMenu, Play, Textarea, TriangleAlert } from "@hxbot/ui";
 import { Show, untrack } from "solid-js";
@@ -9,6 +10,7 @@ import { useText } from "../../text";
 import { AgentAvatar } from "../agents/AgentAvatar";
 import { PickerMenu, type PickerOption } from "./WorkflowPicker";
 import { useBoard } from "./workflow-board";
+import { HxAutoModelPill, HxStepKindPill } from "./workflow-hx-pills";
 import type { WorkflowCatalogs } from "./workflow-model";
 import { ModelPill, modelOption } from "./workflow-model-pills";
 import {
@@ -48,7 +50,7 @@ function agentOptions(catalogs: WorkflowCatalogs): PickerOption<string>[] {
  * The agent of a step. A step with no agent asks for one. An agent that the user deleted shows a
  * warning and opens the same list.
  */
-function AgentPill(props: {
+export function AgentPill(props: {
   agent: AgentProfile | undefined;
   /** True when the step names an agent that is not in the catalog. */
   removed: boolean;
@@ -173,7 +175,7 @@ export function AgentNode(props: { id: string; agentId?: string; task?: string }
               board.setFields(props.id, { agentId: choice.id, model: choice.model, provider: choice.provider })
             }
           />
-          <Show when={agent()}>
+          <Show when={agent() && model() !== HX_WORKFLOW_AUTO_MODEL}>
             <ModelPill
               provider={provider()}
               value={model()}
@@ -181,6 +183,11 @@ export function AgentNode(props: { id: string; agentId?: string; task?: string }
               onChange={(next, nextProvider) => board.setFields(props.id, { model: next, provider: nextProvider })}
             />
           </Show>
+          {/* HXBot (v1.7.5, RTN-11): the model "auto", and the step type (an app action, an app skill or a team). */}
+          <Show when={agent()}>
+            <HxAutoModelPill id={props.id} disabled={locked()} />
+          </Show>
+          <HxStepKindPill id={props.id} disabled={locked()} />
         </div>
       </Field>
       <ResultField id={props.id} running={run.running()} />

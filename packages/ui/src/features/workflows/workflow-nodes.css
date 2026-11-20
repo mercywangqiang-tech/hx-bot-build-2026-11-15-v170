@@ -3314,3 +3314,64 @@ svg.wfn-shape-surface {
     animation: none;
   }
 }
+
+/* HXBot v1.7.5 (RTN-11, RTN-08): HXBot's steps, the "Not supported yet" badge and what a node declares. */
+.wfn-hx-unsupported {
+  margin-inline-start: var(--hxbot-space-1);
+  border: 1px solid var(--hxbot-warning);
+  border-radius: var(--hxbot-radius-pill);
+  background: var(--hxbot-warning-soft);
+  padding: 0 var(--hxbot-space-2);
+  font-size: var(--hxbot-text-xs);
+}
+
+.wfn-hx-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+}
+
+.wfn-hx-hint,
+.wfn-hx-declares {
+  margin: 0;
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-xs);
+}
+
+.wfn-hx-json {
+  min-height: 6rem;
+  font-family: var(--hxbot-font-mono);
+  font-size: var(--hxbot-text-xs);
+}
+
+.wfn-hx-row {
+  display: flex;
+  gap: var(--hxbot-space-2);
+}
+
+.wfn-hx-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+  font-size: var(--hxbot-text-xs);
+}
+
+.wfn-hx-select {
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-md);
+  background: var(--hxbot-surface);
+  padding: var(--hxbot-space-1) var(--hxbot-space-2);
+  color: inherit;
+  font: inherit;
+}
+
+/* HXBot (v1.7.5, RTN-07): the run limits of a workflow, in its dialog. */
+.wfn-hx-limits {
+  display: grid;
+  gap: var(--hxbot-space-3);
+}
+
+.wfn-hx-limits-reset {
+  justify-self: start;
+}

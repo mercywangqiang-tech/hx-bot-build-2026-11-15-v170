@@ -960,4 +960,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (по умолчанию)",
   "settings.hxComputer.versions.git":
     "Агент-программист, который меняет файлы своими командами, не хранит здесь версии. В папке Git их может восстановить Git.",
+  "settings.hxLearned.title": "Время, которому HXBot научился по вашим выборам",
+  "settings.hxLearned.description":
+    "Хранится только на этом компьютере. По умолчанию о команде без продвижения напоминание приходит через {minutes} мин (от 15 минут до 2 часов); «Продолжить» даёт этой команде вдвое больше времени, «Завершить» или «Остановить» делает так, что о такой работе напоминание придёт раньше. HXBot продолжает работу на вашем компьютере через {seconds} с после того, как вы остановитесь (от 3 до 15 с), дольше, если вы возвращаетесь сразу после того, как он продолжил.",
+  "settings.hxLearned.changed": "Изменено: {list}",
+  "settings.hxLearned.work": "{work} {minutes} мин",
+  "settings.hxLearned.none": "Пока ничего не изменилось.",
+  "settings.hxLearned.reset": "Использовать значения по умолчанию",
+  "settings.hxLearned.failed": "HXBot не смог прочитать или изменить выученное время.",
+  "settings.hxBoot.sound.title": "Звук заставки",
+  "settings.hxBoot.sound.description":
+    "Заставка показывается при первом запуске и при первом запуске после каждого обновления. Выключено: она идёт без звука.",
 } as const satisfies PartialTranslation<typeof source>;

@@ -415,4 +415,7 @@ export const messages = {
   "error.backend.taskStartFailed": "HXBot n’a pas pu lancer la tâche. Faites plutôt le travail dans ce tour.",
   "error.backend.hxAskOwnerOnly":
     "Seul le propriétaire de ce HXBot peut choisir ceci. Tout le monde peut annuler la modification.",
+  "error.backend.hxRoutineZoneUnknown":
+    "« {zone} » n’est pas un fuseau horaire connu de cet ordinateur. Choisissez un fuseau dans la liste, par exemple Asia/Shanghai.",
+  "error.backend.hxRoutineConfirmGone": "Cette question n’est plus ouverte.",
 } as const satisfies PartialTranslation<typeof source>;

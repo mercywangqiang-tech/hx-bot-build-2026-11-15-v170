@@ -167,8 +167,27 @@ interface Suggestion {
   taskId: string | null;
 }
 
+/**
+ * HXBot (v1.7.5, RTN-11): work that asks for a model chosen by the work although its agent is not on
+ * auto: an agent step of a workflow whose model is "auto" (hx-workflows/auto-model.ts).
+ */
+export interface HxAutoWork {
+  wanted(agentId: string, deliveryId: string): boolean;
+  /** The model of this delivery was chosen. */
+  done(deliveryId: string): void;
+}
+
+/** The model an agent goes back to after one piece of work on auto, and the model that work had. */
+interface HxRestore {
+  ref: HxModelRef;
+  effort: AgentReasoningEffort;
+  chosen: HxModelRef;
+}
+
 export class HxAutoRouter {
   #host: HxAutoHost | null = null;
+  #autoWork: HxAutoWork | null = null;
+  readonly #restore = new Map<string, HxRestore>();
   readonly #store: HxAutoModelStore;
   readonly #following = new Set<string>();
   readonly #crossMoves = new Map<string, number>();
@@ -183,6 +202,11 @@ export class HxAutoRouter {
     this.#host = host;
   }
 
+  /** HXBot (v1.7.5, RTN-11): see `HxAutoWork`. */
+  setAutoWork(work: HxAutoWork | null): void {
+    this.#autoWork = work;
+  }
+
   get store(): HxAutoModelStore {
     return this.#store;
   }
@@ -190,10 +214,14 @@ export class HxAutoRouter {
   /** Whether the next work of this agent waits for a decision: the agent is on auto, idle, and the work is new. */
   due(agentId: string): boolean {
     const host = this.#host;
-    if (!host || this.#following.has(agentId) || !this.#store.enabled(agentId)) return false;
+    if (!host || this.#following.has(agentId)) return false;
+    const onAuto = this.#store.enabled(agentId);
+    // HXBot (v1.7.5, RTN-11): or the next work is a workflow step whose model is "auto".
+    if (!onAuto && !this.#autoWork) return false;
     if (host.busy(agentId)) return false;
     const work = host.nextWork(agentId);
-    return work !== null && !this.#store.decided(work.deliveryId);
+    if (work === null || this.#store.decided(work.deliveryId)) return false;
+    return onAuto || this.#autoWork?.wanted(agentId, work.deliveryId) === true;
   }
 
   /** Decides the model of the next work and moves the agent to it. Then the drain runs again. */
@@ -262,6 +290,28 @@ export class HxAutoRouter {
    */
   async teamJudge(leadAgentId: string, prompt: string, timeoutMs: number): Promise<string | null> {
     const host = this.#host;
+    const option = this.#teamJudgeOption(leadAgentId);
+    if (!host || !option) return null;
+    const gateModel = hxProviderModelOf({
+      provider: option.provider,
+      model: option.id,
+      providerAccountId: option.providerAccountId,
+    });
+    const release = gateModel ? await hxProviderGate.acquire(gateModel, 1, HX_JUDGE_PLACE_MS) : () => {};
+    if (!release) return null;
+    const stop = new AbortController();
+    try {
+      const answer = await hxWithin(host.judge(leadAgentId, option, prompt, stop.signal), timeoutMs);
+      if (answer === null) stop.abort();
+      return answer;
+    } finally {
+      release();
+    }
+  }
+
+  /** The model the judge of this lead's team uses now, or null when none fits. */
+  #teamJudgeOption(leadAgentId: string) {
+    const host = this.#host;
     const agent = host?.agent(leadAgentId);
     if (!host || !agent) return null;
     const settings = this.#store.settings(leadAgentId);
@@ -280,25 +330,18 @@ export class HxAutoRouter {
       })),
     );
     if (!pick) return null;
-    const option = host
-      .models(leadAgentId)
-      .find((model) => hxSameModel(hxRefOf({ ...model, providerAccountId: model.providerAccountId }), pick.ref));
-    if (!option) return null;
-    const gateModel = hxProviderModelOf({
-      provider: option.provider,
-      model: option.id,
-      providerAccountId: option.providerAccountId,
-    });
-    const release = gateModel ? await hxProviderGate.acquire(gateModel, 1, HX_JUDGE_PLACE_MS) : () => {};
-    if (!release) return null;
-    const stop = new AbortController();
-    try {
-      const answer = await hxWithin(host.judge(leadAgentId, option, prompt, stop.signal), timeoutMs);
-      if (answer === null) stop.abort();
-      return answer;
-    } finally {
-      release();
-    }
+    return (
+      host
+        .models(leadAgentId)
+        .find((model) => hxSameModel(hxRefOf({ ...model, providerAccountId: model.providerAccountId }), pick.ref)) ??
+      null
+    );
+  }
+
+  /** HXBot (v1.7.5, CONC-16): which model judges this lead's team now (for the pass list), or null. */
+  teamJudgeModel(leadAgentId: string): { provider: string; model: string; name: string } | null {
+    const option = this.#teamJudgeOption(leadAgentId);
+    return option ? { provider: option.provider, model: option.id, name: option.name } : null;
   }
 
   /** A model change that the user or another agent made: the agent is no longer on auto. */
@@ -340,6 +383,12 @@ export class HxAutoRouter {
    */
   turnEnded(agentId: string, threadId: string, turnId: string, status: string): void {
     const host = this.#host;
+    // HXBot (v1.7.5, RTN-11): after the turn of a workflow step on "auto", the agent has its own model again.
+    const restore = this.#restore.get(agentId);
+    if (host && restore) {
+      this.#restore.delete(agentId);
+      this.#restoreModel(host, agentId, restore);
+    }
     if (!host || !this.#store.enabled(agentId)) return;
     if (status === "failed") {
       this.#offerStronger(agentId, host.taskOfThread(agentId, threadId));
@@ -349,6 +398,21 @@ export class HxAutoRouter {
     const reply = host.lastReply(agentId, threadId, turnId);
     if (reply !== null && GAVE_UP.test(reply.slice(-600)))
       this.#offerStronger(agentId, host.taskOfThread(agentId, threadId));
+  }
+
+  /**
+   * Moves an agent back to its own model after one piece of work on "auto": not when the agent is on
+   * auto now, or when someone chose another model since.
+   */
+  #restoreModel(host: HxAutoHost, agentId: string, restore: HxRestore): void {
+    const agent = host.agent(agentId);
+    if (!agent || this.#store.enabled(agentId) || !hxSameModel(refOfAgent(agent), restore.chosen)) return;
+    if (hxSameModel(restore.ref, restore.chosen) && agent.reasoningEffort === restore.effort) return;
+    host.move(agentId, { ...restore.ref, reasoningEffort: restore.effort }).catch((error: unknown) =>
+      logger.warn("HXBot could not move an agent back to its model after a workflow step.", {
+        error: String(error),
+      }),
+    );
   }
 
   #offerStronger(agentId: string, taskId: string | null): void {
@@ -655,6 +719,19 @@ export class HxAutoRouter {
       ms: Date.now() - started,
     };
     this.#store.record(decision);
+    // HXBot (v1.7.5, RTN-11): a workflow step on "auto" of an agent that is not: its own model comes
+    // back when this work's turn ends.
+    if (!this.#store.enabled(agentId)) {
+      this.#autoWork?.done(work.deliveryId);
+      // A turn that a usage limit held did not end here: the model it came from is still the agent's own.
+      const earlier = this.#restore.get(agentId);
+      if (moved)
+        this.#restore.set(agentId, {
+          ref: earlier?.ref ?? current,
+          effort: earlier?.effort ?? agent.reasoningEffort,
+          chosen: target,
+        });
+    }
     if (final.provider === "opencode" && hxModelProfile(final).freeGroup === HX_OPENCODE_FREE_GROUP)
       this.#store.countFree(now);
     // HXBot (v1.7.4, CONC-08): a move for the provider's overload says which model and why.

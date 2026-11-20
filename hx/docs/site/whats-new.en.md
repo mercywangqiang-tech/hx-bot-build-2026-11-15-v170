@@ -1,19 +1,69 @@
 ---
 title: What's new
 kicker: HXBot Research Edition
-updated: November 19, 2026
-version: Desktop 0.67.14 · Mobile 1.5.0
+updated: November 20, 2026
+version: Desktop 0.67.15 · Mobile 1.5.1
 description: The new features and highlights of each HXBot Research Edition version, newest first.
 ---
 
 This page lists the new features and highlights of HXBot by version, newest first. Each version has all the features of the versions before it. The title of each part names the app that changed and its version number: the desktop app and the web app share one version number, and the mobile app has its own. After each highlight, the apps that have it are named. To use a new feature, update the app to that version: from desktop 0.67.13 on, HXBot downloads and installs a new version in the background also while you use it, then saves and restarts into it once the agents are idle, or after 10 minutes at most; there is nothing to click (0.67.10 to 0.67.12 install a version that they find as they open). The data in the screenshots is demo data.
+
+## Desktop 0.67.15 · Mobile 1.5.1: a start film, and more reliable routines and workflows {#desktop-0-67-15}
+
+November 20, 2026 · Desktop and web 0.67.15 · Android 1.5.1 (no iOS update this time; it stays 1.5.0)
+
+> **Highlights**
+> 1. {NEW} A start film: the giraffe comes with balloons and becomes the HXBot logo. It plays on the first start and the first start after each update, in the film for the window's shape, and never cuts the logo or the name. {on:Desktop, web, Android}
+> 2. Routines have a time zone and show their next three runs (local time and UTC, with the daylight saving change); missed runs show how many and when, and follow your choice: skip all or run once. {on:Desktop}
+> 3. A catch-up that sends, posts, pays or deletes asks you first; every run has a result: succeeded, no update, not verified or failed. {on:Desktop}
+> 4. More capable workflows: app skill, Computer Use and team steps; save a turn of a chat as a workflow; a failed run continues from the failed step, and external actions already done are not done again. {on:Desktop}
+> 5. A deleted agent no longer comes back, and it leaves the web client and phones at once. {on:Desktop, web, mobile}
+
+### The start film {#desktop-0-67-15-boot}
+
+![The start film opens on the giraffe and ends on the HXBot logo; turn on its sound in Settings › General › Appearance](/hx-portal/whats-new/boot-film.en.jpg)
+
+- **When it plays:** the first time you open HXBot on a computer, and the first time after each update, “The giraffe and the balloons” plays (about 16 s), becomes the HXBot logo and fades into HXBot. Other starts show the logo for 0.6 s.
+- **The logo is never cut:** the 16:9, 4:3 or 9:16 film fills the window; where the window cuts it, only white goes, never the logo or the name “HXBot”.
+- **Skip it:** after 1 s, a click or any key goes in at once; a key in the first second does not skip it, and does not reach the screen behind it. On a phone, tap or press Android's back button.
+- **It stays out of the way:** with reduced motion, a damaged film, or a film that has not started in 1 s, only the logo shows; routines due while it plays start on time. The sound is off; turn it on in Settings › General › Appearance (on Android, Settings › Appearance).
+- **The web client and bot.hxallai.com:** a browser plays it at most once in 30 days (both pages share the record, which stays in this browser and is not sent), then it fades into the page; it is muted, and does not play with a data saver, 2G, reduced motion or in a background tab. It comes over the network, so its first frame shows while it loads, for 3 s at most; a slow film can be skipped after 2 s.
+
+### Routines: time zone, next three runs, missed runs spelled out {#desktop-0-67-15-routines}
+
+![A routine needs a time zone; below it, the next three runs, with the daylight saving offsets](/hx-portal/whats-new/routine-zone.en.jpg)
+
+- **A time zone is required:** a new routine needs a time zone, and the one you registered comes first; an agent that makes a routine asks you once too. Routines from before the update ask once to confirm their time zone, and run in their old one until then.
+- **The next three runs:** the editor and the chat card show the next three runs in local time, UTC and offset. A time that a clock change skips runs at the first minute after the gap; a repeated time runs once.
+- **Missed runs:** runs missed while HXBot was closed or the computer slept show in the list and the history: how many, from when to when, and what happened, by your choice: skip all or run once.
+- **Spread out:** routines due in the same minute start a few seconds apart, in order. A trigger that comes while the last run still runs is recorded as skipped, with the reason; after a pause, the editor shows that no trigger is queued.
+
+### Sending asks first, and every run has a result {#desktop-0-67-15-confirm}
+
+![A catch-up would send an email: it asks first, and runs only after “Run this once”](/hx-portal/whats-new/routine-confirm.en.jpg)
+
+- **It asks first:** when a catch-up would send, post, pay or delete, the chat asks you; it runs only after Run this once, and Skip this time or no answer before the next run skips it. A routine whose instruction does such things (routines from before the update are marked by themselves) can ask before each run.
+- **Results:** each run says succeeded, no update, not verified or failed. A result that is not verified (for example, a file it said it saved is not there) shows in the chat and as a notification; no update does not disturb you.
+
+### Workflows {#desktop-0-67-15-workflows}
+
+- **Three new steps:** app skill, Computer Use and team task. An agent step can use the automatic model, chosen by the work of that step.
+- **Save as a workflow:** the Computer Use calls, app skills and team tasks of a turn become a workflow with Save as workflow; a routine can run a prompt, a workflow, an app skill or a team task.
+- **Continue from the failed step:** external actions that are already done (sending, uploading and so on) are not done again; the conditions are checked again first. A step whose result is unknown after a restart runs again only when you choose Continue.
+- **Run limits:** 10 loops, 100 steps and 600 s per loop; change them in the Workflows menu › Run limits. At a limit the run stops and says why.
+- **Teams learn your choices:** Continue at the time reminder doubles that team's time, and Wrap up shortens it for the same kind of work; Computer Use learns how long to wait after you stop. Reset both in Settings › Computer Use. When the team judge's model passed the labeled set and the judge agreed with you 5 times in a row, you can let it decide such cases from the team card; the 3rd time for the same reason always asks you.
+
+### Fixed {#desktop-0-67-15-fixes}
+
+- A deleted agent came back when you quit and opened HXBot at once, and stayed on the web client and phones. Now the delete is kept on disk, the agent is hidden everywhere while you can still undo, and a quit or a crash finishes it at the next start; a remote server that cannot be reached gets it when it can.
+- The desktop app could not play its own video files (the start film only showed the logo in the packaged app).
 
 ## Desktop 0.67.14: agents edit spreadsheets, documents, slides and PDFs, and the queue in sight {#desktop-0-67-14}
 
 November 19, 2026 · Desktop and web 0.67.14 · Mobile 1.5.0 (no change this time)
 
 > **Highlights**
-> 1. {NEW} Agents edit Excel, Word, PowerPoint and PDF files directly, and keep a copy first: the card in the chat lists the cells, paragraphs or slides that changed, and “Restore to before the change” goes back. {on:Desktop}
+> 1. Agents edit Excel, Word, PowerPoint and PDF files directly, and keep a copy first: the card in the chat lists the cells, paragraphs or slides that changed, and “Restore to before the change” goes back. {on:Desktop}
 > 2. Old formats work too, and the documents you have open stay as they are: .xls, .doc and .ppt are converted on a copy by LibreOffice, Numbers, Pages, Keynote or Office on this computer, and HXBot reads .csv itself; HXBot quits only the apps it opened. {on:Desktop}
 > 3. See the queue: chats and tasks show their place, about how long, and why they wait; a team's progress card has a line for each member, and a switch: More urgent, Normal, Not urgent. {on:Desktop}
 > 4. HXBot eases off a busy model provider: after a throttle it sends half as many requests at once and pauses a moment, and your own message still goes first; new work moves to a model of the same rank or better when a queue is too long; a team that pauses because it may be going in circles gets a small model's view. {on:Desktop}

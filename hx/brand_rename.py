@@ -67,6 +67,7 @@ EXCLUDE_CONTENT = {
     "hx/brand_rename.py",
     "hx/marketing-files.txt",  # 上游原来的文件名：改名之前按它删
     "hx/upstream_checks.py",
+    "hx/v175_pairs.py",  # v1.7.5 的重放对照：按上游原来的包名和名字定位（@openbot/…）
     "hx/unused-messages.txt",  # 上游原来的键名
     "hx/brand.json",
     "hx/docs/改造说明.md",

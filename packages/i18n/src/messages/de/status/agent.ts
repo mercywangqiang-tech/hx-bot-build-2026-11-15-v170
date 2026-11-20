@@ -215,4 +215,54 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "Die Version von vor dieser Änderung ist nicht mehr vorhanden.",
   "status.agent.hxSkill.restore.spaceFull":
     "Es ist kein Platz, um die Datei, wie sie jetzt ist, vor dem Zurücksetzen zu behalten. Gib Speicherplatz frei oder vergrößere den Platz unter Einstellungen → PC-Steuerung.",
+  "status.agent.hxRoutineConfirm.title": "Die Routine „{name}“ wartet vor dem Start auf dein Ja",
+  "status.agent.hxRoutineConfirm.titleMany": "{count} Routinen warten vor dem Start auf dein Ja",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "{count}-mal verpasst ({from} – {until}), während HXBot geschlossen war oder der Computer schlief. Sie läuft einmal für alle.",
+  "status.agent.hxRoutineConfirm.noteLate": "Dieser Lauf holt einen verpassten Termin nach.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "Seit dem Update auf v1.7.5 fragt sie vor jedem Lauf, weil sie sendet, veröffentlicht, bezahlt oder löscht.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "Dieser Lauf sendet Nachrichten oder E-Mails. Vor deinem Ja wird nichts gesendet.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "Dieser Lauf veröffentlicht. Vor deinem Ja wird nichts veröffentlicht.",
+  "status.agent.hxRoutineConfirm.actions.pay": "Dieser Lauf bezahlt oder kauft. Vor deinem Ja wird nichts bezahlt.",
+  "status.agent.hxRoutineConfirm.actions.delete": "Dieser Lauf löscht. Vor deinem Ja wird nichts gelöscht.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "Dieser Lauf sendet, veröffentlicht, bezahlt oder löscht. Vor deinem Ja geschieht nichts.",
+  "status.agent.hxRoutineConfirm.actions.each": "Diese Routine fragt vor jedem Lauf.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Du hast Ja gesagt: Sie läuft jetzt.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Du hast Nein gesagt: Diesmal übersprungen.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Keine Antwort vor dem nächsten Termin: Diesmal übersprungen.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Ergebnis der Routine nicht bestätigt",
+  "status.agent.hxRoutineResult.missingFile":
+    "Der Lauf von „{name}“ sagt, er habe {files} gespeichert, aber HXBot hat es dort nicht gefunden. Prüfe das Ergebnis, bevor du dich darauf verlässt.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "Der Lauf von „{name}“ hat eine Datei geändert, die HXBot nicht zurücklesen konnte. Prüfe das Ergebnis, bevor du dich darauf verlässt.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "Der Lauf von „{name}“ hat etwas gesendet, veröffentlicht, bezahlt oder gelöscht, und HXBot kennt das Ergebnis nicht. Prüfe es, bevor du dich darauf verlässt.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "Der Lauf von „{name}“ sollte senden, veröffentlichen, bezahlen oder löschen, endete aber ohne einen solchen Schritt. Prüfe das Ergebnis, bevor du dich darauf verlässt.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "Die Routine ist pausiert: Dieser Termin läuft nicht.",
+  "status.agent.hxLearned.teamProgress":
+    "Team · Wie du zuletzt gewählt hast, kommt die nächste Erinnerung nach {minutes} Minuten ohne Fortschritt.",
+  "status.agent.hxLearned.workProgress":
+    "Team · Wie du gewählt hast, wird an solche Arbeit jetzt nach {minutes} Minuten ohne Fortschritt erinnert.",
+  "status.agent.hxLearned.yield":
+    "PC-Steuerung · Du hast den Computer direkt nach dem Weitermachen von HXBot wieder benutzt, daher wartet es jetzt {seconds} Sekunden, nachdem du aufhörst.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Team · Der Prüfer sagt, es kann weitergehen: {reason} Wie eingestellt, wurde nicht angehalten, um dich zu fragen.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Team · Aus diesem Grund ging es schon zweimal auf Rat des Prüfers weiter, daher fragt es dich diesmal.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Team · Du hast zweimal ein Team gestoppt, nachdem der Prüfer es weiterlaufen ließ, daher wirst du in solchen Fällen wieder jedes Mal gefragt.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Team · Ab jetzt gilt in solchen Fällen ({cause}) die Entscheidung des Prüfers, nur auf diesem Computer.",
+  "status.agent.hxTeam.judgeAuto.off": "Team · In solchen Fällen ({cause}) wirst du wieder jedes Mal gefragt.",
+  "status.agent.hxTeam.card.judgeOffer":
+    "Die Einschätzung des Prüfers stimmte {count}-mal hintereinander mit deiner Wahl überein.",
+  "status.agent.hxTeam.card.judgeWent": "Der Prüfer ließ es weiterlaufen: {reason}",
+  "status.agent.hxTeam.cause.G1": "eine Weile kein Fortschritt",
+  "status.agent.hxTeam.cause.G2": "Arbeit, die sich im Kreis dreht",
+  "status.agent.hxTeam.cause.G3": "Arbeit, die sich zu weit verzweigt",
 } as const satisfies PartialTranslation<typeof source>;

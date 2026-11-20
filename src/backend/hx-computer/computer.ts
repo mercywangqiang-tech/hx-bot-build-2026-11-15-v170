@@ -10,6 +10,7 @@ import { agentComputerUseEnabled, CHANNEL_CHANGE_ITEM_TYPE, type ConversationMes
 import { sourceText } from "@hxbot/i18n";
 import { hxAppDataFolder } from "../hx-access/hub";
 import { hxAccessStore } from "../hx-access/rules";
+import { hxLearned, hxLearnedLine } from "../hx-flow/learned";
 import { hxFlow } from "../hx-flow/ledger";
 import type { HxProgressWriter } from "../hx-progress/progress";
 import type { HxAsk } from "../hx-skills/ask";
@@ -27,7 +28,7 @@ import { HX_INSTALL_FILES, hxInstallApp } from "./install";
 import { type HxLaneHolder, hxComputerLanes } from "./lanes";
 import { HxAutoResumeSetting } from "./park-setting";
 import { type HxParkedWork, hxParkedSteps } from "./parked";
-import { type HxPresenceSource, hxPresence } from "./presence";
+import { type HxPresenceSource, hxPresence, hxSetForegroundIdle } from "./presence";
 import { hxRunScript } from "./run-script";
 import { hxRun, hxRunBackground } from "./runner";
 import { hxSelfTest } from "./selftest";
@@ -42,6 +43,35 @@ import { HxComputerStops, type HxLookSnapshot } from "./steps";
 import { type HxComputerAllowed, hxComputerToolCall } from "./tools";
 import { HX_COMPUTER_VERIFIED } from "./verified";
 import { type HxWorkDeps, hxStepWork, hxSystemTurn, hxUserSaid } from "./work";
+
+let callObserver:
+  | ((params: Pick<DynamicToolCallParams, "tool" | "arguments">, result: DynamicToolResult) => void)
+  | null = null;
+
+/** HXBot (v1.7.5, RTN-11): hears each call and its answer; the router names the turn of the params. */
+export function hxObserveComputerCalls(observer: typeof callObserver): void {
+  callObserver = observer;
+}
+
+/** The agent of a call: see `hxComputer.toolCall`. */
+export interface HxComputerCallAgent {
+  id?: string;
+  name: string;
+  computerUse: boolean;
+  inTask: boolean;
+  routine?: boolean;
+  /** HXBot (v1.7.4): the conversation's public thread id: computer_skill keeps a task's versions together. */
+  threadId?: string | null;
+}
+
+/** The call without the observer: `hxComputer.toolCall`'s body. */
+function hxComputerCall(
+  agent: HxComputerCallAgent | null,
+  params: Pick<DynamicToolCallParams, "tool" | "arguments">,
+  ask: HxAsk | null,
+): Promise<DynamicToolResult> {
+  return hxComputer.toolCallInner(agent, params, ask);
+}
 
 export function hxComputerPlatform(platform: NodeJS.Platform): HxComputerPlatform | null {
   if (platform === "darwin") return "mac";
@@ -129,16 +159,25 @@ export const hxComputer = {
    * of the user. The calls no longer wait in one line for each other (CONC-05): a read waits for
    * nobody, the steps of one app wait for that app, the front of the screen and the system for theirs.
    */
-  toolCall(
-    agent: {
-      id?: string;
-      name: string;
-      computerUse: boolean;
-      inTask: boolean;
-      routine?: boolean;
-      /** HXBot (v1.7.4): the conversation's public thread id: computer_skill keeps a task's versions together. */
-      threadId?: string | null;
-    } | null,
+  /**
+   * HXBot (v1.7.5, RTN-11): the call and then its observer, which keeps a turn's calls for "save as a
+   * workflow". The observer never changes the answer.
+   */
+  async toolCall(
+    agent: HxComputerCallAgent | null,
+    params: Pick<DynamicToolCallParams, "tool" | "arguments">,
+    ask: HxAsk | null = null,
+  ): Promise<DynamicToolResult> {
+    const result = await hxComputerCall(agent, params, ask);
+    try {
+      callObserver?.(params, result);
+    } catch {
+      // What the observer keeps changes nothing of the call.
+    }
+    return result;
+  },
+  toolCallInner(
+    agent: HxComputerCallAgent | null,
     params: Pick<DynamicToolCallParams, "tool" | "arguments">,
     /** HXBot (v1.7.4, BAK-03): asks the user in the conversation of the call (computer_skill). */
     ask: HxAsk | null = null,
@@ -471,7 +510,14 @@ const parkHost = {
       sourceText("status.agent.hxComputer.parkedLong", { app: work.window.app || work.window.title || "—" }),
     );
   },
+  // HXBot (v1.7.5, CONC-13): twice in a day the user came back just after HXBot went on: wait longer.
+  wentOnTooEarly: (work: HxParkedWork) => {
+    const change = hxLearned.wentOnTooEarly();
+    if (change) stepHost?.note?.(work.agentId, hxLearnedLine(change));
+  },
 };
+// HXBot (v1.7.5, CONC-13): the pause before a foreground step for the user's own work, as it learned.
+hxSetForegroundIdle(() => hxLearned.yieldMs());
 
 /** A small line in the agent's chat about its work on this computer (v1.6.7), like the team lines. */
 export function hxComputerLine(text: string, at = new Date()): ConversationMessage {

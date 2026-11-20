@@ -2,8 +2,12 @@ import { decodeHxAccessLog, decodeHxAccessRules } from "@hxbot/contracts/hx-acce
 import { decodeHxAutoModelView } from "@hxbot/contracts/hx-auto-model";
 import { decodeHxComputerStatus, decodeHxSelfTestReport } from "@hxbot/contracts/hx-computer";
 import { decodeHxFileVersionsView, decodeHxRestoreFileChangeResult } from "@hxbot/contracts/hx-file-change";
+import { decodeHxLearnedView } from "@hxbot/contracts/hx-learned";
 import { decodeHxOcAttempt, decodeHxOcAttemptStatus, decodeHxOcCatalog } from "@hxbot/contracts/hx-opencode";
 import { decodeHxSetTeamPriorityResult } from "@hxbot/contracts/hx-progress";
+import { decodeHxAnswerRoutineConfirmResult } from "@hxbot/contracts/hx-routine-confirm";
+import { decodeHxTeamCardActionResult } from "@hxbot/contracts/hx-team-card";
+import { decodeHxSaveTurnResult, decodeHxWorkflowLimits } from "@hxbot/contracts/hx-workflows";
 import { ATTACHMENT_LIMITS, INPUT_LIMITS } from "@hxbot/contracts/input-limits";
 import {
   type AgentIpcRequest,
@@ -632,6 +636,8 @@ const agentGroup = bridgeGroup(IPC_ENDPOINTS.agent, {
   updateAgent: decodeAgent,
   setAvatar: decodeAgent,
   deleteAgent: decodeVoid,
+  holdAgentDelete: decodeVoid,
+  releaseAgentDelete: decodeVoid,
   readConversation: decodeConversation,
   readConversationPage: decodeConversationPageFromMain,
   searchConversationMessages: decodeConversationSearchPageFromMain,
@@ -986,6 +992,13 @@ const hxbotApi: HxBotDesktopApi = {
     hxSetTeamPriority: decodeHxSetTeamPriorityResult,
     revokeMobileConnectedDevice: decodeVoid,
     logout: decodeCentralAuthState,
+    hxAnswerRoutineConfirm: decodeHxAnswerRoutineConfirmResult,
+    hxSaveTurnAsWorkflow: decodeHxSaveTurnResult,
+    hxWorkflowLimits: decodeHxWorkflowLimits,
+    hxSetWorkflowLimits: decodeHxWorkflowLimits,
+    hxLearnedView: decodeHxLearnedView,
+    hxLearnedReset: decodeHxLearnedView,
+    hxTeamCardAction: decodeHxTeamCardActionResult,
     openCompanySignIn: decodeCentralAuthState,
     getCompanySignIn: decodeCompanySignInSettings,
     testCompanySignIn: decodeTestCompanySignInResult,

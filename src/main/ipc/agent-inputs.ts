@@ -316,6 +316,8 @@ export function parseUpdateRoutine(value: unknown): UpdateRoutineInput {
     parsed.active = value.active;
   }
   if (value.schedule !== undefined) parsed.schedule = parseRoutineSchedule(value.schedule);
+  // HXBot (v1.7.5, RTN-01): the editor can change the zone of a saved routine. The store checks the name.
+  if (value.timezone !== undefined) parsed.timezone = requireString(value.timezone, "timezone", 128);
   Object.assign(
     parsed,
     optionalLimitPolicy(value.limitPolicy),

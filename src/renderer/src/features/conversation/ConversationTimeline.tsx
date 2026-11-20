@@ -66,6 +66,9 @@ import { isIncomingAgentMessage } from "./conversation-read-state";
 import { conversationRuntime } from "./conversation-runtime";
 import { useConversationViewScope } from "./conversation-scope";
 import { HxFileChangeRow, isHxFileChangeRow } from "./HxFileChangeRow";
+import { HxRoutineConfirmRow, isHxRoutineConfirmRow } from "./HxRoutineConfirmRow";
+import { HxSaveTurnRow, isHxSaveTurnRow } from "./HxSaveTurnRow";
+import { HxTeamJudgeRow } from "./HxTeamJudge";
 import { HxTeamPriorityRow } from "./HxTeamPriority";
 import { agentSkillsMode } from "./installed-skills-source";
 import { MarketplaceSuggestionChatCard, marketplaceSuggestionKnown } from "./MarketplaceSuggestionChatCard";
@@ -1068,6 +1071,66 @@ export function ConversationTimeline() {
                     </div>
                   );
                 }
+                // HXBot (v1.7.5, RTN-02): the card of a routine run that waits for the person's yes, with
+                // “运行这一次” and “这次跳过”. Only this computer answers for its own agents.
+                if (untrack(() => isHxRoutineConfirmRow(initialMessage) || isHxSaveTurnRow(initialMessage))) {
+                  return (
+                    <div
+                      data-index={virtualRow.index}
+                      ref={messageVirtualizer.measureElement}
+                      class="virtual-chat-row"
+                      style={{
+                        transform: messageVirtualizer.isVirtualized()
+                          ? `translateY(${virtualRow.start - messageVirtualizer.scrollMargin()}px)`
+                          : "none",
+                      }}
+                    >
+                      <Show when={message()?.id === compactionBefore()}>
+                        <CompactionMarker />
+                      </Show>
+                      <Show when={dayMarker()}>
+                        {(label) => (
+                          <div class="time-marker">
+                            <span>{label()}</span>
+                          </div>
+                        )}
+                      </Show>
+                      <Show when={message()?.id === unreadBoundaryMessageId()}>
+                        <UnreadMessagesDivider
+                          animateIn={unreadDividerArrives}
+                          elementRef={(element) => {
+                            setUnreadMessagesDividerElement(element);
+                            scheduleUnreadDividerVisibilityUpdate();
+                          }}
+                        />
+                      </Show>
+                      <ChatRowBoundary>
+                        <article
+                          data-chat-search-message={message()?.id}
+                          class={{ "message-entry-animated": animateEntrance }}
+                        >
+                          {/* HXBot (v1.7.5, RTN-11): the line after a turn that can be saved as a workflow. */}
+                          <Show
+                            when={isHxSaveTurnRow(initialMessage)}
+                            fallback={
+                              <HxRoutineConfirmRow
+                                message={message() ?? initialMessage}
+                                agentId={props.agent?.id}
+                                local={!props.runtime}
+                              />
+                            }
+                          >
+                            <HxSaveTurnRow
+                              message={message() ?? initialMessage}
+                              agentId={props.agent?.id}
+                              local={!props.runtime}
+                            />
+                          </Show>
+                        </article>
+                      </ChatRowBoundary>
+                    </div>
+                  );
+                }
                 // HXBot (v1.7.4, #54): the card of a file that an app skill changed, with its changes and
                 // “恢复到修改前”. Only this computer restores the files of its own agents.
                 if (untrack(() => isHxFileChangeRow(initialMessage))) {
@@ -1166,6 +1229,12 @@ export function ConversationTimeline() {
                           </Show>
                           {/* HXBot (v1.7.4, CONC-09): 这件更急 / 普通 / 不急 under a team's progress card. */}
                           <HxTeamPriorityRow
+                            message={message() ?? initialMessage}
+                            agentId={props.agent?.id}
+                            local={!props.runtime}
+                          />
+                          {/* HXBot (v1.7.5, CONC-16): the judge's automatic mode, wrap up and stop. */}
+                          <HxTeamJudgeRow
                             message={message() ?? initialMessage}
                             agentId={props.agent?.id}
                             local={!props.runtime}

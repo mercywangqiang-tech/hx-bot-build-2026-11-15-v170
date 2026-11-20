@@ -886,4 +886,14 @@ export const messages = {
   "settings.hxComputer.versions.cap": "空间上限",
   "settings.hxComputer.versions.default": "{size}（默认）",
   "settings.hxComputer.versions.git": "编程智能体用自己的命令改的文件不在这里留版本；在 Git 仓库里可以用 Git 恢复。",
+  "settings.hxLearned.title": "按你的选择调整的时间",
+  "settings.hxLearned.description":
+    "只存在这台电脑上。团队没进展时默认 {minutes} 分钟提醒一次（15 分钟～2 小时）：你点“继续”，这个团队的间隔改为 2 倍；点“收尾”或“停”，这类工作以后提醒得早一些。你停手 {seconds} 秒后 HXBot 接着操作电脑（3～15 秒）：接着做后你马上又用电脑的次数多了，就多等一会儿。",
+  "settings.hxLearned.changed": "已调整：{list}",
+  "settings.hxLearned.work": "{work} {minutes} 分钟",
+  "settings.hxLearned.none": "还没有调整过。",
+  "settings.hxLearned.reset": "恢复默认",
+  "settings.hxLearned.failed": "HXBot 读不到或改不了这些时间。",
+  "settings.hxBoot.sound.title": "开机视频的声音",
+  "settings.hxBoot.sound.description": "第一次打开和每次升级后第一次打开时播放开机视频。关着时没有声音。",
 } as const satisfies PartialTranslation<typeof source>;

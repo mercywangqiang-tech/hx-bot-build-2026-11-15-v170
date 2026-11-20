@@ -68,6 +68,17 @@ const config: KnipConfig = {
     "tasklist.exe",
     // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.
     "charmap.exe",
+    // HXBot (v1.7.5): the start film check reads each film frame by frame (scripts/hx-boot-film-check.ts).
+    "ffmpeg",
+    "ffprobe",
+    // HXBot: the real check opens files in Notepad on Windows runners.
+    "notepad.exe",
+    // HXBot (v1.7.0): the quiet check moves the user to File Explorer.
+    "explorer.exe",
+    // HXBot (v1.7.1): the memory of the agents on Windows (src/main/hx-flow-readings.ts).
+    "tasklist.exe",
+    // HXBot (v1.7.3): the lanes check works in a second app on Windows runners.
+    "charmap.exe",
     // Opens the interactive provider sign-in CLI on Linux.
     "xterm",
     // Builds the remote desktop runtime.

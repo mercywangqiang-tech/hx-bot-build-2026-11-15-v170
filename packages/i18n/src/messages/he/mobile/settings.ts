@@ -281,4 +281,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "יש להזין את האימייל של החשבון הזה.",
   "mobile.settings.hxDelete.incorrectPassword": "הסיסמה שגויה.",
   "mobile.settings.hxDelete.failed": "לא ניתן היה למחוק את החשבון. יש לנסות שוב מאוחר יותר.",
+  "mobile.settings.appearance.hxBootSound": "צליל סרט הפתיחה",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "הסרט מוצג בפתיחה הראשונה ובפתיחה הראשונה אחרי כל עדכון. כבוי: הוא מוצג בלי צליל.",
 } as const satisfies PartialTranslation<typeof source>;

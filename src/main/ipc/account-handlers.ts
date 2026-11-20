@@ -1,11 +1,18 @@
 import { decodeHxAutoModelUpdate } from "@hxbot/contracts/hx-auto-model";
 import { decodeHxFileVersionCap, decodeHxRestoreFileChangeInput } from "@hxbot/contracts/hx-file-change";
 import { decodeHxSetTeamPriorityInput } from "@hxbot/contracts/hx-progress";
+import { decodeHxAnswerRoutineConfirmInput } from "@hxbot/contracts/hx-routine-confirm";
+import { decodeHxTeamCardActionInput } from "@hxbot/contracts/hx-team-card";
+import { decodeHxSaveTurnInput, decodeHxWorkflowLimitsInput } from "@hxbot/contracts/hx-workflows";
 import { hxAccessStore } from "../../backend/hx-access/rules";
 import { hxAutoRouter } from "../../backend/hx-auto-model/router";
 import { hxComputer } from "../../backend/hx-computer/computer";
+import { hxLearned } from "../../backend/hx-flow/learned";
+import { hxChannelRoutineConfirm, hxRoutineConfirm } from "../../backend/hx-routines/confirm";
 import { hxFileVersionsSetCap, hxFileVersionsView, hxRestoreFileChangeCall } from "../../backend/hx-skills/host";
 import { hxTeams } from "../../backend/hx-team/service";
+import { hxSetWorkflowLimitsFor, hxWorkflowLimitsFor } from "../../backend/hx-workflows/limits";
+import { hxTurnTools } from "../../backend/hx-workflows/turn-tools";
 // The cloud account: email sign-in, profile, and the mobile devices connected to it.
 
 import { INPUT_LIMITS } from "@hxbot/contracts/input-limits";
@@ -96,6 +103,26 @@ export function accountIpcHandlers({ centralAuth, host }: AccountIpcDependencies
         runCauseEffect(centralAuth.revokeMobileConnectedDevice(sessionId)),
       ),
       logout: handler(() => runCauseEffect(centralAuth.logout())),
+      // HXBot (v1.7.5, RTN-02): this computer's answer to a routine run that waits for the yes.
+      hxAnswerRoutineConfirm: payloadHandler(decodeHxAnswerRoutineConfirmInput, (input) =>
+        input.channelId === undefined
+          ? hxRoutineConfirm.answer({ ownerId: input.agentId, cardId: input.cardId, run: input.run })
+          : hxChannelRoutineConfirm.answer({ ownerId: input.channelId, cardId: input.cardId, run: input.run }),
+      ),
+      // HXBot (v1.7.5, RTN-11, RTN-07): a chat turn saved as a workflow, and a workflow's limits.
+      hxSaveTurnAsWorkflow: payloadHandler(decodeHxSaveTurnInput, (input) =>
+        hxTurnTools.save(input.agentId, input.turnId),
+      ),
+      hxWorkflowLimits: payloadHandler(stringPayload("workflowId", INPUT_LIMITS.identifier), (workflowId) =>
+        hxWorkflowLimitsFor(workflowId),
+      ),
+      hxSetWorkflowLimits: payloadHandler(decodeHxWorkflowLimitsInput, (input) =>
+        hxSetWorkflowLimitsFor(input.workflowId, input.limits),
+      ),
+      // HXBot (v1.7.5, CONC-13): the learned reminder and pause times of this computer.
+      hxLearnedView: handler(() => hxLearned.view()),
+      hxLearnedReset: handler(() => hxLearned.reset()),
+      hxTeamCardAction: payloadHandler(decodeHxTeamCardActionInput, (input) => hxTeams.cardAction(input)),
       openCompanySignIn: handler(() => runCauseEffect(centralAuth.openCompanySignIn())),
       getCompanySignIn: payloadHandler(stringPayload("serverId"), (serverId) =>
         runCauseEffect(centralAuth.companySignInSettings(hostId(serverId))),

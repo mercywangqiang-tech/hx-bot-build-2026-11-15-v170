@@ -290,4 +290,7 @@ export const messages = {
   "mobile.settings.hxDelete.emailRequired": "Digite o e-mail desta conta.",
   "mobile.settings.hxDelete.incorrectPassword": "A senha está incorreta.",
   "mobile.settings.hxDelete.failed": "Não foi possível excluir a conta. Tente novamente mais tarde.",
+  "mobile.settings.appearance.hxBootSound": "Som do filme de abertura",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "O filme passa na primeira abertura e na primeira abertura depois de cada atualização. Desligado: passa sem som.",
 } as const satisfies PartialTranslation<typeof source>;

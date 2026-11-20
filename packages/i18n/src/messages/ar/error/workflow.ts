@@ -59,4 +59,17 @@ export const messages = {
   "error.workflow.githubUncertain":
     "توقف التغيير في الطريق. قد يكون على GitHub. تحقق هناك قبل أن تشغّل الخطوة مرة أخرى.",
   "error.workflow.githubNoEvent": "لا توجد على GitHub مشكلة أو طلب سحب يبدأ عليه هذا المشغّل.",
+  "error.workflow.hxStepNoAgent": "اختر الوكيل لهذه الخطوة.",
+  "error.workflow.hxStepInvalid": "إعدادات هذه الخطوة غير مناسبة: {reason}",
+  "error.workflow.hxStepUnavailable": "ما زال HXBot يبدأ التشغيل. شغّل الخطوة مرة أخرى بعد لحظة.",
+  "error.workflow.hxStepComputerUseOff": "التحكم في الحاسوب متوقف لدى {agent}. شغّله من إعدادات الوكيل، ثم تابع.",
+  "error.workflow.hxActionUnknown":
+    "توقف HXBot أثناء تنفيذ {action}، لذا النتيجة غير معروفة. تحقّق منها أولًا: «المتابعة من هذه الخطوة» تنفّذها مرة أخرى.",
+  "error.workflow.hxActionFailed": "لم ينجح الاستدعاء {action}: {reason}",
+  "error.workflow.hxTeamFailed": "لم يُكمل الفريق العمل: {reason}",
+  "error.workflow.hxConnectionOff": "اتصال المراسلة لهذا المُخرَج متوقف. شغّله، ثم تابع.",
+  "error.workflow.hxLimitLoops": "تجاوز الحد: بلغ عدد تكرارات الحلقة {count}، لذا توقف التشغيل.",
+  "error.workflow.hxLimitSteps": "تجاوز الحد: بلغ عدد خطوات التشغيل {count}، لذا توقف.",
+  "error.workflow.hxLimitSeconds": "تجاوز الحد: استمرت الحلقات أكثر من {count} ثانية، لذا توقف التشغيل.",
+  "error.workflow.hxTurnNothing": "لا تحتوي هذه الجولة على خطوة تحكم في الحاسوب أو مهارة تطبيق أو فريق لحفظها.",
 } as const satisfies PartialTranslation<typeof source>;

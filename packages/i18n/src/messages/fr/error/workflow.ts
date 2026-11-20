@@ -68,4 +68,20 @@ export const messages = {
   "error.workflow.githubUncertain":
     "La modification s’est arrêtée en chemin. Elle peut déjà être sur GitHub. Vérifiez avant de relancer l’étape.",
   "error.workflow.githubNoEvent": "GitHub n’a aucune issue ni pull request sur laquelle ce déclencheur démarre.",
+  "error.workflow.hxStepNoAgent": "Choisissez l’agent de cette étape.",
+  "error.workflow.hxStepInvalid": "Les réglages de cette étape ne conviennent pas : {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot démarre encore. Relancez l’étape dans un instant.",
+  "error.workflow.hxStepComputerUseOff":
+    "Computer Use est désactivé pour {agent}. Activez-le dans les réglages de l’agent, puis continuez.",
+  "error.workflow.hxActionUnknown":
+    "HXBot s’est arrêté pendant {action}, son résultat est donc inconnu. Vérifiez-le d’abord : « Reprendre à cette étape » le refait.",
+  "error.workflow.hxActionFailed": "L’appel {action} n’a pas fonctionné : {reason}",
+  "error.workflow.hxTeamFailed": "L’équipe n’a pas terminé : {reason}",
+  "error.workflow.hxConnectionOff":
+    "La connexion de messagerie de cette sortie est désactivée. Activez-la, puis continuez.",
+  "error.workflow.hxLimitLoops": "Limite dépassée : une boucle a tourné {count} fois, l’exécution s’est donc arrêtée.",
+  "error.workflow.hxLimitSteps": "Limite dépassée : l’exécution a atteint {count} étapes, elle s’est donc arrêtée.",
+  "error.workflow.hxLimitSeconds":
+    "Limite dépassée : ses boucles ont duré plus de {count} secondes, l’exécution s’est donc arrêtée.",
+  "error.workflow.hxTurnNothing": "Ce tour n’a aucune étape Computer Use, compétence d’app ou équipe à enregistrer.",
 } as const satisfies PartialTranslation<typeof source>;

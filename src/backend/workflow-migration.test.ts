@@ -35,6 +35,11 @@ const EMPTY_WORKFLOW_TABLES = {
   browser_proxies: [],
   browser_profile_proxies: [],
   agent_usage_skill_loads: [],
+  hx_external_actions: [],
+  hx_meta: [],
+  hx_routine_confirmations: [],
+  hx_routine_detail: [],
+  hx_run_detail: [],
 };
 
 function databaseAt(version: number): DatabaseSync {
@@ -96,7 +101,7 @@ function workflowTables(db: DatabaseSync) {
 }
 
 function expectHealthy(db: DatabaseSync): void {
-  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 58 });
+  expect(db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()).toEqual({ version: 59 });
   expect(db.prepare("PRAGMA foreign_keys").get()).toEqual({ foreign_keys: 1 });
   expect(db.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   expect(db.prepare("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
@@ -178,9 +183,9 @@ describe("workflow migration", () => {
     const db = databaseAt(45);
     seed(db, 45);
     const before = contents(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=20");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=20");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 20");
     expect(contents(db)).toEqual(before);
     expect(workflowTables(db)).toEqual([]);
@@ -265,6 +270,11 @@ const EMPTY_V54_TABLES = {
   browser_proxies: [],
   browser_profile_proxies: [],
   agent_usage_skill_loads: [],
+  hx_external_actions: [],
+  hx_meta: [],
+  hx_routine_confirmations: [],
+  hx_routine_detail: [],
+  hx_run_detail: [],
 };
 const EMPTY_LATER_TABLES = { projection_messaging_allowed_senders: [], ...EMPTY_V54_TABLES };
 
@@ -353,9 +363,9 @@ describe("workflow GitHub migration", () => {
     seedWorkflow(db);
     const before = contents(db);
     const check = runSourceCheck(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=46");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=46");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 46");
     expect(contents(db)).toEqual(before);
     expect(runSourceCheck(db)).toBe(check);
@@ -494,9 +504,9 @@ describe("workflow Discord migration", () => {
     seedWorkflow(db);
     const before = contents(db);
     const check = runSourceCheck(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=47");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=47");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 47");
     expect(contents(db)).toEqual(before);
     expect(runSourceCheck(db)).toBe(check);
@@ -583,9 +593,9 @@ describe("workflow Telegram migration", () => {
     seedWorkflow(db);
     const before = contents(db);
     const check = runSourceCheck(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=48");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=48");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 48");
     expect(contents(db)).toEqual(before);
     expect(runSourceCheck(db)).toBe(check);
@@ -684,9 +694,9 @@ describe("workflow Slack migration", () => {
     seedWorkflow(db);
     const before = contents(db);
     const check = runSourceCheck(db);
-    db.exec("INSERT INTO schema_migrations VALUES(59,'now')");
+    db.exec("INSERT INTO schema_migrations VALUES(60,'now')");
     expect(() => migrateHxBotDatabase(db)).toThrow("newer than this application supports");
-    db.exec("DELETE FROM schema_migrations WHERE version=59; DELETE FROM schema_migrations WHERE version=48");
+    db.exec("DELETE FROM schema_migrations WHERE version=60; DELETE FROM schema_migrations WHERE version=48");
     expect(() => migrateHxBotDatabase(db)).toThrow("missing version 48");
     expect(contents(db)).toEqual(before);
     expect(runSourceCheck(db)).toBe(check);

@@ -286,4 +286,7 @@ export const messages = defineMessages("mobile.settings", {
   "mobile.settings.hxDelete.emailRequired": "Enter the email of this account.",
   "mobile.settings.hxDelete.incorrectPassword": "The password is incorrect.",
   "mobile.settings.hxDelete.failed": "The account could not be deleted. Try again later.",
+  "mobile.settings.appearance.hxBootSound": "Sound of the start film",
+  "mobile.settings.appearance.hxBootSoundFooter":
+    "The film plays on the first start and the first start after each update. Off: it plays without sound.",
 });

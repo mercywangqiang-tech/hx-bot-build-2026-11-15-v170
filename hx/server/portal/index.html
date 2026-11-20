@@ -459,7 +459,110 @@
   }
 </style>
 
+<style id="hx-boot-style">
+  /* HXBot v1.7.5（UI-27）：开机动画。本机 30 天内播过就不再播；播完淡出到本页；见 body 开头的脚本。 */
+  .hx-boot{position:fixed;inset:0;z-index:2147483000;background:#fff;opacity:1;transition:opacity .45s ease-out;overflow:hidden;cursor:default}
+  .hx-boot.hx-boot-out{opacity:0;pointer-events:none}
+  .hx-boot img,.hx-boot video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--hx-boot-position,center);user-select:none;-webkit-user-select:none}
+  .hx-boot video{background:transparent}
+  @media (prefers-reduced-motion: reduce){.hx-boot{display:none}}
+</style>
+
 <body>
+<script>
+/* HXBot v1.7.5（UI-27）：bot.hxallai.com 的开机动画。
+   - 本机（这个浏览器）30 天内播过就不播；记在 localStorage "hxbot:web-boot-played-at"（与 /app 共用），只在本机，不上报。
+   - 按窗口比例选片：宽/高 ≥1.6 用 16:9，≥1.2 用 4:3，其余用 9:16；铺满窗口，裁边时保住 logo 和 “HXBot” 字样。
+   - 浏览器能播 AV1 用 AV1（更小），否则用 H.264。静音播放（浏览器只允许静音自动播放）。
+   - 片子播过 1 秒后点一下或按任意键跳过；之前的点击和按键不跳过，也不落到被盖住的页面上（浏览器快捷键照常）。
+     片子来得慢或卡住时，出现 2 秒后也能跳过；出现 20 秒后不管播没播完都淡出。
+     播完、跳过、播放失败、3 秒内没开始（片子走网络，先显示它的第一帧），都淡出到本页；淡出一开始，本页就能点。
+   - 系统“减少动态效果”、省流量模式、2G 网络、存储不能用、页面在后台标签里打开：不播。页面在下面照常加载，不等动画。 */
+(function () {
+  var KEY = "hxbot:web-boot-played-at", REPLAY = 30 * 24 * 3600e3, now = Date.now();
+  var FILM = { "16x9": 2560 / 1440, "4x3": 1920 / 1440, "9x16": 1440 / 2560 };
+  var SAFE = { "16x9": [[0.39, 0.61], [0.23, 0.95]], "4x3": [[0.36, 0.64], [0.23, 0.95]], "9x16": [[0.39, 0.61], [0.4, 0.66]] };
+  try {
+    if (document.visibilityState === "hidden") return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var c = navigator.connection;
+    if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ""))) return;
+    var at = Number(localStorage.getItem(KEY));
+    if (isFinite(at) && at > 0 && (at > now + 60000 || now - at < REPLAY)) return;
+  } catch (e) { return; }
+  var w = Math.max(1, window.innerWidth), h = Math.max(1, window.innerHeight), r = w / h;
+  var aspect = r >= 1.6 ? "16x9" : r >= 1.2 ? "4x3" : "9x16";
+  function place(visible, safe) {
+    if (visible >= 1) return 50;
+    var start = 0.5 - visible / 2, lowest = Math.max(0, safe[1] - visible), highest = Math.min(1 - visible, safe[0]);
+    start = lowest > highest ? Math.min(Math.max(start, 0), 1 - visible) : Math.min(Math.max(start, lowest), highest);
+    return Math.round((start / (1 - visible)) * 10000) / 100;
+  }
+  var ratio = FILM[aspect], fw = Math.max(w, h * ratio), fh = fw / ratio;
+  var base = "/hx-portal/boot/hxbot-boot-" + aspect;
+  var box = document.createElement("div");
+  box.className = "hx-boot";
+  box.setAttribute("aria-hidden", "true");
+  box.style.setProperty("--hx-boot-position", place(w / fw, SAFE[aspect][0]) + "% " + place(h / fh, SAFE[aspect][1]) + "%");
+  var first = document.createElement("img");
+  first.src = base + "-first.jpg";
+  first.alt = "";
+  first.draggable = false;
+  var video = document.createElement("video");
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("muted", "");
+  video.preload = "auto";
+  video.disablePictureInPicture = true;
+  var av1 = false;
+  try { av1 = video.canPlayType('video/mp4; codecs="av01.0.05M.08"') === "probably"; } catch (e) {}
+  video.src = base + (av1 ? "-av1.mp4" : ".mp4");
+  box.appendChild(first);
+  box.appendChild(video);
+  document.body.insertBefore(box, document.body.firstChild);
+  var started = false, gone = false, cameAt = Date.now();
+  function out() {
+    if (gone) return;
+    gone = true;
+    window.removeEventListener("keydown", skip, true);
+    window.removeEventListener("pointerdown", skip, true);
+    try { video.pause(); } catch (e) {}
+    box.className = "hx-boot hx-boot-out";
+    setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 500);
+  }
+  function swallow(types) {
+    function stop(event) { event.preventDefault(); event.stopPropagation(); window.removeEventListener(event.type, stop, true); }
+    for (var i = 0; i < types.length; i++) window.addEventListener(types[i], stop, true);
+    setTimeout(function () { for (var i = 0; i < types.length; i++) window.removeEventListener(types[i], stop, true); }, 600);
+  }
+  function skip(event) {
+    if (gone) return;
+    if (event.type === "keydown" && (event.ctrlKey || event.metaKey || event.altKey)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    // The rest of this press (the key's release, the pointer's release and the click) is not for the
+    // page either: the film covers it, or the fade that a skip starts has just uncovered it.
+    swallow(event.type === "keydown" ? ["keyup"] : ["pointerup", "click"]);
+    if ((started && video.currentTime >= 1) || Date.now() - cameAt >= 2000) out();
+  }
+  window.addEventListener("keydown", skip, true);
+  window.addEventListener("pointerdown", skip, true);
+  video.addEventListener("playing", function () {
+    if (started) return;
+    started = true;
+    try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+  });
+  video.addEventListener("ended", out);
+  video.addEventListener("error", out);
+  first.addEventListener("error", function () { first.style.display = "none"; });
+  setTimeout(function () { if (!started) out(); }, 3000);
+  setTimeout(out, 20000);
+  var attempt = video.play();
+  if (attempt && attempt.catch) attempt.catch(out);
+})();
+</script>
 <!-- HX BOT 长颈鹿标志：定义一次，页头、页脚与图标里用 <use> 引用 -->
 <svg class="defs" aria-hidden="true" focusable="false"><defs><symbol id="hx-giraffe" viewBox="-6 -6 307.75 590.25"><path d="M20.15,577.98C12.21,577.21 9.32,573.92 7.30,563.31C5.47,553.73 4.36,543.08 3.90,530.60C3.44,518.23 2.84,509.29 1.90,500.76C1.26,494.95 1.04,491.16 0.80,482.00C0.69,477.76 0.49,472.77 0.35,470.90C-0.08,465.02 -0.00,396.13 0.45,388.90C0.64,385.82 0.89,381.37 1.00,379.00C1.27,373.26 1.91,364.01 2.51,356.90C3.23,348.46 3.56,344.01 3.80,339.50C4.11,333.73 4.97,319.96 5.21,316.80C5.33,315.31 6.14,307.62 7.01,299.70C10.42,268.95 10.77,266.19 13.30,251.30C14.01,247.12 14.95,240.82 15.40,237.30C16.49,228.58 17.19,224.61 19.19,215.63C19.64,213.61 20.81,207.98 21.79,203.13C24.43,190.07 25.41,185.78 29.27,170.30C30.53,165.24 31.90,159.70 32.30,158.00C34.97,146.80 36.39,142.14 44.83,116.90C49.48,103.01 51.06,98.69 55.60,87.50C59.50,77.90 63.13,69.36 66.39,62.10C67.19,60.34 68.33,57.70 68.93,56.24C69.53,54.77 70.87,51.86 71.91,49.77C74.72,44.12 74.86,44.50 68.91,41.71C67.38,40.98 65.27,39.84 64.21,39.17C63.16,38.50 61.98,37.75 61.60,37.50C47.48,28.51 41.43,21.86 37.80,11.30C35.47,4.54 35.18,1.63 36.70,0.43C37.46,-0.16 37.49,-0.16 40.35,1.28C44.21,3.21 49.23,4.61 57.24,5.99C66.69,7.62 68.65,8.05 71.60,9.14C75.10,10.44 77.40,11.83 81.90,15.42C90.04,21.90 91.82,22.48 116.78,26.81C118.03,27.03 122.13,27.78 125.88,28.49C134.05,30.04 137.06,30.60 138.00,30.73C142.92,31.46 170.32,36.63 173.81,37.49C182.78,39.72 185.15,43.39 182.58,51.10C179.78,59.51 172.74,67.91 165.80,71.14C160.66,73.54 157.35,74.15 137.80,76.28C137.31,76.33 135.28,76.60 133.30,76.88C131.32,77.16 129.25,77.44 128.70,77.51C118.36,78.82 106.63,82.86 99.87,87.43C89.97,94.14 84.53,102.80 79.52,119.84C73.81,139.27 68.00,179.69 65.45,217.70C64.90,225.90 64.90,225.90 64.90,251.10C64.90,276.88 64.93,278.27 65.72,285.40C68.15,307.61 77.58,320.12 100.30,331.30C106.80,334.50 111.97,336.28 123.50,339.27C131.73,341.40 136.76,342.28 149.80,343.88C158.03,344.89 158.73,344.96 164.90,345.40C187.49,347.02 206.53,351.37 221.27,358.29C245.79,369.78 262.18,384.19 273.26,404.00C286.84,428.25 293.61,454.77 295.01,489.20C295.36,497.75 294.85,518.09 294.10,525.30C291.85,547.01 288.74,564.96 286.22,570.85C284.00,576.04 279.86,578.16 272.40,577.94C264.38,577.70 261.38,575.24 260.12,567.88C259.95,566.90 259.58,563.85 259.30,561.10C257.85,547.08 256.26,538.79 252.80,527.18C241.87,490.57 217.43,466.09 183.25,457.52C171.49,454.58 162.61,453.52 149.50,453.52C139.72,453.51 137.05,453.70 127.80,455.08C104.47,458.56 81.79,470.80 68.06,487.33C58.88,498.38 52.10,509.92 47.39,522.50C42.46,535.67 40.51,543.69 37.71,562.25C36.53,570.03 35.61,572.82 33.51,574.92C31.03,577.40 26.02,578.54 20.15,577.98Z" fill="#E4983A"/><path d="M33.74,154.84C33.39,154.46 33.41,154.33 34.28,150.97C35.23,147.30 36.49,143.05 36.66,142.87C37.25,142.29 39.74,144.37 40.76,146.30C41.51,147.70 41.52,149.86 40.80,151.28C39.50,153.82 34.91,156.14 33.74,154.84ZM66.48,183.67C57.91,177.87 55.43,165.73 61.08,157.24C62.81,154.63 65.03,152.77 68.33,151.18C73.26,148.81 73.16,148.68 71.94,156.23C70.78,163.44 70.04,168.69 69.11,176.50C68.72,179.80 68.34,182.88 68.28,183.35C68.15,184.39 67.67,184.48 66.48,183.67ZM28.80,245.20C24.49,244.65 21.10,242.56 17.60,238.31C15.71,236.01 15.73,236.10 16.21,232.66C17.12,226.12 19.37,215.00 20.05,213.70C21.50,210.94 28.20,208.35 33.13,208.65C40.32,209.08 46.44,213.30 49.39,219.86C51.62,224.80 50.77,233.44 47.67,237.57C44.97,241.16 40.93,244.10 37.60,244.89C36.07,245.26 30.71,245.44 28.80,245.20ZM19.00,355.97C11.81,354.45 6.11,349.72 4.31,343.80C3.69,341.74 4.20,330.97 5.00,329.39C7.10,325.27 12.32,321.07 16.80,319.92C19.98,319.10 25.57,319.32 28.69,320.40C37.95,323.58 42.80,334.06 39.44,343.60C37.85,348.11 36.03,350.62 32.80,352.79C29.01,355.33 22.77,356.76 19.00,355.97ZM81.90,355.92C76.44,354.65 73.01,351.19 72.08,346.01C70.88,339.26 73.61,333.95 79.66,331.33C81.63,330.47 85.59,330.40 87.97,331.18C91.49,332.33 94.44,335.31 95.92,339.20C96.71,341.28 96.78,346.19 96.04,348.03C93.91,353.35 87.14,357.13 81.90,355.92ZM126.86,371.21C119.78,370.39 111.90,363.51 109.63,356.15C107.80,350.22 109.18,340.53 112.22,337.93C113.45,336.87 113.80,336.86 117.04,337.78C124.24,339.81 129.98,341.14 137.00,342.41C138.34,342.65 144.22,343.44 148.28,343.92C151.73,344.33 152.23,344.56 153.00,346.10C154.35,348.81 152.80,356.65 150.07,360.87C148.78,362.87 144.08,367.52 142.30,368.56C138.63,370.71 132.16,371.82 126.86,371.21ZM200.25,381.98C196.40,381.50 192.88,379.87 191.15,377.75C185.63,370.97 187.52,360.79 195.00,357.05C199.85,354.62 206.20,355.32 209.95,358.69C216.06,364.19 216.01,374.33 209.84,379.07C206.95,381.29 203.39,382.37 200.25,381.98ZM263.60,407.01C254.61,405.09 247.96,395.16 249.52,385.99C250.18,382.06 251.54,378.80 252.51,378.80C252.64,378.80 254.22,380.22 256.01,381.95C263.12,388.83 268.65,396.14 273.75,405.42C274.15,406.14 274.31,406.63 274.20,406.81C273.79,407.46 266.38,407.60 263.60,407.01ZM81.30,425.78C75.23,424.88 69.48,420.50 67.19,415.03C65.37,410.70 65.57,402.65 67.60,398.57C69.52,394.70 74.45,390.66 78.31,389.80C80.50,389.31 85.95,389.01 87.50,389.29C92.21,390.16 95.90,392.51 99.08,396.67C103.73,402.75 103.73,412.06 99.08,418.13C96.71,421.23 93.78,423.49 90.78,424.54C88.07,425.48 83.38,426.09 81.30,425.78ZM1.90,415.56C0.12,414.52 0.17,414.87 0.25,403.17C0.32,392.84 0.32,392.84 0.87,392.12C3.18,389.09 9.95,391.17 13.50,396.00C16.06,399.49 16.46,405.51 14.38,409.42C12.02,413.84 4.94,417.33 1.90,415.56ZM148.99,422.74C145.50,421.96 142.41,418.99 141.47,415.50C139.82,409.36 146.00,402.72 152.38,403.80C158.98,404.91 162.24,411.81 159.10,418.01C157.38,421.40 152.74,423.57 148.99,422.74ZM218.90,442.59C214.93,441.06 213.83,435.55 216.88,432.49C220.66,428.71 227.25,431.51 227.28,436.91C227.30,441.12 222.88,444.13 218.90,442.59ZM271.89,473.82C266.16,472.26 262.68,467.59 262.72,461.50C262.76,454.80 265.46,450.96 271.40,449.19C282.17,445.99 291.22,457.00 286.35,467.38C284.13,472.12 277.11,475.24 271.89,473.82ZM2.07,498.97C1.64,498.42 1.29,492.83 1.00,481.50C0.89,477.54 0.72,472.77 0.62,470.90C0.13,462.34 0.13,462.62 0.67,462.38C1.05,462.20 1.49,462.28 3.02,462.81C6.51,464.00 7.93,464.92 10.61,467.74C14.50,471.83 15.66,474.88 15.65,481.00C15.64,486.83 14.09,490.89 10.44,494.68C7.94,497.28 2.81,499.91 2.07,498.97Z" fill="#79512B"/><path d="M111.32,50.58C107.32,49.61 105.84,44.58 108.71,41.71C112.11,38.31 117.44,40.59 117.44,45.45C117.44,48.72 114.34,51.32 111.32,50.58Z" fill="#79512B"/><ellipse cx="114.5" cy="53.2" rx="4.2" ry="1.9" fill="#FFF1D2"/></symbol></defs></svg>
 

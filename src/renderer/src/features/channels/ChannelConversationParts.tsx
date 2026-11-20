@@ -195,8 +195,20 @@ export function ChannelSettingsPane(
   // subscription each time a message arrives.
   const memoriesPort = createMemo(() => channelMemoriesPort(props.channelId, channelName(), runtime().agent));
   const routinesPort = createMemo(() => {
-    const legacy = channelRoutinesPort(props.channelId, runtime().agent, props.routines.localHost());
+    const port = channelRoutinesPort(props.channelId, runtime().agent, props.routines.localHost());
     const serverId = props.routines.eventsServerId();
+    // HXBot (v1.7.5, RTN-01): this computer's host tells the editor the registered zone.
+    const legacy =
+      props.routines.localHost() && serverId
+        ? {
+            ...port,
+            registeredZone: () => window.hxbot.hostAdmin.getTimezone(serverId).then((settings) => settings.timezone),
+            registerZone: (zone: string) => window.hxbot.hostAdmin.setTimezone(zone, serverId).then(() => undefined),
+            // HXBot (v1.7.5, RTN-02, MIG-03): the channel routine's run that waits for the yes.
+            answerConfirm: (cardId: string, run: boolean) =>
+              window.hxbot.auth.hxAnswerRoutineConfirm({ channelId: props.channelId, cardId, run }),
+          }
+        : port;
     const eventApi =
       runtime().eventRoutines ??
       (serverId

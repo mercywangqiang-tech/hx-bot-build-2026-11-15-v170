@@ -384,4 +384,7 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "Görevler yalnızca bu bilgisayardaki ajanlar için kullanılabilir.",
   "error.backend.taskStartFailed": "HXBot görevi başlatamadı. Bunun yerine işi bu turda yapın.",
   "error.backend.hxAskOwnerOnly": "Bunu yalnızca bu HXBot'un sahibi seçebilir. Değişikliği herkes iptal edebilir.",
+  "error.backend.hxRoutineZoneUnknown":
+    "“{zone}” bu bilgisayarın tanıdığı bir saat dilimi değil. Listeden Asia/Shanghai gibi bir saat dilimi seçin.",
+  "error.backend.hxRoutineConfirmGone": "Bu soru artık açık değil.",
 } as const satisfies PartialTranslation<typeof source>;

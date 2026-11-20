@@ -79,7 +79,6 @@ import {
   WorkflowAddMenu,
   WorkflowDropMenu,
 } from "./WorkflowAddMenu";
-import { AgentNode } from "./WorkflowAgentNode";
 import { ApprovalNode } from "./WorkflowApprovalNode";
 import { AssetNode } from "./WorkflowAssetNode";
 import {
@@ -93,6 +92,8 @@ import {
 } from "./WorkflowCanvasHud";
 import { ConditionNode } from "./WorkflowConditionNode";
 import { showWorkflowDeleteToast } from "./WorkflowDeleteUndoToast";
+import { type HxWorkflowLimitsPort, WorkflowHxLimitsDialog } from "./WorkflowHxLimits";
+import { HxAgentOrStepNode } from "./WorkflowHxNodes";
 import { ImageNode } from "./WorkflowImageNode";
 import { LlmNode } from "./WorkflowLlmNode";
 import { minimapLayout, WorkflowMinimap } from "./WorkflowMinimap";
@@ -234,6 +235,8 @@ export interface WorkflowCanvasProps {
   onRename: (workflowId: string, title: string) => void;
   /** Runs when the Undo toast of a delete closes without Undo. A promise that rejects shows the workflow again. */
   onDelete: (workflowId: string) => Promise<unknown>;
+  /** HXBot (v1.7.5, RTN-07): the run limits of a workflow, on the host. Without it, the menu has no limits. */
+  hxLimits?: HxWorkflowLimitsPort | undefined;
 }
 
 /** What a right-click hit. The canvas keeps the world point, so a new node opens there. */
@@ -499,7 +502,8 @@ function CanvasNodeView(props: { node: CanvasItem; trigger: WorkflowTriggerState
     case "llm":
       return <LlmNode id={node.id} />;
     case "agent":
-      return <AgentNode id={node.id} />;
+      // HXBot (v1.7.5, RTN-11): an agent node is an agent's task or one of HXBot's three steps.
+      return <HxAgentOrStepNode id={node.id} />;
     case "image":
       return <ImageNode id={node.id} />;
     case "trigger":
@@ -1124,7 +1128,10 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
         : { id: workflow.id, title: workflow.title, steps: workflow.steps },
     );
   };
+  // HXBot (v1.7.5, RTN-07): the dialog of the run limits.
+  const [hxLimitsOpen, setHxLimitsOpen] = createSignal(false);
   const onSwitcher = (action: SwitcherAction) => {
+    if (action === "hx-limits") return setHxLimitsOpen(true);
     if (action.startsWith("version:")) return openVersion(action.slice("version:".length));
     if (action === "live") return closeVersion();
     // Another action leaves the version first. A rename changes only the name.
@@ -3156,6 +3163,7 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
               viewing={props.versionPreview?.versionId}
               versionsDisabled={running()}
               readOnly={props.readOnly === true}
+              hxLimits={props.hxLimits !== undefined}
               onAction={onSwitcher}
             />
           }
@@ -3393,6 +3401,16 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
             <Eye aria-hidden="true" />
             {t("workflow.canvas.hud.show")}
           </Button>
+        </Show>
+        <Show when={props.hxLimits}>
+          {(port) => (
+            <WorkflowHxLimitsDialog
+              open={hxLimitsOpen()}
+              workflowId={openId()}
+              port={port()}
+              onClose={() => setHxLimitsOpen(false)}
+            />
+          )}
         </Show>
       </main>
     </BoardProvider>

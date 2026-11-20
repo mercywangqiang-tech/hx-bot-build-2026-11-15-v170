@@ -190,3 +190,22 @@
 .hx-team-priority-message[data-failed] {
   color: var(--hxbot-danger-text);
 }
+
+/* HXBot (v1.7.5, CONC-16): the judge's buttons under a team's card. */
+.hx-team-judge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  margin-top: var(--hxbot-space-2);
+}
+
+.hx-team-judge-hint,
+.hx-team-judge-message {
+  color: var(--hxbot-text-dim);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-team-judge-message[data-failed] {
+  color: var(--hxbot-danger-text);
+}

@@ -393,4 +393,7 @@ export const messages = defineMessages("error.backend", {
   "error.backend.taskRemoteUnsupported": "Tasks are only available for agents on this computer.",
   "error.backend.taskStartFailed": "HXBot could not start the task. Do the work in this turn instead.",
   "error.backend.hxAskOwnerOnly": "Only the owner of this HXBot can choose this. Anyone can cancel the change.",
+  "error.backend.hxRoutineZoneUnknown":
+    '"{zone}" is not a timezone this computer knows. Choose a zone from the list, such as Asia/Shanghai.',
+  "error.backend.hxRoutineConfirmGone": "This question is no longer open.",
 });

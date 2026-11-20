@@ -348,4 +348,6 @@ export const messages = {
   "error.backend.taskRemoteUnsupported": "任务仅适用于本电脑上的助手。",
   "error.backend.taskStartFailed": "HXBot 无法启动该任务，请改为在本轮对话中完成。",
   "error.backend.hxAskOwnerOnly": "只有这台 HXBot 的主人能选这一项；谁都可以取消修改。",
+  "error.backend.hxRoutineZoneUnknown": "“{zone}”不是这台电脑认得的时区。请从列表里选，例如 Asia/Shanghai。",
+  "error.backend.hxRoutineConfirmGone": "这个问题已经关闭。",
 } as const satisfies PartialTranslation<typeof source>;

@@ -17,7 +17,10 @@ import { hxComputerWarmUp } from "../backend/hx-computer/computer";
 import { hxDataFolder } from "../backend/hx-data-folder";
 import { hxFlow } from "../backend/hx-flow/ledger";
 import { hxOpenCodeNames } from "../backend/hx-opencode/names";
+import { hxAttachNotifier } from "../backend/hx-routines/notify";
+import { hxRoutineZones } from "../backend/hx-routines/zone";
 import { hxTeams } from "../backend/hx-team/service";
+import { hxTurnTools } from "../backend/hx-workflows/turn-tools";
 import { DiscordConnectFailed, toDiscordConnectFailed } from "../backend/messaging/discord/discord-connect";
 import { SlackConnectFailed, toSlackConnectFailed } from "../backend/messaging/slack/slack-connect";
 import { routineFlowRoutines } from "../backend/routine-flows/routine-flow-routines";
@@ -49,6 +52,7 @@ import {
   HOSTED_UPDATE_TRIGGER,
   HostedUpdateAdapter,
 } from "./hosted-update-adapter";
+import { hxAgentDeletes } from "./hx-agent-deletes";
 import { hxUserInHxbot } from "./hx-ask-first";
 import { hxAtMostEvery, hxClientFetch } from "./hx-client-header";
 import { HxDesktopMemory } from "./hx-flow-memory";
@@ -116,7 +120,7 @@ import {
 } from "@hxbot/contracts/ipc";
 import { decodeRecord, requiredString } from "@hxbot/contracts/ipc-decoding";
 import { localeDirection } from "@hxbot/i18n";
-import { sourceText } from "@hxbot/i18n/source";
+import { localizeSourceText, sourceText } from "@hxbot/i18n/source";
 import { createHxBotLogger, registerSecretValue, toLogValue } from "@hxbot/logging";
 import { REMOTE_ACCOUNT_CHECK_INTERVAL_MS } from "@hxbot/team-client";
 import { installRemoteSyncProfileSink } from "@hxbot/team-client/sync-profile";
@@ -225,7 +229,7 @@ import { CUSTOM_AGENTS_FILE, CustomAgentStore } from "./custom-agent-store";
 import { type CustomProviderChanges, createCustomProviderChanges } from "./custom-provider-changes";
 import { CustomProviderStore } from "./custom-provider-store";
 import { MCP_OAUTH_REDIRECT_URL } from "./deep-link-router";
-import { desktopShowsAgentEvent } from "./desktop-notifications";
+import { desktopShowsAgentEvent, showRetainedNotification } from "./desktop-notifications";
 import { shouldAutoStartHost } from "./development-profile";
 import {
   applyDevelopmentRemoteAccount,
@@ -1476,6 +1480,23 @@ export async function createApplicationServices({
     join(app.getPath("userData"), SERVER_TIMEZONE_PREFERENCE_FILE),
   );
   await runCauseEffect(serverTimezone.load());
+  // HXBot (v1.7.5, RTN-04): a routine run whose result is not verified shows a desktop notification, when the
+  // person allows them.
+  hxAttachNotifier((title, body) => {
+    if (!Notification.isSupported() || !notificationPreference.get().desktopNotifications) return;
+    // The backend writes English source text, one template per line; the person reads their language.
+    const local = (text: string) =>
+      text
+        .split("\n")
+        .map((line) => localizeSourceText(line, language.locale))
+        .join("\n");
+    showRetainedNotification(new Notification({ title: local(title), body: local(body) }));
+  });
+  // HXBot (v1.7.5, RTN-01): the registered zone of new routines is the server timezone the user chose.
+  hxRoutineZones.attach({
+    registered: () => serverTimezone.get().timezone,
+    register: (zone) => runCauseEffect(serverTimezone.set(zone)).then(() => undefined),
+  });
   const serverPersonality = new ServerPersonalityPreferenceStore(
     join(app.getPath("userData"), SERVER_PERSONALITY_PREFERENCE_FILE),
   );
@@ -2321,6 +2342,19 @@ export async function createApplicationServices({
     service.messaging.setTelegramMentionHandler(null);
     service.messaging.setSlackMentionHandler(null);
     return Effect.runPromise(workflowRuntime.close());
+  });
+  // HXBot (v1.7.5, RTN-11): "save as a workflow" in a chat makes a workflow of this computer.
+  hxTurnTools.attach({
+    connection: () => store.database.connection,
+    agentName: (agentId) => service.listAgents().find((agent) => agent.id === agentId)?.name ?? null,
+    create: async ({ title, graph }) => {
+      const detail = await runCauseEffect(workflowRuntime.create({ title, graph }));
+      return { workflowId: detail.summary.id, title: detail.summary.title };
+    },
+    texts: () => ({
+      confirm: (what) => language.translate("workflow.hx.confirmStep", { what }),
+      title: (agent, date) => language.translate("workflow.hx.savedTitle", { agent, date }),
+    }),
   });
   // An agent routine's answer sent on to a messaging place; see `routine-results.ts`.
   const routineResultRuntime = await Effect.runPromise(
@@ -3829,8 +3863,12 @@ export async function createApplicationServices({
         continueAgent: (agentId, text) => service.hxContinueAfterUpdate(agentId, text),
         log: (message) => logger.info(message),
       });
+      // HXBot (v1.7.5 fix): the agent deletes that a quit or a killed process left end now.
+      hxAgentDeletes.start();
     }),
   );
+  // HXBot (v1.7.5 fix): from the quit on, a held delete stays on disk and ends on the next start.
+  teardown.push(TEARDOWN_ORDER.resourceMonitor, "the held agent deletes", () => hxAgentDeletes.stop());
   const describeRestartReadiness = (): RestartReadiness =>
     checkRestartReadiness({
       // A workflow model step lives in this process only; agent steps are queued deliveries.

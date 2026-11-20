@@ -211,4 +211,54 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "이 변경 전의 버전이 더 이상 남아 있지 않습니다.",
   "status.agent.hxSkill.restore.spaceFull":
     "되돌리기 전에 지금 파일을 보관할 공간이 없습니다. 디스크 공간을 확보하거나 설정 → 컴퓨터 제어에서 공간을 늘리세요.",
+  "status.agent.hxRoutineConfirm.title": "루틴 “{name}”이(가) 실행 전에 동의를 기다립니다",
+  "status.agent.hxRoutineConfirm.titleMany": "루틴 {count}개가 실행 전에 동의를 기다립니다",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "HXBot이 닫혀 있었거나 컴퓨터가 잠자기 상태였던 동안 {count}번 놓쳤습니다({from} – {until}). 모아서 한 번만 실행합니다.",
+  "status.agent.hxRoutineConfirm.noteLate": "이번 실행은 놓친 시간을 대신합니다.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "v1.7.5로 업데이트한 뒤부터 보내기, 게시, 결제, 삭제를 하므로 실행할 때마다 먼저 묻습니다.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "이번 실행은 메시지나 메일을 보냅니다. 동의하기 전에는 아무것도 보내지 않습니다.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "이번 실행은 게시하거나 공개합니다. 동의하기 전에는 아무것도 게시하지 않습니다.",
+  "status.agent.hxRoutineConfirm.actions.pay":
+    "이번 실행은 결제하거나 구매합니다. 동의하기 전에는 아무것도 결제하지 않습니다.",
+  "status.agent.hxRoutineConfirm.actions.delete": "이번 실행은 삭제합니다. 동의하기 전에는 아무것도 삭제하지 않습니다.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "이번 실행은 보내기, 게시, 결제 또는 삭제를 합니다. 동의하기 전에는 아무 일도 하지 않습니다.",
+  "status.agent.hxRoutineConfirm.actions.each": "이 루틴은 실행할 때마다 먼저 묻습니다.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "동의했습니다: 지금 실행합니다.",
+  "status.agent.hxRoutineConfirm.outcome.no": "거절했습니다: 이번에는 건너뜁니다.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "다음 시간 전까지 답이 없었습니다: 이번에는 건너뜁니다.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "루틴 결과를 확인하지 못함",
+  "status.agent.hxRoutineResult.missingFile":
+    "“{name}” 실행은 {files}을(를) 저장했다고 하지만 HXBot이 그곳에서 찾지 못했습니다. 결과를 믿기 전에 확인하세요.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "“{name}” 실행이 바꾼 파일을 HXBot이 다시 읽지 못했습니다. 결과를 믿기 전에 확인하세요.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "“{name}” 실행이 무언가를 보내거나 게시하거나 결제하거나 삭제했는데, HXBot은 그 결과를 모릅니다. 믿기 전에 확인하세요.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "“{name}” 실행은 보내기, 게시, 결제, 삭제 중 하나를 해야 했지만 그런 단계 없이 끝났습니다. 결과를 믿기 전에 확인하세요.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "루틴이 일시 중지되었습니다: 이번에는 실행하지 않습니다.",
+  "status.agent.hxLearned.teamProgress":
+    "팀 · 지난번 선택에 따라 다음 알림은 진행이 없는 상태로 {minutes}분이 지난 뒤에 옵니다.",
+  "status.agent.hxLearned.workProgress":
+    "팀 · 선택에 따라 이런 작업은 이제 진행 없이 {minutes}분이 지나면 알려 드립니다.",
+  "status.agent.hxLearned.yield":
+    "컴퓨터 제어 · HXBot이 다시 이어 간 직후에 컴퓨터를 다시 사용하셔서, 이제 사용을 멈춘 뒤 {seconds}초를 기다립니다.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "팀 · 판정 모델은 계속해도 된다고 봅니다: {reason} 설정한 대로 멈춰서 묻지 않았습니다.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "팀 · 이 이유로 이미 판정 모델의 판단에 따라 두 번 계속했으므로, 이번에는 묻습니다.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "팀 · 판정 모델이 계속하게 한 팀을 두 번 멈추셨으므로, 이런 경우에는 다시 매번 묻습니다.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "팀 · 이제부터 이런 경우({cause})는 이 컴퓨터에서만 판정 모델의 판단대로 진행합니다.",
+  "status.agent.hxTeam.judgeAuto.off": "팀 · 이런 경우({cause})는 다시 매번 묻습니다.",
+  "status.agent.hxTeam.card.judgeOffer": "판정 모델의 의견이 선택과 {count}번 연속으로 일치했습니다.",
+  "status.agent.hxTeam.card.judgeWent": "판정 모델이 계속하게 했습니다: {reason}",
+  "status.agent.hxTeam.cause.G1": "한동안 진행이 없음",
+  "status.agent.hxTeam.cause.G2": "같은 자리를 맴도는 작업",
+  "status.agent.hxTeam.cause.G3": "너무 넓게 퍼지는 작업",
 } as const satisfies PartialTranslation<typeof source>;

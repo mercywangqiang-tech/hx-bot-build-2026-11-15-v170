@@ -208,4 +208,54 @@ export const messages = {
   "status.agent.hxSkill.restore.notKept": "Bu değişiklikten önceki sürüm artık saklanmıyor.",
   "status.agent.hxSkill.restore.spaceFull":
     "Geri getirmeden önce dosyanın şu anki hâlini saklayacak yer yok. Diskte yer açın veya Ayarlar → Bilgisayar Kullanımı bölümünden alanı büyütün.",
+  "status.agent.hxRoutineConfirm.title": "“{name}” rutini çalışmadan önce onayınızı bekliyor",
+  "status.agent.hxRoutineConfirm.titleMany": "{count} rutin çalışmadan önce onayınızı bekliyor",
+  "status.agent.hxRoutineConfirm.noteCatchUp":
+    "HXBot kapalıyken veya bilgisayar uykudayken {count} kez kaçırıldı ({from} – {until}). Hepsi için bir kez çalışır.",
+  "status.agent.hxRoutineConfirm.noteLate": "Bu çalıştırma kaçırılan bir zamanın yerini tutar.",
+  "status.agent.hxRoutineConfirm.noteEach":
+    "v1.7.5 güncellemesinden beri gönderdiği, yayımladığı, ödeme yaptığı veya sildiği için her çalıştırmadan önce sorar.",
+  "status.agent.hxRoutineConfirm.actions.send":
+    "Bu çalıştırma mesaj veya e-posta gönderir. Siz evet demeden hiçbir şey gönderilmez.",
+  "status.agent.hxRoutineConfirm.actions.publish":
+    "Bu çalıştırma paylaşır veya yayımlar. Siz evet demeden hiçbir şey paylaşılmaz.",
+  "status.agent.hxRoutineConfirm.actions.pay":
+    "Bu çalıştırma ödeme yapar veya satın alır. Siz evet demeden hiçbir şey ödenmez.",
+  "status.agent.hxRoutineConfirm.actions.delete": "Bu çalıştırma siler. Siz evet demeden hiçbir şey silinmez.",
+  "status.agent.hxRoutineConfirm.actions.several":
+    "Bu çalıştırma gönderir, yayımlar, ödeme yapar veya siler. Siz evet demeden hiçbir şey olmaz.",
+  "status.agent.hxRoutineConfirm.actions.each": "Bu rutin her çalıştırmadan önce sorar.",
+  "status.agent.hxRoutineConfirm.outcome.yes": "Evet dediniz: şimdi çalışıyor.",
+  "status.agent.hxRoutineConfirm.outcome.no": "Hayır dediniz: bu sefer atlandı.",
+  "status.agent.hxRoutineConfirm.outcome.expired": "Sonraki zamanından önce yanıt gelmedi: bu sefer atlandı.",
+  "status.agent.hxRoutineResult.unverifiedTitle": "Rutin sonucu doğrulanmadı",
+  "status.agent.hxRoutineResult.missingFile":
+    "“{name}” çalıştırması {files} kaydettiğini söylüyor, ama HXBot orada bulamadı. Güvenmeden önce sonucu kontrol edin.",
+  "status.agent.hxRoutineResult.notReadBack":
+    "“{name}” çalıştırması HXBot'un geri okuyamadığı bir dosyayı değiştirdi. Güvenmeden önce sonucu kontrol edin.",
+  "status.agent.hxRoutineResult.actionUnknown":
+    "“{name}” çalıştırması bir şey gönderdi, yayımladı, ödedi veya sildi ve HXBot sonucu bilmiyor. Güvenmeden önce kontrol edin.",
+  "status.agent.hxRoutineResult.noToolStep":
+    "“{name}” çalıştırması göndermeli, yayımlamalı, ödemeli veya silmeliydi, ama böyle bir adım olmadan bitti. Güvenmeden önce sonucu kontrol edin.",
+  "status.agent.hxRoutineConfirm.outcome.paused": "Rutin duraklatıldı: bu zaman çalışmaz.",
+  "status.agent.hxLearned.teamProgress":
+    "Ekip · Geçen sefer seçtiğiniz gibi, sonraki hatırlatma ilerleme olmadan {minutes} dakika geçince gelir.",
+  "status.agent.hxLearned.workProgress":
+    "Ekip · Seçtiğiniz gibi, bu tür işler için hatırlatma artık ilerleme olmadan {minutes} dakika geçince gelir.",
+  "status.agent.hxLearned.yield":
+    "Bilgisayar Kullanımı · HXBot devam ettikten hemen sonra bilgisayarı yeniden kullandınız, bu yüzden artık siz bıraktıktan sonra {seconds} saniye bekler.",
+  "status.agent.hxTeam.judgeAuto.went":
+    "Ekip · Hakem devam edebileceğini söylüyor: {reason} Ayarladığınız gibi, size sormak için durmadı.",
+  "status.agent.hxTeam.judgeAuto.third":
+    "Ekip · Bu nedenle hakemin dediği gibi zaten iki kez devam etti, bu yüzden bu sefer size soruyor.",
+  "status.agent.hxTeam.judgeAuto.back":
+    "Ekip · Hakem devam ettirdikten sonra bir ekibi iki kez durdurdunuz, bu yüzden bunun gibi durumlarda yine her seferinde size sorulur.",
+  "status.agent.hxTeam.judgeAuto.on":
+    "Ekip · Bundan sonra bunun gibi durumlar ({cause}) yalnızca bu bilgisayarda hakemin dediği gibi ilerler.",
+  "status.agent.hxTeam.judgeAuto.off": "Ekip · Bunun gibi durumlarda ({cause}) yine her seferinde size sorulur.",
+  "status.agent.hxTeam.card.judgeOffer": "Hakemin görüşü seçiminizle art arda {count} kez aynı çıktı.",
+  "status.agent.hxTeam.card.judgeWent": "Hakem devam ettirdi: {reason}",
+  "status.agent.hxTeam.cause.G1": "bir süredir ilerleme yok",
+  "status.agent.hxTeam.cause.G2": "kendi etrafında dönen iş",
+  "status.agent.hxTeam.cause.G3": "fazla dağılan iş",
 } as const satisfies PartialTranslation<typeof source>;

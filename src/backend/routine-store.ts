@@ -36,6 +36,14 @@ import {
   requiredNumberColumn,
   requiredStringColumn,
 } from "./database/database-rows";
+import {
+  type HxRunDetail,
+  hxConfirmZone,
+  hxRoutineFlagsOf,
+  hxRunsWithFlags,
+  hxWriteRoutineDetail,
+  hxWriteRunDetail,
+} from "./hx-routines/detail";
 import type { HxBotDatabase } from "./hxbot-database";
 import { hasWebhookReceipt, insertWebhookReceipt, revokeRoutineWebhooks } from "./webhook-route-store";
 import { parseEventFilters, validateWebhookTrigger, webhookMismatch, webhookRunInstruction } from "./webhook-trigger";
@@ -109,6 +117,8 @@ export interface RoutineUpdateFields {
   limitPolicy?: RoutineLimitPolicy;
   missedPolicy?: RoutineMissedPolicy;
   runIn?: RoutineRunPlace;
+  /** HXBot (v1.7.5, RTN-01): an IANA zone. Left out, the routine keeps its zone. */
+  timezone?: string;
 }
 
 interface RoutineWebhookFields {
@@ -281,6 +291,8 @@ export class RoutineStore {
         );
         this.#writeRunIn(db, routineId, input.runIn ?? "chat");
         this.#insertTrigger(db, routineId, input.timezone, schedule, createdAt, sequence, now);
+        // HXBot (v1.7.5, RTN-01): a routine made now has a zone that someone chose.
+        hxConfirmZone(db, this.tables.ownerKind, routineId, createdAt);
         return this.#require(routineId, ownerId);
       },
     );
@@ -292,12 +304,15 @@ export class RoutineStore {
     const name = input.name ?? current.name;
     const instruction = input.instruction ?? current.instruction;
     const schedule = normalizeRoutineSchedule(input.schedule ?? current.trigger.schedule, now);
-    this.#validateInput(name, instruction, current.timezone, schedule, current.trigger.schedule);
+    // HXBot (v1.7.5, RTN-01): an update can name a new zone. The next run moves to it.
+    const timezone = input.timezone ?? current.timezone;
+    const zoneChanged = timezone !== current.timezone;
+    this.#validateInput(name, instruction, timezone, schedule, current.trigger.schedule);
     const active = input.active ?? current.active;
     const limitPolicy = limitPolicyFor(schedule, input.limitPolicy ?? current.limitPolicy);
     const missedPolicy = input.missedPolicy ?? current.missedPolicy ?? "skip";
     const reactivating = !current.active && active;
-    if (active && (input.schedule || reactivating)) assertOnceAhead(schedule, current.timezone, now);
+    if (active && (input.schedule || reactivating || zoneChanged)) assertOnceAhead(schedule, timezone, now);
     const updatedAt = now.toISOString();
     const { commandPrefix, eventPrefix, routineAggregate, routineTable, triggerTable, ownerColumn } = this.tables;
     return this.database.dispatch(
@@ -328,17 +343,26 @@ export class RoutineStore {
           input.routineId,
           ownerId,
         );
+        if (zoneChanged) {
+          db.prepare(`UPDATE ${routineTable} SET timezone = ? WHERE routine_id = ? AND ${ownerColumn} = ?`).run(
+            timezone,
+            input.routineId,
+            ownerId,
+          );
+        }
+        // HXBot (v1.7.5, MIG-03): an update that names a zone confirms it, also when it is the same one.
+        if (input.timezone !== undefined) hxConfirmZone(db, this.tables.ownerKind, input.routineId, updatedAt);
         if (input.runIn) this.#writeRunIn(db, input.routineId, input.runIn);
         if (input.schedule) {
           db.prepare(`DELETE FROM ${triggerTable} WHERE routine_id = ?`).run(input.routineId);
-          this.#insertTrigger(db, input.routineId, current.timezone, schedule, updatedAt, sequence, now);
-        } else if (reactivating) {
+          this.#insertTrigger(db, input.routineId, timezone, schedule, updatedAt, sequence, now);
+        } else if (reactivating || (zoneChanged && active)) {
           db.prepare(
             `UPDATE ${triggerTable}
              SET next_run_at = ?, updated_at = ?, last_event_sequence = ?
              WHERE trigger_id = ? AND routine_id = ?`,
           ).run(
-            nextRoutineOccurrence(schedule, current.timezone, now).toISOString(),
+            nextRoutineOccurrence(schedule, timezone, now).toISOString(),
             updatedAt,
             sequence,
             current.trigger.id,
@@ -440,6 +464,8 @@ export class RoutineStore {
           sequence,
         );
         if (runIn) this.#writeRunIn(db, id, runIn);
+        // HXBot (v1.7.5, MIG-03): a save that carries the zone of a schedule confirms it.
+        if (schedule) hxConfirmZone(db, this.tables.ownerKind, id, timestamp);
         if (schedule) {
           if (current?.trigger.kind === "webhook") {
             revokeRoutineWebhooks(db, this.tables.ownerKind, [id], { forget: false }, now);
@@ -586,7 +612,9 @@ export class RoutineStore {
            ORDER BY created_at DESC, run_id DESC LIMIT ?`,
         )
         .all(routineId, ownerId, safeLimit),
-    ).map((row) => this.#run(row));
+    )
+      .map((row) => this.#run(row))
+      .map(hxRunsWithFlags(this.database.connection, this.tables.ownerKind, routineId));
   }
 
   /** Runs that were created but never got a handle - the crash window between the two writes. */
@@ -798,9 +826,35 @@ export class RoutineStore {
       if (missedPolicy === "run-once") {
         if (!missed.previous) continue;
         const count = missed.truncated ? missed.count : missed.count - 1;
-        this.#recordMissed(routine, { first, until: missed.previous, count }, missed.last);
+        // HXBot (v1.7.5, RTN-02): the record names every missed occurrence and that the newest one runs once.
+        this.#recordMissed(routine, { first, until: missed.previous, count }, missed.last, {
+          missed: {
+            total: missed.count,
+            from: first.toISOString(),
+            until: missed.last.toISOString(),
+            handled: "run-once",
+            while: "closed",
+          },
+        });
+        hxWriteRoutineDetail(this.database.connection, this.tables.ownerKind, routine.id, (detail) => ({
+          ...detail,
+          pendingCatchUp: {
+            scheduledFor: missed.last.toISOString(),
+            total: missed.count,
+            from: first.toISOString(),
+            until: missed.last.toISOString(),
+          },
+        }));
       } else {
-        this.#recordMissed(routine, { first, until: missed.last, count: missed.count }, missed.next);
+        this.#recordMissed(routine, { first, until: missed.last, count: missed.count }, missed.next, {
+          missed: {
+            total: missed.count,
+            from: first.toISOString(),
+            until: missed.last.toISOString(),
+            handled: "skip",
+            while: "closed",
+          },
+        });
       }
     }
   }
@@ -818,7 +872,9 @@ export class RoutineStore {
     }
     if (missedPolicy === "run-once") return;
     const at = new Date(trigger.nextRunAt);
-    this.#recordMissed(routine, { first: at, until: at, count: 1 }, null);
+    this.#recordMissed(routine, { first: at, until: at, count: 1 }, null, {
+      missed: { total: 1, from: at.toISOString(), until: at.toISOString(), handled: "skip", while: "closed" },
+    });
   }
 
   /**
@@ -866,6 +922,7 @@ export class RoutineStore {
     routine: OwnedRoutine,
     skipped: { first: Date; until: Date; count: number },
     nextRunAt: Date | null,
+    hx?: HxRunDetail,
   ): void {
     const {
       commandPrefix,
@@ -926,6 +983,8 @@ export class RoutineStore {
           timestamp,
           sequences[0] ?? 0,
         );
+        // HXBot (v1.7.5, RTN-02): how many came due while HXBot was closed, and what the policy did.
+        if (hx) hxWriteRunDetail(db, this.tables.ownerKind, runId, routine.id, () => hx, timestamp);
         if (next) {
           db.prepare(
             `UPDATE ${triggerTable} SET next_run_at = ?, updated_at = ?, last_event_sequence = ?
@@ -939,6 +998,69 @@ export class RoutineStore {
         return null;
       },
     );
+  }
+
+  /**
+   * HXBot (v1.7.5, RTN-03 / RTN-02): one record in the run history of occurrences that did not run: a
+   * skipped trigger (the last run still runs, a spent plan, a declined or expired confirmation) or the
+   * occurrences a sleep made late. It is a cancelled run with a missed count, as the records of a closed
+   * HXBot are, so a released client reads "skipped n"; HXBot's own reason goes in `hx_run_detail`. A second
+   * call for the same trigger and time does nothing.
+   */
+  protected hxRecordNotRunRow(
+    routine: RunSource,
+    triggerId: string | null,
+    record: { scheduledFor: string; until: string | null; count: number },
+    detail: HxRunDetail,
+  ): void {
+    const { commandPrefix, eventPrefix, runAggregate, runTable, ownerColumn } = this.tables;
+    const runId = randomUUID();
+    const count = Math.max(1, Math.min(record.count, ROUTINE_MISSED_COUNT_LIMIT + 1));
+    const until = count > 1 ? record.until : null;
+    this.database.dispatch(
+      `${commandPrefix}-trigger:hx-not-run:${triggerId ?? routine.id}:${record.scheduledFor}`,
+      [
+        {
+          aggregateType: runAggregate,
+          aggregateId: routine.id,
+          eventType: `${eventPrefix}.run-missed`,
+          payload: { runId, triggerId, scheduledFor: record.scheduledFor, until, count },
+        },
+      ],
+      (db, sequences) => {
+        const exists = db
+          .prepare(`SELECT 1 FROM ${runTable} WHERE trigger_id IS ? AND scheduled_for = ?`)
+          .get(triggerId, record.scheduledFor);
+        if (exists) return null;
+        const timestamp = new Date().toISOString();
+        db.prepare(
+          `INSERT INTO ${runTable} (
+             run_id, routine_id, ${ownerColumn}, trigger_id, run_kind, scheduled_for, routine_name, instruction,
+             status, error, missed_count, missed_until, created_at, updated_at, last_event_sequence
+           ) VALUES (?, ?, ?, ?, 'scheduled', ?, ?, ?, 'cancelled', NULL, ?, ?, ?, ?, ?)`,
+        ).run(
+          runId,
+          routine.id,
+          routine.ownerId,
+          triggerId,
+          record.scheduledFor,
+          routine.name,
+          routine.instruction,
+          count,
+          until,
+          timestamp,
+          timestamp,
+          sequences[0] ?? 0,
+        );
+        hxWriteRunDetail(db, this.tables.ownerKind, runId, routine.id, () => detail, timestamp);
+        return null;
+      },
+    );
+  }
+
+  /** HXBot (v1.7.5): writes what HXBot records about a run, in its own table. */
+  protected hxNoteRunRow(runId: string, routineId: string, change: (detail: HxRunDetail) => HxRunDetail): void {
+    hxWriteRunDetail(this.database.connection, this.tables.ownerKind, runId, routineId, change);
   }
 
   protected createRunRow(
@@ -1085,6 +1207,8 @@ export class RoutineStore {
       limitPolicy,
       missedPolicy,
       ...this.#runIn(row),
+      // HXBot (v1.7.5): what HXBot records about the routine. The frozen Team API routes leave it out.
+      ...hxRoutineFlagsOf(this.database.connection, this.tables.ownerKind, requiredStringColumn(row, "routine_id")),
       createdAt: requiredStringColumn(row, "created_at"),
       updatedAt: requiredStringColumn(row, "updated_at"),
     };

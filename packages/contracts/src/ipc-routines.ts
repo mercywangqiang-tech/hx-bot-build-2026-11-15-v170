@@ -164,6 +164,38 @@ export type RoutineRunPlace = (typeof ROUTINE_RUN_PLACES)[number];
  * an agent and a channel; `Routine` and `ChannelRoutine` only add the owner id and keep their own
  * shapes exactly.
  */
+/**
+ * HXBot (v1.7.5): what HXBot adds to a routine of this computer's host. The released Team API routes
+ * project a fixed key list, so a remote client never gets it.
+ */
+/** HXBot (v1.7.5, RTN-02, MIG-03): a run that waits for the person's yes, with what the answer needs. */
+export interface HxRoutineWaiting {
+  cardId: string;
+  scheduledFor: string;
+  reason: "each" | "catch-up";
+  actions: Array<"send" | "publish" | "pay" | "delete">;
+  missed?: { total: number; truncated: boolean; from: string; until: string };
+  expiresAt: string;
+}
+
+export interface HxRoutineFlags {
+  /** MIG-03: the routine came from an earlier version, and nobody has confirmed its zone yet. */
+  zoneUnconfirmed?: boolean;
+  /** MIG-03: each run asks first, because the instruction sends, posts, pays or deletes. */
+  confirmEach?: boolean;
+  /** MIG-03: what the upgrade to v1.7.5 changed on this routine. */
+  upgraded?: { at: string; changes: Array<"zone-unconfirmed" | "confirm-each"> };
+  /**
+   * RTN-06: what the routine has waiting, read back from the scheduler: runs that did not start and
+   * questions that wait for the yes. The run that works now, if any, apart.
+   */
+  queue?: { queued: number; running: { runId: string; status: string; deliveryId: string | null } | null };
+  /** RTN-04: the result of the newest run, so the list marks a result that is not verified. */
+  lastResult?: "succeeded" | "no-update" | "unverified" | "failed";
+  /** RTN-02, MIG-03: the runs that wait for the yes; the list answers them. */
+  waiting?: HxRoutineWaiting[];
+}
+
 export interface RoutineFields {
   id: string;
   name: string;
@@ -182,6 +214,8 @@ export interface RoutineFields {
   runIn?: RoutineRunPlace;
   createdAt: string;
   updatedAt: string;
+  /** HXBot (v1.7.5). */
+  hx?: HxRoutineFlags;
 }
 
 export interface Routine extends RoutineFields {
@@ -254,6 +288,21 @@ export interface RoutineRunFields {
   missed?: RoutineMissedRuns;
   createdAt: string;
   updatedAt: string;
+  /** HXBot (v1.7.5): what HXBot records about the run. Only this computer's host sends it. */
+  hx?: HxRunFlags;
+}
+
+/** HXBot (v1.7.5, RTN-02, RTN-03, RTN-04): what HXBot records about a run. */
+export interface HxRunFlags {
+  /** Why this occurrence did not run. */
+  /** `unasked`: the run needs the yes and nothing could ask, so it did not run (it never runs unasked). */
+  skip?: "previous-running" | "plan-limit" | "declined" | "expired" | "cancelled" | "unasked";
+  /** Occurrences that came due while HXBot was closed or the computer slept, and what the policy did. */
+  missed?: { total: number; from: string; until: string; handled: "skip" | "run-once"; while: "closed" | "asleep" };
+  /** This run makes up for missed occurrences. */
+  catchUp?: { total: number };
+  /** The result; absent until HXBot judged the run. */
+  result?: "succeeded" | "no-update" | "unverified" | "failed";
 }
 
 export interface RoutineRun extends RoutineRunFields {
@@ -326,6 +375,8 @@ export interface UpdateRoutineInput {
   limitPolicy?: RoutineLimitPolicy;
   missedPolicy?: RoutineMissedPolicy;
   runIn?: RoutineRunPlace;
+  /** HXBot (v1.7.5, RTN-01): an IANA zone. Left out, the routine keeps its zone. */
+  timezone?: string;
 }
 
 export interface DeleteRoutineInput {

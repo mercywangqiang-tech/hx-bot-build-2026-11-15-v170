@@ -2,6 +2,7 @@ import type { HxAccessLogView, HxAccessRuleView } from "./hx-access-settings";
 import type { HxAutoModelUpdate, HxAutoModelView } from "./hx-auto-model";
 import type { HxComputerStatus, HxSelfTestReport } from "./hx-computer";
 import type { HxFileVersionsView, HxRestoreFileChangeInput, HxRestoreFileChangeResult } from "./hx-file-change";
+import type { HxLearnedView } from "./hx-learned";
 import type {
   HxOcAttempt,
   HxOcAttemptRef,
@@ -13,6 +14,9 @@ import type {
   HxOcMethodInput,
 } from "./hx-opencode";
 import type { HxSetTeamPriorityInput, HxSetTeamPriorityResult } from "./hx-progress";
+import type { HxAnswerRoutineConfirmInput, HxAnswerRoutineConfirmResult } from "./hx-routine-confirm";
+import type { HxTeamCardActionInput, HxTeamCardActionResult } from "./hx-team-card";
+import type { HxSaveTurnInput, HxSaveTurnResult, HxWorkflowLimits, HxWorkflowLimitsInput } from "./hx-workflows";
 import type {
   AcpRegistryEntry,
   AcpRegistryInstallation,
@@ -1600,6 +1604,19 @@ export const IPC_ENDPOINTS = {
     hxSetTeamPriority: request<HxSetTeamPriorityInput, HxSetTeamPriorityResult>()("auth:hx-set-team-priority"),
     revokeMobileConnectedDevice: request<string, void>()("auth:revoke-mobile-connected-device"),
     logout: request<undefined, CentralAuthState>()("auth:logout"),
+    // HXBot (v1.7.5, RTN-02): the answer to a routine run that waits for the person's yes (hx-routines).
+    hxAnswerRoutineConfirm: request<HxAnswerRoutineConfirmInput, HxAnswerRoutineConfirmResult>()(
+      "auth:hx-answer-routine-confirm",
+    ),
+    // HXBot (v1.7.5, RTN-11): saves a chat turn of this computer as a workflow; RTN-07: a workflow's limits.
+    hxSaveTurnAsWorkflow: request<HxSaveTurnInput, HxSaveTurnResult>()("auth:hx-save-turn-as-workflow"),
+    hxWorkflowLimits: request<string, HxWorkflowLimits>()("auth:hx-workflow-limits"),
+    hxSetWorkflowLimits: request<HxWorkflowLimitsInput, HxWorkflowLimits>()("auth:hx-set-workflow-limits"),
+    // HXBot (v1.7.5, CONC-13): the times learned from the person's choices, and the defaults back.
+    hxLearnedView: request<undefined, HxLearnedView>()("auth:hx-learned-view"),
+    hxLearnedReset: request<undefined, HxLearnedView>()("auth:hx-learned-reset"),
+    // HXBot (v1.7.5, CONC-16): a button on a team's card: the judge's automatic mode, wrap up, stop.
+    hxTeamCardAction: request<HxTeamCardActionInput, HxTeamCardActionResult>()("auth:hx-team-card-action"),
     // Company sign-in. `openCompanySignIn` opens the provider page again for the email in the state.
     openCompanySignIn: request<undefined, CentralAuthState>()("auth:open-company-sign-in"),
     // The setup of a server that the user owns, by server id. `testCompanySignIn` waits for the browser.
@@ -1698,6 +1715,9 @@ export const IPC_ENDPOINTS = {
     updateAgent: scopedRequest<UpdateAgentInput, ClientAgentSummary>()("agent:update"),
     setAvatar: scopedRequest<SetAgentAvatarInput, ClientAgentSummary>()("agent:set-avatar"),
     deleteAgent: scopedRequest<string, void>()("agent:delete"),
+    // HXBot (v1.7.5 fix): a delete that waits for its undo time is held on the host, and Undo releases it.
+    holdAgentDelete: scopedRequest<string, void>()("agent:hold-delete"),
+    releaseAgentDelete: scopedRequest<string, void>()("agent:release-delete"),
     readConversation: scopedRequest<string, ConversationWithReadState>()("agent:read-conversation"),
     readConversationPage: scopedRequest<ReadConversationPageInput, ConversationPage>()("agent:read-conversation-page"),
     searchConversationMessages: scopedRequest<SearchConversationMessagesInput, ConversationSearchPage>()(

@@ -252,6 +252,7 @@ import type { ProviderSession } from "./database/provider-sessions";
 import { reportOriginalFailure } from "./effect-boundary";
 import type { HostMemory } from "./host-memory";
 import { hxAccessHostFor, setHxAccessHost } from "./hx-access/hub";
+import { type HxAgentDeleteHolds, hxAgentDeleteHolds } from "./hx-agent-delete/holds";
 import { type HxAutoHost, hxAutoRouter } from "./hx-auto-model/router";
 import { hxAutoModelStore } from "./hx-auto-model/store";
 import { hxComputer, hxComputerAgentsToStop, hxComputerLine, hxComputerStoppedText } from "./hx-computer/computer";
@@ -260,10 +261,17 @@ import { HX_IDLE_MIN_MS, hxWithIdlePolicy } from "./hx-flow/idle";
 import { hxFlow } from "./hx-flow/ledger";
 import { hxEventLoopTurn } from "./hx-flow/loop-turn";
 import { hxProgressMessage } from "./hx-progress/progress";
+import { hxAttachChannelConfirm } from "./hx-routines/channel";
+import { hxRoutineConfirm } from "./hx-routines/confirm";
+import { hxWriteRoutineConfirmCard } from "./hx-routines/confirm-card";
+import { hxNotify } from "./hx-routines/notify";
+import { hxRoutineResults } from "./hx-routines/results-service";
 import { hxFileChangeMessage, hxSetFileCardPort } from "./hx-skills/change-card";
 import { hxSetSkillUiHost } from "./hx-skills/host";
 import { type HxTeamPort, hxTeamLine, hxTeams } from "./hx-team/service";
 import { hxReadSpend } from "./hx-team/spend";
+import { hxAttachWorkflowSteps } from "./hx-workflows/host";
+import { hxWriteSaveTurnLine } from "./hx-workflows/save-line";
 import type { SignInRegion } from "./kimi-region";
 import type { LinkWallet } from "./link-wallet";
 import type { MailboxStore } from "./mailbox-store";
@@ -563,6 +571,20 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
   readonly #requestedNewChats = new Set<string>();
   /** A turn that ends with open plan steps runs again, at most 3 times for one request. */
   readonly #planContinuation = new PlanContinuation({ limit: 8 });
+  /**
+   * HXBot (v1.7.5 fix): a delete that waits for its undo time is kept on disk beside `hxbot.db`, and its
+   * agent is out of every list (this computer, the web client, the phones) until the delete or an undo.
+   */
+  readonly #hxDeletes: HxAgentDeleteHolds = hxAgentDeleteHolds(() => this.#store.database.path, {
+    exists: (agentId) => this.#store.list().some((agent) => agent.id === agentId),
+    blockDeliveries: (agentId) => this.#mailbox.blockAgentDeliveries(agentId),
+    resume: (agentId) => {
+      this.#drain.scheduleDrain(agentId);
+      this.#routineTimer.arm();
+    },
+    emitRoster: () => this.#emit({ type: "agents-changed", agents: this.listAgents() }),
+    warn: (message, detail) => logger.warn(message, detail),
+  });
   #initialized = false;
   #stopping = false;
 
@@ -773,7 +795,12 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
         listAgents: () => this.listAgents(),
         // A hidden agent keeps its routines, but they do not run until the user restores it.
         excludedAgents: () =>
-          new Set([...this.#duplication.pendingAgents(), ...this.#removal.deleting(), ...this.#hiddenAgentIds()]),
+          new Set([
+            ...this.#duplication.pendingAgents(),
+            ...this.#removal.deleting(),
+            ...this.#hiddenAgentIds(),
+            ...this.#hxDeletes.held(),
+          ]),
         isRunning: () => this.#initialized && !this.#stopping,
         usageLimited: (agentId) => !this.#usageLimits.mayDrain(agentId),
         routineThread: (agentId, routineId, routineName) => this.#tasks.routineThread(agentId, routineId, routineName),
@@ -788,6 +815,43 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           );
         },
       },
+    });
+    // HXBot (v1.7.5, RTN-02, MIG-03): the questions that wait for the person's yes before a routine runs.
+    hxRoutineConfirm.attach({
+      connection: () => store.database.connection,
+      routine: (agentId, routineId) =>
+        this.#routines.listFor(agentId).find((routine) => routine.id === routineId) ?? null,
+      writeCard: (agentId, cardId, card, settled) =>
+        hxWriteRoutineConfirmCard(this.#conversation, store.database, agentId, cardId, card, settled, (error) =>
+          this.#emitError("hx_routine_confirm_failed", error, agentId),
+        ),
+      startRun: (input) => Effect.runPromise(this.#routines.hxStartConfirmedRun(input)),
+      recordSkipped: (input) => this.#routines.hxRecordSkipped(input),
+    });
+    // HXBot (v1.7.5, RTN-04): the result of each routine run, judged when its turn ends.
+    hxRoutineResults.attach({
+      connection: () => store.database.connection,
+      runForDelivery: (deliveryId) => this.#routines.runForDelivery(deliveryId),
+      workspaceOf: (agentId) => this.listAgents().find((agent) => agent.id === agentId)?.workspacePath ?? null,
+      appendLine: (agentId, text) => {
+        try {
+          this.#appendSystemMessage(agentId, hxComputerLine(text), "thread.hx-routine-result");
+        } catch (error) {
+          this.#emitError("hx_routine_result_failed", error, agentId);
+        }
+      },
+      notify: (_agentId, title, body) => hxNotify(title, body),
+    });
+    // HXBot (v1.7.5, RTN-11): the app action, app skill and team steps of workflows (hx-workflows). A turn
+    // keeps its Computer Use calls and team starts; after it, a chat line offers to save them as a workflow.
+    hxAttachWorkflowSteps({
+      connection: () => store.database.connection,
+      agents: () => this.listAgents(),
+      writeLine: (agentId, line) =>
+        hxWriteSaveTurnLine(this.#conversation, store.database, agentId, line, (error) =>
+          this.#emitError("hx_save_turn_failed", error, agentId),
+        ),
+      delivery: (deliveryId) => this.#mailbox.getDelivery(deliveryId)?.delivery ?? null,
     });
     this.#hostedSites = new HostedSiteCoordinator({
       store,
@@ -1429,6 +1493,16 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
         },
       },
     });
+    // HXBot (v1.7.5, RTN-02, MIG-03): a channel routine that waits for the yes asks in its routine list
+    // and with a desktop notification, not in the channel.
+    hxAttachChannelConfirm(this.#channelRoutines, {
+      connection: () => store.database.connection,
+      changed: (channelId) => {
+        this.#emit({ type: "channel-routines-changed", channelId });
+        this.#routineTimer.arm();
+      },
+      notify: (title, body) => hxNotify(title, body),
+    });
     this.routineRecords = new RoutineRecords({
       database: store.database,
       agentRoutines: this.#routines,
@@ -1947,7 +2021,7 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
   }
 
   listAgents(): AgentSummary[] {
-    return this.#duplication.visibleAgents(this.#store.list());
+    return this.#hxDeletes.visible(this.#duplication.visibleAgents(this.#store.list()));
   }
 
   /** The folder that every local agent can change, beside its own workspace. */
@@ -4609,8 +4683,53 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
   deleteAgent(agentId: string): Effect.Effect<void, AgentLifecycleFailed> {
     return Effect.sync(() => this.#planContinuation.cancel(agentId)).pipe(
       Effect.andThen(this.#removal.delete(agentId)),
+      // HXBot (v1.7.5 fix): the waiting delete ends with the delete; a failed one shows the agent again.
+      Effect.tap(() => Effect.sync(() => this.#hxDeletes.deleted(agentId))),
+      Effect.tapError(() => Effect.sync(() => this.#hxDeletes.failed(agentId))),
       Effect.mapError((failure) => new AgentLifecycleFailed({ operation: "deleteAgent", cause: failure.cause })),
     );
+  }
+
+  /**
+   * HXBot (v1.7.5 fix): the person deleted the agent and may still undo it. Fails at once as the delete
+   * would; otherwise the waiting delete is on disk and the agent is out of every list.
+   */
+  holdAgentDelete(agentId: string): Effect.Effect<void, AgentLifecycleFailed> {
+    return this.ensureAgentDeletable(agentId).pipe(
+      Effect.andThen(lifecycleStep("hold agent delete", () => this.#hxDeletes.hold(agentId))),
+      Effect.mapError((failure) => new AgentLifecycleFailed({ operation: "deleteAgent", cause: failure.cause })),
+    );
+  }
+
+  /** HXBot (v1.7.5 fix): Undo. Fails with `error.agent.gone` when the agent was deleted already. */
+  releaseAgentDelete(agentId: string): Effect.Effect<void, AgentLifecycleFailed> {
+    return lifecycleStep("release agent delete", () => {
+      if (this.#removal.deleting().has(agentId)) throw new Error(sourceText("error.agent.deletionBusy"));
+      this.#hxDeletes.release(agentId);
+    }).pipe(Effect.mapError((failure) => new AgentLifecycleFailed({ operation: "deleteAgent", cause: failure.cause })));
+  }
+
+  /**
+   * HXBot (v1.7.5 fix): the delete of a held agent that nobody can undo any more (its window is gone, the
+   * hold reached its limit, or a start found it). A failure keeps the hold: the person deleted the agent,
+   * so it stays out of the lists and the delete is tried again; it never comes back on its own.
+   */
+  hxDeleteHeld(agentId: string): Effect.Effect<void, AgentLifecycleFailed> {
+    return Effect.sync(() => this.#planContinuation.cancel(agentId)).pipe(
+      Effect.andThen(this.#removal.delete(agentId)),
+      Effect.tap(() => Effect.sync(() => this.#hxDeletes.deleted(agentId))),
+      Effect.mapError((failure) => new AgentLifecycleFailed({ operation: "deleteAgent", cause: failure.cause })),
+    );
+  }
+
+  /** HXBot (v1.7.5 fix): the waiting deletes, also those of joined servers that the main process sends. */
+  get hxPendingDeletes() {
+    return this.#hxDeletes.pending;
+  }
+
+  /** HXBot (v1.7.5 fix): the agents of this computer whose delete waits. */
+  hxHeldDeletes(): ReadonlySet<string> {
+    return this.#hxDeletes.held();
   }
 
   deleteChannel(channelId: string): Effect.Effect<void, AgentLifecycleFailed> {
@@ -4642,6 +4761,8 @@ export class AgentService extends EventEmitter<AgentServiceEvents> {
           (failure) => new AgentLifecycleFailed({ operation: "initialize agent store", cause: failure.cause }),
         ),
       );
+    // HXBot (v1.7.5 fix): the agents of the deletes that waited when HXBot stopped stay out of every list.
+    yield* lifecycleStep("hold the waiting agent deletes", () => this.#hxDeletes.restore());
     yield* this.#mailbox
       .initialize()
       .pipe(

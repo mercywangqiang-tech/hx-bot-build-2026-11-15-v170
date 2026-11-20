@@ -950,4 +950,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (Standard)",
   "settings.hxComputer.versions.git":
     "Ein Coding-Agent, der Dateien mit eigenen Befehlen ändert, behält hier keine Versionen. In einem Git-Ordner kann Git sie zurücksetzen.",
+  "settings.hxLearned.title": "Zeiten, die HXBot aus deinen Entscheidungen gelernt hat",
+  "settings.hxLearned.description":
+    "Nur auf diesem Computer gespeichert. An ein Team ohne Fortschritt wird standardmäßig nach {minutes} Minuten erinnert (15 Minuten bis 2 Stunden); „Weitermachen“ gibt diesem Team die doppelte Zeit, „Abschließen“ oder „Stoppen“ lässt an solche Arbeit früher erinnern. HXBot macht {seconds} Sekunden, nachdem du aufhörst, mit deinem Computer weiter (3 bis 15 Sekunden), länger, wenn du direkt danach zurückkommst.",
+  "settings.hxLearned.changed": "Geändert: {list}",
+  "settings.hxLearned.work": "{work} {minutes} Min.",
+  "settings.hxLearned.none": "Noch nichts geändert.",
+  "settings.hxLearned.reset": "Standardwerte verwenden",
+  "settings.hxLearned.failed": "HXBot konnte die gelernten Zeiten nicht lesen oder ändern.",
+  "settings.hxBoot.sound.title": "Ton des Startfilms",
+  "settings.hxBoot.sound.description":
+    "Der Film läuft beim ersten Start und beim ersten Start nach jedem Update. Aus: Er läuft ohne Ton.",
 } as const satisfies PartialTranslation<typeof source>;

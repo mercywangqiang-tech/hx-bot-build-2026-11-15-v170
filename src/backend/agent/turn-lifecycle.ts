@@ -33,6 +33,8 @@ import { causeHelpers, reportOriginalFailure } from "../effect-boundary";
 import { hxRecordItem, hxReleaseEarlierTurns } from "../hx-access/hub";
 import { hxAutoRouter } from "../hx-auto-model/router";
 import { hxProviderGate, hxRetryAfterMs } from "../hx-flow/provider-gate";
+import { hxRoutineResults } from "../hx-routines/results-service";
+import { hxTurnTools } from "../hx-workflows/turn-tools";
 import type { DeliveryContext, MailboxStore, UsageLimitContinuation } from "../mailbox-store";
 import {
   type AppServerNotification,
@@ -1443,6 +1445,21 @@ export class TurnLifecycle {
           })
         : null;
       if (!continuation) this.#planContinuation.cancel(agentId, laneTaskId);
+      // HXBot (v1.7.5, RTN-04): the end of the turn is not the run's success; HXBot judges each routine run.
+      if (!continuation) {
+        hxRoutineResults.judgeTurn({
+          agentId,
+          turnId,
+          outcome,
+          reportedFailure,
+          noUpdate: quiet || markerAnswer || noUpdateCalled,
+          answer: latestAssistant?.text,
+          messages: snapshot.messages,
+          deliveries: deliveries.map(({ delivery }) => delivery),
+        });
+        // HXBot (v1.7.5, RTN-11): a turn that worked with Computer Use, app skills or a team can be saved.
+        hxTurnTools.turnEnded(agentId, turnId);
+      }
       if (deliveries.length > 0) {
         const terminal = outcome === "failed" ? "failed" : outcome === "interrupted" ? "interrupted" : "completed";
         for (const delivery of deliveries) {

@@ -214,16 +214,28 @@ export default function AgentSettingsPanel(props: AgentSettingsPanelProps) {
     };
   };
   const memoriesPort = createMemo(() => agentMemoriesPort(props.agent.id, props.agent.name, props.memoryLimit ?? null));
-  const legacyRoutinesPort = createMemo(() =>
-    agentRoutinesPort(
+  const legacyRoutinesPort = createMemo(() => {
+    const port = agentRoutinesPort(
       props.agent.id,
       props.localHost === true && agentAutomationAllowed(props.agent, props.agentDefaults ?? DEFAULT_AGENT_DEFAULTS),
       // Set only for the host on this computer, the one place the policy is kept.
       props.localHost === true,
       props.routines,
       props.localHost === true || props.routineRunPlace === true,
-    ),
-  );
+    );
+    // HXBot (v1.7.5, RTN-01): this computer's host tells the editor the registered zone.
+    const serverId = props.skillsServerId;
+    return props.localHost === true && serverId
+      ? {
+          ...port,
+          registeredZone: () => window.hxbot.hostAdmin.getTimezone(serverId).then((settings) => settings.timezone),
+          registerZone: (zone: string) => window.hxbot.hostAdmin.setTimezone(zone, serverId).then(() => undefined),
+          // HXBot (v1.7.5, RTN-02, MIG-03): the agent routine's run that waits for the yes.
+          answerConfirm: (cardId: string, run: boolean) =>
+            window.hxbot.auth.hxAnswerRoutineConfirm({ agentId: props.agent.id, cardId, run }),
+        }
+      : port;
+  });
   const routinesPort = createMemo(() => {
     const eventApi = props.eventRoutines ?? props.adminCalls?.eventRoutines;
     return eventApi

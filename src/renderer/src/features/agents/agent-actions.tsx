@@ -248,7 +248,9 @@ const AgentActions = createSimpleContext({
 
     /**
      * The agent leaves the roster at once, and a toast offers Undo. Main deletes the agent only when the
-     * time is over, so an undo has nothing to restore. If the app quits before then, the agent stays.
+     * time is over, so an undo has nothing to restore.
+     * HXBot (v1.7.5 fix): the host holds the delete at once (on disk, and the agent leaves the lists of
+     * every device), so a quit, a closed window or a hidden one no longer brings the agent back.
      */
     async function deleteAgent(agentId: string) {
       if (agentSetupOpen() && creatingAgent()) return;
@@ -272,6 +274,25 @@ const AgentActions = createSimpleContext({
 
       const toastId = `agent-delete-${serverId}-${agentId}`;
       let settled = false;
+      // HXBot (v1.7.5 fix): the host holds the delete; undo and the delete wait for the hold first.
+      const held = agentsPort()
+        .agent.holdAgentDelete(agentId, serverId)
+        .then(
+          () => true,
+          (error) => {
+            if (!settle()) return false;
+            if (scopeIsCurrent()) {
+              showAgent();
+              if (wasActive) setActiveAgentId(agentId);
+            }
+            const { t, errorMessage } = currentText();
+            actionToast.error(t("agent.error.deleteFailed"), {
+              description: errorMessage(error, t("sidebar.delete.failed")),
+              report: { operation: "agent", source: "action", cause_code: classifyFailure(error) },
+            });
+            return false;
+          },
+        );
       /** Undo and delete each end the same wait, so only the first of them runs. */
       function settle(): boolean {
         if (settled) return false;
@@ -284,9 +305,26 @@ const AgentActions = createSimpleContext({
       }
 
       function undo(): void {
-        if (!settle() || !scopeIsCurrent()) return;
-        showAgent();
-        if (wasActive) setActiveAgentId(agentId);
+        if (!settle()) return;
+        if (scopeIsCurrent()) {
+          showAgent();
+          if (wasActive) setActiveAgentId(agentId);
+        }
+        // HXBot (v1.7.5 fix): the host lets the agent go back to every device.
+        void held.then(async (holds) => {
+          if (!holds) return;
+          try {
+            await agentsPort().agent.releaseAgentDelete(agentId, serverId);
+          } catch (error) {
+            // The delete ended already (the window was gone, or the hold reached its limit).
+            forgetDeletedAgent();
+            const { t, errorMessage } = currentText();
+            actionToast.error(t("agent.error.deleteFailed"), {
+              description: errorMessage(error, t("sidebar.delete.failed")),
+              report: { operation: "agent", source: "action", cause_code: classifyFailure(error) },
+            });
+          }
+        });
       }
 
       function forgetDeletedAgent(): void {
@@ -311,6 +349,8 @@ const AgentActions = createSimpleContext({
         // fails, the agent comes back without its pin.
         removePinnedSidebarItemEverywhere({ kind: "agent", id: agentId });
         try {
+          // HXBot (v1.7.5 fix): after the hold, so the two never meet on the host.
+          await held;
           await agentsPort().agent.deleteAgent(agentId, serverId);
           forgetDeletedAgent();
         } catch (error) {

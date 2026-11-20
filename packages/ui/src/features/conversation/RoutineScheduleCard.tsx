@@ -1,4 +1,5 @@
 import { CalendarClock } from "@hxbot/ui";
+import type { JSX } from "@solidjs/web";
 import { useText } from "../../text";
 import { ChatActionCard, type ChatActionCardStatus } from "./ChatActionCard";
 import { RoutineSchedulePicker } from "./RoutineSchedulePicker";
@@ -24,6 +25,8 @@ export interface RoutineScheduleCardProps {
   today?: Date;
   /** The frequencies the menu offers. Defaults to all of them. */
   kinds?: RoutineDraftKindOption[];
+  /** HXBot (v1.7.5, RTN-01): the next three runs, under the schedule row. */
+  upcoming?: JSX.Element;
 }
 
 /**
@@ -74,6 +77,7 @@ export function RoutineScheduleCard(props: RoutineScheduleCardProps) {
         onChange={(schedule) => props.onChange?.(schedule)}
         onEditEnd={() => props.onEditEnd?.()}
       />
+      {deleted() ? undefined : props.upcoming}
     </ChatActionCard>
   );
 }

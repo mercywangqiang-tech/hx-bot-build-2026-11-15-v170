@@ -1,0 +1,272 @@
+/* HXBot v1.7.5: the next three runs of a routine, its timezone field, and its run results. */
+
+.hx-routine-upcoming {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+  color: var(--hxbot-text-primary);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-upcoming-title {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hx-routine-upcoming-run {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--hxbot-space-2);
+}
+
+.hx-routine-upcoming-offset,
+.hx-routine-upcoming-utc,
+.hx-routine-upcoming-empty {
+  color: var(--hxbot-text-muted);
+}
+
+.hx-routine-upcoming-note {
+  flex-basis: 100%;
+  color: var(--hxbot-warning-text);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-zone {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+}
+
+.hx-routine-zone-hint {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-zone-warning {
+  color: var(--hxbot-warning-text);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-confirm {
+  box-sizing: border-box;
+  display: flex;
+  width: min(100%, 448px);
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+  border: 1px solid var(--hxbot-warning);
+  border-radius: var(--hxbot-radius-card);
+  background: var(--hxbot-bg-canvas);
+  color: var(--hxbot-text-primary);
+  padding: var(--hxbot-space-3);
+}
+
+.hx-routine-confirm[data-settled] {
+  border-color: var(--hxbot-border);
+}
+
+.hx-routine-confirm-head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: var(--hxbot-space-3);
+}
+
+.hx-routine-confirm-glyph {
+  display: inline-flex;
+  width: var(--hxbot-icon-sm);
+  height: var(--hxbot-icon-sm);
+  flex: 0 0 auto;
+  color: var(--hxbot-warning-text);
+}
+
+.hx-routine-confirm-glyph svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hx-routine-confirm-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+}
+
+.hx-routine-confirm-title,
+.hx-routine-confirm-note,
+.hx-routine-confirm-actions,
+.hx-routine-confirm-outcome,
+.hx-routine-confirm-message {
+  margin: 0;
+}
+
+.hx-routine-confirm-title {
+  font-size: var(--hxbot-text-md);
+}
+
+.hx-routine-confirm-note,
+.hx-routine-confirm-outcome {
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-confirm-actions {
+  color: var(--hxbot-warning-text);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-confirm-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-confirm-line {
+  overflow-wrap: anywhere;
+}
+
+.hx-routine-confirm-message[data-failed] {
+  color: var(--hxbot-danger-text);
+}
+
+.hx-routine-confirm-buttons {
+  display: flex;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-routine-run-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-run-note[data-hx-result="unverified"] {
+  color: var(--hxbot-warning-text);
+}
+
+.hx-routine-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hxbot-space-1);
+}
+
+.hx-routine-badge {
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-card);
+  color: var(--hxbot-text-muted);
+  font-size: var(--hxbot-text-sm);
+  padding: 0 var(--hxbot-space-1);
+}
+
+.hx-routine-badge-warning {
+  border-color: var(--hxbot-warning);
+  color: var(--hxbot-warning-text);
+}
+
+.hx-routine-upgrade,
+.hx-routine-queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+  border: 1px solid var(--hxbot-warning);
+  border-radius: var(--hxbot-radius-card);
+  background: var(--hxbot-warning-soft);
+  padding: var(--hxbot-space-3);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-queue {
+  border-color: var(--hxbot-border);
+  background: transparent;
+}
+
+.hx-routine-upgrade-title {
+  margin: 0;
+}
+
+.hx-routine-upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-1);
+  margin: 0;
+  padding: 0 0 0 var(--hxbot-space-3);
+}
+
+.hx-routine-upgrade-change {
+  display: block;
+  color: var(--hxbot-text-muted);
+}
+
+.hx-routine-upgrade-buttons,
+.hx-routine-queue-running {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+}
+
+/* HXBot v1.7.5 (RTN-02, MIG-03): a run that waits for the yes, under its routine in the list. */
+.hx-routine-waiting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hxbot-space-2);
+  margin-top: var(--hxbot-space-2);
+  border: 1px solid var(--hxbot-warning);
+  border-radius: var(--hxbot-radius-card);
+  background: var(--hxbot-warning-soft);
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-routine-waiting-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hxbot-space-2);
+}
+
+.hx-routine-waiting-actions {
+  display: flex;
+  gap: var(--hxbot-space-2);
+}
+
+/* HXBot v1.7.5 (RTN-11): the line that saves a chat turn as a workflow. */
+.hx-save-turn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--hxbot-space-2);
+  margin: var(--hxbot-space-2) 0;
+  border: 1px solid var(--hxbot-border);
+  border-radius: var(--hxbot-radius-card);
+  padding: var(--hxbot-space-2) var(--hxbot-space-3);
+  font-size: var(--hxbot-text-sm);
+}
+
+.hx-save-turn-done {
+  color: var(--hxbot-text-muted);
+}
+
+.hx-save-turn-error {
+  color: var(--hxbot-danger);
+}

@@ -28,7 +28,7 @@ import { parseCreateRoutine, parseUpdateRoutine } from "../src/main/ipc/agent-in
 
 const ROOT = resolve(import.meta.dirname, "..");
 const OUT = join(ROOT, ".hxbot-build", "routine-pause-resume-e2e");
-const STEP_DEADLINE_MS = 15_000;
+const STEP_DEADLINE_MS = 80_000;
 const DAY = "2031-03-03";
 const at = (time: string) => new Date(`${DAY}T${time}:00.000Z`);
 
@@ -96,7 +96,8 @@ async function openFixture(root: string): Promise<Fixture> {
         syncMailboxMessages: () => {},
         listAgents: () => store.list(),
         excludedAgents: () => new Set(),
-        isRunning: () => false,
+        // HXBot (v1.7.5, CONC-14): a staggered start fires only while the service runs.
+        isRunning: () => true,
         usageLimited: () => false,
         routineThread: () => null,
         routineDeleted: () => Effect.void,
@@ -195,6 +196,11 @@ async function cancelQueued(): Promise<void> {
 
 async function pass(now: Date): Promise<void> {
   await runCauseEffect(current().scheduler.processDue(now));
+  // HXBot (v1.7.5, CONC-14): routines due in the same minute start spread over it. Wait for those starts.
+  const until = performance.now() + 65_000;
+  while (current().scheduler.hxPendingStarts() > 0 && performance.now() < until) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
 }
 
 try {

@@ -926,4 +926,15 @@ export const messages = {
   "settings.hxComputer.versions.default": "{size} (padrão)",
   "settings.hxComputer.versions.git":
     "Um agente de programação que altera arquivos com os próprios comandos não guarda versões aqui. Em uma pasta Git, o Git pode restaurá-los.",
+  "settings.hxLearned.title": "Tempos que o HXBot aprendeu com suas escolhas",
+  "settings.hxLearned.description":
+    "Guardados só neste computador. Por padrão, uma equipe sem progresso recebe lembrete depois de {minutes} minutos (de 15 minutos a 2 horas); “Continuar” dá a essa equipe o dobro do tempo, “Concluir” ou “Parar” faz trabalhos desse tipo receberem lembrete mais cedo. O HXBot volta a usar seu computador {seconds} segundos depois que você para (de 3 a 15 segundos), mais tempo quando você volta logo depois que ele continuou.",
+  "settings.hxLearned.changed": "Alterado: {list}",
+  "settings.hxLearned.work": "{work} {minutes} min",
+  "settings.hxLearned.none": "Nada mudou ainda.",
+  "settings.hxLearned.reset": "Usar os padrões",
+  "settings.hxLearned.failed": "O HXBot não conseguiu ler nem alterar os tempos aprendidos.",
+  "settings.hxBoot.sound.title": "Som do filme de abertura",
+  "settings.hxBoot.sound.description":
+    "O filme passa na primeira abertura e na primeira abertura depois de cada atualização. Desligado: passa sem som.",
 } as const satisfies PartialTranslation<typeof source>;

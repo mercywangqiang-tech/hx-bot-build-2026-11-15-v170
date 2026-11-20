@@ -52,6 +52,7 @@ import hotfix_173 as hx_hotfix_173  # 同目录：v1.7.3 紧急修正（程序�
 import office_files as hx_office_files  # 同目录：应用技能（一）办公与文件（v1.7.4）
 import flow_v174 as hx_flow_v174  # 同目录：并发（二）提供商在途上限、等待看得见、过载换模型、裁判建议（v1.7.4）
 import skills_ui_v174 as hx_skills_ui_v174  # 同目录：应用技能（一）的对话部分：空间满时问你、改了文件的卡片（v1.7.4）
+import routines_v175 as hx_routines_v175  # 同目录：应用工作流与定时任务升级（v1.7.5）
 
 ROOT = Path(__file__).resolve().parent.parent
 BRAND = json.loads((ROOT / "hx" / "brand.json").read_text(encoding="utf-8"))
@@ -592,7 +593,8 @@ def mobile() -> None:
             f'  browser: {{\n    ios: {{ upTo: "{VERSIONS['mobile']}" }},\n    android: {{ upTo: "{VERSIONS['mobile']}" }},\n  }},\n')
     replace(features,
             'export const MOBILE_LATEST_VERSIONS: MobileLatestVersions = {\n  ios: "1.4.7",\n  android: "1.4.6",\n};',
-            f'export const MOBILE_LATEST_VERSIONS: MobileLatestVersions = {{\n  ios: "{VERSIONS["mobile"]}",\n  android: "{VERSIONS["mobile"]}",\n}};')
+            # v1.7.5: iOS can lag Android (no iOS package without a D-U-N-S number): its latest is mobileIos.
+            f'export const MOBILE_LATEST_VERSIONS: MobileLatestVersions = {{\n  ios: "{VERSIONS.get("mobileIos", VERSIONS["mobile"])}",\n  android: "{VERSIONS["mobile"]}",\n}};')
     gs = ROOT / "apps/mobile/google-services.json"
     if gs.exists():  # OpenBot 自己的 Firebase 项目，研究版不用（安卓推送通知第一版关闭）
         if CHECK_ONLY:
@@ -2011,6 +2013,11 @@ def skills_ui() -> None:
     hx_skills_ui_v174.apply(sys.modules[__name__])
 
 
+def routines_175() -> None:
+    """应用工作流与定时任务升级：时区必填与下三次、错过与跳过的记录、结果判定、工作流新步骤、开机画面（hx/routines_v175.py）。"""
+    hx_routines_v175.apply(sys.modules[__name__])
+
+
 def test_expectations() -> None:
     """上游测试里写死的名称和地址，随改名和封堵一起改，让测试检查 HX 版的实际行为。"""
     csp = "src/main/content-security-policy.test.ts"
@@ -2046,7 +2053,7 @@ def upstream() -> None:
 def main() -> int:
     for step in (desktop, logo, site_pages, shared, account, login_password, mobile, visible_names, interface_text, keychain,
                  giraffe_pile, mobile_giraffe_pile, secret_box, animal_avatars, upstream, on_demand_access, own_link_and_names,
-                 registered_accounts, in_app_updates, own_account_deletion, access_settings_page, required_updates, workbuddy_look, settings_groups, computer_catalog, auto_model, opencode_connect, team_rooms, computer_work, computer_real, vault_login, window_fixes, quiet, concurrency, bug_fixes_172, computer_lanes, bug_fixes_173, hotfix_173, office_files, concurrency_two, skills_ui, test_expectations, checks_of_upstream, rename_all):
+                 registered_accounts, in_app_updates, own_account_deletion, access_settings_page, required_updates, workbuddy_look, settings_groups, computer_catalog, auto_model, opencode_connect, team_rooms, computer_work, computer_real, vault_login, window_fixes, quiet, concurrency, bug_fixes_172, computer_lanes, bug_fixes_173, hotfix_173, office_files, concurrency_two, skills_ui, routines_175, test_expectations, checks_of_upstream, rename_all):
         step()
     brand_rename.finish(sys.modules[__name__])
     if not CHECK_ONLY or not pending:

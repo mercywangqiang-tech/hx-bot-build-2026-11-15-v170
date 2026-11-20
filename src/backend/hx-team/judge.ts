@@ -31,6 +31,8 @@ export type HxUserChoice = "continue" | "finish" | "stop";
 export interface HxJudgeView {
   verdict: HxJudgeVerdict;
   reason: string;
+  /** v1.7.5 (CONC-16): the model that judged (provider and model id), for the pass list. */
+  model?: { provider: string; model: string };
 }
 
 interface HxJudgeBoardRow {

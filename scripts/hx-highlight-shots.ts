@@ -63,10 +63,103 @@ interface Shot {
 /** Newest first. One HOT and one NEW in all. */
 export const SHOTS: Shot[] = [
   {
+    id: "boot-film",
+    story: "hxbot-highlights--boot-film",
+    version: "0.67.15",
+    tag: "new",
+    title: {
+      zh: "开机动画：长颈鹿带着气球走来，变成 HXBot 标志",
+      en: "A start film: the giraffe with balloons becomes the HXBot logo",
+    },
+    lead: {
+      zh: "第一次打开和每次升级后第一次打开时播放，其他时候只显示 0.6 秒标志。按窗口比例选 16:9、4:3 或 9:16 的片子，标志和名字不会被裁掉；播过 1 秒后点一下或按任意键跳过。网页版和 bot.hxallai.com 首页在这台浏览器 30 天内只播一次，手机上也有。",
+      en: "It plays on the first start and the first start after each update; other starts show the logo for 0.6 s. The film for the window (16:9, 4:3 or 9:16) never cuts the logo or the name; after 1 s, a click or any key skips it. The web client and bot.hxallai.com play it at most once in 30 days in a browser, and the phones have it too.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 620,
+    callouts: [
+      {
+        css: ".hx-highlight-boot-frame:first-child img",
+        badge: "corner",
+        label: { zh: "从片子的第一帧开始", en: "Opens on its first frame" },
+        note: { zh: "白底，没有黑屏、没有闪白", en: "White, with no black or flash" },
+      },
+      {
+        css: ".hx-highlight-boot-frame:last-child img",
+        badge: "corner",
+        label: { zh: "结尾就是标志", en: "Ends on the logo" },
+        note: { zh: "淡出到 HXBot，0.12 秒", en: "Fades into HXBot in 0.12 s" },
+      },
+      {
+        css: ".hx-highlight-settings",
+        badge: "end",
+        label: { zh: "声音默认关", en: "Sound off by default" },
+        note: { zh: "设置 → 通用 → 外观", en: "Settings › General › Appearance" },
+      },
+    ],
+  },
+  {
+    id: "routine-zone",
+    story: "hxbot-highlights--routine-zone",
+    version: "0.67.15",
+    title: {
+      zh: "定时任务要选时区，看得到接下来三次",
+      en: "Routines have a time zone, and show their next three runs",
+    },
+    lead: {
+      zh: "新建定时任务时必须选时区，默认是你登记的时区。下面列出接下来三次：本地时间、UTC 和偏移，夏令时前后写明白；被拨快跳过的时刻顺延到缺口后的第一分钟，拨慢重复的时刻只跑第一次。",
+      en: "A new routine needs a time zone, and the one you registered comes first. Below it are the next three runs, in local time, UTC and offset, with the daylight saving change spelled out; a time that a clock change skips runs at the first minute after the gap, and a repeated time runs once.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 620,
+    callouts: [
+      {
+        css: ".hx-routine-zone",
+        badge: "end",
+        label: { zh: "必须选时区", en: "A time zone is required" },
+        note: { zh: "你登记的时区排第一", en: "Yours comes first" },
+      },
+      {
+        css: ".hx-routine-upcoming-list",
+        badge: "end",
+        label: { zh: "接下来三次", en: "The next three runs" },
+        note: { zh: "本地时间、UTC、偏移", en: "Local time, UTC and offset" },
+      },
+    ],
+  },
+  {
+    id: "routine-confirm",
+    story: "hxbot-highlights--routine-confirm",
+    version: "0.67.15",
+    title: {
+      zh: "错过的定时任务写明白，要发送的先问你",
+      en: "Missed runs are spelled out, and sending asks you first",
+    },
+    lead: {
+      zh: "HXBot 关着或电脑睡眠时错过的，写明错过几次、从几点到几点，按你选的“全部跳过”或“补跑一次”处理。补跑会发送、发布、付款或删除时，先在对话里问你，你点“运行这一次”才做。每次运行都有结果：成功、无更新、结果未核实、失败。",
+      en: "Runs missed while HXBot was closed or the computer slept show how many and from when to when, and follow your choice: skip all or run once. When the catch-up would send, post, pay or delete, the chat asks you first, and it runs only after Run this once. Every run has a result: succeeded, no update, not verified or failed.",
+    },
+    crop: ".hx-highlight-frame",
+    width: 620,
+    callouts: [
+      {
+        css: ".hx-routine-confirm-note",
+        badge: "end",
+        label: { zh: "错过几次、什么时候", en: "How many, and when" },
+        note: { zh: "按“补跑一次”处理", en: "Run once for them" },
+      },
+      {
+        css: ".hx-routine-confirm-buttons",
+        badge: "end",
+        label: { zh: "你确认才运行", en: "Runs only when you say so" },
+        note: { zh: "不回答就跳过，不会自己做", en: "No answer: it skips" },
+      },
+    ],
+  },
+  {
     id: "skills-change",
     story: "hxbot-highlights--skills-change",
     version: "0.67.14",
-    tag: "new",
     title: {
       zh: "助手直接改表格、文档、演示和 PDF，改之前先留一份",
       en: "Agents edit spreadsheets, documents, slides and PDFs, and keep a copy first",

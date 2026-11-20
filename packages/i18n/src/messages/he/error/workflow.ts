@@ -58,4 +58,17 @@ export const messages = {
   "error.workflow.githubUncertain":
     "השינוי נעצר באמצע. ייתכן שהוא נמצא ב-GitHub. יש לבדוק שם לפני שמריצים את השלב שוב.",
   "error.workflow.githubNoEvent": "ב-GitHub אין issue או pull request שהטריגר הזה מתחיל מהם.",
+  "error.workflow.hxStepNoAgent": "יש לבחור את הסוכן של השלב הזה.",
+  "error.workflow.hxStepInvalid": "ההגדרות של השלב הזה לא מתאימות: {reason}",
+  "error.workflow.hxStepUnavailable": "HXBot עדיין עולה. אפשר להריץ את השלב שוב בעוד רגע.",
+  "error.workflow.hxStepComputerUseOff": "השליטה במחשב כבויה עבור {agent}. יש להפעיל אותה בהגדרות הסוכן ואז להמשיך.",
+  "error.workflow.hxActionUnknown":
+    "HXBot נעצר באמצע {action}, ולכן התוצאה לא ידועה. כדאי לבדוק אותה קודם: ״להמשיך מהשלב הזה״ מבצע אותו שוב.",
+  "error.workflow.hxActionFailed": "הקריאה {action} לא הצליחה: {reason}",
+  "error.workflow.hxTeamFailed": "הצוות לא סיים: {reason}",
+  "error.workflow.hxConnectionOff": "חיבור ההודעות של הפלט הזה כבוי. יש להפעיל אותו ואז להמשיך.",
+  "error.workflow.hxLimitLoops": "חריגה מהמגבלה: לולאה רצה {count} פעמים, ולכן ההרצה נעצרה.",
+  "error.workflow.hxLimitSteps": "חריגה מהמגבלה: ההרצה הגיעה ל־{count} שלבים, ולכן נעצרה.",
+  "error.workflow.hxLimitSeconds": "חריגה מהמגבלה: הלולאות רצו יותר מ־{count} שניות, ולכן ההרצה נעצרה.",
+  "error.workflow.hxTurnNothing": "בתור הזה אין שלב של שליטה במחשב, מיומנות אפליקציה או צוות לשמירה.",
 } as const satisfies PartialTranslation<typeof source>;

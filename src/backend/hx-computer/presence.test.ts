@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HX_NOW_CONSENT_MS, HX_PARK_REMIND_MS, HxParkedSteps, type HxParkedWork, hxSameWindow } from "./parked";
-import { HX_BACKGROUND_IDLE_MS, HX_USER_IDLE_MS, HxPresence, hxIdleNeeded } from "./presence";
+import { HX_BACKGROUND_IDLE_MS, HX_USER_IDLE_MS, HxPresence, hxIdleNeeded, hxSetForegroundIdle } from "./presence";
 
 // HXBot 电脑操控（五）（v1.7.3，CONC-06）：你在不在用电脑（presence.ts）和停放续做（parked.ts），含压力测试。
 
@@ -402,5 +402,84 @@ describe("the parked steps", () => {
     // Each one is resumed at most once per time it was parked.
     expect([...counts.values()].every((count) => count <= 2)).toBe(true);
     expect(watch.resumed.length).toBeGreaterThan(150);
+  });
+});
+
+describe("going on too early (v1.7.5, CONC-13)", () => {
+  function earlyHost(time: ReturnType<typeof clock>) {
+    const watch = host(time);
+    const early: string[] = [];
+    return {
+      ...watch,
+      early,
+      host: { ...watch.host, wentOnTooEarly: (parked: HxParkedWork) => early.push(parked.agentId) },
+    };
+  }
+
+  it("tells when the user uses the computer again within 3 seconds after the work went on", async () => {
+    const time = clock();
+    const parked = new HxParkedSteps({ now: time.now, every: never });
+    const watch = earlyHost(time);
+    parked.setHost(watch.host);
+    parked.park(work("a"));
+    watch.state.idle = 6_000;
+    await parked.check();
+    expect(watch.resumed).toEqual(["a"]);
+    // One second later the user moves the mouse: the last input is after HXBot went on.
+    time.move(1_000);
+    watch.state.idle = 200;
+    await parked.check();
+    expect(watch.early).toEqual(["a"]);
+    // Told once.
+    time.move(1_000);
+    await parked.check();
+    expect(watch.early).toEqual(["a"]);
+  });
+
+  it("does not tell when the user rests for 3 seconds, or comes back later", async () => {
+    const time = clock();
+    const parked = new HxParkedSteps({ now: time.now, every: never });
+    const watch = earlyHost(time);
+    parked.setHost(watch.host);
+    parked.park(work("a"));
+    watch.state.idle = 6_000;
+    await parked.check();
+    for (let second = 0; second < 4; second += 1) {
+      time.move(1_000);
+      watch.state.idle += 1_000;
+      await parked.check();
+    }
+    time.move(1_000);
+    watch.state.idle = 100;
+    await parked.check();
+    expect(watch.early).toEqual([]);
+  });
+
+  it("a host without the hook is as before", async () => {
+    const time = clock();
+    const parked = new HxParkedSteps({ now: time.now, every: never });
+    const watch = host(time);
+    parked.setHost(watch.host);
+    parked.park(work("a"));
+    watch.state.idle = 6_000;
+    await parked.check();
+    time.move(1_000);
+    watch.state.idle = 100;
+    await parked.check();
+    expect(watch.resumed).toEqual(["a"]);
+  });
+
+  it("the foreground pause follows the learned value, inside its limits", () => {
+    hxSetForegroundIdle(() => 9_000);
+    expect(hxIdleNeeded(0)).toBe(9_000);
+    expect(hxIdleNeeded(3)).toBe(HX_BACKGROUND_IDLE_MS);
+    hxSetForegroundIdle(() => Number.NaN);
+    expect(hxIdleNeeded(1)).toBe(HX_USER_IDLE_MS);
+    hxSetForegroundIdle(() => {
+      throw new Error("broken");
+    });
+    expect(hxIdleNeeded(1)).toBe(HX_USER_IDLE_MS);
+    hxSetForegroundIdle(null);
+    expect(hxIdleNeeded(0)).toBe(HX_USER_IDLE_MS);
   });
 });

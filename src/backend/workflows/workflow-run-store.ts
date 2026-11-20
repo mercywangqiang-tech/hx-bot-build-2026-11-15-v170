@@ -4,6 +4,7 @@
  * leaves, so two sweeps, or a sweep and a user action, never both settle one step.
  */
 
+import type { DatabaseSync } from "node:sqlite";
 import {
   isWorkflowGraph,
   WORKFLOW_BRANCHES,
@@ -241,6 +242,11 @@ export class WorkflowRunStore {
   }
 
   /** Changes an open run's status. Answers whether it changed. */
+  /** HXBot (v1.7.5, RTN-07, RTN-11): the connection, for the run limits and the record of external actions. */
+  get hxConnection(): DatabaseSync {
+    return this.#database.connection;
+  }
+
   setRunStatus(runId: string, status: WorkflowRunStatus, error: string | null, now = new Date()): boolean {
     const at = now.toISOString();
     const ended = isOneOf(OPEN_RUN_STATUSES, status) ? null : at;

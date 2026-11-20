@@ -246,6 +246,16 @@ export function configureApplicationProtocol(): void {
       if (candidate.startsWith("..") || isAbsolute(candidate)) {
         return new Response("Not found", { status: 404 });
       }
+      // HXBot (v1.7.5, UI-27): the start film streams, with its length, as attachments do.
+      if (extname(filePath).toLowerCase() === ".mp4") {
+        return await runCauseEffect(
+          fileResponse(filePath, {
+            "Content-Type": "video/mp4",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+          }),
+        );
+      }
       return new Response(await readFile(filePath), {
         headers: {
           "Content-Type": applicationContentType(filePath),
@@ -268,6 +278,7 @@ function applicationContentType(
   | "image/svg+xml"
   | "image/png"
   | "image/webp"
+  | "image/jpeg"
   | "font/woff2"
   | "application/octet-stream" {
   switch (extname(path).toLowerCase()) {
@@ -283,6 +294,10 @@ function applicationContentType(
       return "image/png";
     case ".webp":
       return "image/webp";
+    // HXBot (v1.7.5, UI-27): the first frame of the start film.
+    case ".jpg":
+    case ".jpeg":
+      return "image/jpeg";
     case ".woff2":
       return "font/woff2";
     default:

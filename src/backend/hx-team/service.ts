@@ -25,6 +25,7 @@ import {
   hxProgressText,
   hxTeamCardTeamId,
 } from "@hxbot/contracts/hx-progress";
+import type { HxTeamCardActionInput, HxTeamCardActionResult } from "@hxbot/contracts/hx-team-card";
 import {
   AVATAR_HUES,
   CHANNEL_CHANGE_ITEM_TYPE,
@@ -35,15 +36,18 @@ import {
 import { isDynamicRecord } from "@hxbot/contracts/runtime-values";
 import { sourceText } from "@hxbot/i18n";
 import { z } from "zod";
+import { hxClassifyWork } from "../hx-auto-model/classify";
 import { hxAutoRouter } from "../hx-auto-model/router";
 import { hxComputerLanes } from "../hx-computer/lanes";
 import { hxParkedSteps } from "../hx-computer/parked";
 import { hxHoldDetails } from "../hx-flow/hold-detail";
+import { type HxGuardChoice, hxLearned, hxLearnedLine } from "../hx-flow/learned";
 import { type HxFlowTeamTask, hxFlow } from "../hx-flow/ledger";
 import { HX_FLOW_RELAXED_WEIGHT, HX_FLOW_URGENT_WEIGHT, HxFlowDifficultyTimes } from "../hx-flow/order";
 import type { HxProgressWriter } from "../hx-progress/progress";
 import { hxFormFiles, hxFormLabel, hxFormTemplate, hxMissingParts, hxReadForm, hxSaysNothing } from "./form";
 import {
+  HX_GUARD_COUNTS,
   type HxGuardId,
   type HxSpendReading,
   type HxTeamGuardState,
@@ -68,6 +72,7 @@ import {
   hxJudgePromptFor,
   hxParseTeamJudge,
 } from "./judge";
+import { HX_JUDGE_PASSES, HxJudgeAuto, hxJudgeSooner } from "./judge-auto";
 import { type HxMatchAgent, hxMatchRoles } from "./match";
 import {
   hxCapacityLine,
@@ -283,6 +288,13 @@ const JUDGE_REMINDERS = {
   },
 } as const;
 
+/** v1.7.5 (CONC-16): the cause of a pause in the words of a note; the screen translates it with the note. */
+const CAUSE_KEYS = {
+  G1: "status.agent.hxTeam.cause.G1",
+  G2: "status.agent.hxTeam.cause.G2",
+  G3: "status.agent.hxTeam.cause.G3",
+} as const satisfies Record<HxJudgeCause, string>;
+
 /** v1.7.4 (CONC-09): how often a running team's card is read again, and the most lines it shows. */
 const HX_TEAM_CARD_REFRESH_MS = 5_000;
 const HX_TEAM_CARD_LINES = 30;
@@ -345,11 +357,15 @@ export class HxTeams {
   /** v1.7.4 (CONC-09): the text of each team's card as written last, and the timer that refreshes them. */
   readonly #cardTexts = new Map<string, string>();
   #cardTimer: ReturnType<typeof setInterval> | null = null;
+  /** v1.7.5 (CONC-13): the kind of work of each team, by its id. */
+  readonly #works = new Map<string, string>();
   /** v1.7.4 (CONC-08): members that a move for the provider's overload is changing now. */
   readonly #moving = new Set<string>();
   #timesFile: string | null = null;
   /** v1.7.4 (CONC-11): the folder of the team records, for the judge's agreement record. */
   #folder: string | null = null;
+  /** v1.7.5 (CONC-16): the judge's automatic mode of this computer, beside the team records. */
+  readonly #judgeAuto = new HxJudgeAuto(() => this.#folder);
   #spendReading = false;
   readonly #chains = new Map<string, Promise<void>>();
   readonly #now: () => number;
@@ -411,6 +427,53 @@ export class HxTeams {
     if ((team.weight ?? "normal") === input.priority) return { status: "unchanged", priority: input.priority };
     this.#setPriority(port, team, input.priority);
     return { status: "changed", priority: input.priority };
+  }
+
+  /**
+   * v1.7.5 (CONC-16): a button on a team's card in the starter's chat on this computer: turn on the
+   * judge's automatic mode for the cause of the pause (only when the card offers it), ask each time
+   * again, wrap up or stop.
+   */
+  async cardAction(input: HxTeamCardActionInput): Promise<HxTeamCardActionResult> {
+    const port = this.#port;
+    const teamId = hxTeamCardTeamId(input.messageId);
+    const team = teamId ? this.store.get(teamId) : null;
+    if (!port || !team || team.starterAgentId !== input.agentId) return { status: "missing" };
+    if (team.state !== "running") return { status: "ended" };
+    const guard = this.#guard(team);
+    const causeName = (cause: HxJudgeCause) => sourceText(CAUSE_KEYS[cause]);
+    if (input.action === "judge-auto") {
+      const paused = guard.paused;
+      const cause = paused?.guard;
+      if (!paused?.view || (cause !== "G1" && cause !== "G2" && cause !== "G3")) return { status: "refused" };
+      if (!this.#judgeAuto.offer(cause, paused.view.model ?? null)) return { status: "refused" };
+      this.#judgeAuto.set(cause, true);
+      port.note(team.starterAgentId, sourceText("status.agent.hxTeam.judgeAuto.on", { cause: causeName(cause) }));
+      this.#writeCard(team);
+      return { status: "done" };
+    }
+    if (input.action === "judge-ask") {
+      const cause = guard.judge?.lastPass?.cause;
+      if (!cause || !this.#judgeAuto.auto(cause)) return { status: "refused" };
+      this.#judgeAuto.set(cause, false);
+      if (guard.judge?.lastPass) guard.judge.lastPass.open = false;
+      this.#save(team);
+      port.note(team.starterAgentId, sourceText("status.agent.hxTeam.judgeAuto.off", { cause: causeName(cause) }));
+      this.#writeCard(team);
+      return { status: "done" };
+    }
+    if (guard.judge?.lastPass) guard.judge.lastPass.open = false;
+    this.#save(team);
+    const answer = await this.call({
+      tool: HX_TEAM_TOOL,
+      arguments: { action: input.action, teamId: team.id },
+      agentId: team.starterAgentId,
+      key: `hx-team-card:${input.messageId}:${input.action}:${this.#now()}`,
+      roomId: null,
+      byPerson: true,
+    });
+    this.#writeCard(team);
+    return { status: answer.success ? "done" : "refused" };
   }
 
   refreshCards(): void {
@@ -513,11 +576,26 @@ export class HxTeams {
 
   // ------------------------------------------------------------------ tools
 
+  /** v1.7.5 (RTN-11): hears each start_team call and its answer, so a chat turn can be saved as a workflow. */
+  #startObserver: ((call: HxTeamCall, answer: HxTeamAnswer) => void) | null = null;
+
+  observeStarts(observer: ((call: HxTeamCall, answer: HxTeamAnswer) => void) | null): void {
+    this.#startObserver = observer;
+  }
+
   async call(call: HxTeamCall): Promise<HxTeamAnswer> {
     const port = this.#port;
     if (!port) return refuse("Teams are not ready yet. Try again in a moment.");
     try {
-      if (call.tool === HX_START_TEAM_TOOL) return await this.#start(port, call);
+      if (call.tool === HX_START_TEAM_TOOL) {
+        const started = await this.#start(port, call);
+        try {
+          this.#startObserver?.(call, started);
+        } catch {
+          // What the observer keeps changes nothing of the team.
+        }
+        return started;
+      }
       if (call.tool === HX_TEAM_TOOL) return await this.#team(port, call);
       if (call.tool === HX_TEAM_BOARD_TOOL) return this.#board(call);
       if (call.tool === HX_TEAM_DONE_TOOL) return await this.#done(port, call);
@@ -793,7 +871,15 @@ export class HxTeams {
     if (team.state !== "running") return refuse(`The team has ended (${team.state}). Start a new team for more work.`);
     if (input.action === "stop") {
       this.#recordAgreement(team, "stop");
+      const stoppedAtG1 = guard.paused?.guard === "G1";
+      // v1.7.5 (CONC-16): a stop after the judge let the team go on, twice, sends that cause back to advice.
+      const passed = guard.judge?.lastPass;
+      if (passed && this.#judgeAuto.strike(passed.cause))
+        port.note(team.starterAgentId, sourceText("status.agent.hxTeam.judgeAuto.back"));
+      if (passed) this.#recordPassAgreement(team, passed.cause);
       await this.#stop(port, team, "user", false);
+      // v1.7.5 (CONC-13): a stop at a G1 reminder: such work is reminded sooner from now on.
+      if (stoppedAtG1) this.#learn(port, team, "stop");
       return answer({ status: "stopped", team: this.#summary(team) });
     }
     if (input.action === "priority") {
@@ -807,6 +893,9 @@ export class HxTeams {
       const paused = guard.paused;
       guard.paused = null;
       guard.sinceProgressMs = 0;
+      // v1.7.5 (CONC-13): "continue" at a G1 reminder gives this team twice the time; "wrap up" makes
+      // the default of such work shorter.
+      if (paused?.guard === "G1") this.#learn(port, team, input.action === "finish" ? "finish" : "continue");
       if (paused?.guard === "G9") guard.spend.unanswered = 0;
       if (paused?.guard === "G2") guard.moves = {};
       if (paused?.guard === "G3") guard.handoffs = [];
@@ -1029,6 +1118,17 @@ export class HxTeams {
           ),
         );
     }
+    // v1.7.5 (CONC-16): the offer of the automatic mode, and the line of a pass with its buttons.
+    const paused = team.guard?.paused;
+    if (
+      paused?.view &&
+      (paused.guard === "G1" || paused.guard === "G2" || paused.guard === "G3") &&
+      this.#judgeAuto.offer(paused.guard, paused.view.model ?? null)
+    )
+      lines.push(line(sourceText("status.agent.hxTeam.card.judgeOffer", { count: this.#judgeAuto.streak() })));
+    const went = team.guard?.judge?.lastPass;
+    if (!paused && went?.open)
+      lines.push(line(sourceText("status.agent.hxTeam.card.judgeWent", { reason: went.reason })));
     if (team.weight === "urgent") lines.push(line(sourceText("status.agent.hxTeam.card.urgent")));
     if (team.weight === "relaxed") lines.push(line(sourceText("status.agent.hxTeam.card.relaxed")));
     for (const member of team.members) {
@@ -1132,8 +1232,13 @@ export class HxTeams {
       // v1.7.1 (CONC-10): the guards see each new piece of work and each piece that is done.
       if (previous === undefined && task.parentTaskId !== null) {
         const goal = hxReadForm(task.instruction).goal ?? task.instruction;
-        if (hxSpread(guard, "open", hxDepth(task.id, parents))) this.#later(team, () => this.#spread(port, team));
-        if (owner && hxLoopReceive(guard, owner, goal))
+        // v1.7.5 (CONC-16): after the judge let the team go on, the next check comes sooner.
+        const passes = guard.judge?.passes ?? {};
+        if (
+          hxSpread(guard, "open", hxDepth(task.id, parents), hxJudgeSooner(HX_GUARD_COUNTS.spread, passes.G3 ?? 0, 5))
+        )
+          this.#later(team, () => this.#spread(port, team));
+        if (owner && hxLoopReceive(guard, owner, goal, hxJudgeSooner(HX_GUARD_COUNTS.loop, passes.G2 ?? 0, 2)))
           this.#later(team, () => this.#pause(port, team, "G2", this.#reason(team, "G2same", names(owner))));
       }
       if (task.state === "running" && !team.timing?.[task.id]) team.timing = { ...team.timing, [task.id]: at };
@@ -1152,7 +1257,15 @@ export class HxTeams {
         // G2: the same work changes hands again with no file change and no open item closed.
         const folder = this.#folderHash(team);
         const openItems = countOpen(hxReadForm(task.instruction).open);
-        if (hxLoopMove(guard, task.id, folder, openItems))
+        if (
+          hxLoopMove(
+            guard,
+            task.id,
+            folder,
+            openItems,
+            hxJudgeSooner(HX_GUARD_COUNTS.loop, guard.judge?.passes?.G2 ?? 0, 2),
+          )
+        )
           this.#later(team, () => this.#pause(port, team, "G2", this.#reason(team, "G2moves", "")));
       }
       if (task.state === "running") this.#stepOf(team, owner, "todo", "doing");
@@ -1230,6 +1343,9 @@ export class HxTeams {
     team.endedAt = new Date(this.#now()).toISOString();
     this.#save(team);
     hxFlow.forgetTeam(team.id);
+    // v1.7.5 (CONC-13): its own reminder time goes with it.
+    hxLearned.forgetTeam(team.id);
+    this.#works.delete(team.id);
     const minutes = Math.max(1, Math.round((this.#now() - Date.parse(team.createdAt)) / 60_000));
     port.note(team.starterAgentId, sourceText("status.agent.hxTeam.done", { minutes }));
     const lead = this.#lead(team);
@@ -1262,6 +1378,9 @@ export class HxTeams {
     }[reason];
     this.#save(team);
     hxFlow.forgetTeam(team.id);
+    // v1.7.5 (CONC-13): its own reminder time goes with it.
+    hxLearned.forgetTeam(team.id);
+    this.#works.delete(team.id);
     const room = port.room(team.channelId);
     if (room.exists && !room.archived) {
       const roots = room.tasks.filter((task) => task.parentTaskId === null && !TERMINAL.has(task.state));
@@ -1531,8 +1650,8 @@ export class HxTeams {
     const zh = team.language === "zh";
     const text: Record<string, [string, string]> = {
       G1: [
-        "实际干活累计 30 分钟没有进展（没有做完的工作、文件没有变化、计划步骤没有推进）。",
-        "30 minutes of real work with no progress (no work done, no file changed, no step of the plan moved).",
+        `实际干活累计 ${name || "30"} 分钟没有进展（没有做完的工作、文件没有变化、计划步骤没有推进）。`,
+        `${name || "30"} minutes of real work with no progress (no work done, no file changed, no step of the plan moved).`,
       ],
       G2moves: [
         "同一件工作在成员之间转手了 3 次，两次之间文件没有变化，未解决的问题也没有减少。",
@@ -1560,6 +1679,8 @@ export class HxTeams {
     if (team.state !== "running" || guard.paused) return;
     const at = new Date(this.#now()).toISOString();
     guard.paused = { guard: guardId, at, reason };
+    // v1.7.5 (CONC-16): the line of an earlier pass goes; the new pause speaks for itself.
+    if (guard.judge?.lastPass?.open) guard.judge.lastPass.open = false;
     this.#save(team);
     port.note(team.starterAgentId, sourceText("status.agent.hxTeam.paused", { reason }));
     // v1.7.4 (CONC-11): G1 to G3, which the code's check could not tell: a judge gives its view. It is
@@ -1569,6 +1690,35 @@ export class HxTeams {
     if (view && guard.paused) {
       guard.paused.view = view;
       this.#save(team);
+    }
+    // v1.7.5 (CONC-16): in automatic mode a "continue" of a passed model lets the team go on, twice at
+    // most for the same cause; the chat gets one line with "Wrap up" and "Stop".
+    if (
+      view?.verdict === "continue" &&
+      (guardId === "G1" || guardId === "G2" || guardId === "G3") &&
+      guard.paused &&
+      this.#judgeAuto.auto(guardId) &&
+      this.#judgeAuto.passed(view.model ?? null)
+    ) {
+      const passes = guard.judge?.passes?.[guardId] ?? 0;
+      if (passes < HX_JUDGE_PASSES) {
+        guard.paused = null;
+        guard.sinceProgressMs = 0;
+        if (guardId === "G2") guard.moves = {};
+        if (guardId === "G3") guard.handoffs = [];
+        guard.judge = {
+          times: guard.judge?.times ?? [],
+          reminded: guard.judge?.reminded ?? [],
+          passes: { ...guard.judge?.passes, [guardId]: passes + 1 },
+          lastPass: { cause: guardId, reason: view.reason, at, open: true },
+        };
+        this.#save(team);
+        hxFlow.tick(undefined, true);
+        port.note(team.starterAgentId, sourceText("status.agent.hxTeam.judgeAuto.went", { reason: view.reason }));
+        this.#writeCard(team);
+        return;
+      }
+      port.note(team.starterAgentId, sourceText("status.agent.hxTeam.judgeAuto.third"));
     }
     const zh = team.language === "zh";
     const text = zh
@@ -1609,7 +1759,8 @@ export class HxTeams {
     const now = this.#now();
     const calls = hxJudgeAllowed(guard.judge?.times ?? [], now);
     if (!calls.allowed) return null;
-    guard.judge = { times: [...calls.times, now], reminded: guard.judge?.reminded ?? [] };
+    // v1.7.5 (CONC-16): the passes of the automatic mode stay with the times.
+    guard.judge = { ...guard.judge, times: [...calls.times, now], reminded: guard.judge?.reminded ?? [] };
     this.#save(team);
     const tasks = this.#tasks(port, team.channelId);
     const names = (agentId: string | null) =>
@@ -1630,12 +1781,17 @@ export class HxTeams {
       // G1 and G2 count only when the shared folder did not change; G3 does not look at it.
       filesChanged: cause === "G3" ? null : false,
     };
+    const judging = hxAutoRouter.teamJudgeModel(team.leadAgentId);
     const answer = await hxAutoRouter.teamJudge(team.leadAgentId, hxJudgePromptFor(input), HX_TEAM_JUDGE.timeoutMs);
-    const view = answer === null ? null : hxParseTeamJudge(answer);
-    if (!view) return null;
+    const parsed = answer === null ? null : hxParseTeamJudge(answer);
+    if (!parsed) return null;
+    // v1.7.5 (CONC-16): the model that judged, for the pass list of the automatic mode.
+    const view: HxJudgeView = judging
+      ? { ...parsed, model: { provider: judging.provider, model: judging.model } }
+      : parsed;
     const reminded = guard.judge?.reminded ?? [];
     if (view.verdict === "remind" && !reminded.includes(cause)) {
-      guard.judge = { times: guard.judge?.times ?? [], reminded: [...reminded, cause] };
+      guard.judge = { ...guard.judge, times: guard.judge?.times ?? [], reminded: [...reminded, cause] };
       this.#save(team);
       const lead = this.#lead(team);
       if (lead)
@@ -1670,6 +1826,29 @@ export class HxTeams {
       appendFileSync(join(folder, "hx-judge-agreement.jsonl"), `${JSON.stringify(line)}\n`);
     } catch {
       // The record is a convenience; the choice itself is done.
+    }
+  }
+
+  /**
+   * v1.7.5 (CONC-16): the judge let the team go on and you stopped it: a disagreement on this
+   * computer, so the next offer of the automatic mode needs 5 agreements again.
+   */
+  #recordPassAgreement(team: HxTeamRecord, cause: HxJudgeCause): void {
+    const folder = this.#folder;
+    if (!folder) return;
+    const line = {
+      at: new Date(this.#now()).toISOString(),
+      team: team.id,
+      cause,
+      view: "continue",
+      choice: "stop",
+      agrees: false,
+      auto: true,
+    };
+    try {
+      appendFileSync(join(folder, "hx-judge-agreement.jsonl"), `${JSON.stringify(line)}\n`);
+    } catch {
+      // The record is a convenience; the stop itself is done.
     }
   }
 
@@ -1710,6 +1889,28 @@ export class HxTeams {
    * One look at each running team: real work (G1, G8, the user's minutes), and the spend (G5, G7,
    * G9). Tests call it.
    */
+  /** v1.7.5 (CONC-13): the kind of work of a team, from its goal, by the same rules as auto model. */
+  #workOf(team: HxTeamRecord): string {
+    const known = this.#works.get(team.id);
+    if (known) return known;
+    const work = hxClassifyWork({
+      text: team.goal,
+      attachments: [],
+      historyTokens: 0,
+      window: 200_000,
+      previous: null,
+      now: this.#now(),
+    }).work;
+    this.#works.set(team.id, work);
+    return work;
+  }
+
+  /** v1.7.5 (CONC-13): learns from the user's answer to a G1 reminder and says so in the starter's chat. */
+  #learn(port: HxTeamPort, team: HxTeamRecord, choice: HxGuardChoice): void {
+    const change = hxLearned.choose({ work: this.#workOf(team), teamId: team.id, choice });
+    if (change) port.note(team.starterAgentId, hxLearnedLine(change));
+  }
+
   async tick(): Promise<void> {
     const port = this.#port;
     if (!port) return;
@@ -1720,7 +1921,13 @@ export class HxTeams {
       // reading, the first G1 check took any folder for a changed one, and G1 came 30 minutes late.
       if (guard.folderHash === null) guard.folderHash = this.#folderHash(team);
       const working = !guard.paused && hxFlow.teamRunning(team.id);
-      const due = hxWorkTick(guard, now, working);
+      // v1.7.5 (CONC-13): the G1 time learned from the user's answers.
+      const progressMs = hxJudgeSooner(
+        hxLearned.progressMs(this.#workOf(team), team.id),
+        guard.judge?.passes?.G1 ?? 0,
+        60_000,
+      );
+      const due = hxWorkTick(guard, now, working, progressMs);
       const minutes = team.stated?.minutes;
       if (minutes !== undefined && guard.activeMs >= minutes * 60_000) {
         this.#later(team, () => this.#stop(port, team, "minutes", true));
@@ -1731,7 +1938,10 @@ export class HxTeams {
         // The code check: a file that changed is progress too.
         const folder = this.#folderHash(team);
         if (folder !== null && folder !== guard.folderHash) hxProgress(guard, folder);
-        else this.#later(team, () => this.#pause(port, team, "G1", this.#reason(team, "G1", "")));
+        else
+          this.#later(team, () =>
+            this.#pause(port, team, "G1", this.#reason(team, "G1", String(Math.round(progressMs / 60_000)))),
+          );
       }
       this.store.save(team);
     }

@@ -46,7 +46,9 @@ export async function routeAgentRoutines(
       if (agents.listRoutines(agentId).some((routine) => routine.id === routineId && !isReleasedRoutine(routine))) {
         throw new HttpError(404, sourceText("error.backend.routineGone"));
       }
-      const input = parseUpdateRoutine({ ...body, agentId, routineId });
+      // HXBot (v1.7.5): the released route takes a timezone and has always kept the saved one. It still does:
+      // only this computer's editor moves a routine to another zone.
+      const input = parseUpdateRoutine({ ...body, timezone: undefined, agentId, routineId });
       requireReleasedSchedule(input.schedule);
       return json(200, agents.updateRoutine(input));
     }

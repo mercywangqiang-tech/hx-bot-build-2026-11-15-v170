@@ -14,7 +14,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { AGENT_PROVIDERS, type WorkflowGraph, type WorkflowNode } from "@hxbot/contracts/ipc";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import type { AgentBrowserHost } from "../src/backend/agent/turn-lifecycle";
 
 const OUT = resolve(import.meta.dirname, "../.hxbot-build/workflow-webhook-e2e");
@@ -256,17 +256,23 @@ try {
   // 6. A graph that this version cannot run keeps the request as done, so the sender does not send
   // it again.
   const filed = await runCauseEffect(workflows.create({ title: "File orders" }));
-  const filedSaved = await runCauseEffect(
-    workflows.saveGraph({
-      workflowId: filed.summary.id,
-      baseRevision: filed.revision,
-      graph: {
-        nodes: [trigger("webhook"), { id: "step", kind: "output", at: { x: 300, y: 0 }, fields: { target: "file" } }],
-        edges: [{ id: "edge", from: "trigger", to: "step", type: "text" }],
-        strokes: [],
-      },
-    }),
+  const filedGraph = {
+    nodes: [
+      trigger("webhook"),
+      { id: "step", kind: "output" as const, at: { x: 300, y: 0 }, fields: { target: "file" } },
+    ],
+    edges: [{ id: "edge", from: "trigger", to: "step", type: "text" as const }],
+    strokes: [],
+  };
+  // HXBot (v1.7.5, RTN-08): a save refuses a node without a runner. Such a graph is one an earlier
+  // version saved, so the store writes it here as that version did.
+  const refusedSave = await Effect.runPromise(
+    workflows
+      .saveGraph({ workflowId: filed.summary.id, baseRevision: filed.revision, graph: filedGraph })
+      .pipe(Effect.result),
   );
+  assert.ok(Result.isFailure(refusedSave), "A save of a graph that cannot run is refused.");
+  const filedSaved = workflowStore.saveGraph(filed.summary.id, filed.revision, filedGraph);
   assert.ok(filedSaved.ok);
   const filedSecret = await runCauseEffect(
     events.rotateWorkflowSecret({ workflowId: filed.summary.id, nodeId: "trigger" }),

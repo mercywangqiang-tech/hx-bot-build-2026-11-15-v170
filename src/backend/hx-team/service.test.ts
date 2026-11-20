@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { HX_AUTO_DEFAULTS, type HxAutoModelSettings } from "@hxbot/contracts/hx-auto-model";
@@ -7,6 +7,7 @@ import type { ChannelMessage, ChannelTask } from "@hxbot/contracts/ipc";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hxAutoRouter } from "../hx-auto-model/router";
 import { hxHoldDetails } from "../hx-flow/hold-detail";
+import { hxLearned } from "../hx-flow/learned";
 import { type HxFlowCandidate, hxFlow } from "../hx-flow/ledger";
 import { hxCapacityLine } from "./protocol";
 import {
@@ -286,6 +287,8 @@ beforeEach(() => {
   store.open(join(folder, "teams"));
   teams = new HxTeams(store, () => now);
   teams.setPort(port);
+  // v1.7.5 (CONC-13): each test starts from the default reminder time.
+  hxLearned.reset();
 });
 
 afterEach(() => {
@@ -588,7 +591,7 @@ describe("the watcher", () => {
     expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
   });
 
-  it("goes on after the user answers a G1 pause: continue counts again from 0, finish wraps up", async () => {
+  it("goes on after the user answers a G1 pause: continue gives the team twice the time (v1.7.5, CONC-13), finish wraps up", async () => {
     const { id } = await started();
     hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
     hxFlow.started("w", { ...candidate(), teamId: id }, null);
@@ -596,7 +599,9 @@ describe("the watcher", () => {
     expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
     expect(read(await call("team", { action: "continue" }, { key: "k2" })).status).toBe("continued");
     expect(teams.store.get(id)?.guard?.paused).toBeNull();
-    await work(29);
+    // The starter's chat says the new time.
+    expect(port.notes.some((note) => note.text.includes("60"))).toBe(true);
+    await work(59);
     expect(teams.store.get(id)?.guard?.paused).toBeNull();
     await work(1.5);
     expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
@@ -608,6 +613,205 @@ describe("the watcher", () => {
     // The lead hears it in the room: no new work, hand back what the team has.
     expect(port.posts.at(-1)?.text).toContain("hxbot.team_done");
     expect(port.posts.at(-1)?.toAgentIds).toEqual([team?.leadAgentId]);
+  });
+
+  it("a stop or a wrap-up at a G1 reminder makes work of that kind reminded sooner (v1.7.5, CONC-13)", async () => {
+    const first = await started();
+    hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+    hxFlow.started("w", { ...candidate(), teamId: first.id }, null);
+    await work(30.5);
+    expect(teams.store.get(first.id)?.guard?.paused?.guard).toBe("G1");
+    expect(read(await call("team", { action: "stop", teamId: first.id }, { key: "k2" })).status).toBe("stopped");
+    expect(port.notes.some((note) => note.text.includes("23") || note.text.includes("22"))).toBe(true);
+    // A new team with the same goal: its reminder comes at 0.75 of 30 minutes.
+    const second = { id: read(await call("start_team", CARD, { key: "turn-2:call-1" })).team?.id ?? fail() };
+    expect(second.id).not.toBe(first.id);
+    hxFlow.started("w", { ...candidate(), teamId: second.id }, null);
+    await work(20);
+    expect(teams.store.get(second.id)?.guard?.paused).toBeNull();
+    await work(3);
+    expect(teams.store.get(second.id)?.guard?.paused?.guard).toBe("G1");
+    // A stop that does not answer a G1 reminder changes nothing.
+    hxLearned.reset();
+    const third = read(await call("start_team", CARD, { key: "turn-3:call-1" })).team?.id ?? fail();
+    expect(read(await call("team", { action: "stop", teamId: third }, { key: "k3" })).status).toBe("stopped");
+    expect(hxLearned.view().progressByWork).toEqual({});
+  });
+
+  describe("the judge's automatic mode (v1.7.5, CONC-16)", () => {
+    const MODEL = { provider: "claude", model: "claude-haiku-5-5", name: "Claude Haiku 5.5" };
+    const teamsFolder = () => join(folder, "teams");
+    const cardText = (id: string) =>
+      port.cards
+        .filter((entry) => entry.id === hxTeamCardId(id))
+        .at(-1)
+        ?.card.steps.map((step) => step.text)
+        .join("\n") ?? "";
+    function judging(verdict: "continue" | "ask") {
+      const judgeOn = vi.spyOn(hxAutoRouter, "judgeOn").mockReturnValue(true);
+      const teamJudge = vi
+        .spyOn(hxAutoRouter, "teamJudge")
+        .mockResolvedValue(`VERDICT: ${verdict}\nREASON: 写作者在改第二稿，文件刚有变化。`);
+      const model = vi.spyOn(hxAutoRouter, "teamJudgeModel").mockReturnValue(MODEL);
+      return () => {
+        judgeOn.mockRestore();
+        teamJudge.mockRestore();
+        model.mockRestore();
+      };
+    }
+    function passed(agreements: number) {
+      writeFileSync(join(teamsFolder(), "hx-judge-pass.json"), JSON.stringify([{ ...MODEL, score: 0.95 }]));
+      writeFileSync(
+        join(teamsFolder(), "hx-judge-agreement.jsonl"),
+        Array.from({ length: agreements }, () => JSON.stringify({ agrees: true })).join("\n") +
+          (agreements ? "\n" : ""),
+      );
+    }
+
+    it("CONC-16-A1: without the conditions the card offers no automatic mode", async () => {
+      const restore = judging("continue");
+      try {
+        teams.open(teamsFolder());
+        const { id } = await started();
+        hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+        hxFlow.started("w", { ...candidate(), teamId: id }, null);
+        // No pass list, no agreements.
+        await work(30.5);
+        teams.refreshCards();
+        expect(teams.store.get(id)?.guard?.paused?.view?.verdict).toBe("continue");
+        expect(cardText(id)).not.toContain("in a row");
+        expect(await teams.cardAction({ agentId: "me", messageId: hxTeamCardId(id), action: "judge-auto" })).toEqual({
+          status: "refused",
+        });
+        // A passed model with 4 agreements: still not.
+        passed(4);
+        teams.refreshCards();
+        expect(cardText(id)).not.toContain("in a row");
+        // Five: the card offers it, and only the click turns it on.
+        passed(5);
+        teams.refreshCards();
+        expect(cardText(id)).toContain("5 times in a row");
+        expect(existsSync(join(teamsFolder(), "hx-judge-auto.json"))).toBe(false);
+        expect(await teams.cardAction({ agentId: "other", messageId: hxTeamCardId(id), action: "judge-auto" })).toEqual(
+          {
+            status: "missing",
+          },
+        );
+        expect(await teams.cardAction({ agentId: "me", messageId: hxTeamCardId(id), action: "judge-auto" })).toEqual({
+          status: "done",
+        });
+        expect(JSON.parse(readFileSync(join(teamsFolder(), "hx-judge-auto.json"), "utf8")).causes.G1.auto).toBe(true);
+      } finally {
+        restore();
+      }
+    });
+
+    it("CONC-16-A2: in automatic mode the team goes on twice for the same cause, sooner each time, and the third time asks you", async () => {
+      const restore = judging("continue");
+      try {
+        teams.open(teamsFolder());
+        passed(5);
+        writeFileSync(
+          join(teamsFolder(), "hx-judge-auto.json"),
+          JSON.stringify({ version: 1, causes: { G1: { auto: true, strikes: 0, at: null } } }),
+        );
+        const { id } = await started();
+        hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+        hxFlow.started("w", { ...candidate(), teamId: id }, null);
+        const asked = () => port.delivered.filter((entry) => entry.text.includes("action 为 continue")).length;
+        await work(30.5);
+        expect(teams.store.get(id)?.guard?.paused).toBeNull();
+        expect(asked()).toBe(0);
+        expect(port.notes.at(-1)?.text).toContain("写作者在改第二稿");
+        teams.refreshCards();
+        expect(cardText(id)).toContain("The judge let it go on");
+        // The next check comes after half the time: 15 minutes.
+        await work(15.5);
+        expect(teams.store.get(id)?.guard?.paused).toBeNull();
+        expect(teams.store.get(id)?.guard?.judge?.passes?.G1).toBe(2);
+        expect(asked()).toBe(0);
+        // The third time, after 7.5 minutes: you are asked.
+        await work(8);
+        expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+        expect(asked()).toBe(1);
+      } finally {
+        restore();
+      }
+    });
+
+    it("a judge that says ask, or a model off the pass list, asks you as before in automatic mode", async () => {
+      const restore = judging("ask");
+      try {
+        teams.open(teamsFolder());
+        passed(5);
+        writeFileSync(
+          join(teamsFolder(), "hx-judge-auto.json"),
+          JSON.stringify({ version: 1, causes: { G1: { auto: true, strikes: 0, at: null } } }),
+        );
+        const { id } = await started();
+        hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+        hxFlow.started("w", { ...candidate(), teamId: id }, null);
+        await work(30.5);
+        expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
+      } finally {
+        restore();
+      }
+      const again = judging("continue");
+      try {
+        writeFileSync(join(teamsFolder(), "hx-judge-pass.json"), "[]");
+        const second = read(await call("start_team", CARD, { key: "turn-2:call-1" })).team?.id ?? fail();
+        hxFlow.started("w", { ...candidate(), teamId: second }, null);
+        await work(30.5);
+        expect(teams.store.get(second)?.guard?.paused?.guard).toBe("G1");
+      } finally {
+        again();
+      }
+    });
+
+    it("two stops after the judge let teams go on bring the cause back to advice; the card can turn it off too", async () => {
+      const restore = judging("continue");
+      try {
+        teams.open(teamsFolder());
+        passed(5);
+        writeFileSync(
+          join(teamsFolder(), "hx-judge-auto.json"),
+          JSON.stringify({ version: 1, causes: { G1: { auto: true, strikes: 0, at: null } } }),
+        );
+        hxFlow.attachScheduler({ limit: () => 4, running: () => ["w"] });
+        const auto = () => JSON.parse(readFileSync(join(teamsFolder(), "hx-judge-auto.json"), "utf8")).causes.G1.auto;
+        for (const [round, key] of ["turn-a:call-1", "turn-b:call-1"].entries()) {
+          const id = read(await call("start_team", CARD, { key })).team?.id ?? fail();
+          hxFlow.started("w", { ...candidate(), teamId: id }, null);
+          await work(30.5);
+          expect(teams.store.get(id)?.guard?.paused).toBeNull();
+          expect(await teams.cardAction({ agentId: "me", messageId: hxTeamCardId(id), action: "stop" })).toEqual({
+            status: "done",
+          });
+          expect(teams.store.get(id)?.state).toBe("stopped");
+          expect(auto()).toBe(round === 0);
+        }
+        expect(port.notes.some((note) => note.text.includes("Twice you stopped"))).toBe(true);
+        // On again by hand, then "ask me each time again" on the card of a pass.
+        writeFileSync(
+          join(teamsFolder(), "hx-judge-auto.json"),
+          JSON.stringify({ version: 1, causes: { G1: { auto: true, strikes: 0, at: null } } }),
+        );
+        const id = read(await call("start_team", CARD, { key: "turn-c:call-1" })).team?.id ?? fail();
+        hxFlow.started("w", { ...candidate(), teamId: id }, null);
+        await work(30.5);
+        expect(await teams.cardAction({ agentId: "me", messageId: hxTeamCardId(id), action: "judge-ask" })).toEqual({
+          status: "done",
+        });
+        expect(auto()).toBe(false);
+        // A wrap-up from the card goes to the team as the person's.
+        expect(await teams.cardAction({ agentId: "me", messageId: hxTeamCardId(id), action: "finish" })).toEqual({
+          status: "done",
+        });
+        expect(teams.store.get(id)?.guard?.wrapUp).toBe(true);
+      } finally {
+        restore();
+      }
+    });
   });
 
   it("adds the judge's view to a G1 pause, reminds the lead once for the cause, records the agreement (v1.7.4, CONC-11)", async () => {
@@ -643,8 +847,8 @@ describe("the watcher", () => {
         .trim()
         .split("\n");
       expect(JSON.parse(record.at(-1) ?? "{}")).toMatchObject({ view: "remind", choice: "continue", agrees: true });
-      // The same cause again: a second view, no second reminder.
-      await work(30.5);
+      // The same cause again (after twice the time, v1.7.5 CONC-13): a second view, no second reminder.
+      await work(60.5);
       expect(teamJudge).toHaveBeenCalledTimes(2);
       expect(reminders()).toHaveLength(1);
     } finally {
@@ -668,13 +872,14 @@ describe("the watcher", () => {
       // An answer that is not in the form counts as none.
       teamJudge.mockResolvedValue("I think the team should continue.");
       await call("team", { action: "continue" }, { key: "k2" });
-      await work(30.5);
+      // v1.7.5 (CONC-13): each continue gives the team twice the time, up to 2 hours.
+      await work(60.5);
       expect(teams.store.get(id)?.guard?.paused?.view).toBeUndefined();
       // Rules only: no call at all.
       judgeOn.mockReturnValue(false);
       const calls = teamJudge.mock.calls.length;
       await call("team", { action: "continue" }, { key: "k3" });
-      await work(30.5);
+      await work(120.5);
       expect(teamJudge.mock.calls.length).toBe(calls);
       expect(teams.store.get(id)?.guard?.paused?.guard).toBe("G1");
     } finally {

@@ -42,6 +42,7 @@ import {
 } from "@hxbot/ui";
 import { createScrollFades } from "@hxbot/ui/components/createScrollFades";
 import { SettingsBackIcon, SettingsForwardIcon } from "@hxbot/ui/components/SettingsPanel";
+import { HxRoutineUpcoming } from "@hxbot/ui/features/conversation/HxRoutineUpcoming";
 import {
   type RoutineResultChoice,
   RoutineResultDestinationField,
@@ -72,6 +73,13 @@ import { type DesktopAnalyticsScope, desktopAnalytics } from "../../analytics";
 import { writeClipboardText } from "../../clipboard";
 import { webhookFailureCode } from "../../webhook-failure-code";
 import { HostedUpsellRoutinesNotice, hostedUpsellRoutineCreated } from "../servers/hosted-server-upsell-controller";
+import {
+  HxRoutineListBadges,
+  HxRoutineQueueNote,
+  HxRoutineUpgradeNotice,
+  HxRoutineWaitingRows,
+} from "./HxRoutineNotes";
+import { HxRoutineZoneField, hxDeviceZone } from "./HxRoutineZoneField";
 import { isEventRoutine, routineListSummary, routineScheduleOf } from "./routine-summary";
 import type { RoutineEditorRecord, RoutinesPort } from "./routines-port";
 
@@ -106,6 +114,8 @@ interface RoutineDraft {
   eventFilters: EventFilterDraft[];
   /** Undefined until the user picks a place: the saved one applies. Null stops sending. */
   destination: RoutineResultChoice | null | undefined;
+  /** HXBot (v1.7.5, RTN-01): an IANA zone; empty until the person chooses one. */
+  timezone: string;
 }
 
 interface WebhookEditorState {
@@ -181,6 +191,19 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
   const [togglingIds, setTogglingIds] = createSignal<ReadonlySet<string>>(new Set());
   const [pendingExit, setPendingExit] = createSignal<PendingRoutineExit | null>(null);
   const scrollFades = createScrollFades();
+  // HXBot (v1.7.5, RTN-01): the registered zone; null when none is registered, undefined when unknown.
+  const [registeredZone, setRegisteredZone] = createSignal<string | null | undefined>(undefined);
+  createEffect(
+    () => props.port.registeredZone,
+    (load) => {
+      setRegisteredZone(undefined);
+      if (!load) return;
+      load().then(
+        (zone) => setRegisteredZone(zone),
+        () => setRegisteredZone(undefined),
+      );
+    },
+  );
   let draftRevision = 0;
   // The saved routine the open draft started from. A field that still matches it is unedited.
   let draftBase: RoutineEditorRecord | null = null;
@@ -347,6 +370,12 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
             ? (routine.missedPolicy ?? "skip")
             : current.missedPolicy,
         runIn: current.runIn === (base.runIn ?? "chat") ? (routine.runIn ?? "chat") : current.runIn,
+        timezone:
+          current.timezone === (hxZoneUnconfirmed(base) ? "" : base.timezone)
+            ? hxZoneUnconfirmed(routine)
+              ? ""
+              : routine.timezone
+            : current.timezone,
         ...(triggerEdited || scheduleEdited || webhookEdited ? {} : triggerDraftOf(routine)),
       };
     });
@@ -368,6 +397,8 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
       runIn: routine.runIn ?? "chat",
       ...triggerDraftOf(routine),
       destination: undefined,
+      // HXBot (v1.7.5, MIG-03): a zone nobody confirmed starts empty, so a save asks for it.
+      timezone: hxZoneUnconfirmed(routine) ? "" : routine.timezone,
     });
     resetWebhookState();
     setShowErrors(false);
@@ -398,6 +429,9 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
       eventType: "",
       eventFilters: [],
       destination: undefined,
+      // HXBot (v1.7.5, RTN-01): the registered zone. With none registered the person chooses one; a client
+      // that cannot read it starts with this device's zone, which the field shows.
+      timezone: newRoutineZone(registeredZone()),
     });
     resetWebhookState();
     setShowErrors(false);
@@ -524,9 +558,17 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
         name: current.name.trim(),
         instruction: current.instruction.trim(),
         active: current.active,
-        // An update keeps the saved zone, so an edit on a computer in another zone does not move the schedule.
+        // HXBot (v1.7.5, RTN-01): the zone in the field. A webhook routine keeps a zone for a later schedule.
         timezone:
-          (current.id ? draftBase?.timezone : undefined) ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"),
+          current.timezone ||
+          (current.id ? draftBase?.timezone : undefined) ||
+          registeredZone() ||
+          hxDeviceZone() ||
+          "UTC",
+        zoneChanged:
+          current.triggerKind === "schedule" &&
+          current.id !== null &&
+          (current.timezone !== draftBase?.timezone || hxZoneUnconfirmed(draftBase)),
         schedule: current.schedule,
         trigger: webhookTriggerOf(current) ?? { kind: "schedule", schedule: current.schedule },
         limitPolicy: current.limitPolicy,
@@ -550,6 +592,16 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
       });
       setDraft((latest) => (latest && latest.id === current.id ? { ...latest, id: saved.id } : latest));
       if (draft()?.id === current.id) draftBase = saved;
+      // HXBot (v1.7.5, RTN-01): the first zone the person saves becomes the registered zone. The routine
+      // keeps its zone when this fails, and the next new routine asks again.
+      const register = props.port.registerZone;
+      if (register && registeredZone() === null && current.triggerKind === "schedule" && saved.timezone) {
+        const zone = saved.timezone;
+        void register(zone).then(
+          () => setRegisteredZone(zone),
+          () => undefined,
+        );
+      }
       const destinationSaved = await saveDestination(saved.id, current.destination);
       // A remote host can keep the new routine but not its place. The editor keeps the change, so Save
       // tries again.
@@ -640,6 +692,22 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
    * Pauses or resumes a routine from the list. It saves the routine as the editor does, with only
    * `active` changed, so the host keeps every other field.
    */
+  /** HXBot (v1.7.5, MIG-03): saves a routine from an earlier version with its own zone, which confirms it. */
+  async function hxConfirmRoutineZone(routine: RoutineEditorRecord): Promise<void> {
+    const schedule = routineScheduleOf(routine);
+    await props.port.save({
+      routineId: routine.id,
+      name: routine.name,
+      instruction: routine.instruction,
+      active: routine.active,
+      timezone: routine.timezone,
+      schedule,
+      trigger: { kind: "schedule", schedule },
+      zoneChanged: true,
+    });
+    await loadRoutines();
+  }
+
   async function setRoutineActive(routine: RoutineEditorRecord, active: boolean): Promise<void> {
     if (togglingIds().has(routine.id)) return;
     setTogglingIds((current) => new Set(current).add(routine.id));
@@ -845,6 +913,12 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
                   when={routines().length > 0}
                   fallback={<p class="agent-routines-empty">{t("routine.settings.empty")}</p>}
                 >
+                  {/* HXBot (v1.7.5, MIG-03): what the upgrade changed, routine by routine. */}
+                  <HxRoutineUpgradeNotice
+                    ownerId={props.port.ownerId}
+                    routines={listedRoutines()}
+                    confirmZone={hxConfirmRoutineZone}
+                  />
                   <div class="agent-routines-list">
                     <For each={listedRoutines()} keyed={(routine) => routine.id}>
                       {(routine) => (
@@ -879,6 +953,8 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
                                     ? t("routine.settings.completed", { schedule: routineListSummary(routine(), text) })
                                     : routineListSummary(routine(), text)}
                                 </small>
+                                {/* HXBot (v1.7.5, RTN-04, MIG-03): a result not verified, asks each time, zone not confirmed. */}
+                                <HxRoutineListBadges routine={routine()} />
                               </span>
                             </Button>
                             {/* A done one-time routine needs a new time to run again, so only the editor resumes it. */}
@@ -889,6 +965,12 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
                               onChange={(active) => void setRoutineActive(routine(), active)}
                             />
                           </div>
+                          {/* HXBot (v1.7.5, RTN-02, MIG-03): a run that waits for the yes, answered here. */}
+                          <HxRoutineWaitingRows
+                            routine={routine()}
+                            answer={props.port.answerConfirm}
+                            answered={() => void loadRoutines()}
+                          />
                         </ItemGroup>
                       )}
                     </For>
@@ -973,6 +1055,11 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
                   </Show>
                 </div>
               </div>
+              {/* HXBot (v1.7.5, RTN-06): a paused routine reads back what it still has waiting. */}
+              <HxRoutineQueueNote
+                routine={current().id ? (routines().find((routine) => routine.id === current().id) ?? null) : null}
+                onOpenRun={(messageId) => requestOpenRun(messageId)}
+              />
 
               <label class="settings-field">
                 <span>{t("routine.settings.name")}</span>
@@ -1056,6 +1143,22 @@ export function AgentRoutinesSettings(props: AgentRoutinesSettingsProps) {
                     kinds={scheduleKinds()}
                     action={triggerMenu(current)}
                     onChange={(scheduleDraft) => changeDraft((value) => reopened(withSchedule(value, scheduleDraft)))}
+                  />
+                  {/* HXBot (v1.7.5, RTN-01): the required zone, and the next three runs in it and in UTC. */}
+                  <HxRoutineZoneField
+                    value={current().timezone}
+                    registered={registeredZone()}
+                    editable={current().id === null || props.port.zoneOnUpdate === true}
+                    unconfirmedZone={
+                      current().id !== null && hxZoneUnconfirmed(draftBase) ? draftBase?.timezone : undefined
+                    }
+                    showError={showErrors()}
+                    onChange={(timezone) => changeDraft((value) => ({ ...value, timezone }))}
+                  />
+                  <HxRoutineUpcoming
+                    schedule={current().schedule}
+                    timezone={current().timezone}
+                    active={current().active}
                   />
                 </Show>
               </section>
@@ -1265,10 +1368,23 @@ function webhookTriggerOf(routine: RoutineEditorRecord | RoutineDraft): RoutineW
   return { kind: "webhook", eventType: routine.trigger.eventType, filters: routine.trigger.filters };
 }
 
+/** HXBot (v1.7.5, RTN-01): the zone a new routine starts with. */
+function newRoutineZone(registered: string | null | undefined): string {
+  if (registered === null) return "";
+  return registered ?? hxDeviceZone();
+}
+
 function validDraft(draft: RoutineDraft): boolean {
   if (!draft.name.trim() || !draft.instruction.trim()) return false;
   if (draft.triggerKind === "webhook") return eventFilterDraftsValid(draft.eventFilters);
+  // HXBot (v1.7.5, RTN-01): a schedule needs its zone.
+  if (!draft.timezone) return false;
   return routineDraftProblem(draft.scheduleDraft) === null;
+}
+
+/** HXBot (v1.7.5, MIG-03): a routine from an earlier version whose zone nobody confirmed. */
+function hxZoneUnconfirmed(routine: RoutineEditorRecord | null): boolean {
+  return routine?.hx?.zoneUnconfirmed === true;
 }
 
 function isBlankNewDraft(draft: RoutineDraft): boolean {
